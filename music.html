@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FULLKIK</title>
     <style>
-        :root { --bg-color: #0b0b13; --text-main: #ffffff; --text-muted: #a0a0b0; --card-bg: rgba(20, 20, 35, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #6f42c1; --accent-light: #8a5cff; --danger: #ff453a; --token: #ffffff;}
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #1a1a3a 0%, #0b0b13 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
+        /* 🛠️ THEME UPDATED TO DARK MAROON */
+        :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
-        .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 19, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
+        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; }
         .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -18,15 +19,18 @@
 
         .header-right { display: flex; align-items: center; gap: 15px; }
         .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(111,66,193,0.4); }
+        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
 
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
-        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 20, 35, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
+        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
         .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
         .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
+
+        .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color);}
+        .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
@@ -42,7 +46,7 @@
         .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
         
         .genre-card { aspect-ratio: 1; border-radius: 20px; position: relative; overflow: hidden; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);}
-        .genre-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(111, 66, 193, 0.4); border-color: var(--accent); }
+        .genre-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(128, 0, 0, 0.4); border-color: var(--accent); }
         .genre-img { width: 100%; height: 100%; object-fit: cover; }
         .genre-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; align-items: flex-end; padding: 20px;}
         .genre-title { font-size: 24px; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
@@ -79,13 +83,13 @@
 
         .action-row { display: flex; gap: 15px;}
         .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px;}
-        .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(111, 66, 193, 0.4);}
+        .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(128, 0, 0, 0.4);}
         
         .player-right { width: 350px; flex-shrink: 0;}
         .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
 
         /* --- PROFILE CENTER UI --- */
-        .profile-banner { background: linear-gradient(135deg, #1c1c28 0%, #0b0b13 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; gap: 30px; border: 1px solid var(--border-color); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .profile-banner { background: linear-gradient(135deg, #1c1010 0%, #0b0b0b 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; gap: 30px; border: 1px solid var(--border-color); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .profile-pic-large-wrap { position: relative; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); flex-shrink:0;}
         .profile-pic-large-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .profile-pic-large-wrap .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; opacity: 0; transition: 0.2s;}
@@ -98,9 +102,9 @@
         .input-col { flex: 1; display: flex; flex-direction: column; gap: 8px;}
         .input-col label { font-size: 12px; color: var(--text-muted);}
         .input-field { background: #ffffff; color: #000000; border: none; border-radius: 8px; padding: 14px 16px; font-size: 14px; outline: none; transition: 0.2s;}
-        .input-field:focus { box-shadow: 0 0 0 3px rgba(138, 92, 255, 0.4); }
+        .input-field:focus { box-shadow: 0 0 0 3px rgba(165, 42, 42, 0.4); }
         .error-msg { color: var(--danger); font-size: 11px; font-weight: bold; min-height: 14px;}
-        .btn-submit { background: linear-gradient(90deg, #6f42c1, #8a5cff); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;}
+        .btn-submit { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;}
         .btn-submit:hover { opacity: 0.9; }
 
         /* --- VIP CENTER SPECIFICS --- */
@@ -114,7 +118,30 @@
 
         .vip-upload-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
-        .vip-btn-upload:hover { border-color: var(--accent); background: rgba(138, 92, 255, 0.1); }
+        .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
+
+        /* --- TOPUP CENTER (NEW UI) --- */
+        .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
+        .topup-pack { background: #1a1a24; border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
+        .topup-pack.active { border-color: var(--accent-light); background: rgba(128, 0, 0, 0.1); }
+        .topup-pack .tag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: rgba(165, 42, 42, 0.2); color: var(--accent-light); font-size: 10px; font-weight: bold; padding: 2px 10px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+        .topup-pack .amt { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; color: var(--token);}
+        .topup-pack .prc { font-size: 14px; color: var(--text-muted);}
+
+        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
+        .pay-btn { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
+        .pay-btn.active { border-color: var(--accent-light); color: white;}
+
+        .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
+        .promo-bar input { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
+        .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
+
+        .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
+
+        /* --- HISTORY VIEW (NEW UI) --- */
+        .hist-list { display: flex; flex-direction: column; gap: 10px; }
+        .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a1a24; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
+        .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
@@ -126,7 +153,7 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
-        .modal-box { background: rgba(30, 30, 40, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
+        .modal-box { background: rgba(30, 20, 20, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
@@ -134,12 +161,7 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
-        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
-
-        .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .topup-card { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; cursor: pointer; transition: 0.2s; font-size: 18px; font-weight: 600; color: var(--token);}
-        .topup-card:hover { background: rgba(255, 255, 255, 0.1); transform: scale(1.05);}
 
         .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -155,6 +177,9 @@
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
             .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .topup-grid-large { grid-template-columns: 1fr 1fr; }
+            .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
+            .hist-row > div:nth-child(n+3) { display: none; } /* Squash history on mobile */
         }
     </style>
 </head>
@@ -164,7 +189,7 @@
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <div class="logo-container" id="logoText">FULKKIK</div>
+    <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
         <button class="nav-tab active" id="nav-store" onclick="switchView('home')" data-i18n="store">首页</button>
         <button class="nav-tab" id="nav-library" onclick="switchView('library')" data-i18n="library">我的音乐</button>
@@ -178,8 +203,9 @@
             <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
             <div class="profile-dropdown" id="profileDropdown">
                 <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
-                <button class="dropdown-item" onclick="openTopUpModal()" data-i18n="pTopup">充值中心</button>
-                <button class="dropdown-item" onclick="switchView('library')" data-i18n="pHist">个人消费</button>
+                <button class="dropdown-item" onclick="switchView('topup')" data-i18n="pTopup">充值中心</button>
+                <button class="dropdown-item" onclick="switchView('history')" data-i18n="pHist">个人消费</button>
+                <button class="dropdown-item" onclick="switchView('purchased')" data-i18n="pBought">已购音乐</button>
                 <button class="dropdown-item" style="color: var(--danger);" onclick="logout()" data-i18n="logout">登出</button>
             </div>
         </div>
@@ -211,7 +237,7 @@
         <div class="player-container">
             <div class="player-left">
                 <h1 class="player-title" id="playerTitle">Song Title</h1>
-                <div class="player-meta" id="playerMeta">FULKKIK • MP3 0.0MB</div>
+                <div class="player-meta" id="playerMeta">FULLKIK • MP3 0.0MB</div>
                 <div class="waveform-ui" id="waveform"></div>
                 <div class="audio-controls">
                     <div class="play-circle" onclick="togglePlayerAudio()" id="playerPlayBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
@@ -226,8 +252,68 @@
     </div>
 
     <div id="view-library" class="view-section">
-        <h2 style="margin-top:0;" data-i18n="library">Library</h2>
+        <h2 style="margin-top:0;" data-i18n="library">Library (My Uploads)</h2>
         <div id="libraryList"></div>
+    </div>
+    
+    <div id="view-purchased" class="view-section">
+        <h2 style="margin-top:0;" data-i18n="pBought">Purchased Music</h2>
+        <div id="purchasedList"></div>
+    </div>
+
+    <div id="view-topup" class="view-section">
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pTopup">充值中心</h2>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-muted); font-size:18px;" onclick="switchView('history')" data-i18n="pHist">我的消费</h2>
+        </div>
+        
+        <div class="topup-grid-large">
+            <div class="topup-pack active" onclick="selectTopup(500, 200, 850, this)">
+                <div class="tag">限时优惠</div><div class="amt">💎 500 + 200</div><div class="prc">¥850</div>
+            </div>
+            <div class="topup-pack" onclick="selectTopup(400, 150, 680, this)">
+                <div class="tag">限时优惠</div><div class="amt">💎 400 + 150</div><div class="prc">¥680</div>
+            </div>
+            <div class="topup-pack" onclick="selectTopup(300, 100, 510, this)">
+                <div class="tag">限时优惠</div><div class="amt">💎 300 + 100</div><div class="prc">¥510</div>
+            </div>
+            <div class="topup-pack" onclick="selectTopup(200, 0, 340, this)">
+                <div class="amt" style="margin-top:25px;">💎 200</div><div class="prc">¥340</div>
+            </div>
+            <div class="topup-pack" onclick="selectTopup(100, 0, 170, this)">
+                <div class="amt" style="margin-top:25px;">💎 100</div><div class="prc">¥170</div>
+            </div>
+            <div class="topup-pack" onclick="selectTopup(50, 0, 85, this)">
+                <div class="amt" style="margin-top:25px;">💎 50</div><div class="prc">¥85</div>
+            </div>
+        </div>
+
+        <p style="font-size:12px; color:var(--text-muted);">支付方式</p>
+        <div class="pay-methods">
+            <button class="pay-btn active">RMB</button><button class="pay-btn">MYR</button>
+        </div>
+        <div class="pay-methods">
+            <button class="pay-btn">支付宝转账</button><button class="pay-btn">微联扫码</button><button class="pay-btn">微信原生</button>
+        </div>
+
+        <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
+
+        <div class="topup-footer">
+            <div style="color:var(--text-muted); font-size:14px;">总计</div>
+            <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥850</div>
+        </div>
+        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
+    </div>
+
+    <div id="view-history" class="view-section">
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+            <h2 style="margin:0; cursor:pointer; color:var(--text-muted); font-size:18px;" onclick="switchView('topup')" data-i18n="pTopup">充值中心</h2>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pHist">我的消费</h2>
+        </div>
+        <div class="vip-tabs">
+            <button class="vip-tab active">全部</button><button class="vip-tab">购买历史</button><button class="vip-tab">消费记录</button>
+        </div>
+        <div class="hist-list" id="historyList"></div>
     </div>
 
     <div id="view-profile" class="view-section">
@@ -244,7 +330,7 @@
                 <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
                     <svg viewBox="0 0 24 24" style="width:16px;fill:currentColor;"><path d="M8.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S9.1,13.5,8.5,13.5z M12.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S13.1,13.5,12.5,13.5z M20,10.5c0-4.1-4-7.5-9-7.5s-9,3.4-9,7.5c0,2.3,1.3,4.4,3.4,5.7l-0.9,2.8l3.2-1.6 c1.1,0.3,2.2,0.5,3.4,0.5C16,18,20,14.6,20,10.5z"/></svg> 微信: <span id="wechatIdText"></span>
                 </div>
-                <div style="color:var(--text-muted); margin-top:5px; font-size:14px; display:flex; align-items:center; gap:10px;"><span style="color:var(--token)">💎</span> <span id="profileBannerTokens">0</span> <button class="btn-upgrade-top" style="padding:2px 8px; font-size:10px;" onclick="openTopUpModal()">+</button></div>
+                <div style="color:var(--text-muted); margin-top:5px; font-size:14px; display:flex; align-items:center; gap:10px;"><span style="color:var(--token)">💎</span> <span id="profileBannerTokens">0</span></div>
             </div>
         </div>
 
@@ -293,6 +379,7 @@
         <div class="vip-tabs">
             <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED" data-i18n="tabApp">已发布 (0)</button>
             <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING" data-i18n="tabPen">正在审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED" data-i18n="tabUnsub">未提交审核 (0)</button>
             <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED" data-i18n="tabRej">驳回歌曲 (0)</button>
             <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED" data-i18n="tabRem">已下架 (0)</button>
         </div>
@@ -306,8 +393,6 @@
     </div>
 </div>
 
-<audio id="mainAudio" preload="metadata"></audio>
-
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
 <div class="modal-overlay" id="cropModal">
@@ -318,12 +403,8 @@
             <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" style="width:200px; margin-bottom:10px;">
             <p style="font-size:12px; color:var(--text-muted); margin:0;" data-i18n="cropSub">Drag image to center, use slider to zoom.</p>
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executePfpCrop()" data-i18n="save">Save Crop</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executePfpCrop()" data-i18n="save" style="color:var(--accent-light);">Save Crop</button></div>
     </div>
-</div>
-
-<div class="modal-overlay" id="topUpModal">
-    <div class="modal-box"><div class="modal-content" id="topUpContent"><h3 style="margin: 0 0 5px 0;" data-i18n="selectAmt">Select Amount</h3><div class="topup-grid"><div class="topup-card" onclick="processTopUp(10)">+ 10</div><div class="topup-card" onclick="processTopUp(50)">+ 50</div><div class="topup-card" onclick="processTopUp(100)">+ 100</div><div class="topup-card" onclick="processTopUp(200)">+ 200</div><div class="topup-card" onclick="processTopUp(500)">+ 500</div><div class="topup-card" onclick="processTopUp(1000)">+ 1000</div></div></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" style="border:none;" data-i18n="cancel">Cancel</button></div></div>
 </div>
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
@@ -347,21 +428,22 @@
             <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:5px;"></div>
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent);" data-i18n="save">Upload</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="save">Upload</button></div>
     </div>
 </div>
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], userPurchases = [];
+    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
+    let currentTopupAmt = 500, currentTopupPrice = 850;
     
     // --- LANGUAGE SYSTEM ---
     const dict = {
-        en: { store: "Store", library: "Library", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Purchase History", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Your library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload" },
-        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "你的音乐库是空的。", previewLimit: "未登录仅可试听 30 秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传" }
+        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload" },
+        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无音乐。", previewLimit: "未登录仅可试听 30 秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -374,6 +456,7 @@
         if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
         if(currentSong) openSong(currentSong.id);
         if(document.getElementById('view-library').classList.contains('active')) renderLibrary();
+        if(document.getElementById('view-purchased').classList.contains('active')) renderPurchased();
         if(document.getElementById('view-vip').classList.contains('active')) renderVipCenter();
     }
 
@@ -396,7 +479,7 @@
         if(username) {
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
-                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; isUserVip = data.isVip || false;
+                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
                 updateTokenUI(); 
                 
                 const pfpUrl = data.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'%2386868b\\\'%3E%3Cpath d=\\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\\'/%3E%3C/svg%3E';
@@ -435,7 +518,6 @@
         
         renderGenres(); applyLang(); hideLoader();
 
-        // Restore View State
         const savedView = localStorage.getItem('djLastView');
         if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView);
         else switchView('home');
@@ -453,9 +535,11 @@
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         if(view === 'home' || view === 'genre' || view === 'song') document.getElementById('nav-store').classList.add('active');
         if(view === 'library') { document.getElementById('nav-library').classList.add('active'); renderLibrary(); }
+        if(view === 'purchased') { document.getElementById('nav-library').classList.add('active'); renderPurchased(); }
         if(view === 'vip') renderVipCenter();
+        if(view === 'history') renderHistory();
 
-        if(view === 'home' || view === 'library' || view === 'profile' || view === 'vip') localStorage.setItem('djLastView', view);
+        if(['home', 'library', 'profile', 'vip', 'topup', 'history', 'purchased'].includes(view)) localStorage.setItem('djLastView', view);
     }
 
     // --- CROPPER IMPLEMENTATION ---
@@ -518,28 +602,74 @@
         else { hideLoader(); showToast(await res.text(), true); }
     }
 
+    // --- TOPUP CENTER & HISTORY ---
+    function selectTopup(amt, bonus, price, el) {
+        document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active');
+        currentTopupAmt = amt + bonus; currentTopupPrice = price;
+        document.getElementById('topupTotalDisplay').innerText = `¥${price}`;
+    }
+    async function executeRealTopup() {
+        showLoader();
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice }) });
+        if(res.ok) { 
+            const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; 
+            updateTokenUI(); hideLoader(); showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); 
+        } else { hideLoader(); showToast("Top up failed", true); }
+    }
+
+    function renderHistory() {
+        const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
+        let combined = [];
+        userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price }));
+        userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName }));
+        combined.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
+
+        combined.forEach(item => {
+            if(item.type === 'topup') {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
+                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
+                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
+                        <div><div style="font-weight:bold;">RMB ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
+                    </div>`;
+            } else {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
+                        <div><div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">购买歌曲</div><div style="font-size:11px;color:var(--text-muted);">${item.name}</div></div>
+                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
+                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
+                    </div>`;
+            }
+        });
+    }
+
     // --- VIP CENTER ---
     let currentVipTab = 'APPROVED';
     function renderVipCenter() {
         if(!isUserVip) return;
         const mySongs = allSongs.filter(s => s.uploader === username);
-        
         let downloads = 0; let rev = 0;
         mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
-        document.getElementById('vipStatUp').innerText = mySongs.length;
-        document.getElementById('vipStatDl').innerText = downloads;
-        document.getElementById('vipStatRev').innerText = rev;
+        document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
 
-        ['APPROVED', 'PENDING', 'REJECTED', 'REMOVED'].forEach(status => {
+        ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
-            document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)]} (${count})`;
+            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
         });
         filterVipSongs(currentVipTab);
     }
 
     function filterVipSongs(status) {
-        currentVipTab = status; document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active')); document.getElementById(`vipTab-${status}`).classList.add('active');
+        currentVipTab = status; document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active')); 
+        if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).classList.add('active');
+        
         const listDiv = document.getElementById('vipSongList'); listDiv.innerHTML = '';
         const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
@@ -563,42 +693,24 @@
     function openVipUpload(isBatch) {
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
-        
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = '批量上传 (Batch Upload)'; }
-        else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = '上传音乐 (Upload Audio)'; }
-        
-        document.getElementById('vipFileCount').innerText = '';
-        fileInput.onchange = (e) => { document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
+        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = '批量上传 (Batch Upload)'; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = '上传音乐 (Upload Audio)'; }
+        document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = (e) => { document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
         document.getElementById('vipUploadModal').style.display = 'flex';
     }
-    
     function handleVipCover(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { pendingVipCover = ev.target.result; document.getElementById('vipCoverPreview').src = pendingVipCover; }; reader.readAsDataURL(file); }
 
     async function executeVipUpload() {
-        const files = document.getElementById('vipFileInput').files;
-        const titleBase = document.getElementById('vipTitleInput').value.trim();
-        const price = document.getElementById('vipPriceInput').value;
+        const files = document.getElementById('vipFileInput').files; const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value;
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        
-        if(!files.length) return errRow.innerText = "Please select MP3 file(s).";
-        if(!titleBase) return errRow.innerText = "Title is required.";
-        if(!pendingVipCover) return errRow.innerText = "Cover image is required.";
+        if(!files.length) return errRow.innerText = "Please select MP3 file(s)."; if(!titleBase) return errRow.innerText = "Title is required."; if(!pendingVipCover) return errRow.innerText = "Cover image is required.";
         
         showLoader();
         for(let i=0; i<files.length; i++) {
-            const fd = new FormData();
-            fd.append('mp3file', files[i]);
-            fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase);
-            fd.append('price', price);
-            fd.append('coverBase64', pendingVipCover);
-            fd.append('uploader', username); // Tags the file with the VIP user
-            fd.append('status', 'PENDING');  // Forces to Pending Queue
-            
+            const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('coverBase64', pendingVipCover); fd.append('uploader', username); fd.append('status', 'PENDING');  
             await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
         }
-        closeModals(); hideLoader(); showToast("Uploaded to Pending Queue!"); 
-        await init(); switchView('vip');
+        closeModals(); hideLoader(); showToast("Uploaded to Pending Queue!"); await init(); switchView('vip');
     }
 
     // --- GENRES & SONGS ---
@@ -606,7 +718,7 @@
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
             grid.innerHTML += `<div class="genre-card" onclick="openGenre('${g.id}', '${g.name}')"><img src="${cover}" class="genre-img"><div class="genre-overlay"><div class="genre-title">${g.name}</div></div></div>`;
         });
     }
@@ -618,8 +730,17 @@
         
         if(songs.length === 0) grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`;
         songs.forEach(s => {
-            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
-            grid.innerHTML += `<div class="song-card" onclick="openSong('${s.id}')"><img src="${cover}" class="song-cover"><div class="song-info"><div class="song-title" title="${s.filename}">${s.filename}</div><div class="song-tag"><span>FULKKIK</span> <span>💎 ${s.price||10}</span></div></div></div>`;
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+            grid.innerHTML += `
+                <div class="song-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}" class="song-cover">
+                    <div class="song-info">
+                        <div class="song-title" title="${s.filename}">${s.filename}</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
+                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
+                    </div>
+                </div>
+            `;
         });
         switchView('genre');
     }
@@ -629,8 +750,8 @@
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `FULKKIK • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
-        document.getElementById('playerCover').src = currentSong.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
+        document.getElementById('playerMeta').innerText = `FULLKIK • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
+        document.getElementById('playerCover').src = currentSong.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
         
         const price = currentSong.price || 10; const actionsDiv = document.getElementById('playerActions');
         if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download</a>`; } 
@@ -642,9 +763,19 @@
 
     function renderLibrary() {
         const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
+        if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
+        myUploads.forEach(s => {
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="font-weight: 500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
+        });
+    }
+
+    function renderPurchased() {
+        const listDiv = document.getElementById('purchasedList'); listDiv.innerHTML = '';
         if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         userPurchases.forEach(p => {
-            const cover = p.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
+            const cover = p.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="font-weight: 500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.songName}</div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="openSong('${p.songId}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
         });
     }
@@ -661,7 +792,6 @@
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    async function processTopUp(amount) { document.getElementById('topUpContent').innerHTML = `<div style="padding:40px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount }) }); if(res.ok) { userTokens = (await res.json()).tokens; updateTokenUI(); closeModals(); showToast(`Added ${amount} Tokens!`); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Top up failed", true); } }
     function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
     async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
