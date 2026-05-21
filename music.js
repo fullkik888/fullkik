@@ -96,7 +96,7 @@ app.post('/api/register', async (req, res) => {
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: 0, profilePic: '', purchases: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: 0, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact}`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -169,9 +169,26 @@ app.put('/api/users/:username/change-email', async (req, res) => { await db.coll
 app.put('/api/users/:username/change-phone', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ phone: req.body.newPhone }); res.send('Updated'); });
 app.put('/api/users/:username/set-tokens', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ tokens: parseInt(req.body.tokens) || 0 }); await logEvent('admin', `Modified token balance for <span style="font-weight:600;">${req.params.username}</span> to ${req.body.tokens}`); res.send('Updated'); });
 app.delete('/api/users/:username', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).delete(); await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); res.send('Deleted'); });
+
+// 🛠️ Updated Top-Up to track history
 app.post('/api/users/:username/topup', async (req, res) => {
-    const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
-    const newTokens = (doc.data().tokens || 0) + req.body.amount; await userRef.update({ tokens: newTokens }); res.json({ tokens: newTokens });
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
+        const user = doc.data();
+        const newTokens = (user.tokens || 0) + req.body.amount; 
+        
+        user.topups = user.topups || [];
+        user.topups.push({
+            id: Math.random().toString(36).substr(2, 10).toUpperCase(),
+            amount: req.body.amount,
+            cost: req.body.cost || 0,
+            currency: req.body.currency || 'RMB',
+            date: new Date().toISOString()
+        });
+
+        await userRef.update({ tokens: newTokens, topups: user.topups }); 
+        res.json({ tokens: newTokens, topups: user.topups });
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/users/:username/purchase', async (req, res) => {
@@ -238,7 +255,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
         size: fileBuffer.length, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'Admin'
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK'
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
 }
@@ -275,8 +292,8 @@ app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
-    if(!db) return res.json({ headerTitle: 'FULKKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
-    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULKKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
+    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
+    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
 });
 app.put('/api/settings', async (req, res) => { await db.collection('settings').doc('global').set({ headerTitle: req.body.headerTitle, heroTitle: req.body.heroTitle }, { merge: true }); res.send('Updated'); });
 
