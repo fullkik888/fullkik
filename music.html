@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FULLKIK</title>
     <style>
-        /* 🛠️ THEME UPDATED TO DARK MAROON */
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
@@ -41,10 +40,19 @@
         .hero { text-align: center; margin-bottom: 40px; }
         .hero h1 { font-size: 36px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 2px;}
         .hero p { color: var(--text-muted); font-size: 14px; margin: 0 0 30px 0;}
-        .search-bar { width: 100%; max-width: 600px; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box;}
+        
+        /* OVERLAY SEARCH BAR UI */
+        .search-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; z-index: 50;}
+        .search-bar { width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box;}
+        .search-results { position: absolute; top: 60px; left: 0; width: 100%; background: #1a1a24; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.8); max-height: 400px; overflow-y: auto; display: none; flex-direction: column; text-align: left;}
+        .search-results.show { display: flex; animation: popIn 0.2s;}
+        .search-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;}
+        .search-item:hover { background: rgba(255,255,255,0.05); }
+        .search-item-cover { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .search-item-title { font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;}
+        .search-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
         
         .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
-        
         .genre-card { aspect-ratio: 1; border-radius: 20px; position: relative; overflow: hidden; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);}
         .genre-card:hover { transform: translateY(-5px); box-shadow: 0 15px 40px rgba(128, 0, 0, 0.4); border-color: var(--accent); }
         .genre-img { width: 100%; height: 100%; object-fit: cover; }
@@ -56,7 +64,7 @@
         .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .song-info { padding: 15px; }
         .song-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
-        .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
+        .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
         .btn-back { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
@@ -113,8 +121,9 @@
         .vip-stat-val { font-size: 28px; font-weight: bold; }
         .vip-stat-lbl { font-size: 12px; color: var(--text-muted); }
         .vip-tabs { display: flex; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;}
-        .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none;}
+        .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none; transition: 0.2s;}
         .vip-tab.active { color: var(--accent-light); font-weight: bold; }
+        .vip-tab:hover { color: white; }
 
         .vip-upload-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
@@ -128,8 +137,8 @@
         .topup-pack .amt { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; color: var(--token);}
         .topup-pack .prc { font-size: 14px; color: var(--text-muted);}
 
-        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
-        .pay-btn { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
+        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
+        .pay-btn { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; min-width: 100px; text-align:center;}
         .pay-btn.active { border-color: var(--accent-light); color: white;}
 
         .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
@@ -161,7 +170,6 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
-        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
         .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
@@ -218,7 +226,10 @@
         <div class="hero">
             <h1 id="heroTitle">专属DJ节奏空间</h1>
             <p data-i18n="heroSub">专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品</p>
-            <input type="text" class="search-bar" id="mainSearch" placeholder="Search songs..." onkeypress="handleGlobalSearch(event)">
+            <div class="search-container">
+                <input type="text" class="search-bar" id="mainSearch" placeholder="Search songs..." oninput="handleGlobalSearch(event)">
+                <div class="search-results" id="searchResults"></div>
+            </div>
         </div>
         <div class="grid-layout" id="genreGrid"></div>
     </div>
@@ -268,40 +279,21 @@
             <h2 style="margin:0; cursor:pointer; color:var(--text-muted); font-size:18px;" onclick="switchView('history')" data-i18n="pHist">我的消费</h2>
         </div>
         
-        <div class="topup-grid-large">
-            <div class="topup-pack active" onclick="selectTopup(500, 200, 850, this)">
-                <div class="tag">限时优惠</div><div class="amt">💎 500 + 200</div><div class="prc">¥850</div>
-            </div>
-            <div class="topup-pack" onclick="selectTopup(400, 150, 680, this)">
-                <div class="tag">限时优惠</div><div class="amt">💎 400 + 150</div><div class="prc">¥680</div>
-            </div>
-            <div class="topup-pack" onclick="selectTopup(300, 100, 510, this)">
-                <div class="tag">限时优惠</div><div class="amt">💎 300 + 100</div><div class="prc">¥510</div>
-            </div>
-            <div class="topup-pack" onclick="selectTopup(200, 0, 340, this)">
-                <div class="amt" style="margin-top:25px;">💎 200</div><div class="prc">¥340</div>
-            </div>
-            <div class="topup-pack" onclick="selectTopup(100, 0, 170, this)">
-                <div class="amt" style="margin-top:25px;">💎 100</div><div class="prc">¥170</div>
-            </div>
-            <div class="topup-pack" onclick="selectTopup(50, 0, 85, this)">
-                <div class="amt" style="margin-top:25px;">💎 50</div><div class="prc">¥85</div>
-            </div>
+        <div class="pay-methods" style="justify-content:center; margin-bottom:20px;">
+            <button class="pay-btn active" id="currBtnRMB" onclick="setCurrency('RMB')">RMB</button>
+            <button class="pay-btn" id="currBtnMYR" onclick="setCurrency('MYR')">MYR</button>
         </div>
 
+        <div class="topup-grid-large" id="topupPackagesGrid"></div>
+
         <p style="font-size:12px; color:var(--text-muted);">支付方式</p>
-        <div class="pay-methods">
-            <button class="pay-btn active">RMB</button><button class="pay-btn">MYR</button>
-        </div>
-        <div class="pay-methods">
-            <button class="pay-btn">支付宝转账</button><button class="pay-btn">微联扫码</button><button class="pay-btn">微信原生</button>
-        </div>
+        <div class="pay-methods" id="paymentMethodsGrid"></div>
 
         <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
 
         <div class="topup-footer">
             <div style="color:var(--text-muted); font-size:14px;">总计</div>
-            <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥850</div>
+            <div style="font-size:24px; font-weight:bold; color:var(--accent-light);" id="topupTotalDisplay">¥850</div>
         </div>
         <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
     </div>
@@ -312,7 +304,9 @@
             <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pHist">我的消费</h2>
         </div>
         <div class="vip-tabs">
-            <button class="vip-tab active">全部</button><button class="vip-tab">购买历史</button><button class="vip-tab">消费记录</button>
+            <button class="vip-tab active" onclick="setHistoryTab('ALL')" id="histTab-ALL">全部</button>
+            <button class="vip-tab" onclick="setHistoryTab('PURCHASES')" id="histTab-PURCHASES">购买历史</button>
+            <button class="vip-tab" onclick="setHistoryTab('TOPUPS')" id="histTab-TOPUPS">充值记录</button>
         </div>
         <div class="hist-list" id="historyList"></div>
     </div>
@@ -394,8 +388,6 @@
     </div>
 </div>
 
-<audio id="mainAudio" preload="metadata"></audio>
-
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
 <div class="modal-overlay" id="cropModal">
@@ -412,7 +404,6 @@
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
 <div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
-<div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
 
 <div class="modal-overlay" id="vipUploadModal">
     <div class="modal-box">
@@ -441,7 +432,7 @@
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
-    let currentTopupAmt = 500, currentTopupPrice = 850;
+    let currentTopupAmt = 500, currentTopupPrice = 850; let currentCurrency = 'RMB';
     
     // --- LANGUAGE SYSTEM ---
     const dict = {
@@ -459,7 +450,6 @@
         if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
         if(currentSong) openSong(currentSong.id);
         
-        // Re-render active views safely
         try {
             const vLib = document.getElementById('view-library'); if(vLib && vLib.classList.contains('active')) renderLibrary();
             const vPur = document.getElementById('view-purchased'); if(vPur && vPur.classList.contains('active')) renderPurchased();
@@ -501,14 +491,9 @@
                         document.getElementById('vipRegSection').style.display = 'none';
                         document.getElementById('vipConfigSection').style.display = 'block';
                         document.getElementById('btnVipCenterTop').style.display = 'block';
-                        
                         document.getElementById('configWechat').value = data.wechat || '';
                         document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        
-                        if(data.wechatPublic && data.wechat) {
-                            document.getElementById('profileWechatDisplay').style.display = 'flex';
-                            document.getElementById('wechatIdText').innerText = data.wechat;
-                        }
+                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
                     } else {
                         document.getElementById('btnUpgradeTop').style.display = 'block';
                     }
@@ -525,14 +510,12 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            renderGenres(); applyLang(); 
-        } catch(e) {
-            console.error("Init Error:", e);
-        } finally {
+            renderGenres(); applyLang(); setCurrency('RMB');
+        } catch(e) { console.error("Init Error:", e); } 
+        finally {
             hideLoader();
             const savedView = localStorage.getItem('djLastView');
-            if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView);
-            else switchView('home');
+            if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
         }
     }
 
@@ -543,30 +526,59 @@
     function switchView(view) {
         audioEl.pause();
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        const targetView = document.getElementById(`view-${view}`);
-        if(targetView) targetView.classList.add('active');
+        const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         if(view === 'home' || view === 'genre' || view === 'song') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
-        if(view === 'library') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderLibrary(); }
-        if(view === 'purchased') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderPurchased(); }
+        if(view === 'library' || view === 'purchased') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); }
+        
+        if(view === 'library') renderLibrary();
+        if(view === 'purchased') renderPurchased();
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory();
 
         if(['home', 'library', 'profile', 'vip', 'topup', 'history', 'purchased'].includes(view)) localStorage.setItem('djLastView', view);
     }
 
+    // --- LIVE SEARCH OVERLAY ---
+    function handleGlobalSearch(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const resDiv = document.getElementById('searchResults');
+        if(query.length === 0) { resDiv.classList.remove('show'); return; }
+        
+        const filtered = allSongs.filter(s => s.status === 'APPROVED' && s.filename.toLowerCase().includes(query));
+        resDiv.innerHTML = '';
+        if(filtered.length === 0) { resDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found</div>`; }
+        
+        filtered.forEach(s => {
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+            const uploader = s.uploader || 'FULLKIK';
+            resDiv.innerHTML += `
+                <div class="search-item" onclick="document.getElementById('searchResults').classList.remove('show'); openSong('${s.id}')">
+                    <img src="${cover}" class="search-item-cover">
+                    <div style="flex:1; overflow:hidden;">
+                        <div class="search-item-title">${s.filename}</div>
+                        <div class="search-item-sub">${uploader}</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" style="width:20px; fill:var(--text-muted);"><path d="M8 5v14l11-7z"/></svg>
+                </div>`;
+        });
+        resDiv.classList.add('show');
+    }
+
+    // Hide search results if clicked outside
+    document.addEventListener('click', (e) => {
+        const resDiv = document.getElementById('searchResults');
+        if(resDiv && resDiv.classList.contains('show') && !e.target.closest('.search-container')) { resDiv.classList.remove('show'); }
+    });
+
     // --- CROPPER IMPLEMENTATION ---
     let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas'), ctx = cropCanvas.getContext('2d');
     let offsetX = 0, offsetY = 0, isDragging = false, startX, startY;
     
     function handlePfpSelect(event) {
-        const file = event.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => { 
-            cropImg.src = e.target.result; 
-            cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; };
-        };
+        const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
+        reader.onload = (e) => { cropImg.src = e.target.result; cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; }; };
         reader.readAsDataURL(file);
     }
     function drawCrop() {
@@ -598,30 +610,59 @@
         showLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
         if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideLoader(); showToast("Failed to upgrade", true); }
     }
-
     async function saveWechatConfig() {
         const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked;
         showLoader(); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
         if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { hideLoader(); showToast("Error saving", true); }
     }
-
     async function submitPasswordChange() {
         const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
         document.getElementById('errPw').innerText = '';
         if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
         if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
-
         showLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
         if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; hideLoader(); showToast("Password Updated!"); }
         else { hideLoader(); showToast(await res.text(), true); }
     }
 
     // --- TOPUP CENTER & HISTORY ---
+    const topupBase = [
+        {amt: 500, bns: 200, rmb: 850, myr: 550},
+        {amt: 400, bns: 150, rmb: 680, myr: 440},
+        {amt: 300, bns: 100, rmb: 510, myr: 330},
+        {amt: 200, bns: 0, rmb: 340, myr: 220},
+        {amt: 100, bns: 0, rmb: 170, myr: 110},
+        {amt: 50, bns: 0, rmb: 85, myr: 55}
+    ];
+
+    function setCurrency(curr) {
+        currentCurrency = curr;
+        document.getElementById('currBtnRMB').classList.toggle('active', curr === 'RMB');
+        document.getElementById('currBtnMYR').classList.toggle('active', curr === 'MYR');
+
+        const grid = document.getElementById('topupPackagesGrid'); grid.innerHTML = '';
+        topupBase.forEach((p, idx) => {
+            const price = curr === 'RMB' ? p.rmb : p.myr; const sym = curr === 'RMB' ? '¥' : 'RM';
+            grid.innerHTML += `
+                <div class="topup-pack ${idx === 0 ? 'active' : ''}" onclick="selectTopup(${p.amt}, ${p.bns}, ${price}, this)">
+                    ${p.bns > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${p.amt} + ${p.bns}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${p.amt}</div>`}
+                    <div class="prc">${sym}${price}</div>
+                </div>`;
+            if(idx === 0) { currentTopupAmt = p.amt + p.bns; currentTopupPrice = price; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
+        });
+
+        const methodsGrid = document.getElementById('paymentMethodsGrid');
+        if(curr === 'RMB') { methodsGrid.innerHTML = `<button class="pay-btn active">支付宝转账</button><button class="pay-btn">支付宝原生</button><button class="pay-btn">微联扫码</button><button class="pay-btn">微信京东</button><button class="pay-btn">微信原生</button>`; } 
+        else { methodsGrid.innerHTML = `<button class="pay-btn active">FPX 网上银行</button><button class="pay-btn">Touch 'n Go</button><button class="pay-btn">GrabPay</button><button class="pay-btn">Boost</button>`; }
+    }
+
     function selectTopup(amt, bonus, price, el) {
         document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active');
         currentTopupAmt = amt + bonus; currentTopupPrice = price;
-        document.getElementById('topupTotalDisplay').innerText = `¥${price}`;
+        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
     }
+
     async function executeRealTopup() {
         showLoader();
         const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice }) });
@@ -631,30 +672,43 @@
         } else { hideLoader(); showToast("Top up failed", true); }
     }
 
-    function renderHistory() {
+    let histFilter = 'ALL';
+    function setHistoryTab(tab) {
+        histFilter = tab;
+        document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(`histTab-${tab}`).classList.add('active');
+        renderHistoryList();
+    }
+
+    function renderHistory() { setHistoryTab('ALL'); }
+
+    function renderHistoryList() {
         const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
         let combined = [];
         userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price }));
-        userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName }));
+        userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
         combined.sort((a,b) => new Date(b.date) - new Date(a.date));
 
-        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
+        const filtered = combined.filter(item => { if(histFilter === 'ALL') return true; if(histFilter === 'PURCHASES' && item.type === 'buy') return true; if(histFilter === 'TOPUPS' && item.type === 'topup') return true; return false; });
 
-        combined.forEach(item => {
+        if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
+
+        filtered.forEach(item => {
             if(item.type === 'topup') {
                 listDiv.innerHTML += `
                     <div class="hist-row">
-                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
+                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--token);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
                         <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
                         <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
                         <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
-                        <div><div style="font-weight:bold;">RMB ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
+                        <div><div style="font-weight:bold;">${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
                     </div>`;
             } else {
+                const uploaderName = item.uploader || 'FULLKIK';
                 listDiv.innerHTML += `
                     <div class="hist-row">
                         <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
-                        <div><div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">购买歌曲</div><div style="font-size:11px;color:var(--text-muted);">${item.name}</div></div>
+                        <div style="overflow:hidden;"><div style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.name}">${item.name}</div><div style="font-size:11px;color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">UP: ${uploaderName}</div></div>
                         <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
                         <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
                         <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
@@ -750,7 +804,7 @@
                     <img src="${cover}" class="song-cover">
                     <div class="song-info">
                         <div class="song-title" title="${s.filename}">${s.filename}</div>
-                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">UP: ${s.uploader || 'FULLKIK'}</div>
                         <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
                     </div>
                 </div>
@@ -790,7 +844,22 @@
         if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         userPurchases.forEach(p => {
             const cover = p.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="font-weight: 500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.songName}</div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="openSong('${p.songId}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
+            // We find the uploader from allSongs, fallback to FULLKIK
+            const upName = allSongs.find(s => s.id === p.songId)?.uploader || 'FULLKIK';
+            listDiv.innerHTML += `
+                <div class="lib-row">
+                    <img src="${cover}" class="lib-cover">
+                    <div style="overflow:hidden;">
+                        <div style="font-weight: 500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.songName}</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">UP: ${upName}</div>
+                    </div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div>
+                    <div><button class="icon-btn" onclick="openSong('${p.songId}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+                    <div style="display:flex; align-items:center; gap: 5px;">
+                        <a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a>
+                        <button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
+                    </div>
+                </div>`;
         });
     }
 
@@ -801,12 +870,11 @@
     audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
     function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
-    function handleGlobalSearch(e) { if(e.key === 'Enter') { /* Global search implementation */ } }
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
-    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
+    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); switchView('topup'); }
+    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
     async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
 
