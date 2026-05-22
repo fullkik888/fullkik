@@ -65,7 +65,7 @@
 
 <div class="auth-container">
     <div id="loginView" class="view-section active">
-        <h2 data-i18n="loginTitle">欢迎来到FULL KIK</h2><p data-i18n="loginSub">Access your Personal DJ Portal</p>
+        <h2 data-i18n="loginTitle">欢迎来到FULL KIK</h2><p data-i18n="loginSub">进入专属DJ门户</p>
         <div class="input-group"><input type="text" id="loginContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
         <div class="input-group"><input type="password" id="loginPass" placeholder="Password" data-placeholder="passPH"></div>
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
@@ -117,7 +117,6 @@
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
     }
-    applyLang();
 
     function showToast(msg, isError = false) { 
         const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.classList.add('error');
@@ -156,6 +155,8 @@
         const res = await fetch(`${API_URL}/reset-password`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ token: currentResetToken, newPassword: newPass }) });
         if(res.ok) { showToast("Password updated!"); setTimeout(() => switchView('loginView'), 1500); } else showToast(await res.text(), true);
     }
+
+    document.addEventListener("DOMContentLoaded", () => { applyLang(); });
 </script>
 </body>
 </html>
