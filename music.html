@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FULLKIK</title>
     <style>
+        /* 🛠️ THEME UPDATED TO DARK MAROON & TEXT TRUNCATIONS */
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
@@ -46,7 +47,7 @@
         /* SEARCH DROPDOWN UI */
         .search-wrapper { position: relative; max-width: 600px; margin: 0 auto; }
         .search-bar { width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box;}
-        .search-dropdown { position: absolute; top: calc(100% + 10px); left: 0; width: 100%; background: #111116; border: 1px solid var(--border-color); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; text-align:left;}
+        .search-dropdown { position: absolute; top: calc(100% + 10px); left: 0; width: 100%; background: #1a1a24; border: 1px solid var(--border-color); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; text-align:left;}
         .search-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;}
         .search-item:hover { background: rgba(255,255,255,0.05); }
         .search-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -63,7 +64,7 @@
         .song-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .song-info { padding: 15px; }
-        .song-title { font-size: 15px; font-weight: 600; margin-bottom: 5px;}
+        .song-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
         .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
 
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
@@ -136,9 +137,14 @@
         .topup-pack .amt { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; color: var(--token);}
         .topup-pack .prc { font-size: 14px; color: var(--text-muted);}
 
-        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
-        .pay-btn { flex: 1; min-width: 80px; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
-        .pay-btn.active { border-color: var(--accent-light); color: white;}
+        .pay-methods-tabs { display: flex; gap: 10px; margin-bottom: 10px;}
+        .pay-tab { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight:bold;}
+        .pay-tab.active { border-color: var(--accent-light); color: white; background:rgba(128,0,0,0.2);}
+        
+        .pay-methods-grid { display: flex; gap: 10px; margin-bottom: 20px;}
+        .pay-grid-btn { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
+        .pay-grid-btn.active { border-color: var(--accent-light); color: white;}
+
         .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
         .promo-bar input { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
@@ -280,17 +286,17 @@
         
         <div class="topup-grid-large" id="topupGridRender"></div>
 
-        <p style="font-size:12px; color:var(--text-muted);">支付方式</p>
-        <div class="pay-methods">
-            <button class="pay-btn active" id="btnCurrRMB" onclick="setCurrency('RMB')">RMB</button>
-            <button class="pay-btn" id="btnCurrMYR" onclick="setCurrency('MYR')">MYR</button>
+        <p style="font-size:12px; color:var(--text-muted);">支付方式 (Payment Method)</p>
+        <div class="pay-methods-tabs">
+            <button class="pay-tab active" id="btnCurrRMB" onclick="setCurrency('RMB')">RMB</button>
+            <button class="pay-tab" id="btnCurrMYR" onclick="setCurrency('MYR')">MYR</button>
         </div>
-        <div class="pay-methods" id="payMethodList"></div>
+        <div class="pay-methods-grid" id="payMethodList"></div>
 
         <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
 
         <div class="topup-footer">
-            <div style="color:var(--text-muted); font-size:14px;">总计</div>
+            <div style="color:var(--text-muted); font-size:14px;">总计 (Total)</div>
             <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥0</div>
         </div>
         <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
@@ -426,16 +432,17 @@
 </div>
 
 <script>
+    // System Variables
     const API_URL = '/api';
     let allGenres = [], allSongs = [], userPurchases = [], userTopups = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
+    let currentTopupAmt = 500, currentTopupPrice = 850;
     
     // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
     let currentCurrency = 'RMB';
-    let currentTopupAmt = 500, currentTopupPrice = 850;
-    const EX_RATE = 0.65; // Approx RMB to MYR
+    const EX_RATE = 0.65; // Approx RMB to MYR conversion rate
     const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
 
     function setCurrency(curr) {
@@ -443,11 +450,9 @@
         document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
         document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
         
-        const methods = curr === 'RMB' 
-            ? ['支付宝转账', '微联扫码', '微信原生'] 
-            : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
-            
-        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
+        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-grid-btn ${i===0?'active':''}">${m}</button>`).join('');
+        
         renderTopupPacks();
     }
 
@@ -497,7 +502,7 @@
         } catch(e) {}
     }
 
-    function generateWaveform() { const wf = document.getElementById('waveform'); wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
+    function generateWaveform() { const wf = document.getElementById('waveform'); wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } }
     function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
@@ -521,25 +526,53 @@
         }
         drop.style.display = 'block';
     }
-    document.addEventListener('click', (e) => { if(!e.target.closest('.search-wrapper')) document.getElementById('searchResults').style.display = 'none'; });
+    // Close search dropdown on outside click
+    document.addEventListener('click', (e) => { if(!e.target.closest('.search-wrapper')) { const el = document.getElementById('searchResults'); if(el) el.style.display = 'none'; }});
 
-    // --- INITIALIZATION ---
+    // --- SYSTEM INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        generateWaveform();
+        init();
+    });
+
     async function init() {
         try {
+            const profileBtnEl = document.getElementById('profileBtn');
+            if(!username && profileBtnEl) { 
+                profileBtnEl.innerHTML = `<span style="padding: 2px 10px; font-weight: bold;" id="profileBtnText">Login</span>`;
+                profileBtnEl.onclick = (e) => { e.stopPropagation(); window.location.href = '/register.html'; };
+                document.getElementById('tokenUI').style.display = 'none'; document.getElementById('nav-library').style.display = 'none';
+            }
+
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
                     const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
+                    updateTokenUI(); 
                     
                     const pfpUrl = data.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'%2386868b\\\'%3E%3Cpath d=\\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\\'/%3E%3C/svg%3E';
-                    if(document.getElementById('profileBtnText')) { document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`; }
-                    document.getElementById('profileBannerPic').src = pfpUrl; document.getElementById('profileBannerName').innerText = username;
+                    if(document.getElementById('profileBtn')) {
+                        document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
+                    }
+                    if(document.getElementById('profileBannerPic')) document.getElementById('profileBannerPic').src = pfpUrl; 
+                    if(document.getElementById('profileBannerName')) document.getElementById('profileBannerName').innerText = username;
                     
                     if(isUserVip) {
-                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
-                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
-                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
+                        if(document.getElementById('profileBannerVipTag')) document.getElementById('profileBannerVipTag').style.display = 'inline-block'; 
+                        if(document.getElementById('vipRegSection')) document.getElementById('vipRegSection').style.display = 'none'; 
+                        if(document.getElementById('vipConfigSection')) document.getElementById('vipConfigSection').style.display = 'block'; 
+                        if(document.getElementById('btnVipCenterTop')) document.getElementById('btnVipCenterTop').style.display = 'block';
+                        
+                        if(document.getElementById('configWechat')) document.getElementById('configWechat').value = data.wechat || ''; 
+                        if(document.getElementById('configWechatPub')) document.getElementById('configWechatPub').checked = data.wechatPublic;
+                        
+                        if(data.wechatPublic && data.wechat && document.getElementById('profileWechatDisplay')) { 
+                            document.getElementById('profileWechatDisplay').style.display = 'flex'; 
+                            document.getElementById('wechatIdText').innerText = data.wechat; 
+                        }
+                    } else { 
+                        if(document.getElementById('btnUpgradeTop')) document.getElementById('btnUpgradeTop').style.display = 'block'; 
+                    }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
             }
             
@@ -548,7 +581,8 @@
 
             allGenres = await (await fetch(`${API_URL}/genres`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            setCurrency('RMB'); updateTokenUI(); renderGenres(); applyLang(); 
+            setCurrency('RMB'); // Init topup UI
+            renderGenres(); applyLang(); 
         } catch(e) { console.error("Init Error:", e); } finally {
             hideLoader();
             const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
@@ -760,14 +794,6 @@
         });
     }
 
-    // AUDIO LOGIC
-    const MAX_PREVIEW = 30;
-    audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-    audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= MAX_PREVIEW) { audioEl.pause(); audioEl.currentTime = MAX_PREVIEW; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
-    audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
-
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
@@ -775,8 +801,6 @@
     async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
 
-    // Init wrapped in DOMContentLoaded to prevent any race condition crash
-    document.addEventListener('DOMContentLoaded', () => { init(); });
 </script>
 </body>
 </html>
