@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FULLKIK - Portal</title>
+    <title>FULL KIK - Portal</title>
     <style>
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.7); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; color-scheme: dark; padding: 20px; box-sizing: border-box; overflow: hidden;}
@@ -101,7 +101,6 @@
 <script>
     const API_URL = '/api'; let currentResetToken = null;
     
-    // --- LANGUAGE SYSTEM ---
     const dict = {
         en: { loginTitle: "Welcome to FULL KIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "Successfully Registered", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
         cn: { loginTitle: "欢迎来到FULL KIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功", errFill: "请填写所有字段", errMatch: "密码不匹配" }
