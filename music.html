@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FULLKIK</title>
     <style>
-        /* 🛠️ THEME UPDATED TO DARK MAROON & TEXT TRUNCATIONS */
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
@@ -129,7 +128,7 @@
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
         .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
 
-        /* --- TOPUP CENTER --- */
+        /* --- TOPUP CENTER (NEW UI) --- */
         .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
         .topup-pack { background: #1a1a24; border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
         .topup-pack.active { border-color: var(--accent-light); background: rgba(128, 0, 0, 0.1); }
@@ -140,12 +139,14 @@
         .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
         .pay-btn { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
         .pay-btn.active { border-color: var(--accent-light); color: white;}
+
         .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
         .promo-bar input { flex: 1; background: #1a1a24; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
+
         .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
 
-        /* --- HISTORY LISTS --- */
+        /* --- HISTORY VIEW (NEW UI) --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a1a24; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
@@ -403,6 +404,7 @@
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
 <div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
+<div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
 
 <div class="modal-overlay" id="vipUploadModal">
     <div class="modal-box">
@@ -481,24 +483,25 @@
     function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
 
     function applyLang() {
-        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
-        document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
-        document.getElementById('mainSearch').placeholder = dict[currentLang].search;
-        if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
-        if(currentSong) openSong(currentSong.id);
-        
         try {
+            document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
+            document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
+            if(document.getElementById('mainSearch')) document.getElementById('mainSearch').placeholder = dict[currentLang].search;
+            if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
+            
+            if(currentSong) openSong(currentSong.id);
+            
             const vLib = document.getElementById('view-library'); if(vLib && vLib.classList.contains('active')) renderLibrary();
             const vPur = document.getElementById('view-purchased'); if(vPur && vPur.classList.contains('active')) renderPurchased();
             const vVip = document.getElementById('view-vip'); if(vVip && vVip.classList.contains('active')) renderVipCenter();
             const vHist = document.getElementById('view-history'); if(vHist && vHist.classList.contains('active')) renderHistory('ALL');
-        } catch(e) {}
+        } catch(e) { console.warn("ApplyLang Issue:", e); }
     }
 
-    function generateWaveform() { const wf = document.getElementById('waveform'); wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
-    function showLoader() { document.getElementById('globalLoader').style.display = 'flex'; }
-    function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
-    function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
+    function generateWaveform() { const wf = document.getElementById('waveform'); if(!wf) return; wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
+    function showLoader() { const lg = document.getElementById('globalLoader'); if(lg) lg.style.display = 'flex'; }
+    function hideLoader() { const lg = document.getElementById('globalLoader'); if(lg) lg.style.display = 'none'; }
+    function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
@@ -519,9 +522,7 @@
         }
         drop.style.display = 'block';
     }
-    // Close search dropdown on outside click
-    document.addEventListener('click', (e) => { if(!e.target.closest('.search-wrapper')) document.getElementById('searchResults').style.display = 'none'; });
-
+    document.addEventListener('click', (e) => { const sw = e.target.closest('.search-wrapper'); const res = document.getElementById('searchResults'); if(!sw && res) res.style.display = 'none'; });
 
     // --- INITIALIZATION ---
     async function init() {
@@ -533,38 +534,47 @@
                     updateTokenUI(); 
                     
                     const pfpUrl = data.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'%2386868b\\\'%3E%3Cpath d=\\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\\'/%3E%3C/svg%3E';
-                    if(document.getElementById('profileBtnText')) {
-                        document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
-                    }
-                    document.getElementById('profileBannerPic').src = pfpUrl; document.getElementById('profileBannerName').innerText = username;
+                    if(document.getElementById('profileBtn')) document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
+                    if(document.getElementById('profileBannerPic')) document.getElementById('profileBannerPic').src = pfpUrl; 
+                    if(document.getElementById('profileBannerName')) document.getElementById('profileBannerName').innerText = username;
                     
                     if(isUserVip) {
-                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
-                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
-                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
+                        if(document.getElementById('profileBannerVipTag')) document.getElementById('profileBannerVipTag').style.display = 'inline-block'; 
+                        if(document.getElementById('vipRegSection')) document.getElementById('vipRegSection').style.display = 'none'; 
+                        if(document.getElementById('vipConfigSection')) document.getElementById('vipConfigSection').style.display = 'block'; 
+                        if(document.getElementById('btnVipCenterTop')) document.getElementById('btnVipCenterTop').style.display = 'block';
+                        
+                        if(document.getElementById('configWechat')) document.getElementById('configWechat').value = data.wechat || ''; 
+                        if(document.getElementById('configWechatPub')) document.getElementById('configWechatPub').checked = data.wechatPublic;
+                        
+                        if(data.wechatPublic && data.wechat) {
+                            if(document.getElementById('profileWechatDisplay')) document.getElementById('profileWechatDisplay').style.display = 'flex'; 
+                            if(document.getElementById('wechatIdText')) document.getElementById('wechatIdText').innerText = data.wechat; 
+                        }
+                    } else { 
+                        if(document.getElementById('btnUpgradeTop')) document.getElementById('btnUpgradeTop').style.display = 'block'; 
+                    }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
             }
             
             const setRes = await fetch(`${API_URL}/settings`);
-            if(setRes.ok) { const settings = await setRes.json(); if(settings.headerTitle) document.getElementById('logoText').innerText = settings.headerTitle; if(settings.heroTitle) document.getElementById('heroTitle').innerText = settings.heroTitle; }
+            if(setRes.ok) { const settings = await setRes.json(); if(settings.headerTitle && document.getElementById('logoText')) document.getElementById('logoText').innerText = settings.headerTitle; if(settings.heroTitle && document.getElementById('heroTitle')) document.getElementById('heroTitle').innerText = settings.heroTitle; }
 
             allGenres = await (await fetch(`${API_URL}/genres`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            setCurrency('RMB'); // Init topup UI
-            renderGenres(); applyLang(); 
+            setCurrency('RMB'); renderGenres(); applyLang(); 
         } catch(e) { console.error("Init Error:", e); } finally {
             hideLoader();
             const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
         }
     }
 
-    function toggleDropdown(e) { if(username) { e.stopPropagation(); document.getElementById('profileDropdown').classList.toggle('show'); } }
+    function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
     function closeDropdowns(e) { const d = document.getElementById('profileDropdown'); if(d && d.classList.contains('show') && !e.target.closest('#profileBtn')) d.classList.remove('show'); }
     function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); window.location.href = '/register.html'; }
 
     function switchView(view) {
-        audioEl.pause(); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        if(audioEl) audioEl.pause(); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
@@ -578,15 +588,19 @@
     }
 
     // --- CROPPER IMPLEMENTATION ---
-    let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas'), ctx = cropCanvas.getContext('2d');
+    let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas');
+    let ctx = cropCanvas ? cropCanvas.getContext('2d') : null;
     let offsetX = 0, offsetY = 0, isDragging = false, startX, startY;
-    function handlePfpSelect(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { cropImg.src = e.target.result; cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; }; }; reader.readAsDataURL(file); }
-    function drawCrop() { ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value); const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom; const w = cropImg.width * scale; const h = cropImg.height * scale; if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0; if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h; ctx.drawImage(cropImg, offsetX, offsetY, w, h); }
-    document.getElementById('cropZoom').addEventListener('input', drawCrop);
-    cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
-    cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
+    
+    function handlePfpSelect(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { cropImg.src = e.target.result; cropImg.onload = () => { offsetX=0; offsetY=0; if(document.getElementById('cropZoom')) document.getElementById('cropZoom').value = 1; drawCrop(); if(document.getElementById('cropModal')) document.getElementById('cropModal').style.display='flex'; }; }; reader.readAsDataURL(file); }
+    function drawCrop() { if(!ctx) return; ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value); const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom; const w = cropImg.width * scale; const h = cropImg.height * scale; if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0; if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h; ctx.drawImage(cropImg, offsetX, offsetY, w, h); }
+    if(document.getElementById('cropZoom')) document.getElementById('cropZoom').addEventListener('input', drawCrop);
+    if(cropCanvas) {
+        cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
+        cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
+    }
 
-    async function executePfpCrop() { showLoader(); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } hideLoader(); }
+    async function executePfpCrop() { showLoader(); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { if(document.getElementById('profileBannerPic')) document.getElementById('profileBannerPic').src = base64; if(document.getElementById('headerProfilePic')) document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } hideLoader(); }
 
     // --- PERSONAL CENTER ACTIONS ---
     async function submitVipUpgrade() { const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim(); document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true; if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;} if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;} if(!pass) return; showLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) }); if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideLoader(); showToast("Failed to upgrade", true); } }
@@ -598,11 +612,11 @@
     // --- HISTORY UI ---
     function renderHistory(filter) {
         document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
-        if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
-        if(filter==='BUY') document.getElementById('histTabBUY').classList.add('active');
-        if(filter==='TOPUP') document.getElementById('histTabTOPUP').classList.add('active');
+        if(filter==='ALL' && document.getElementById('histTabALL')) document.getElementById('histTabALL').classList.add('active');
+        if(filter==='BUY' && document.getElementById('histTabBUY')) document.getElementById('histTabBUY').classList.add('active');
+        if(filter==='TOPUP' && document.getElementById('histTabTOPUP')) document.getElementById('histTabTOPUP').classList.add('active');
 
-        const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('historyList'); if(!listDiv) return; listDiv.innerHTML = '';
         let combined = [];
         if(filter==='ALL' || filter==='TOPUP') userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price, curr: t.currency }));
         if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
@@ -641,7 +655,10 @@
         let downloads = 0; let rev = 0;
         mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
-        document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
+        if(document.getElementById('vipStatUp')) document.getElementById('vipStatUp').innerText = mySongs.length; 
+        if(document.getElementById('vipStatDl')) document.getElementById('vipStatDl').innerText = downloads; 
+        if(document.getElementById('vipStatRev')) document.getElementById('vipStatRev').innerText = rev;
+
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
             if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
@@ -653,7 +670,7 @@
         currentVipTab = status; document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active')); 
         if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).classList.add('active');
         
-        const listDiv = document.getElementById('vipSongList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('vipSongList'); if(!listDiv) return; listDiv.innerHTML = '';
         const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
@@ -672,19 +689,28 @@
 
     let pendingVipCover = null;
     function openVipUpload(isBatch) {
-        pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E";
-        document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
+        pendingVipCover = null; if(document.getElementById('vipCoverPreview')) document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E";
+        if(document.getElementById('vipTitleInput')) document.getElementById('vipTitleInput').value = ''; 
+        if(document.getElementById('vipPriceInput')) document.getElementById('vipPriceInput').value = '10'; 
+        if(document.getElementById('vipErrRow')) document.getElementById('vipErrRow').innerText = '';
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = '批量上传 (Batch Upload)'; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = '上传音乐 (Upload Audio)'; }
-        document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = (e) => { document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
-        document.getElementById('vipUploadModal').style.display = 'flex';
+        if(fileInput) {
+            if(isBatch) { fileInput.multiple = true; if(document.getElementById('vipUpTitle')) document.getElementById('vipUpTitle').innerText = '批量上传 (Batch Upload)'; } else { fileInput.multiple = false; if(document.getElementById('vipUpTitle')) document.getElementById('vipUpTitle').innerText = '上传音乐 (Upload Audio)'; }
+            if(document.getElementById('vipFileCount')) document.getElementById('vipFileCount').innerText = ''; 
+            fileInput.onchange = (e) => { if(document.getElementById('vipFileCount')) document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
+        }
+        if(document.getElementById('vipUploadModal')) document.getElementById('vipUploadModal').style.display = 'flex';
     }
-    function handleVipCover(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { pendingVipCover = ev.target.result; document.getElementById('vipCoverPreview').src = pendingVipCover; }; reader.readAsDataURL(file); }
+    function handleVipCover(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { pendingVipCover = ev.target.result; if(document.getElementById('vipCoverPreview')) document.getElementById('vipCoverPreview').src = pendingVipCover; }; reader.readAsDataURL(file); }
 
     async function executeVipUpload() {
-        const files = document.getElementById('vipFileInput').files; const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value;
-        const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        if(!files.length) return errRow.innerText = "Please select MP3 file(s)."; if(!titleBase) return errRow.innerText = "Title is required."; if(!pendingVipCover) return errRow.innerText = "Cover image is required.";
+        const fileInput = document.getElementById('vipFileInput'); const files = fileInput ? fileInput.files : []; 
+        const titleBase = document.getElementById('vipTitleInput') ? document.getElementById('vipTitleInput').value.trim() : ''; 
+        const price = document.getElementById('vipPriceInput') ? document.getElementById('vipPriceInput').value : '10';
+        const errRow = document.getElementById('vipErrRow'); if(errRow) errRow.innerText = '';
+        if(!files.length) { if(errRow) errRow.innerText = "Please select MP3 file(s)."; return; } 
+        if(!titleBase) { if(errRow) errRow.innerText = "Title is required."; return; } 
+        if(!pendingVipCover) { if(errRow) errRow.innerText = "Cover image is required."; return; }
         
         showLoader();
         for(let i=0; i<files.length; i++) {
@@ -696,33 +722,35 @@
 
     // --- GENRES & SONGS ---
     function renderGenres() {
-        const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
+        const grid = document.getElementById('genreGrid'); if(!grid) return; grid.innerHTML = '';
         allGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
             const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
-            grid.innerHTML += `<div class="genre-card" onclick="openGenre('${g.id}', '${g.name}')"><img src="${cover}" class="genre-img"><div class="genre-overlay"><div class="genre-title">${g.name}</div></div></div>`;
+            grid.innerHTML += `<div class="genre-card" onclick="openGenre('${g.id}', '${g.name.replace(/'/g, "\\'")}')"><img src="${cover}" class="genre-img"><div class="genre-overlay"><div class="genre-title">${g.name}</div></div></div>`;
         });
     }
 
     function openGenre(id, name) {
-        currentGenreId = id; document.getElementById('genreViewTitle').innerText = name;
-        const grid = document.getElementById('genreSongGrid'); grid.innerHTML = '';
+        currentGenreId = id; if(document.getElementById('genreViewTitle')) document.getElementById('genreViewTitle').innerText = name;
+        const grid = document.getElementById('genreSongGrid'); if(!grid) return; grid.innerHTML = '';
         const songs = allSongs.filter(s => s.genreId === id && s.status === 'APPROVED'); 
         
-        if(songs.length === 0) grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`;
-        songs.forEach(s => {
-            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
-            grid.innerHTML += `
-                <div class="song-card" onclick="openSong('${s.id}')">
-                    <img src="${cover}" class="song-cover">
-                    <div class="song-info">
-                        <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
-                        <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
-                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
+        if(songs.length === 0) { grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`; }
+        else {
+            songs.forEach(s => {
+                const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+                grid.innerHTML += `
+                    <div class="song-card" onclick="openSong('${s.id}')">
+                        <img src="${cover}" class="song-cover">
+                        <div class="song-info">
+                            <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
+                            <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
+                            <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
+                        </div>
                     </div>
-                </div>
-            `;
-        });
+                `;
+            });
+        }
         switchView('genre');
     }
 
@@ -730,20 +758,27 @@
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
         
-        document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `FULLKIK • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
-        document.getElementById('playerCover').src = currentSong.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+        if(document.getElementById('playerTitle')) document.getElementById('playerTitle').innerText = currentSong.filename;
+        if(document.getElementById('playerMeta')) document.getElementById('playerMeta').innerText = `FULLKIK • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
+        if(document.getElementById('playerCover')) document.getElementById('playerCover').src = currentSong.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
         
         const price = currentSong.price || 10; const actionsDiv = document.getElementById('playerActions');
-        if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download</a>`; } 
-        else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
+        if(actionsDiv) {
+            if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download</a>`; } 
+            else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
+        }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        if(audioEl) {
+            audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; 
+            if(document.getElementById('playerPlayBtn')) document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; 
+            if(document.getElementById('playerSeek')) document.getElementById('playerSeek').value = 0; 
+            if(document.getElementById('playerProg')) document.getElementById('playerProg').style.width = '0%';
+        }
         switchView('song');
     }
 
     function renderLibrary() {
-        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('libraryList'); if(!listDiv) return; listDiv.innerHTML = '';
         const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
         if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         myUploads.forEach(s => {
@@ -753,7 +788,7 @@
     }
 
     function renderPurchased() {
-        const listDiv = document.getElementById('purchasedList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('purchasedList'); if(!listDiv) return; listDiv.innerHTML = '';
         if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         userPurchases.forEach(p => {
             const cover = p.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
@@ -762,19 +797,21 @@
     }
 
     // AUDIO LOGIC
-    const MAX_PREVIEW = 30;
-    audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-    audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= MAX_PREVIEW) { audioEl.pause(); audioEl.currentTime = MAX_PREVIEW; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
-    audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
+    if(audioEl) {
+        const MAX_PREVIEW = 30;
+        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; if(document.getElementById('playerDur')) document.getElementById('playerDur').innerText = formatTime(displayDur); if(document.getElementById('playerSeek')) document.getElementById('playerSeek').max = displayDur; });
+        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= MAX_PREVIEW) { audioEl.pause(); audioEl.currentTime = MAX_PREVIEW; if(document.getElementById('playerPlayBtn')) document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } if(document.getElementById('playerCurr')) document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); if(document.getElementById('playerSeek')) document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; if(document.getElementById('playerProg')) document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
+        audioEl.addEventListener('ended', () => { if(document.getElementById('playerPlayBtn')) document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; if(document.getElementById('playerSeek')) document.getElementById('playerSeek').value = 0; if(document.getElementById('playerProg')) document.getElementById('playerProg').style.width = "0%"; });
+    }
+    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(!audioEl || !btn) return; if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
+    function seekPlayerAudio(val) { if(!audioEl) return; if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
-    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
-    async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
-    function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
+    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); if(document.getElementById('topUpModal')) document.getElementById('topUpModal').style.display = 'flex'; }
+    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); if(document.getElementById('purchaseContent')) document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; if(document.getElementById('purchaseActions')) document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; if(document.getElementById('purchaseModal')) document.getElementById('purchaseModal').style.display = 'flex'; }
+    async function executePurchase(songId, songName, filepath, price) { if(document.getElementById('purchaseContent')) document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; if(document.getElementById('purchaseActions')) document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); if(document.getElementById('successPurchaseModal')) document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
+    function showInfo(purchaseId, dateStr, cost) { if(document.getElementById('infoId')) document.getElementById('infoId').innerText = purchaseId || "N/A"; if(document.getElementById('infoDate')) document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; if(document.getElementById('infoCost')) document.getElementById('infoCost').innerText = cost || "0"; if(document.getElementById('infoModal')) document.getElementById('infoModal').style.display = 'flex'; }
 
     init();
 </script>
