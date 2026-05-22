@@ -176,7 +176,8 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
         const topups = user.topups || [];
-        topups.push({ amount: req.body.amount, price: req.body.price || 0, date: new Date().toISOString() });
+        // 🛠️ Record currency used in backend log
+        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
         res.json({ tokens: newTokens, topups: topups });
@@ -195,7 +196,13 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.tokens >= price) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            user.purchases.push({ songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() });
+            
+            // 🛠️ Store the uploader of the song in the purchase history so the frontend can display it
+            user.purchases.push({ 
+                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
+                uploader: song.uploader || 'FULLKIK', 
+                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+            });
             
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
