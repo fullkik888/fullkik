@@ -1,4 +1,4 @@
-require('dotenv').config();
+ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -68,7 +68,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b0b; background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; } p { color: #a0a0a0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-block; }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(20, 20, 35, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #ff453a; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-block; }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -176,6 +176,7 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
         const topups = user.topups || [];
+        // 🛠️ Record currency used in backend log
         topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
@@ -195,7 +196,13 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.tokens >= price) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            user.purchases.push({ songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, uploader: song.uploader || 'FULLKIK', tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() });
+            
+            // 🛠️ Store the uploader of the song in the purchase history so the frontend can display it
+            user.purchases.push({ 
+                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
+                uploader: song.uploader || 'FULLKIK', 
+                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+            });
             
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
