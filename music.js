@@ -29,7 +29,6 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
-    console.log('✅ Cloudinary Storage Connected!');
 }
 
 const upload = multer({ 
@@ -68,15 +67,14 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b0b; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; } p { color: #a0a0a0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-block; }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-block; }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
         if (!songDoc.exists) return res.status(404).send('Song not found');
-        const fileUrl = songDoc.data().filepath;
-
+        
         const fetchHeaders = {}; if (req.headers.range) fetchHeaders.Range = req.headers.range;
-        const response = await fetch(fileUrl, { headers: fetchHeaders });
+        const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
         if (!response.ok) throw new Error('Cloudinary fetch failed');
 
         const contentType = response.headers.get('content-type'); const contentLength = response.headers.get('content-length'); const contentRange = response.headers.get('content-range'); const acceptRanges = response.headers.get('accept-ranges');
@@ -87,7 +85,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
+// --- AUTH & USERS (With Registration Reward Engine) ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -95,9 +93,24 @@ app.post('/api/register', async (req, res) => {
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
+        
+        // Check Global Settings for active Registration Reward
+        const sysDoc = await db.collection('settings').doc('global').get();
+        let startTokens = 0;
+        if(sysDoc.exists) {
+            const sysData = sysDoc.data();
+            if(sysData.activity && sysData.activity.enabled) {
+                startTokens = parseInt(sysData.activity.reward) || 0;
+                const act = sysData.activity;
+                act.count = (act.count || 0) + 1;
+                act.total = (act.total || 0) + startTokens;
+                await db.collection('settings').doc('global').update({ activity: act });
+            }
+        }
+
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: 0, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
-        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact}`);
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -252,7 +265,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
         size: fileBuffer.length, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK'
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
 }
@@ -277,6 +290,7 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
         if (req.body.status) updates.status = req.body.status; 
         if (req.body.genreId) updates.genreId = req.body.genreId;
+        if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
         if (req.body.coverBase64) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
         await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
@@ -289,10 +303,19 @@ app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
-    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
-    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '' });
+    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
+    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
 });
-app.put('/api/settings', async (req, res) => { await db.collection('settings').doc('global').set({ headerTitle: req.body.headerTitle, heroTitle: req.body.heroTitle }, { merge: true }); res.send('Updated'); });
+app.put('/api/settings', async (req, res) => { 
+    try {
+        let updates = {};
+        if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
+        if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
+        if (req.body.activity !== undefined) updates.activity = req.body.activity;
+        await db.collection('settings').doc('global').set(updates, { merge: true }); 
+        res.send('Updated'); 
+    } catch(e) { res.status(500).send(e.message); }
+});
 
 app.get('/api/logs/:type', async (req, res) => {
     try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); }
