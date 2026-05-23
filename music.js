@@ -85,7 +85,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS (With Registration Reward Engine) ---
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -94,23 +94,20 @@ app.post('/api/register', async (req, res) => {
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
         
-        // Check Global Settings for active Registration Reward
         const sysDoc = await db.collection('settings').doc('global').get();
         let startTokens = 0;
         if(sysDoc.exists) {
             const sysData = sysDoc.data();
             if(sysData.activity && sysData.activity.enabled) {
                 startTokens = parseInt(sysData.activity.reward) || 0;
-                const act = sysData.activity;
-                act.count = (act.count || 0) + 1;
-                act.total = (act.total || 0) + startTokens;
+                const act = sysData.activity; act.count = (act.count || 0) + 1; act.total = (act.total || 0) + startTokens;
                 await db.collection('settings').doc('global').update({ activity: act });
             }
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
-        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, status: 'ACTIVE', profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact}`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -120,7 +117,10 @@ app.post('/api/login', async (req, res) => {
         const { contact, password } = req.body;
         let uDoc = await db.collection('users').doc(contact.toLowerCase()).get();
         if (!uDoc.exists) { const q = await db.collection('users').where('contact', '==', contact).get(); if(!q.empty) uDoc = q.docs[0]; }
-        if (uDoc && uDoc.data()?.password === password) res.json({ success: true, username: uDoc.data().username }); else res.status(400).send('Invalid credentials.');
+        if (uDoc && uDoc.data()?.password === password) {
+            if(uDoc.data().status === 'BANNED') return res.status(403).send('ACCOUNT BANNED');
+            res.json({ success: true, username: uDoc.data().username });
+        } else res.status(400).send('Invalid credentials.');
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -131,6 +131,48 @@ app.get('/api/users/:username', async (req, res) => {
 
 app.get('/api/all-users', async (req, res) => { try { res.json((await db.collection('users').get()).docs.map(d => d.data())); } catch (e) { res.status(500).json([]); }});
 
+// --- ADMIN USER MANAGEMENT ENDPOINTS ---
+app.put('/api/users/:username/status', async (req, res) => {
+    try {
+        const { status, reason } = req.body;
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: status, banReason: reason || '' });
+        await logEvent('admin', `${status === 'BANNED' ? 'Banned' : 'Unbanned'} user: <span style="font-weight:600;">${req.params.username}</span>`);
+        res.send('Status updated');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/role', async (req, res) => {
+    try {
+        const { isVip } = req.body;
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: isVip });
+        await logEvent('admin', `Changed role for <span style="font-weight:600;">${req.params.username}</span> to ${isVip ? 'VIP' : 'NORMAL'}`);
+        res.send('Role updated');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/adjust-tokens', async (req, res) => {
+    try {
+        const { amount, reason } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        const newTokens = Math.max(0, (doc.data().tokens || 0) + parseInt(amount));
+        await userRef.update({ tokens: newTokens });
+        await logEvent('admin', `Adjusted tokens for <span style="font-weight:600;">${req.params.username}</span> by ${amount}. Reason: ${reason}`);
+        res.json({ tokens: newTokens });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/admin-reset-password', async (req, res) => {
+    try {
+        let { newPassword } = req.body;
+        if(!newPassword) newPassword = Math.random().toString(36).slice(-8);
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: newPassword });
+        await logEvent('admin', `Reset password for <span style="font-weight:600;">${req.params.username}</span>`);
+        res.json({ newPassword });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+// Regular User Routes
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -180,7 +222,6 @@ app.put('/api/users/:username/change-username', async (req, res) => {
 
 app.put('/api/users/:username/change-email', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ email: req.body.newEmail }); res.send('Updated'); });
 app.put('/api/users/:username/change-phone', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ phone: req.body.newPhone }); res.send('Updated'); });
-app.put('/api/users/:username/set-tokens', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ tokens: parseInt(req.body.tokens) || 0 }); await logEvent('admin', `Modified token balance for <span style="font-weight:600;">${req.params.username}</span> to ${req.body.tokens}`); res.send('Updated'); });
 app.delete('/api/users/:username', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).delete(); await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); res.send('Deleted'); });
 
 app.post('/api/users/:username/topup', async (req, res) => {
