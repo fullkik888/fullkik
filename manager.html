@@ -11,6 +11,7 @@
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
+        /* SIDEBAR */
         .sidebar { width: 220px; background-color: var(--bg-dark); display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid var(--border-color); overflow-y: auto;}
         .sidebar-header { padding: 30px 20px; }
         .sidebar-logo { font-size: 18px; font-weight: 800; letter-spacing: 1px; color: white; display: flex; flex-direction: column;}
@@ -41,7 +42,7 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .dash-header { margin-bottom: 25px; }
+        .dash-header { margin-bottom: 25px; display:flex; justify-content:space-between; align-items:flex-end;}
         .dash-header h2 { margin: 0 0 5px 0; font-size: 24px;}
         .dash-header p { margin: 0; font-size: 12px; color: var(--text-muted);}
 
@@ -66,16 +67,18 @@
         .chart-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; height: 350px;}
 
         .glass-panel { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; overflow: hidden;}
-        .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;}
+        .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size:14px; font-weight:bold;}
         .btn-primary { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px; transition: 0.2s;}
         .btn-primary:hover { background: var(--accent-light); }
         
         .filter-bar { display: flex; gap: 15px; padding: 20px; background: rgba(0,0,0,0.2); flex-wrap: wrap; align-items: flex-end;}
         .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px;}
         .filter-group label { font-size: 12px; color: var(--text-muted); }
-        .input-text, .select-box { padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; background: var(--bg-dark); color: white; outline: none;}
+        .input-text, .select-box { padding: 10px 15px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; background: var(--bg-dark); color: white; outline: none; transition:0.2s;}
+        .input-text:focus, .select-box:focus { border-color: var(--accent-light); }
         .btn-filter { background: var(--accent); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;}
         
+        /* TABLE STYLES */
         .table-container { width: 100%; overflow-x: auto; }
         .table-inner { min-width: 900px; }
         .header-row { display: grid; padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 12px; font-weight: bold; color: var(--text-muted); background: rgba(0,0,0,0.2);}
@@ -86,7 +89,8 @@
         .grid-logs { grid-template-columns: 40px 1fr 180px; }
         .grid-songs-complex { grid-template-columns: 40px 40px 3fr 100px 100px 60px 80px 80px 100px 100px 60px; gap: 10px;}
         .grid-pending { grid-template-columns: 40px 40px 3fr 120px 100px 120px 140px; gap: 10px;}
-        .grid-detail-hist { grid-template-columns: 150px 100px 100px 100px 100px; }
+        .grid-user-topup { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
+        .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
         
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -98,14 +102,16 @@
         .clickable-cell { padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;}
         .clickable-cell:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
         
-        .btn-text-action { background: none; border: none; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s;}
+        .btn-text-action { background: none; border: none; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; white-space:nowrap;}
         .btn-text-action:hover { color: white; }
         .btn-text-action.danger { color: var(--danger); border: 1px solid rgba(255,69,58,0.3); border-radius: 4px; padding: 2px 6px; background: rgba(255,69,58,0.1); margin-top:2px;}
+        .btn-text-action.success { color: var(--success); border: 1px solid rgba(52,199,89,0.3); border-radius: 4px; padding: 2px 6px; background: rgba(52,199,89,0.1); margin-top:2px;}
 
         .badge-role { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;}
         .badge-role.normal { border: 1px solid #444; background: #222; color: #ccc;}
         .badge-role.vip { border: 1px solid #ffcc00; background: rgba(255, 204, 0, 0.1); color: #ffcc00;}
         .badge-status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid var(--success); color: var(--success); background: rgba(52, 199, 89, 0.1);}
+        .badge-status.banned { border-color: var(--danger); color: var(--danger); background: rgba(255, 69, 58, 0.1); }
         
         .badge-vip { font-size: 10px; font-weight: 800; color: white; line-height: 1.2;}
         .badge-vip span { display: inline-block; border: 1px solid var(--accent-light); color: var(--accent-light); padding: 1px 4px; border-radius: 2px; font-size: 9px; margin-top: 2px;}
@@ -140,16 +146,14 @@
         .page-info { background:var(--bg-dark); border:1px solid var(--accent); color:var(--text-main); padding:6px 15px; border-radius:4px; font-weight:bold; }
         .page-size-sel { background:var(--bg-dark); color:white; border:1px solid var(--border-color); padding:4px; border-radius:4px; outline:none; }
 
-        /* --- USER DETAIL UI (Pictures 1 & 2) --- */
-        .detail-card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); padding: 25px; margin-bottom: 20px;}
-        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;}
-        .detail-stats-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-top: 20px; border-top:1px solid var(--border-color); padding-top:20px;}
-        .stat-item { display: flex; flex-direction: column; gap: 8px;}
-        .stat-item-label { font-size: 11px; color: var(--text-muted); }
-        .stat-item-value { font-size: 14px; font-weight: bold; color: white;}
-        .mgmt-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px;}
-        .mgmt-col { display: flex; flex-direction: column; gap: 15px;}
-        .mgmt-col h4 { margin: 0 0 10px 0; font-size: 14px;}
+        /* --- USER DETAIL VIEW --- */
+        .user-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; background:var(--bg-dark); border:1px solid var(--border-color); padding:20px; border-radius:8px; margin-bottom:20px;}
+        .u-stat-box { display:flex; flex-direction:column; gap:5px; }
+        .u-stat-lbl { font-size:11px; color:var(--text-muted); }
+        .u-stat-val { font-size:14px; font-weight:bold; color:white; }
+        
+        .admin-action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 20px;}
+        .admin-col { display:flex; flex-direction:column; gap:10px; }
 
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s; z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .toast.show { transform: translateX(-50%) translateY(0); }
@@ -158,12 +162,13 @@
         .modal-box { background: var(--bg-main); width: 100%; max-width: 360px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.2s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; text-align: left; }
-        .modal-input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: #0b0b10; color: white; margin-top: 5px; margin-bottom: 15px;}
+        .modal-input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: #0b0b10; color: white; margin-top: 5px; margin-bottom: 15px; transition:0.2s;}
+        .modal-input:focus { border-color:var(--accent-light); }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 14px; border: none; background: transparent; font-size: 14px; cursor: pointer; color: var(--text-main); font-weight: 500; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .btn-danger-full { width: 100%; background: rgba(255, 69, 58, 0.1); color: var(--danger); border: 1px solid rgba(255, 69, 58, 0.3); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s;}
-
+        
         .apple-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -184,8 +189,8 @@
             .grid-users { grid-template-columns: 120px 150px 100px 100px; } 
             .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
             .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
-            .detail-stats-grid { grid-template-columns: repeat(3, 1fr); }
-            .mgmt-grid { grid-template-columns: 1fr; gap: 20px;}
+            .admin-action-grid { grid-template-columns: 1fr; }
+            .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
@@ -195,13 +200,8 @@
 <div id="toast" class="toast"></div>
 
 <div class="sidebar">
-    <div class="sidebar-header">
-        <div class="sidebar-logo">FULLKIK Admin<span>管理后台</span></div>
-    </div>
-    
-    <div class="nav-section">
-        <button class="nav-item active" onclick="switchView('dashboard', '总览')" id="nav-dashboard">◆ 总览</button>
-    </div>
+    <div class="sidebar-header"><div class="sidebar-logo">FULLKIK Admin<span>管理后台</span></div></div>
+    <div class="nav-section"><button class="nav-item active" onclick="switchView('dashboard', '总览')" id="nav-dashboard">◆ 总览</button></div>
 
     <div class="nav-section">
         <div class="nav-title">内容</div>
@@ -231,8 +231,8 @@
 
     <div class="nav-section">
         <div class="nav-title">财务</div>
-        <button class="nav-item" onclick="switchView('data', '交易记录')" id="nav-data">◇ 交易记录</button>
-        <button class="nav-item" onclick="switchView('logs', '充值订单')" id="nav-logs">$ 充值订单</button>
+        <button class="nav-item" onclick="switchView('wip', '交易记录')" id="nav-data">◇ 交易记录</button>
+        <button class="nav-item" onclick="switchView('logs', '系统日志')" id="nav-logs">$ 系统日志</button>
     </div>
 </div>
 
@@ -241,7 +241,6 @@
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
-            <button class="btn-top">EN</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
     </div>
@@ -254,7 +253,6 @@
             <div class="stat-card"><div class="stat-title">平台总收入 (💎 消耗)</div><div class="stat-val" id="stat-total-rev">0 <span style="font-size:16px; color:var(--token);">💎</span></div><div class="stat-sub" style="color: var(--token);">VIP 已分成 0 💎</div></div>
             <div class="stat-card"><div class="stat-title">待审提现</div><div class="stat-val" style="color: #ffcc00;">0</div><div class="stat-sub">等待审核</div></div>
         </div>
-
         <div class="ops-panel">
             <div class="ops-header">今日运营 <span style="color:#666; font-weight:normal; margin-left:10px;">/ 对比昨日</span></div>
             <div class="ops-grid">
@@ -267,10 +265,7 @@
                 <div class="ops-item"><div class="ops-item-title">新增歌曲</div><div class="ops-item-val" id="ops-songs-today" style="color:var(--danger)">0</div><div class="ops-item-sub">昨日 0</div></div>
             </div>
         </div>
-
-        <div class="chart-grid">
-            <div class="chart-card"><canvas id="chartSongs"></canvas></div><div class="chart-card"><canvas id="chartUsers"></canvas></div>
-        </div>
+        <div class="chart-grid"><div class="chart-card"><canvas id="chartSongs"></canvas></div><div class="chart-card"><canvas id="chartUsers"></canvas></div></div>
     </div>
 
     <div id="view-wip" class="view-section"><div style="display:flex; height:100%; align-items:center; justify-content:center; color:var(--text-muted); font-size:20px; font-weight:500;">此页正在开发中...</div></div>
@@ -278,18 +273,13 @@
     <div id="view-activity" class="view-section">
         <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
         <div class="glass-panel" style="padding:20px;">
-            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;">
-                <div>全部活动</div><div>共 1 个活动</div>
-            </div>
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>全部活动</div><div>共 1 个活动</div></div>
             <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
                 <div style="color:var(--text-muted); font-size:12px;">#1</div>
                 <div style="flex:1;">
                     <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
                     <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center;">
-                        <span>注册赠送 · 💎 <span id="act-reward">10</span></span>
-                        <span>·</span><span>已发放 <span id="act-count">0</span> 次</span>
-                        <span>·</span><span>共发出 <span id="act-total">0</span> 💎</span>
-                        <span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
+                        <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px;">
@@ -314,15 +304,8 @@
         <div class="dash-header"><h2>待审队列</h2><p>共 <span id="pending-count-text">0</span> 首待审核</p></div>
         <div class="glass-panel">
             <div class="filter-bar" style="justify-content:space-between; padding:15px;">
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <label style="display:flex; align-items:center; gap:5px; color:white;"><input type="checkbox" id="selectAllPending" onchange="toggleAllPending()"> 全选</label>
-                    <span style="font-size:12px; color:var(--text-muted)">已选 <span id="sel-pend-count" style="font-weight:bold; color:white;">0</span> 首</span>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="bulkRejectReason" placeholder="批量驳回原因(必填)" class="input-text" style="padding:6px 12px; height:32px;">
-                    <button class="btn-primary" style="background:var(--success); height:32px; padding:0 15px;" onclick="bulkApprove()">批量通过</button>
-                    <button class="btn-primary" style="background:var(--danger); height:32px; padding:0 15px;" onclick="bulkReject()">批量驳回</button>
-                </div>
+                <div style="display:flex; align-items:center; gap:15px;"><label style="display:flex; align-items:center; gap:5px; color:white;"><input type="checkbox" id="selectAllPending" onchange="toggleAllPending()"> 全选</label><span style="font-size:12px; color:var(--text-muted)">已选 <span id="sel-pend-count" style="font-weight:bold; color:white;">0</span> 首</span></div>
+                <div style="display:flex; gap:10px;"><input type="text" id="bulkRejectReason" placeholder="批量驳回原因(必填)" class="input-text" style="padding:6px 12px; height:32px;"><button class="btn-primary" style="background:var(--success); height:32px; padding:0 15px;" onclick="bulkApprove()">批量通过</button><button class="btn-primary" style="background:var(--danger); height:32px; padding:0 15px;" onclick="bulkReject()">批量驳回</button></div>
             </div>
             <div class="table-container">
                 <div class="table-inner">
@@ -370,79 +353,87 @@
             </div>
         </div>
     </div>
-    
+
     <div id="view-user-detail" class="view-section">
-        <div class="detail-header">
-            <div>
-                <h1 style="margin:0 0 5px 0; font-size:28px;" id="det-username">Username</h1>
-                <div style="color:var(--text-muted); font-size:13px;" id="det-email">email@example.com</div>
-            </div>
-            <button class="btn-top" onclick="switchView('users')">← 返回列表</button>
+        <div class="dash-header" style="justify-content:space-between; align-items:flex-start;">
+            <div><h2 id="det-u-name" style="margin:0; font-size:28px;">Username</h2><p id="det-u-email" style="margin-top:5px;"></p></div>
+            <button class="btn-text-action" onclick="backToUserList()">← 返回列表</button>
         </div>
         
-        <div class="detail-card">
-            <div class="detail-stats-grid" id="det-stats"></div>
+        <div class="user-detail-grid">
+            <div class="u-stat-box"><div class="u-stat-lbl">角色</div><div class="u-stat-val" id="det-u-role">NORMAL</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">状态</div><div class="u-stat-val" id="det-u-status">ACTIVE</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">等级</div><div class="u-stat-val">—</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">钻石余额</div><div class="u-stat-val" style="color:var(--token);">💎 <span id="det-u-tokens">0</span></div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">累计收入</div><div class="u-stat-val" style="color:var(--token);">💎 0</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">可提现</div><div class="u-stat-val" style="color:var(--token);">💎 0</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">充值 / 购买</div><div class="u-stat-val" id="det-u-counts">0 / 0</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">注册时间</div><div class="u-stat-val" id="det-u-date">N/A</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">微信号</div><div class="u-stat-val" id="det-u-wechat">-</div></div>
         </div>
 
-        <div class="detail-card">
-            <h3 style="margin:0 0 5px 0; font-size:16px;">用户名 / DJ 名</h3>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:15px;">用于登录后台、个人主页URL、上传文件命名。全局唯一。</p>
-            <input type="text" id="det-username-input" class="input-text" style="width:100%; margin-bottom:15px; background:#0b0b0b;">
-            <button class="btn-primary" style="width:100%;" onclick="adminChangeUsername()">保存用户名</button>
+        <div class="glass-panel" style="padding:20px;">
+            <div class="panel-header" style="border:none; padding:0 0 15px 0;">用户名 / DJ 名</div>
+            <input type="text" id="det-u-editname" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">全局唯一。修改后旧的链接将失效；已上传的歌曲文件名不会自动重命名。留空将清除用户名，该账号之后只能用邮箱登录。</div>
+            <button class="btn-primary" style="width:100%; background:var(--accent-light);" onclick="showToast('用户名修改功能开发中')">保存用户名</button>
         </div>
 
-        <div class="detail-card">
-            <h3 style="margin:0 0 20px 0; font-size:16px;">管理操作</h3>
-            <div class="mgmt-grid">
-                <div class="mgmt-col">
-                    <h4>角色管理</h4>
-                    <label style="font-size:11px; color:var(--text-muted);">角色</label>
-                    <select id="det-role-select" class="select-box" style="background:#0b0b0b;">
-                        <option value="NORMAL">Normal - 普通用户</option>
-                        <option value="VIP">VIP - 创作者</option>
-                    </select>
-                    <button class="btn-primary" onclick="adminChangeRole()">更新角色</button>
-                </div>
-                <div class="mgmt-col">
-                    <h4>钻石调整</h4>
-                    <label style="font-size:11px; color:var(--text-muted);">当前余额: <span id="det-tokens-val" style="color:var(--token); font-weight:bold;">0</span></label>
-                    <input type="number" id="det-adjust-amt" class="input-text" placeholder="例如 +100 或 -50" style="background:#0b0b0b;">
-                    <input type="text" id="det-adjust-reason" class="input-text" placeholder="原因(必填，写入审计日志)" style="background:#0b0b0b;">
-                    <button class="btn-primary" onclick="adminAdjustDiamonds()">调整钻石</button>
-                </div>
-                <div class="mgmt-col">
-                    <h4>账号安全</h4>
-                    <label style="font-size:11px; color:var(--text-muted);">新密码 (留空则随机生成)</label>
-                    <input type="text" id="det-new-pw" class="input-text" placeholder="留空=系统生成一次性临时密码" style="background:#0b0b0b;">
-                    <button class="btn-primary" style="background:transparent; border:1px solid var(--border-color); color:var(--text-main);" onclick="adminResetPw()">重置 / 设置密码</button>
-                    
-                    <label style="font-size:11px; color:var(--text-muted); margin-top:15px;">封禁原因 (必填)</label>
-                    <input type="text" id="det-ban-reason" class="input-text" placeholder="例如：违规上传/恶意行为" style="background:#0b0b0b; border-color:var(--danger);">
-                    <button class="btn-primary" style="background:var(--danger);" onclick="adminBanUser()">封禁账号</button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="detail-card" style="padding:0; background:transparent; border:none;">
-            <h3 style="margin:0 0 15px 0; font-size:16px;">最近充值</h3>
-            <div class="table-container"><div class="table-inner"><div class="header-row grid-detail-hist"><div>时间</div><div>币种</div><div>支付金额</div><div>获得钻石</div><div>状态</div></div><div id="det-topup-list"></div></div></div>
-        </div>
-        <div class="detail-card" style="padding:0; background:transparent; border:none; margin-top:30px;">
-            <h3 style="margin:0 0 15px 0; font-size:16px;">最近购买</h3>
-            <div class="table-container"><div class="table-inner"><div class="header-row grid-detail-hist"><div>时间</div><div>歌曲</div><div></div><div>花费钻石</div><div>状态</div></div><div id="det-buy-list"></div></div></div>
-        </div>
-    </div>
-
-    <div id="view-data" class="view-section">
         <div class="glass-panel">
-            <div class="panel-header"><span style="font-weight: 600;">交易记录</span><button class="btn-primary" style="background:var(--danger)" onclick="clearLogs('register', true)">Clear All</button></div>
-            <div class="table-container"><div class="table-inner"><div class="header-row grid-logs"><div></div><div>Event</div><div>Date</div></div><div id="dataList"></div></div></div>
+            <div class="panel-header">管理操作<span style="font-size:12px;color:var(--text-muted);font-weight:normal;">所有操作都会记录到 admin_log</span></div>
+            <div class="admin-action-grid">
+                <div class="admin-col">
+                    <div style="font-size:14px; font-weight:bold;">角色管理</div>
+                    <label style="font-size:12px; color:var(--text-muted);">角色</label>
+                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option></select>
+                    <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
+                    <label style="font-size:12px; color:var(--text-muted); margin-top:10px;">VIP 等级 (分成比例)</label>
+                    <select class="select-box"><option>R0 - 创作者 0% / 平台 100%</option></select>
+                </div>
+                
+                <div class="admin-col" style="border-left:1px solid var(--border-color); padding-left:20px;">
+                    <div style="font-size:14px; font-weight:bold;">钻石调整</div>
+                    <div style="font-size:12px; color:var(--text-muted);">当前余额: <span style="color:var(--token); font-weight:bold;" id="det-curr-token">0</span></div>
+                    <label style="font-size:12px; color:var(--text-muted); margin-top:5px;">调整数量 (正数增加 / 负数扣减)</label>
+                    <input type="number" id="det-adj-amt" class="input-text" placeholder="例如 +100 或 -50">
+                    <label style="font-size:12px; color:var(--text-muted);">原因 (必填，写入审计日志)</label>
+                    <input type="text" id="det-adj-reason" class="input-text" placeholder="例如: 退款订单 #42">
+                    <button class="btn-primary" style="margin-top:10px;" onclick="adminAdjustTokens()">调整钻石</button>
+                </div>
+
+                <div class="admin-col" style="border-left:1px solid var(--border-color); padding-left:20px;">
+                    <div style="font-size:14px; font-weight:bold;">账号安全</div>
+                    <label style="font-size:12px; color:var(--text-muted);">新密码 (留空则随机生成)</label>
+                    <input type="text" id="det-force-pass" class="input-text" placeholder="至少 6 位">
+                    <button class="btn-primary" style="margin-top:10px;" onclick="adminForcePassword()">重置 / 设置密码</button>
+
+                    <label style="font-size:12px; color:var(--text-muted); margin-top:20px;">封禁原因 (必填)</label>
+                    <input type="text" id="det-ban-reason" class="input-text" placeholder="例如: 违规上传 / 恶意行为">
+                    <button class="btn-primary" style="margin-top:10px; background:transparent; border:1px solid var(--danger); color:var(--danger);" id="det-ban-btn" onclick="adminBanToggle()">封禁账号</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="panel-header">最近充值</div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-user-topup"><div>时间</div><div>币种</div><div>支付金额</div><div>获得钻石</div><div>状态</div></div>
+                <div id="det-topup-list"></div>
+            </div></div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="panel-header">最近购买</div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-user-buy"><div>歌曲</div><div>时间</div><div>消耗钻石</div><div>下载</div><div>状态</div></div>
+                <div id="det-buy-list"></div>
+            </div></div>
         </div>
     </div>
     
     <div id="view-logs" class="view-section">
         <div class="glass-panel">
-            <div class="panel-header"><span style="font-weight: 600;">充值订单</span><button class="btn-primary" style="background:var(--danger)" onclick="clearLogs('admin', true)">Clear All</button></div>
+            <div class="panel-header"><span style="font-weight: 600;">系统日志</span><button class="btn-primary" style="background:var(--danger)" onclick="clearLogs('admin', true)">Clear All</button></div>
             <div class="table-container"><div class="table-inner"><div class="header-row grid-logs"><div></div><div>Action</div><div>Date</div></div><div id="logsList"></div></div></div>
         </div>
     </div>
@@ -489,10 +480,8 @@
                 <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">EDIT IMG</div>
             </div>
             <input type="file" id="genreCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'genreCoverPreview', 'genre')">
-            
             <label class="input-label">Sequence (排序)</label><input type="number" id="genreSeqInput" class="modal-input" min="1">
             <label class="input-label">Genre Name</label><input type="text" id="genreNameInput" class="modal-input">
-            
             <div id="genreToggleArea" style="margin-top:10px;"></div>
             <div id="genreDeleteArea"></div>
         </div>
@@ -509,11 +498,9 @@
                 <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
             </div>
             <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
-            
             <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
             <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label></div>
             <div id="transloadFileArea" style="margin-bottom:10px; display:none;"><label class="input-label">URL (.m4a)</label><input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;"></div>
-
             <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
             <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
         </div>
@@ -524,8 +511,7 @@
 <script>
     const API_URL = '/api'; 
     let allSongs = [], allUsers = [], logData = { register: [], admin: [] }, allGenres = [];
-    let currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
-    let currentAdminGenreId = null, currentEditUserObj = null;
+    let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
     let isTransloadMode = false; let chartInstances = {};
     let globalSettings = {};
@@ -545,7 +531,10 @@
         
         if(document.getElementById(`nav-${viewId}`)) document.getElementById(`nav-${viewId}`).classList.add('active');
         if(document.getElementById(`view-${viewId}`)) document.getElementById(`view-${viewId}`).classList.add('active');
-        if(titleStr) document.getElementById('breadcrumb-current').innerText = titleStr;
+        if(titleStr) {
+            if(viewId === 'user-detail') document.getElementById('breadcrumb-current').innerHTML = `<span style="cursor:pointer; color:var(--text-muted);" onclick="switchView('users', '用户管理')">用户管理</span> / ${titleStr}`;
+            else document.getElementById('breadcrumb-current').innerText = titleStr;
+        }
 
         if(viewId === 'users') loadUsers(); 
         if(viewId === 'data') loadLogs('register'); 
@@ -608,8 +597,16 @@
         else { st.innerText = '已停用'; st.style.color = 'var(--danger)'; btn.innerText = '启用'; btn.classList.remove('highlight'); }
     }
     function openActivityModal() { const act = globalSettings.activity || { reward: 10 }; document.getElementById('actRewardInput').value = act.reward; document.getElementById('activityModal').style.display = 'flex'; }
-    async function saveActivity() { showLoader(); let act = globalSettings.activity || { enabled: false, count: 0, total: 0 }; act.reward = parseInt(document.getElementById('actRewardInput').value) || 0; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); closeModals(); hideLoader(); showToast("Saved"); }
-    async function toggleActivity() { showLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
+    async function saveActivity() {
+        showLoader(); let act = globalSettings.activity || { enabled: false, count: 0, total: 0 }; act.reward = parseInt(document.getElementById('actRewardInput').value) || 0;
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) });
+        globalSettings.activity = act; renderActivity(); closeModals(); hideLoader(); showToast("Saved");
+    }
+    async function toggleActivity() {
+        showLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled;
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) });
+        globalSettings.activity = act; renderActivity(); hideLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled");
+    }
 
     // --- DASHBOARD CHARTS ---
     function buildDashboardStats() {
@@ -648,7 +645,11 @@
 
     // --- PENDING QUEUE ---
     function updatePendingBadge() { const pends = allSongs.filter(s => s.status === 'PENDING').length; const b = document.getElementById('sidebar-pending-count'); if(pends > 0) { b.innerText = pends; b.style.display = 'inline-block'; } else { b.style.display = 'none'; } }
-    function loadPending() { showLoader(); pendFiltered = allSongs.filter(s => s.status === 'PENDING'); pendPage = 1; renderPendingUI(); hideLoader(); }
+
+    function loadPending() {
+        showLoader(); pendFiltered = allSongs.filter(s => s.status === 'PENDING'); pendPage = 1; renderPendingUI(); hideLoader();
+    }
+    
     function toggleAllPending() { const st = document.getElementById('selectAllPending').checked; document.querySelectorAll('.pend-check').forEach(cb => cb.checked = st); updatePendSelCount(); }
     function updatePendSelCount() { document.getElementById('sel-pend-count').innerText = document.querySelectorAll('.pend-check:checked').length; }
 
@@ -686,15 +687,30 @@
         renderPaginationControls(pendFiltered.length, pendLimit, pendPage, 'pending-pagination', (np) => { pendPage = np; renderPendingUI(); }, (nl) => { pendLimit = nl; pendPage = 1; renderPendingUI(); });
     }
 
-    async function bulkApprove() { const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲"); showLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); } allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); showToast("Bulk Approved"); }
-    async function bulkReject() { const reason = document.getElementById('bulkRejectReason').value || '未符合规范'; const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲"); showLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); } allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); showToast("Bulk Rejected"); }
-    async function resolvePending(id, newStatus) { let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范'; showLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) }); allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); buildDashboardStats(); loadPending(); showToast("Song Resolved"); }
+    async function bulkApprove() {
+        const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value);
+        if(!checked.length) return showToast("未选择歌曲"); showLoader();
+        for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); }
+        allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); showToast("Bulk Approved");
+    }
+    async function bulkReject() {
+        const reason = document.getElementById('bulkRejectReason').value || '未符合规范';
+        const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value);
+        if(!checked.length) return showToast("未选择歌曲"); showLoader();
+        for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); }
+        allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); showToast("Bulk Rejected");
+    }
+    async function resolvePending(id, newStatus) {
+        let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范';
+        showLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) });
+        allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); buildDashboardStats(); loadPending(); showToast("Song Resolved");
+    }
 
     // --- GENRES ---
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
             if(g.status === 'DISABLED') card.classList.add('disabled');
@@ -705,7 +721,8 @@
             card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); if (draggedGenreId && draggedGenreId !== g.id) handleGenreReorder(draggedGenreId, g.id); });
 
             card.innerHTML = `
-                <div class="genre-badge">${g.sequence}</div><img src="${cover}">
+                <div class="genre-badge">${g.sequence}</div>
+                <img src="${cover}">
                 <div class="overlay" style="flex-direction:column; align-items:flex-start; justify-content:flex-end;">
                     <h4>${g.name}</h4><div style="font-size:12px; color:var(--text-muted);">${count} 首歌曲</div>
                 </div>
@@ -716,7 +733,11 @@
         grid.innerHTML += `<div class="genre-card add-genre-card" onclick="openGenreModal()"><div style="font-size:30px; font-weight:100; margin-bottom:5px;">+</div><div>添加分类</div></div>`;
     }
 
-    async function handleGenreReorder(dragId, dropId) { showLoader(); const fromIndex = allGenres.findIndex(g => g.id === dragId); const toIndex = allGenres.findIndex(g => g.id === dropId); const [moved] = allGenres.splice(fromIndex, 1); allGenres.splice(toIndex, 0, moved); const orderedIds = allGenres.map(g => g.id); await fetch(`${API_URL}/genres/reorder`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({orderedIds}) }); await loadInitial(); }
+    async function handleGenreReorder(dragId, dropId) {
+        showLoader(); const fromIndex = allGenres.findIndex(g => g.id === dragId); const toIndex = allGenres.findIndex(g => g.id === dropId);
+        const [moved] = allGenres.splice(fromIndex, 1); allGenres.splice(toIndex, 0, moved);
+        const orderedIds = allGenres.map(g => g.id); await fetch(`${API_URL}/genres/reorder`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({orderedIds}) }); await loadInitial();
+    }
 
     function openGenreModal(id = null, name = '', cover = '', status = 'ACTIVE', seq = 1) {
         pendingGenreBase64 = null; document.getElementById('genreModalTitle').innerText = id ? 'Edit Genre' : 'Add Genre'; document.getElementById('genreNameInput').value = name;
@@ -724,24 +745,42 @@
         document.getElementById('genreCoverPreview').src = cover || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23333"/%3E%3C/svg%3E';
         
         let toggleHTML = '';
-        if(id) { const toggleText = status === 'DISABLED' ? '启用分类 (Enable)' : '停用分类 (Disable)'; const toggleNewStatus = status === 'DISABLED' ? 'ACTIVE' : 'DISABLED'; toggleHTML = `<button class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--accent); color:var(--accent);" onclick="toggleGenreStatus('${id}', '${toggleNewStatus}')">${toggleText}</button>`; }
-        document.getElementById('genreToggleArea').innerHTML = toggleHTML; document.getElementById('genreDeleteArea').innerHTML = id ? `<button class="btn-danger-full" onclick="deleteGenre('${id}')">删除分类 (Delete)</button>` : ''; document.getElementById('genreModal').dataset.editId = id || ''; document.getElementById('genreModal').style.display = 'flex';
+        if(id) {
+            const toggleText = status === 'DISABLED' ? '启用分类 (Enable)' : '停用分类 (Disable)';
+            const toggleNewStatus = status === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
+            toggleHTML = `<button class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--accent); color:var(--accent);" onclick="toggleGenreStatus('${id}', '${toggleNewStatus}')">${toggleText}</button>`;
+        }
+        document.getElementById('genreToggleArea').innerHTML = toggleHTML;
+        document.getElementById('genreDeleteArea').innerHTML = id ? `<button class="btn-danger-full" onclick="deleteGenre('${id}')">删除分类 (Delete)</button>` : '';
+        document.getElementById('genreModal').dataset.editId = id || ''; document.getElementById('genreModal').style.display = 'flex';
     }
 
     async function toggleGenreStatus(id, newStatus) { showLoader(); await fetch(`${API_URL}/genres/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); closeModals(); await loadInitial(); }
-    async function saveGenre() { showLoader(); const name = document.getElementById('genreNameInput').value; const editId = document.getElementById('genreModal').dataset.editId; const seq = document.getElementById('genreSeqInput').value; const payload = { name, sequence: seq, coverBase64: pendingGenreBase64 }; if(editId) await fetch(`${API_URL}/genres/${editId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }); else await fetch(`${API_URL}/genres`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) }); closeModals(); await loadInitial(); }
+    async function saveGenre() {
+        showLoader(); const name = document.getElementById('genreNameInput').value; const editId = document.getElementById('genreModal').dataset.editId; const seq = document.getElementById('genreSeqInput').value;
+        const payload = { name, sequence: seq, coverBase64: pendingGenreBase64 };
+        if(editId) await fetch(`${API_URL}/genres/${editId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        else await fetch(`${API_URL}/genres`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        closeModals(); await loadInitial();
+    }
     async function deleteGenre(id) { if(!confirm("Delete genre?")) return; showLoader(); await fetch(`${API_URL}/genres/${id}`, { method: 'DELETE' }); closeModals(); await loadInitial(); }
 
     // --- PAGINATION HELPER ---
     function renderPaginationControls(total, limit, current, containerId, onPageChange, onLimitChange) {
-        const totalPages = Math.ceil(total / limit) || 1; const cont = document.getElementById(containerId);
+        const totalPages = Math.ceil(total / limit) || 1;
+        const cont = document.getElementById(containerId);
         cont.innerHTML = `
             <span class="page-nav ${current === 1 ? 'disabled' : ''}" style="cursor:pointer;" onclick="${current === 1 ? '' : 'window._tmpFnP(-1)'}">‹ 上一页</span>
             <span class="page-info">${current} / ${totalPages}</span>
             <span class="page-nav ${current === totalPages ? 'disabled' : ''}" style="cursor:pointer;" onclick="${current === totalPages ? '' : 'window._tmpFnP(1)'}">下一页 ›</span>
-            <span style="margin-left:15px;">每页 <select class="page-size-sel" onchange="window._tmpFnL(this.value)"><option value="10" ${limit==10?'selected':''}>10</option><option value="20" ${limit==20?'selected':''}>20</option><option value="50" ${limit==50?'selected':''}>50</option></select> 条</span>
+            <span style="margin-left:15px;">每页 <select class="page-size-sel" onchange="window._tmpFnL(this.value)">
+                <option value="10" ${limit==10?'selected':''}>10</option>
+                <option value="20" ${limit==20?'selected':''}>20</option>
+                <option value="50" ${limit==50?'selected':''}>50</option>
+            </select> 条</span>
         `;
-        window._tmpFnP = (dir) => onPageChange(current + dir); window._tmpFnL = (l) => onLimitChange(parseInt(l));
+        window._tmpFnP = (dir) => onPageChange(current + dir);
+        window._tmpFnL = (l) => onLimitChange(parseInt(l));
     }
 
     // --- SONGS ---
@@ -756,10 +795,13 @@
 
     function renderSongUI() {
         const listDiv = document.getElementById('complexSongList'); listDiv.innerHTML = '';
-        let appCount = 0; let remCount = 0; songFiltered.forEach(song => { if(song.status === 'REMOVED') remCount++; else appCount++; });
+        
+        let appCount = 0; let remCount = 0;
+        songFiltered.forEach(song => { if(song.status === 'REMOVED') remCount++; else appCount++; });
         document.getElementById('count-all').innerText = songFiltered.length; document.getElementById('count-approved').innerText = appCount; document.getElementById('count-removed').innerText = remCount;
 
-        const totalPages = Math.ceil(songFiltered.length / songLimit) || 1; if(songPage > totalPages) songPage = totalPages;
+        const totalPages = Math.ceil(songFiltered.length / songLimit) || 1;
+        if(songPage > totalPages) songPage = totalPages;
         const start = (songPage - 1) * songLimit; const paged = songFiltered.slice(start, start + songLimit);
 
         paged.forEach(song => {
@@ -808,17 +850,18 @@
         if(isTransloadMode) {
             const url = document.getElementById('transloadUrlInput').value; if(!url) return; showLoader();
             const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
-            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideLoader(); showToast("Failed", true); }
+            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideLoader(); showToast("Failed: " + await res.text(), true); }
         } else {
             const file = document.getElementById('uploadFileInput').files[0]; if(!file) return; showLoader();
             const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideLoader(); showToast("Failed", true); }
+            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideLoader(); showToast("Failed: " + await res.text(), true); }
         }
     }
 
     function openQuickPrice(id, currentPrice) { currentQuickEditId = id; document.getElementById('quickPriceInput').value = currentPrice; document.getElementById('quickPriceModal').style.display = 'flex'; }
     async function confirmQuickPrice() { showLoader(); await fetch(`${API_URL}/songs/${currentQuickEditId}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newPrice: document.getElementById('quickPriceInput').value}) }); closeModals(); loadSongs(); showToast("Price Updated"); }
+
     function openQuickGenre(id, currentGenreId) { currentQuickEditId = id; document.getElementById('quickGenreSelect').value = currentGenreId; document.getElementById('quickGenreModal').style.display = 'flex'; }
     async function confirmQuickGenre() { showLoader(); await fetch(`${API_URL}/songs/${currentQuickEditId}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({genreId: document.getElementById('quickGenreSelect').value}) }); closeModals(); loadSongs(); showToast("Category Updated"); }
 
@@ -828,31 +871,29 @@
         document.getElementById('editSongCoverPreview').src = cover || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%23333"/%3E%3C/svg%3E';
         document.getElementById('songSettingsModal').style.display = 'flex'; 
     }
+    
     async function saveSongSettings() { 
         if(!currentEditId) return; showLoader(); 
         await fetch(`${API_URL}/songs/${currentEditId}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newName: document.getElementById('settingName').value, newPrice: document.getElementById('settingPrice').value, genreId: document.getElementById('settingGenre').value, coverBase64: pendingEditSongBase64}) }); 
         closeModals(); loadSongs(); showToast("Settings Updated"); 
     }
 
-    // --- USERS (DETAILED VIEW ENGINE) ---
+    // --- USERS ---
     async function loadUsers() { showLoader(); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); handleUserSearch(); hideLoader(); }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
     
     function handleUserSearch() {
         const query = document.getElementById('userSearchInput').value.toLowerCase(); const role = document.getElementById('roleFilter').value;
-        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || u.phone.includes(query); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip); return matchesQuery && matchesRole; });
+        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip); return matchesQuery && matchesRole; });
         document.getElementById('userCount').innerText = filtered.length; const listDiv = document.getElementById('userList'); listDiv.innerHTML = '';
         
         filtered.forEach(u => {
-            const isBanned = u.status === 'BANNED';
             const roleBadge = u.isVip ? '<span class="badge-role vip">VIP</span>' : '<span class="badge-role normal">NORMAL</span>';
-            const statusBadge = isBanned ? '<span class="badge-status" style="border-color:var(--danger); color:var(--danger); background:rgba(255,69,58,0.1);">BANNED</span>' : '<span class="badge-status active">ACTIVE</span>';
+            const isBanned = u.status === 'BANNED';
+            const statusBadge = isBanned ? '<span class="badge-status banned">BANNED</span>' : '<span class="badge-status active">ACTIVE</span>';
+            const unbanBtn = isBanned ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')" style="margin-right:5px;">解封</button>` : '';
             const dateStr = u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : 'N/A';
             
-            let actionsHtml = '';
-            if(isBanned) { actionsHtml += `<button class="btn-text-action" style="color:var(--success); border:1px solid var(--success); padding:4px 10px; border-radius:4px; margin-right:10px;" onclick="adminUnban('${u.username}')">解封</button>`; }
-            actionsHtml += `<button class="btn-manage" style="padding:6px 12px; font-size:12px;" onclick="openUserDetail('${u.username}')">管理 →</button>`;
-
             listDiv.innerHTML += `
                 <div class="data-row grid-users">
                     <div style="font-weight: 500;">${u.username}</div>
@@ -862,85 +903,95 @@
                     <div style="font-weight: bold;"><span style="color:#00e5ff;">💎</span> ${u.tokens}</div>
                     <div>${statusBadge}</div>
                     <div style="color:var(--text-muted);">${dateStr}</div>
-                    <div style="text-align:right;">${actionsHtml}</div>
+                    <div style="text-align:right; position:relative; display:flex; justify-content:flex-end;">
+                        ${unbanBtn}
+                        <button class="btn-manage" onclick="openUserDetail('${u.username}')">管理 →</button>
+                    </div>
                 </div>
             `;
         });
     }
 
-    async function openUserDetail(username) {
-        showLoader();
-        const userRes = await fetch(`${API_URL}/users/${username}`);
-        if(!userRes.ok) { hideLoader(); return showToast("User not found", true); }
-        currentEditUserObj = await userRes.json();
+    function openUserDetail(uName) {
+        currentEditUser = allUsers.find(u => u.username === uName);
+        if(!currentEditUser) return;
+        switchView('user-detail', uName);
         
-        document.getElementById('det-username').innerText = currentEditUserObj.username;
-        document.getElementById('det-email').innerText = currentEditUserObj.email;
-        document.getElementById('det-username-input').value = currentEditUserObj.username;
-        document.getElementById('det-role-select').value = currentEditUserObj.isVip ? 'VIP' : 'NORMAL';
-        document.getElementById('det-tokens-val').innerText = currentEditUserObj.tokens;
-        
-        // Calculate Stats
-        let totalRev = 0; const mySongs = allSongs.filter(s => s.uploader === currentEditUserObj.username);
-        mySongs.forEach(s => { totalRev += (s.downloads || 0) * (s.price || 10); });
-        const isBanned = currentEditUserObj.status === 'BANNED';
-        const roleBadge = currentEditUserObj.isVip ? '<span class="badge-role vip">VIP</span>' : '<span class="badge-role normal">NORMAL</span>';
-        const statusBadge = isBanned ? '<span class="badge-status" style="border-color:var(--danger); color:var(--danger); background:rgba(255,69,58,0.1);">BANNED</span>' : '<span class="badge-status active">ACTIVE</span>';
+        document.getElementById('det-u-name').innerText = currentEditUser.username;
+        document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
+        document.getElementById('det-u-role').innerText = currentEditUser.isVip ? 'VIP' : 'NORMAL';
+        document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
+        document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';
+        document.getElementById('det-u-tokens').innerText = currentEditUser.tokens || 0;
+        document.getElementById('det-curr-token').innerText = currentEditUser.tokens || 0;
+        document.getElementById('det-u-counts').innerText = `${(currentEditUser.topups||[]).length} / ${(currentEditUser.purchases||[]).length}`;
+        document.getElementById('det-u-date').innerText = currentEditUser.createdAt ? new Date(currentEditUser.createdAt).toISOString().split('T')[0] : 'N/A';
+        document.getElementById('det-u-wechat').innerText = currentEditUser.wechat || '-';
+        document.getElementById('det-u-editname').value = currentEditUser.username;
+        document.getElementById('det-sel-role').value = currentEditUser.isVip ? 'VIP' : 'NORMAL';
 
-        document.getElementById('det-stats').innerHTML = `
-            <div class="stat-item"><span class="stat-item-label">角色</span><div style="margin-top:5px;">${roleBadge}</div></div>
-            <div class="stat-item"><span class="stat-item-label">状态</span><div style="margin-top:5px;">${statusBadge}</div></div>
-            <div class="stat-item"><span class="stat-item-label">钻石余额</span><span class="stat-item-value" style="color:var(--token);">💎 ${currentEditUserObj.tokens}</span></div>
-            <div class="stat-item"><span class="stat-item-label">累计收入</span><span class="stat-item-value" style="color:var(--token);">💎 ${totalRev}</span></div>
-            <div class="stat-item"><span class="stat-item-label">充值/购买</span><span class="stat-item-value">${(currentEditUserObj.topups||[]).length} / ${(currentEditUserObj.purchases||[]).length}</span></div>
-            <div class="stat-item"><span class="stat-item-label">注册时间</span><span class="stat-item-value" style="color:var(--text-muted); font-size:12px;">${currentEditUserObj.createdAt ? new Date(currentEditUserObj.createdAt).toISOString().split('T')[0] : 'N/A'}</span></div>
-        `;
+        const banBtn = document.getElementById('det-ban-btn');
+        if(currentEditUser.status === 'BANNED') {
+            banBtn.innerText = '解封账号'; banBtn.style.color = 'var(--success)'; banBtn.style.borderColor = 'var(--success)';
+            document.getElementById('det-ban-reason').value = currentEditUser.banReason || '';
+        } else {
+            banBtn.innerText = '封禁账号'; banBtn.style.color = 'var(--danger)'; banBtn.style.borderColor = 'var(--danger)';
+            document.getElementById('det-ban-reason').value = '';
+        }
 
-        // Render Tables
-        const topupList = document.getElementById('det-topup-list'); topupList.innerHTML = '';
-        (currentEditUserObj.topups||[]).slice().reverse().forEach(t => {
-            topupList.innerHTML += `<div class="data-row grid-detail-hist"><div>${new Date(t.date).toLocaleString()}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token); font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
+        // Render History Tables in Detail View
+        const topupDiv = document.getElementById('det-topup-list'); topupDiv.innerHTML = '';
+        (currentEditUser.topups || []).slice().reverse().forEach(t => {
+            topupDiv.innerHTML += `<div class="data-row grid-user-topup"><div>${new Date(t.date).toISOString().split('T')[0]}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token);font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
+        if(!(currentEditUser.topups||[]).length) topupDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
 
-        const buyList = document.getElementById('det-buy-list'); buyList.innerHTML = '';
-        (currentEditUserObj.purchases||[]).slice().reverse().forEach(p => {
-            buyList.innerHTML += `<div class="data-row grid-detail-hist"><div>${new Date(p.purchaseTime).toLocaleString()}</div><div class="truncate">${p.songName}</div><div></div><div style="color:var(--danger); font-weight:bold;">- 💎 ${p.tokensSpent}</div><div style="color:var(--success);">COMPLETED</div></div>`;
+        const buyDiv = document.getElementById('det-buy-list'); buyDiv.innerHTML = '';
+        (currentEditUser.purchases || []).slice().reverse().forEach(p => {
+            buyDiv.innerHTML += `<div class="data-row grid-user-buy"><div class="truncate">${p.songName}</div><div>${new Date(p.purchaseTime).toISOString().split('T')[0]}</div><div style="color:var(--danger);font-weight:bold;">-💎 ${p.tokensSpent}</div><div>1</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
-
-        switchView('user-detail', `用户管理 / ${currentEditUserObj.username}`);
-        hideLoader();
+        if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
     }
 
-    async function adminChangeUsername() {
-        const newName = document.getElementById('det-username-input').value.trim(); if(!newName) return;
-        showLoader(); const res = await fetch(`${API_URL}/users/${currentEditUserObj.username}/change-username`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newUsername: newName}) });
-        if(res.ok) { showToast("Username updated"); openUserDetail(newName); } else { hideLoader(); showToast("Failed to update username", true); }
+    function backToUserList() { switchView('users', '用户管理'); }
+
+    async function adminUpdateRole() {
+        showLoader(); const isVip = document.getElementById('det-sel-role').value === 'VIP';
+        await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip}) });
+        hideLoader(); showToast("Role Updated"); loadUsers();
     }
-    async function adminChangeRole() {
-        const isVip = document.getElementById('det-role-select').value === 'VIP';
-        showLoader(); await fetch(`${API_URL}/users/${currentEditUserObj.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip: isVip}) });
-        showToast("Role updated"); openUserDetail(currentEditUserObj.username);
+
+    async function adminAdjustTokens() {
+        const amt = document.getElementById('det-adj-amt').value; const reason = document.getElementById('det-adj-reason').value;
+        if(!amt || !reason) return showToast("Amount and Reason required");
+        showLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/adjust-tokens`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt, reason: reason}) });
+        document.getElementById('det-adj-amt').value = ''; document.getElementById('det-adj-reason').value = '';
+        allUsers = await (await fetch(`${API_URL}/all-users`)).json(); openUserDetail(currentEditUser.username); hideLoader(); showToast("Tokens Adjusted");
     }
-    async function adminAdjustDiamonds() {
-        const amt = document.getElementById('det-adjust-amt').value; const reason = document.getElementById('det-adjust-reason').value;
-        if(!amt || !reason) return showToast("Amount and Reason required", true);
-        showLoader(); await fetch(`${API_URL}/users/${currentEditUserObj.username}/adjust-tokens`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt, reason: reason}) });
-        document.getElementById('det-adjust-amt').value=''; document.getElementById('det-adjust-reason').value=''; showToast("Diamonds Adjusted"); openUserDetail(currentEditUserObj.username);
+
+    async function adminForcePassword() {
+        let newP = document.getElementById('det-force-pass').value;
+        if(!newP) newP = Math.random().toString(36).slice(-8);
+        showLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/force-password`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newPassword: newP}) });
+        document.getElementById('det-force-pass').value = ''; hideLoader(); showToast(`Password Reset! (${newP})`);
     }
-    async function adminResetPw() {
-        const pw = document.getElementById('det-new-pw').value; showLoader(); 
-        const res = await fetch(`${API_URL}/users/${currentEditUserObj.username}/admin-reset-password`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newPassword: pw}) });
-        const data = await res.json(); document.getElementById('det-new-pw').value = ''; showToast(`Password Reset to: ${data.newPassword}`); openUserDetail(currentEditUserObj.username);
+
+    async function adminBanToggle() {
+        const isBanned = currentEditUser.status === 'BANNED';
+        if(isBanned) { await adminUnbanUser(currentEditUser.username); } 
+        else {
+            const reason = document.getElementById('det-ban-reason').value;
+            if(!reason) return showToast("Reason required for ban");
+            showLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/ban`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({reason}) });
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); openUserDetail(currentEditUser.username); hideLoader(); showToast("User Banned");
+        }
     }
-    async function adminBanUser() {
-        const reason = document.getElementById('det-ban-reason').value; if(!reason) return showToast("Ban reason required", true);
-        showLoader(); await fetch(`${API_URL}/users/${currentEditUserObj.username}/status`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: 'BANNED', reason: reason}) });
-        document.getElementById('det-ban-reason').value = ''; showToast("User Banned"); openUserDetail(currentEditUserObj.username);
-    }
-    async function adminUnban(uname) {
-        if(!confirm(`Unban user ${uname}?`)) return; showLoader();
-        await fetch(`${API_URL}/users/${uname}/status`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({status: 'ACTIVE'}) });
-        showToast("User Unbanned"); loadUsers();
+    
+    async function adminUnbanUser(username) {
+        showLoader(); await fetch(`${API_URL}/admin/users/${username}/unban`, { method: 'PUT' });
+        allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+        if(currentEditUser && currentEditUser.username === username) openUserDetail(username); else handleUserSearch();
+        hideLoader(); showToast("User Unbanned");
     }
 
     // --- DATA / LOGS ---
