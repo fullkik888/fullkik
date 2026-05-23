@@ -67,7 +67,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; display: inline-block; }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,69,58,0.5)); } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: -0.5px; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #ff453a; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; transition: 0.2s; display: inline-block; } .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,69,58,0.4); }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -106,8 +106,8 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, status: 'ACTIVE', profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, createdAt: new Date().toISOString() });
-        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact}`);
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -117,62 +117,70 @@ app.post('/api/login', async (req, res) => {
         const { contact, password } = req.body;
         let uDoc = await db.collection('users').doc(contact.toLowerCase()).get();
         if (!uDoc.exists) { const q = await db.collection('users').where('contact', '==', contact).get(); if(!q.empty) uDoc = q.docs[0]; }
-        if (uDoc && uDoc.data()?.password === password) {
-            if(uDoc.data().status === 'BANNED') return res.status(403).send('ACCOUNT BANNED');
-            res.json({ success: true, username: uDoc.data().username });
-        } else res.status(400).send('Invalid credentials.');
+        if (!uDoc || !uDoc.exists) return res.status(400).send('Invalid credentials.');
+        
+        if (uDoc.data().status === 'BANNED') return res.status(403).send(`Account Banned: ${uDoc.data().banReason || 'Violation of terms'}`);
+        if (uDoc.data().password === password) res.json({ success: true, username: uDoc.data().username }); 
+        else res.status(400).send('Invalid credentials.');
     } catch (e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/users/:username', async (req, res) => {
     const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
-    if (doc.exists) res.json(doc.data()); else res.status(404).send('User not found');
+    if (doc.exists) {
+        if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
+        res.json(doc.data());
+    } else res.status(404).send('User not found');
 });
 
 app.get('/api/all-users', async (req, res) => { try { res.json((await db.collection('users').get()).docs.map(d => d.data())); } catch (e) { res.status(500).json([]); }});
 
-// --- ADMIN USER MANAGEMENT ENDPOINTS ---
-app.put('/api/users/:username/status', async (req, res) => {
+// --- ADVANCED ADMIN USER ENDPOINTS ---
+app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
-        const { status, reason } = req.body;
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: status, banReason: reason || '' });
-        await logEvent('admin', `${status === 'BANNED' ? 'Banned' : 'Unbanned'} user: <span style="font-weight:600;">${req.params.username}</span>`);
-        res.send('Status updated');
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
+        res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.put('/api/users/:username/role', async (req, res) => {
+app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
     try {
-        const { isVip } = req.body;
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: isVip });
-        await logEvent('admin', `Changed role for <span style="font-weight:600;">${req.params.username}</span> to ${isVip ? 'VIP' : 'NORMAL'}`);
-        res.send('Role updated');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/adjust-tokens', async (req, res) => {
-    try {
-        const { amount, reason } = req.body;
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
-        const newTokens = Math.max(0, (doc.data().tokens || 0) + parseInt(amount));
+        const amt = parseInt(req.body.amount) || 0;
+        const newTokens = (doc.data().tokens || 0) + amt;
         await userRef.update({ tokens: newTokens });
-        await logEvent('admin', `Adjusted tokens for <span style="font-weight:600;">${req.params.username}</span> by ${amount}. Reason: ${reason}`);
-        res.json({ tokens: newTokens });
+        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
+        res.send('Adjusted');
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.put('/api/users/:username/admin-reset-password', async (req, res) => {
+app.put('/api/admin/users/:username/force-password', async (req, res) => {
     try {
-        let { newPassword } = req.body;
-        if(!newPassword) newPassword = Math.random().toString(36).slice(-8);
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: newPassword });
-        await logEvent('admin', `Reset password for <span style="font-weight:600;">${req.params.username}</span>`);
-        res.json({ newPassword });
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
+        await logEvent('admin', `Forced password reset for ${req.params.username}`);
+        res.send('Reset');
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// Regular User Routes
+app.put('/api/admin/users/:username/ban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
+        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
+        res.send('Banned');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/unban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
+        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
+        res.send('Unbanned');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -219,10 +227,6 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         res.json({ success: true, username: req.body.newUsername });
     } catch (e) { res.status(500).send(e.message); }
 });
-
-app.put('/api/users/:username/change-email', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ email: req.body.newEmail }); res.send('Updated'); });
-app.put('/api/users/:username/change-phone', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ phone: req.body.newPhone }); res.send('Updated'); });
-app.delete('/api/users/:username', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).delete(); await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); res.send('Deleted'); });
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
