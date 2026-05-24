@@ -234,13 +234,11 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
         
-        // Push to User Data
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
         topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         await userRef.update({ tokens: newTokens, topups: topups }); 
         
-        // Push to Global Orders Collection for Admin
         await db.collection('orders').add({
             user: req.params.username, email: user.email || '-',
             orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
@@ -265,18 +263,14 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
             
-            // Push to User Data
             user.purchases.push({ 
                 songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
                 uploader: song.uploader || 'FULLKIK', 
                 tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
             });
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
-            
-            // Increment Download Count
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
 
-            // Push to Global Transactions Collection for Admin
             await db.collection('transactions').add({
                 buyer: req.params.username, email: user.email || '-',
                 songName: song.filename, uploader: song.uploader || 'FULLKIK',
@@ -288,7 +282,6 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS (For New Pages) ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
