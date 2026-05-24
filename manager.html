@@ -43,10 +43,8 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- LOADERS --- */
-        /* 1. Global Action Loader (Transparent Overlay) */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; }
         
-        /* 2. Splash Initialization Loader (Sphere) */
         #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
         .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
@@ -54,7 +52,6 @@
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         
-        /* 3. Local Content View Loader (Progress Bar) */
         #contentLoader { display:none; position:absolute; inset:0; background:var(--bg-main); z-index:50; flex-direction:column; align-items:center; justify-content:center; }
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); }
         #contentLoaderBar { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
@@ -195,6 +192,9 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .btn-danger-full { width: 100%; background: rgba(255, 69, 58, 0.1); color: var(--danger); border: 1px solid rgba(255, 69, 58, 0.3); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s;}
         
+        .apple-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px; border-radius: 50%; transition: 0.2s; display:flex; align-items:center; justify-content:center;}
         .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         svg { width: 18px; height: 18px; fill: currentColor; }
@@ -226,7 +226,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
@@ -776,7 +776,7 @@
                     <div style="font-weight:bold;">${u.dlCount}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${lastDate}</div>
                     <div>${statusNode}</div>
-                    <div style="text-align:center;">${actionBtn}</div>
+                    <div style="text-align:center; display:flex; gap:10px;">${actionBtn} <button class="btn-manage" onclick="openUserDetail('${u.username}')">管理 →</button></div>
                 </div>
             `;
         });
@@ -875,7 +875,7 @@
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
             if(g.status === 'DISABLED') card.classList.add('disabled');
