@@ -67,7 +67,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,69,58,0.5)); } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: -0.5px; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #ff453a; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; transition: 0.2s; display: inline-block; } .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,69,58,0.4); }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,69,58,0.5)); } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: -0.5px; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; transition: 0.2s; display: inline-block; } .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,69,58,0.4); }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -233,10 +233,21 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
-        const topups = user.topups || [];
-        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         
+        // Push to User Data
+        const topups = user.topups || [];
+        const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
+        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         await userRef.update({ tokens: newTokens, topups: topups }); 
+        
+        // Push to Global Orders Collection for Admin
+        await db.collection('orders').add({
+            user: req.params.username, email: user.email || '-',
+            orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
+            method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
+            status: 'COMPLETED', time: new Date().toISOString()
+        });
+
         res.json({ tokens: newTokens, topups: topups });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -254,18 +265,42 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
             
+            // Push to User Data
             user.purchases.push({ 
                 songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
                 uploader: song.uploader || 'FULLKIK', 
                 tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
             });
-            
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
+            
+            // Increment Download Count
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
+
+            // Push to Global Transactions Collection for Admin
+            await db.collection('transactions').add({
+                buyer: req.params.username, email: user.email || '-',
+                songName: song.filename, uploader: song.uploader || 'FULLKIK',
+                tokens: price, time: new Date().toISOString()
+            });
 
             res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
     } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- ADMIN TRANSACTIONS & ORDERS (For New Pages) ---
+app.get('/api/orders', async (req, res) => {
+    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/orders/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/transactions', async (req, res) => {
+    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/transactions/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
 // --- GENRES ---
