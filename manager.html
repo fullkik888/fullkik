@@ -19,14 +19,14 @@
         
         .nav-section { margin-bottom: 5px; }
         .nav-title { font-size: 11px; color: #555; padding: 10px 20px; margin-top: 5px;}
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; text-align: left; transition: 0.2s;}
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; text-align: left; transition: 0.2s; outline:none;}
         .nav-item.active { background: rgba(165, 42, 42, 0.1); color: var(--text-main); position: relative;}
         .nav-item.active::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
         .nav-item:hover:not(.active) { color: white; }
         
         .sub-nav { display: none; flex-direction: column; background: var(--bg-dark); border-left: 2px solid var(--border-color); margin-left: 26px; margin-top: 5px; margin-bottom: 10px;}
         .sub-nav.show { display: flex; }
-        .sub-nav-item { background: none; border: none; color: var(--text-muted); padding: 8px 15px; font-size: 12px; text-align: left; cursor: pointer; transition: 0.2s; position: relative;}
+        .sub-nav-item { background: none; border: none; color: var(--text-muted); padding: 8px 15px; font-size: 12px; text-align: left; cursor: pointer; transition: 0.2s; position: relative; outline:none;}
         .sub-nav-item:hover { color: white; }
         .sub-nav-item.active { color: var(--accent-light); font-weight: bold; }
         .badge-pending { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: none;}
@@ -43,18 +43,17 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- LOADERS --- */
-        /* 1. Global Action Loader (Transparent Overlay) */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; }
         
-        /* 2. Splash Initialization Loader (Sphere) */
-        #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        /* Initial Splash Sequence */
+        #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.4s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
+        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1s infinite; }
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(15px); animation: popUp 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         
-        /* 3. Local Content View Loader (Progress Bar) */
+        /* Local Content Progress Bar */
         #contentLoader { display:none; position:absolute; inset:0; background:var(--bg-main); z-index:50; flex-direction:column; align-items:center; justify-content:center; }
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); }
         #contentLoaderBar { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
@@ -106,6 +105,7 @@
         .data-row { display: grid; padding: 16px 20px; align-items: center; border-bottom: 1px solid var(--border-color); font-size: 13px; transition: 0.2s;}
         .data-row:hover { background: rgba(255,255,255,0.02); }
         
+        /* Grid Layouts */
         .grid-users { grid-template-columns: 1.5fr 2fr 100px 100px 120px 100px 120px 100px; }
         .grid-dl { grid-template-columns: 60px 2fr 80px 120px 100px 150px 80px 80px; }
         .grid-logs { grid-template-columns: 40px 1fr 180px; }
@@ -126,7 +126,7 @@
         .clickable-cell { padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;}
         .clickable-cell:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
         
-        .btn-text-action { background: none; border: none; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; white-space:nowrap;}
+        .btn-text-action { background: none; border: none; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; white-space:nowrap; outline:none;}
         .btn-text-action:hover { color: white; }
         .btn-text-action.danger { color: var(--danger); border: 1px solid rgba(255,69,58,0.3); border-radius: 4px; padding: 2px 6px; background: rgba(255,69,58,0.1); margin-top:2px;}
         .btn-text-action.success { color: var(--success); border: 1px solid rgba(52,199,89,0.3); border-radius: 4px; padding: 2px 6px; background: rgba(52,199,89,0.1); margin-top:2px;}
@@ -199,6 +199,7 @@
         .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         svg { width: 18px; height: 18px; fill: currentColor; }
 
+        /* 📱 MOBILE RESPONSIVENESS (1 LINE TABLES) */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; height: 60px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border-color); overflow-x: auto;}
@@ -209,11 +210,33 @@
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
-            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
-            .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
-            .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
             .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
+            .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px;}
+            
+            /* SQUASH TABLES TO FIT MOBILE SCREEN WITHOUT SCROLLING */
+            .table-container { overflow-x: hidden; }
+            .table-inner { min-width: 100%; }
+            .header-row { font-size:10px; padding:10px; }
+            .data-row { font-size:11px; padding:10px; }
+            
+            .grid-users { grid-template-columns: 1fr 60px 50px 60px; }
+            .grid-users > div:nth-child(2), .grid-users > div:nth-child(4), .grid-users > div:nth-child(7) { display: none; }
+            
+            .grid-songs-complex { grid-template-columns: 40px 1fr 40px 50px; }
+            .grid-songs-complex > div:nth-child(1), .grid-songs-complex > div:nth-child(4), .grid-songs-complex > div:nth-child(5), .grid-songs-complex > div:nth-child(7), .grid-songs-complex > div:nth-child(8), .grid-songs-complex > div:nth-child(10) { display:none; }
+            
+            .grid-pending { grid-template-columns: 30px 1fr 60px 80px; }
+            .grid-pending > div:nth-child(2), .grid-pending > div:nth-child(6) { display:none; }
+            
+            .grid-dl { grid-template-columns: 1fr 40px 50px 50px; }
+            .grid-dl > div:nth-child(1), .grid-dl > div:nth-child(4), .grid-dl > div:nth-child(6) { display:none; }
+
+            .grid-transactions { grid-template-columns: 1fr 1fr 60px; }
+            .grid-transactions > div:nth-child(3), .grid-transactions > div:nth-child(5), .grid-transactions > div:nth-child(6), .grid-transactions > div:nth-child(7) { display:none;}
+
+            .grid-orders { grid-template-columns: 1fr 60px 60px; }
+            .grid-orders > div:nth-child(2), .grid-orders > div:nth-child(4), .grid-orders > div:nth-child(6), .grid-orders > div:nth-child(8), .grid-orders > div:nth-child(9) { display:none;}
         }
     </style>
 </head>
@@ -226,7 +249,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
@@ -245,6 +268,7 @@
 
     <div class="nav-section">
         <div class="nav-title">内容</div>
+        
         <div class="nav-item-group">
             <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理</button>
             <div class="sub-nav" id="sub-songs">
@@ -254,6 +278,7 @@
                 <button class="sub-nav-item" onclick="switchView('wip', '歌曲管理 / 批量上传')">批量上传</button>
             </div>
         </div>
+
         <button class="nav-item" onclick="switchView('wip', '首页内容')" id="nav-wip1">⌂ 首页内容</button>
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
@@ -292,6 +317,7 @@
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
+            <button class="btn-top">EN</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
     </div>
@@ -324,12 +350,12 @@
     <div id="view-activity" class="view-section">
         <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
         <div class="glass-panel" style="padding:20px;">
-            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>全部活动</div><div>共 1 个活动</div></div>
-            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>全部活动</div><div>共 1 个活动</div></div>
+            <div style="display:flex; align-items:center; flex-wrap:wrap; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
                 <div style="color:var(--text-muted); font-size:12px;">#1</div>
-                <div style="flex:1;">
+                <div style="flex:1; min-width:200px;">
                     <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
-                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:12px; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
                     </div>
                 </div>
@@ -353,7 +379,11 @@
         <div class="glass-panel">
             <div class="filter-bar" style="justify-content:space-between; padding:15px;">
                 <div style="display:flex; align-items:center; gap:15px;"><label style="display:flex; align-items:center; gap:5px; color:white;"><input type="checkbox" id="selectAllPending" onchange="toggleAllPending()"> 全选</label><span style="font-size:12px; color:var(--text-muted)">已选 <span id="sel-pend-count" style="font-weight:bold; color:white;">0</span> 首</span></div>
-                <div style="display:flex; gap:10px;"><input type="text" id="bulkRejectReason" placeholder="批量驳回原因(必填)" class="input-text" style="padding:6px 12px; height:32px;"><button class="btn-primary" style="background:var(--success); height:32px; padding:0 15px;" onclick="bulkApprove()">批量通过</button><button class="btn-primary" style="background:var(--danger); height:32px; padding:0 15px;" onclick="bulkReject()">批量驳回</button></div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="bulkRejectReason" placeholder="批量驳回原因(必填)" class="input-text" style="padding:6px 12px; height:32px; flex:1; min-width:120px;">
+                    <button class="btn-primary" style="background:var(--success); height:32px; padding:0 15px;" onclick="bulkApprove()">通过</button>
+                    <button class="btn-primary" style="background:var(--danger); height:32px; padding:0 15px;" onclick="bulkReject()">驳回</button>
+                </div>
             </div>
             <div class="table-container">
                 <div class="table-inner">
@@ -529,6 +559,31 @@
 <div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="banConfirmModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">封禁账号</h3><p style="font-size:12px; color:var(--text-muted);" id="banConfirmTarget"></p><input type="text" id="banConfirmReason" class="modal-input" placeholder="请输入封禁原因(必填)"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeBanTarget()">封禁</button></div></div></div>
 
+<div class="modal-overlay" id="uploadSongModal">
+    <div class="modal-box">
+        <div class="modal-content">
+            <h3 style="margin: 0 0 15px 0; text-align:center;" id="uploadModalTitle">上传音乐 (Upload Audio)</h3>
+            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('songCoverUpload').click()">
+                <img id="songCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
+            </div>
+            <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
+            <label class="input-label">Category (分类)</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10; margin-bottom:10px;"></select>
+            
+            <div style="background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px dashed var(--border-color); margin-bottom:15px;">
+                <label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 File <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label>
+                <div style="text-align:center; font-size:12px; color:var(--text-muted); margin: 8px 0;">- OR -</div>
+                <label class="input-label" style="margin-top:0;">转运歌曲 (URL Transload .m4a/.mp3)</label>
+                <input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;" placeholder="https://...">
+            </div>
+
+            <label class="input-label">Title (标题)</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
+            <label class="input-label">Tokens 💎</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="executeUpload()" style="color:var(--accent-light);">Upload</button></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="songSettingsModal">
     <div class="modal-box">
         <div class="modal-content">
@@ -564,31 +619,12 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="uploadSongModal">
-    <div class="modal-box">
-        <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;" id="uploadModalTitle">Upload Audio</h3>
-            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('songCoverUpload').click()">
-                <img id="songCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
-                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
-            </div>
-            <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
-            <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
-            <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label></div>
-            <div id="transloadFileArea" style="margin-bottom:10px; display:none;"><label class="input-label">URL (.m4a)</label><input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;"></div>
-            <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
-            <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
-        </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="executeUpload()" style="color:var(--accent-light);">Upload</button></div>
-    </div>
-</div>
-
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
+    let allSongs = [], allUsers = [], logData = { register: [], admin: [] }, allGenres = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
-    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {};
+    let chartInstances = {}; let globalSettings = {};
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -664,7 +700,7 @@
             document.getElementById('welcomeText').style.display = 'block';
             setTimeout(() => {
                 const sp = document.getElementById('splashLoader'); sp.style.opacity = 0;
-                setTimeout(() => sp.style.display = 'none', 800);
+                setTimeout(() => sp.style.display = 'none', 400);
             }, 1000);
         }, 400);
     }
@@ -875,7 +911,7 @@
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
             if(g.status === 'DISABLED') card.classList.add('disabled');
@@ -1000,17 +1036,20 @@
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
     function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; pendingUploadBase64 = null; }
-    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Upload Audio'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-    function openTransloadModal() { isTransloadMode = true; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Transload Audio'; document.getElementById('uploadFileArea').style.display = 'none'; document.getElementById('transloadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
+    function openUploadModal() { document.getElementById('transloadUrlInput').value = ''; resetUploadModal(); document.getElementById('uploadSongModal').style.display = 'flex'; }
 
     async function executeUpload() {
         const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value;
-        if(isTransloadMode) {
-            const url = document.getElementById('transloadUrlInput').value; if(!url) return; showGlobalLoader();
+        const url = document.getElementById('transloadUrlInput').value;
+        const file = document.getElementById('uploadFileInput').files[0];
+        
+        if(!url && !file) return showToast("请选择文件或输入链接 (Provide File or URL)");
+
+        showGlobalLoader();
+        if(url) {
             const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
             if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
         } else {
-            const file = document.getElementById('uploadFileInput').files[0]; if(!file) return; showGlobalLoader();
             const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
             if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
