@@ -12,7 +12,7 @@
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         /* SIDEBAR */
-        .sidebar { width: 220px; background-color: var(--bg-dark); display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid var(--border-color); overflow-y: auto;}
+        .sidebar { width: 220px; background-color: var(--bg-dark); display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid var(--border-color); overflow-y: auto; z-index: 100;}
         .sidebar-header { padding: 30px 20px; }
         .sidebar-logo { font-size: 18px; font-weight: 800; letter-spacing: 1px; color: white; display: flex; flex-direction: column;}
         .sidebar-logo span { font-size: 11px; font-weight: 500; color: var(--text-muted); margin-top: 4px; letter-spacing: 0;}
@@ -31,7 +31,7 @@
         .sub-nav-item.active { color: var(--accent-light); font-weight: bold; }
         .badge-pending { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: none;}
 
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main);}
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); position: relative;}
         .top-bar { height: 60px; min-height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid var(--border-color); background: var(--bg-dark);}
         .breadcrumb { font-size: 13px; color: var(--text-muted); font-weight: 500;}
         .top-actions { display: flex; gap: 10px; align-items: center;}
@@ -41,6 +41,13 @@
         .view-section { display: none; padding: 30px; overflow-y: auto; height: 100%; box-sizing: border-box; animation: fadeIn 0.3s ease;}
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* USER SPECIFIC LOADING UI */
+        #user-loading-overlay { display:none; position:absolute; inset:0; background:var(--bg-main); z-index:50; flex-direction:column; align-items:center; justify-content:center; }
+        .loading-text-cute { font-size:14px; margin-bottom:15px; color:var(--text-muted); font-weight:bold; letter-spacing:1px; animation: pulse 1.5s infinite; }
+        .loading-bar-container { width: 250px; height: 6px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid var(--border-color);}
+        #user-loading-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); transition: width 0.1s linear; border-radius: 4px;}
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         .dash-header { margin-bottom: 25px; display:flex; justify-content:space-between; align-items:flex-end;}
         .dash-header h2 { margin: 0 0 5px 0; font-size: 24px;}
@@ -92,6 +99,10 @@
         .grid-user-topup { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
         
+        /* NEW TRANSACTION & ORDER GRIDS */
+        .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; }
+        .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; }
+
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
         .song-cell-text { display: flex; flex-direction: column; gap: 5px; overflow: hidden; min-width: 0;}
@@ -124,8 +135,11 @@
 
         .btn-manage { background: var(--accent-light); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s;}
         .btn-manage:hover { background: var(--accent); }
+        .manage-dropdown { position: absolute; right: 20px; top: 40px; background: #2a2a35; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; overflow: hidden; z-index: 100; min-width: 120px;}
+        .manage-dropdown.show { display: flex; }
+        .drop-btn { padding: 12px 15px; background: none; border: none; color: white; font-size: 13px; text-align: left; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
+        .drop-btn:hover { background: rgba(255,255,255,0.1); }
         
-        /* GENRES GRID */
         .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px;}
         .genre-card { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; cursor: grab; background: #1a1a24; border: 1px solid transparent; transition: 0.2s;}
         .genre-card.drag-over { border-top: 3px solid var(--accent); }
@@ -138,7 +152,6 @@
         .genre-settings-icon:hover { background: var(--accent); }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
-        /* --- PAGINATION (Picture 3) --- */
         .pagination-bar { display:flex; justify-content:center; align-items:center; padding:15px; gap:15px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); }
         .page-btn { background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main); padding:6px 12px; border-radius:4px; cursor:pointer; transition:0.2s;}
         .page-btn:hover { border-color:var(--accent-light); color:var(--accent-light); }
@@ -146,7 +159,6 @@
         .page-info { background:var(--bg-dark); border:1px solid var(--accent); color:var(--text-main); padding:6px 15px; border-radius:4px; font-weight:bold; }
         .page-size-sel { background:var(--bg-dark); color:white; border:1px solid var(--border-color); padding:4px; border-radius:4px; outline:none; }
 
-        /* --- USER DETAIL VIEW --- */
         .user-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; background:var(--bg-dark); border:1px solid var(--border-color); padding:20px; border-radius:8px; margin-bottom:20px;}
         .u-stat-box { display:flex; flex-direction:column; gap:5px; }
         .u-stat-lbl { font-size:11px; color:var(--text-muted); }
@@ -167,8 +179,7 @@
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 14px; border: none; background: transparent; font-size: 14px; cursor: pointer; color: var(--text-main); font-weight: 500; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
-        .btn-danger-full { width: 100%; background: rgba(255, 69, 58, 0.1); color: var(--danger); border: 1px solid rgba(255, 69, 58, 0.3); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s;}
-        
+
         .apple-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -194,7 +205,7 @@
         }
     </style>
 </head>
-<body>
+<body onclick="closeDropdowns(event)">
 
 <div id="globalLoader" class="modal-overlay" style="display:flex; z-index: 99999;"><div class="apple-spinner"></div></div>
 <div id="toast" class="toast"></div>
@@ -205,6 +216,7 @@
 
     <div class="nav-section">
         <div class="nav-title">内容</div>
+        
         <div class="nav-item-group">
             <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理</button>
             <div class="sub-nav" id="sub-songs">
@@ -214,6 +226,7 @@
                 <button class="sub-nav-item" onclick="switchView('wip', '歌曲管理 / 批量上传')">批量上传</button>
             </div>
         </div>
+
         <button class="nav-item" onclick="switchView('wip', '首页内容')" id="nav-wip1">⌂ 首页内容</button>
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
@@ -231,8 +244,8 @@
 
     <div class="nav-section">
         <div class="nav-title">财务</div>
-        <button class="nav-item" onclick="switchView('wip', '交易记录')" id="nav-data">◇ 交易记录</button>
-        <button class="nav-item" onclick="switchView('logs', '系统日志')" id="nav-logs">$ 系统日志</button>
+        <button class="nav-item" onclick="switchView('transactions', '交易记录')" id="nav-transactions">◇ 交易记录</button>
+        <button class="nav-item" onclick="switchView('orders', '充值订单')" id="nav-orders">$ 充值订单</button>
     </div>
 </div>
 
@@ -241,8 +254,14 @@
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
+            <button class="btn-top">EN</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
+    </div>
+    
+    <div id="user-loading-overlay">
+        <div class="loading-text-cute">努力加载中 >.< </div>
+        <div class="loading-bar-container"><div id="user-loading-bar"></div></div>
     </div>
 
     <div id="view-dashboard" class="view-section active">
@@ -282,10 +301,7 @@
                         <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-top" onclick="openActivityModal()">编辑</button>
-                    <button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button>
-                </div>
+                <div style="display:flex; gap:10px;"><button class="btn-top" onclick="openActivityModal()">编辑</button><button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button></div>
             </div>
         </div>
     </div>
@@ -387,8 +403,6 @@
                     <label style="font-size:12px; color:var(--text-muted);">角色</label>
                     <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option></select>
                     <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
-                    <label style="font-size:12px; color:var(--text-muted); margin-top:10px;">VIP 等级 (分成比例)</label>
-                    <select class="select-box"><option>R0 - 创作者 0% / 平台 100%</option></select>
                 </div>
                 
                 <div class="admin-col" style="border-left:1px solid var(--border-color); padding-left:20px;">
@@ -430,28 +444,41 @@
             </div></div>
         </div>
     </div>
-    
-    <div id="view-logs" class="view-section">
+
+    <div id="view-transactions" class="view-section">
+        <div class="dash-header"><h2 style="margin-bottom:10px;">交易记录</h2><p>歌曲购买流水</p></div>
         <div class="glass-panel">
-            <div class="panel-header"><span style="font-weight: 600;">系统日志</span><button class="btn-primary" style="background:var(--danger)" onclick="clearLogs('admin', true)">Clear All</button></div>
-            <div class="table-container"><div class="table-inner"><div class="header-row grid-logs"><div></div><div>Action</div><div>Date</div></div><div id="logsList"></div></div></div>
+            <div class="filter-bar" style="justify-content:space-between;">
+                <div class="filter-group" style="flex:none; width:300px;"><input type="text" id="transSearchInput" class="input-text" placeholder="搜索 买家邮箱 / 用户名 / VIP 创作者" oninput="loadTransactions()"></div>
+                <button class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="clearAllTransactions()">Clear All</button>
+            </div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-transactions"><div>买家</div><div>歌曲</div><div>VIP 创作者</div><div>消费钻石</div><div>VIP 分成</div><div>平台分成</div><div>时间</div></div>
+                <div id="transactionList"></div>
+            </div></div>
+        </div>
+    </div>
+    
+    <div id="view-orders" class="view-section">
+        <div class="dash-header"><h2 style="margin-bottom:10px;">充值订单</h2><p>钻石充值流水</p></div>
+        <div class="glass-panel">
+            <div class="filter-bar" style="justify-content:space-between;">
+                <div class="filter-group" style="flex:none; width:300px;"><input type="text" id="orderSearchInput" class="input-text" placeholder="搜索 邮箱 / 用户名" oninput="loadOrders()"></div>
+                <button class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="clearAllOrders()">Clear All</button>
+            </div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-orders"><div>用户</div><div>订单号/网关单号</div><div>金额</div><div>货币</div><div>钻石</div><div>支付方式</div><div>状态</div><div>时间</div><div style="text-align:right;">操作</div></div>
+                <div id="orderList"></div>
+            </div></div>
         </div>
     </div>
 </div>
 
 <audio id="adminAudioPlayer" style="display:none;"></audio>
 
-<div class="modal-overlay" id="quickPriceModal">
-    <div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑价格</h3><input type="number" id="quickPriceInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickPrice()" style="color:var(--accent-light)">保存</button></div></div>
-</div>
-
-<div class="modal-overlay" id="quickGenreModal">
-    <div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">移动分类</h3><select id="quickGenreSelect" class="modal-input" style="background:#0f0f13;"></select></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickGenre()" style="color:var(--accent-light)">保存</button></div></div>
-</div>
-
-<div class="modal-overlay" id="activityModal">
-    <div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div>
-</div>
+<div class="modal-overlay" id="quickPriceModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑价格</h3><input type="number" id="quickPriceInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickPrice()" style="color:var(--accent-light)">保存</button></div></div></div>
+<div class="modal-overlay" id="quickGenreModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">移动分类</h3><select id="quickGenreSelect" class="modal-input" style="background:#0f0f13;"></select></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickGenre()" style="color:var(--accent-light)">保存</button></div></div></div>
+<div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
 
 <div class="modal-overlay" id="songSettingsModal">
     <div class="modal-box">
@@ -462,7 +489,6 @@
                 <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">EDIT COVER</div>
             </div>
             <input type="file" id="editSongCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'editSongCoverPreview', 'editSong')">
-            
             <label class="input-label">Song Title</label><input type="text" id="settingName" class="modal-input">
             <label class="input-label">Category</label><select id="settingGenre" class="modal-input" style="background:#0b0b10;"></select>
             <label class="input-label">Token Cost</label><input type="number" id="settingPrice" class="modal-input" min="0">
@@ -510,7 +536,7 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], logData = { register: [], admin: [] }, allGenres = [];
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
     let isTransloadMode = false; let chartInstances = {};
@@ -523,6 +549,7 @@
     function hideLoader() { document.getElementById('globalLoader').style.display = 'none'; }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
+    function closeDropdowns(e) { if(!e.target.closest('.btn-manage')) { document.querySelectorAll('.manage-dropdown').forEach(d => d.classList.remove('show')); } }
 
     function switchView(viewId, titleStr = '') {
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -537,11 +564,11 @@
         }
 
         if(viewId === 'users') loadUsers(); 
-        if(viewId === 'data') loadLogs('register'); 
-        if(viewId === 'logs') loadLogs('admin');
         if(viewId === 'songs') loadSongs();
         if(viewId === 'pending') loadPending();
         if(viewId === 'activity') renderActivity();
+        if(viewId === 'transactions') loadTransactions();
+        if(viewId === 'orders') loadOrders();
     }
 
     function publishChanges() { showLoader(); setTimeout(() => { hideLoader(); showToast("Changes Published!"); }, 800); }
@@ -608,12 +635,59 @@
         globalSettings.activity = act; renderActivity(); hideLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled");
     }
 
+    // --- TRANSACTIONS & ORDERS ---
+    async function loadTransactions() {
+        showLoader(); allTrans = await (await fetch(`${API_URL}/transactions`)).json();
+        const query = document.getElementById('transSearchInput').value.toLowerCase();
+        const filtered = allTrans.filter(t => (t.buyer||'').toLowerCase().includes(query) || (t.email||'').toLowerCase().includes(query) || (t.uploader||'').toLowerCase().includes(query));
+        
+        const listDiv = document.getElementById('transactionList'); listDiv.innerHTML = '';
+        filtered.forEach(t => {
+            listDiv.innerHTML += `
+                <div class="data-row grid-transactions">
+                    <div style="font-weight:bold;">${t.buyer}<br><span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${t.email}</span></div>
+                    <div class="truncate" title="${t.songName}">${t.songName}</div>
+                    <div style="font-weight:bold;">${t.uploader||'FULLKIK'}</div>
+                    <div style="color:var(--token); font-weight:bold;">💎 ${t.tokens||t.tokensSpent||0}</div>
+                    <div style="color:var(--success);">0.00</div>
+                    <div style="color:var(--text-muted);">0.00</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${new Date(t.time).toLocaleString()}</div>
+                </div>`;
+        });
+        hideLoader();
+    }
+    async function clearAllTransactions() { if(!confirm("Clear all transactions?")) return; showLoader(); await fetch(`${API_URL}/transactions/all`, {method:'DELETE'}); loadTransactions(); }
+
+    async function loadOrders() {
+        showLoader(); allOrders = await (await fetch(`${API_URL}/orders`)).json();
+        const query = document.getElementById('orderSearchInput').value.toLowerCase();
+        const filtered = allOrders.filter(o => (o.user||'').toLowerCase().includes(query) || (o.email||'').toLowerCase().includes(query));
+        
+        const listDiv = document.getElementById('orderList'); listDiv.innerHTML = '';
+        filtered.forEach(o => {
+            listDiv.innerHTML += `
+                <div class="data-row grid-orders">
+                    <div style="font-weight:bold;" class="truncate">${o.user}<br><span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${o.email}</span></div>
+                    <div style="font-size:11px; color:var(--text-muted);">${o.orderId}<br>-</div>
+                    <div style="font-weight:bold;">${parseFloat(o.price).toFixed(2)}</div>
+                    <div style="font-weight:bold;">${o.currency||'RMB'}</div>
+                    <div style="color:var(--token); font-weight:bold;">💎 ${o.amount}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${o.method||'SUPERPAY'}</div>
+                    <div><span class="badge-status-pill status-approved">已完成</span></div>
+                    <div style="font-size:11px; color:var(--text-muted);">建 ${new Date(o.time).toLocaleString()}<br>付 ${new Date(o.time).toLocaleString()}</div>
+                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="showToast('Refund under development')">退款</button></div>
+                </div>`;
+        });
+        hideLoader();
+    }
+    async function clearAllOrders() { if(!confirm("Clear all orders?")) return; showLoader(); await fetch(`${API_URL}/orders/all`, {method:'DELETE'}); loadOrders(); }
+
     // --- DASHBOARD CHARTS ---
     function buildDashboardStats() {
         const now = new Date(); document.getElementById('dash-date').innerText = `平台数据 · ${now.toISOString().split('T')[0]} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         const totalUsers = allUsers.length; const vipUsers = allUsers.filter(u => u.isVip).length;
-        let totalRev = 0; let orders = 0;
-        allUsers.forEach(u => { if(u.purchases) { u.purchases.forEach(p => { totalRev += p.tokensSpent; orders++; }); } });
+        let totalRev = 0; let ordersCount = 0;
+        allUsers.forEach(u => { if(u.purchases) { u.purchases.forEach(p => { totalRev += p.tokensSpent; ordersCount++; }); } });
 
         const todayStr = now.toISOString().split('T')[0];
         const usersToday = allUsers.filter(u => u.createdAt && u.createdAt.startsWith(todayStr)).length;
@@ -625,7 +699,7 @@
         document.getElementById('stat-pend-sub').innerText = `${pends} 首待审`;
         document.getElementById('stat-total-rev').innerHTML = `${totalRev} <span style="font-size:16px; color:var(--token);">💎</span>`;
         
-        document.getElementById('ops-orders').innerText = orders; document.getElementById('ops-success').innerText = orders;
+        document.getElementById('ops-orders').innerText = ordersCount; document.getElementById('ops-success').innerText = ordersCount;
         document.getElementById('ops-rev-rm').innerText = totalRev; document.getElementById('ops-users-today').innerText = usersToday;
         document.getElementById('ops-songs-today').innerText = songsToday;
 
@@ -710,7 +784,7 @@
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
             if(g.status === 'DISABLED') card.classList.add('disabled');
@@ -748,7 +822,7 @@
         if(id) {
             const toggleText = status === 'DISABLED' ? '启用分类 (Enable)' : '停用分类 (Disable)';
             const toggleNewStatus = status === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
-            toggleHTML = `<button class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--accent); color:var(--accent);" onclick="toggleGenreStatus('${id}', '${toggleNewStatus}')">${toggleText}</button>`;
+            toggleHTML = `<button class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--accent-light); color:var(--accent-light);" onclick="toggleGenreStatus('${id}', '${toggleNewStatus}')">${toggleText}</button>`;
         }
         document.getElementById('genreToggleArea').innerHTML = toggleHTML;
         document.getElementById('genreDeleteArea').innerHTML = id ? `<button class="btn-danger-full" onclick="deleteGenre('${id}')">删除分类 (Delete)</button>` : '';
@@ -879,7 +953,16 @@
     }
 
     // --- USERS ---
-    async function loadUsers() { showLoader(); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); handleUserSearch(); hideLoader(); }
+    async function loadUsers() {
+        const overlay = document.getElementById('user-loading-overlay'); const bar = document.getElementById('user-loading-bar');
+        hideLoader(); overlay.style.display = 'flex'; bar.style.width = '0%';
+        let progress = 0; const interval = setInterval(() => { progress += Math.random()*15; if(progress > 90) progress = 90; bar.style.width = `${progress}%`; }, 100);
+        
+        allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+        
+        clearInterval(interval); bar.style.width = '100%';
+        setTimeout(() => { overlay.style.display = 'none'; handleUserSearch(); }, 300);
+    }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
     
     function handleUserSearch() {
@@ -939,7 +1022,6 @@
             document.getElementById('det-ban-reason').value = '';
         }
 
-        // Render History Tables in Detail View
         const topupDiv = document.getElementById('det-topup-list'); topupDiv.innerHTML = '';
         (currentEditUser.topups || []).slice().reverse().forEach(t => {
             topupDiv.innerHTML += `<div class="data-row grid-user-topup"><div>${new Date(t.date).toISOString().split('T')[0]}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token);font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
@@ -970,8 +1052,7 @@
     }
 
     async function adminForcePassword() {
-        let newP = document.getElementById('det-force-pass').value;
-        if(!newP) newP = Math.random().toString(36).slice(-8);
+        let newP = document.getElementById('det-force-pass').value; if(!newP) newP = Math.random().toString(36).slice(-8);
         showLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/force-password`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newPassword: newP}) });
         document.getElementById('det-force-pass').value = ''; hideLoader(); showToast(`Password Reset! (${newP})`);
     }
@@ -994,7 +1075,7 @@
         hideLoader(); showToast("User Unbanned");
     }
 
-    // --- DATA / LOGS ---
+    // --- LOGS ---
     async function loadLogs(type) { showLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideLoader(); }
     async function clearLogs(type, isAll) { showLoader(); await fetch(`${API_URL}/logs/${type}/all`, { method: 'DELETE' }); loadLogs(type); showToast("Logs cleared."); }
 
