@@ -44,7 +44,6 @@
 
         /* --- LOADERS --- */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; }
-        
         #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
         .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
@@ -58,6 +57,10 @@
 
         @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
+
+        /* Shaky Error Animation */
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
+        .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
 
         /* --- DASHBOARD UI --- */
         .dash-header { margin-bottom: 25px; display:flex; justify-content:space-between; align-items:flex-end;}
@@ -96,12 +99,13 @@
         .input-text:focus, .select-box:focus { border-color: var(--accent-light); }
         .btn-filter { background: var(--accent); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;}
         
-        /* TABLE STYLES */
-        .table-container { width: 100%; overflow-x: auto; }
-        .table-inner { min-width: 900px; }
+        /* TABLE STYLES (Optimized for Horizontal Scroll) */
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-inner { min-width: 1000px; }
         .header-row { display: grid; padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 12px; font-weight: bold; color: var(--text-muted); background: rgba(0,0,0,0.2);}
         .data-row { display: grid; padding: 16px 20px; align-items: center; border-bottom: 1px solid var(--border-color); font-size: 13px; transition: 0.2s;}
         .data-row:hover { background: rgba(255,255,255,0.02); }
+        .data-row > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
         .grid-users { grid-template-columns: 1.5fr 2fr 100px 100px 120px 100px 120px 100px; }
         .grid-dl { grid-template-columns: 60px 2fr 80px 120px 100px 150px 80px 80px; }
@@ -118,7 +122,7 @@
         .song-cell-text { display: flex; flex-direction: column; gap: 5px; overflow: hidden; min-width: 0;}
         .song-cell-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;}
         .song-cell-sub { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        .song-action-col { display: flex; flex-direction: column; gap: 5px; align-items: center;}
+        .song-action-col { display: flex; flex-direction: column; gap: 5px; align-items: center; white-space: normal !important;}
         
         .clickable-cell { padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: 0.2s; border: 1px solid transparent;}
         .clickable-cell:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
@@ -162,7 +166,6 @@
         .genre-settings-icon:hover { background: var(--accent); }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
-        /* PAGINATION */
         .pagination-bar { display:flex; justify-content:center; align-items:center; padding:15px; gap:15px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); }
         .page-btn { background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main); padding:6px 12px; border-radius:4px; cursor:pointer; transition:0.2s;}
         .page-btn:hover { border-color:var(--accent-light); color:var(--accent-light); }
@@ -192,12 +195,11 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .btn-danger-full { width: 100%; background: rgba(255, 69, 58, 0.1); color: var(--danger); border: 1px solid rgba(255, 69, 58, 0.3); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s;}
         
-        .apple-spinner { width: 30px; height: 30px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 5px; border-radius: 50%; transition: 0.2s; display:flex; align-items:center; justify-content:center;}
         .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         svg { width: 18px; height: 18px; fill: currentColor; }
+
+        .act-stats-row { font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -209,11 +211,14 @@
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
-            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
-            .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
-            .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
             .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
+            .act-stats-row { flex-wrap: wrap; gap: 5px !important; line-height: 1.5; }
+            .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
+            .genre-card .overlay h4 { font-size: 12px; }
+            .genre-card .overlay div { font-size: 10px; }
+            .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
+            .genre-settings-icon svg { width: 14px; height: 14px; }
         }
     </style>
 </head>
@@ -226,7 +231,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
@@ -329,7 +334,7 @@
                 <div style="color:var(--text-muted); font-size:12px;">#1</div>
                 <div style="flex:1;">
                     <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
-                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center;">
+                    <div class="act-stats-row">
                         <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
                     </div>
                 </div>
@@ -575,7 +580,12 @@
             <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
             <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
             <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label></div>
-            <div id="transloadFileArea" style="margin-bottom:10px; display:none;"><label class="input-label">URL (.m4a)</label><input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;"></div>
+            
+            <div style="margin-bottom:10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                <label class="input-label">转运歌曲 (Transload .m4a URL)</label>
+                <input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;" placeholder="https://.../song.m4a">
+            </div>
+
             <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
             <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
         </div>
@@ -588,7 +598,7 @@
     let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
-    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {};
+    let chartInstances = {}; let globalSettings = {};
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -609,9 +619,8 @@
         setTimeout(() => { document.getElementById('contentLoader').style.display = 'none'; }, 200);
     }
 
-    function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+    function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className='toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerText = msg; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor='var(--border-color)';}, 4000); }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
-    function closeDropdowns(e) { if(!e.target.closest('.btn-manage')) { document.querySelectorAll('.manage-dropdown').forEach(d => d.classList.remove('show')); } }
 
     function switchView(viewId, titleStr = '') {
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
@@ -639,33 +648,21 @@
 
     // --- INITIALIZATION ---
     async function loadInitial() { 
-        // SPLASH SCREEN LOGIC
         let loadProgress = 0; const circle = document.getElementById('initLoadCircle');
-        const sInt = setInterval(() => {
-            loadProgress += Math.random() * 15; if(loadProgress >= 100) loadProgress = 100;
-            circle.style.strokeDashoffset = 283 - (283 * loadProgress / 100);
-        }, 100);
+        const sInt = setInterval(() => { loadProgress += Math.random() * 15; if(loadProgress >= 100) loadProgress = 100; circle.style.strokeDashoffset = 283 - (283 * loadProgress / 100); }, 100);
 
         try {
             const res = await fetch(`${API_URL}/settings`);
             if(res.ok) { globalSettings = await res.json(); document.getElementById('headerInput').value = globalSettings.headerTitle || "FULLKIK"; document.getElementById('heroTitleInput').value = globalSettings.heroTitle || "专属DJ节奏空间"; }
-            
-            allUsers = await (await fetch(`${API_URL}/all-users`)).json();
-            allSongs = await (await fetch(`${API_URL}/songs`)).json();
-            allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
-            
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
             buildDashboardStats(); renderGenres(); populateGenreDropdowns(); updatePendingBadge();
         } catch(e) {}
 
         clearInterval(sInt); circle.style.strokeDashoffset = 0;
-        
         setTimeout(() => {
             document.getElementById('initLoadText').style.display = 'none'; document.querySelector('.splash-circle-wrap').style.display = 'none';
             document.getElementById('welcomeText').style.display = 'block';
-            setTimeout(() => {
-                const sp = document.getElementById('splashLoader'); sp.style.opacity = 0;
-                setTimeout(() => sp.style.display = 'none', 800);
-            }, 1000);
+            setTimeout(() => { const sp = document.getElementById('splashLoader'); sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 800); }, 1000);
         }, 400);
     }
     
@@ -776,7 +773,7 @@
                     <div style="font-weight:bold;">${u.dlCount}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${lastDate}</div>
                     <div>${statusNode}</div>
-                    <div style="text-align:center; display:flex; gap:10px;">${actionBtn} <button class="btn-manage" onclick="openUserDetail('${u.username}')">管理 →</button></div>
+                    <div style="text-align:center;">${actionBtn}</div>
                 </div>
             `;
         });
@@ -784,7 +781,7 @@
     }
     function openBanModalFromDl(username) { currentEditUser = { username: username }; document.getElementById('banConfirmTarget').innerText = `封禁账号: ${username}`; document.getElementById('banConfirmReason').value = ''; document.getElementById('banConfirmModal').style.display = 'flex'; }
     async function executeBanTarget() {
-        const reason = document.getElementById('banConfirmReason').value; if(!reason) return showToast("请输入封禁原因");
+        const reason = document.getElementById('banConfirmReason').value; if(!reason) return showToast("请输入封禁原因", true);
         showGlobalLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/ban`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({reason}) });
         allUsers = await (await fetch(`${API_URL}/all-users`)).json();
         closeModals(); hideGlobalLoader(); showToast("已拉黑！");
@@ -1005,16 +1002,17 @@
 
     async function executeUpload() {
         const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value;
-        if(isTransloadMode) {
-            const url = document.getElementById('transloadUrlInput').value; if(!url) return; showGlobalLoader();
-            const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
+        const urlInput = document.getElementById('transloadUrlInput'); const url = urlInput.value.trim(); const file = document.getElementById('uploadFileInput').files[0];
+        
+        if(isTransloadMode || url) {
+            if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
+            showGlobalLoader(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
             if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        } else {
-            const file = document.getElementById('uploadFileInput').files[0]; if(!file) return; showGlobalLoader();
-            const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
+        } else if(file) {
+            showGlobalLoader(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
             if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        }
+        } else { showToast("Please provide file or URL", true); }
     }
 
     function openQuickPrice(id, currentPrice) { currentQuickEditId = id; document.getElementById('quickPriceInput').value = currentPrice; document.getElementById('quickPriceModal').style.display = 'flex'; }
@@ -1127,7 +1125,7 @@
         if(isBanned) { await adminUnbanUser(currentEditUser.username); } 
         else {
             const reason = document.getElementById('det-ban-reason').value;
-            if(!reason) return showToast("Reason required for ban");
+            if(!reason) return showToast("Reason required for ban", true);
             showGlobalLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/ban`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({reason}) });
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); openUserDetail(currentEditUser.username); hideGlobalLoader(); showToast("User Banned");
         }
@@ -1138,7 +1136,7 @@
     async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
     async function clearLogs(type, isAll) { showGlobalLoader(); await fetch(`${API_URL}/logs/${type}/all`, { method: 'DELETE' }); hideGlobalLoader(); loadLogs(type); showToast("Logs cleared."); }
 
-    loadInitial();
+    document.addEventListener("DOMContentLoaded", () => { loadInitial(); });
 </script>
 </body>
 </html>
