@@ -282,21 +282,6 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS ---
-app.get('/api/orders', async (req, res) => {
-    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
-});
-app.delete('/api/orders/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
-});
-
-app.get('/api/transactions', async (req, res) => {
-    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
-});
-app.delete('/api/transactions/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
-});
-
 // --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
@@ -333,7 +318,11 @@ app.get('/api/songs', async (req, res) => {
 async function saveSongData(fileBuffer, originalName, reqBody) {
     const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
     const url = audioResult.secure_url;
-    let coverUrl = ''; if(reqBody.coverBase64) coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    
+    // Default SVG Cover Fallback if nothing provided
+    let coverUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3Ctext x="50%25" y="50%25" font-size="40" text-anchor="middle" alignment-baseline="central"%3E🎧%3C/text%3E%3C/svg%3E';
+    if(reqBody.coverBase64) coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    else if(reqBody.coverUrl) coverUrl = reqBody.coverUrl; // From transload link
 
     const snapshot = await db.collection('songs').get();
     const newSong = {
