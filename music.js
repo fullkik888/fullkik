@@ -180,7 +180,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -233,10 +232,10 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
-        
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
         topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
+        
         await userRef.update({ tokens: newTokens, topups: topups }); 
         
         await db.collection('orders').add({
@@ -268,6 +267,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
                 uploader: song.uploader || 'FULLKIK', 
                 tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
             });
+            
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
 
@@ -315,19 +315,26 @@ app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
 
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+
 async function saveSongData(fileBuffer, originalName, reqBody) {
-    const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
-    const url = audioResult.secure_url;
-    
-    // Default SVG Cover Fallback if nothing provided
-    let coverUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3Ctext x="50%25" y="50%25" font-size="40" text-anchor="middle" alignment-baseline="central"%3E🎧%3C/text%3E%3C/svg%3E';
-    if(reqBody.coverBase64) coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
-    else if(reqBody.coverUrl) coverUrl = reqBody.coverUrl; // From transload link
+    let url = '';
+    if(fileBuffer) {
+        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
+        url = audioResult.secure_url;
+    } else if(reqBody.url) {
+        url = reqBody.url;
+    }
+
+    let coverUrl = DEFAULT_COVER; 
+    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
+        coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    }
 
     const snapshot = await db.collection('songs').get();
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
-        size: fileBuffer.length, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
+        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
@@ -340,9 +347,7 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 
 app.post('/api/transload', async (req, res) => {
     try {
-        const response = await fetch(req.body.url); if (!response.ok) throw new Error(`HTTP Error from source URL`);
-        const buffer = Buffer.from(await response.arrayBuffer());
-        res.json(await saveSongData(buffer, 'TransloadedTrack.m4a', req.body));
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
     } catch (e) { res.status(400).send(e.message); }
 });
 
@@ -354,7 +359,7 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         if (req.body.status) updates.status = req.body.status; 
         if (req.body.genreId) updates.genreId = req.body.genreId;
         if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
-        if (req.body.coverBase64) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
+        if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
         await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -385,5 +390,11 @@ app.get('/api/logs/:type', async (req, res) => {
 });
 app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
 app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
+
+app.get('/api/orders', async (req, res) => { try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
+app.delete('/api/orders/all', async (req, res) => { try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
+
+app.get('/api/transactions', async (req, res) => { try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
+app.delete('/api/transactions/all', async (req, res) => { try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server bound to 0.0.0.0 on Port ${PORT}`));
