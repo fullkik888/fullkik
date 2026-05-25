@@ -58,7 +58,6 @@
         @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
 
-        /* Shaky Error Animation */
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
         .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
 
@@ -99,7 +98,7 @@
         .input-text:focus, .select-box:focus { border-color: var(--accent-light); }
         .btn-filter { background: var(--accent); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold;}
         
-        /* TABLE STYLES (Optimized for Horizontal Scroll) */
+        /* TABLE STYLES */
         .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table-inner { min-width: 1000px; }
         .header-row { display: grid; padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-size: 12px; font-weight: bold; color: var(--text-muted); background: rgba(0,0,0,0.2);}
@@ -154,18 +153,26 @@
         .drop-btn { padding: 12px 15px; background: none; border: none; color: white; font-size: 13px; text-align: left; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
         .drop-btn:hover { background: rgba(255,255,255,0.1); }
         
+        /* GENRES GRID (Modified) */
         .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px;}
-        .genre-card { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; cursor: grab; background: #1a1a24; border: 1px solid transparent; transition: 0.2s;}
+        .genre-card { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; cursor: pointer; background: #1a1a24; border: 1px solid transparent; transition: 0.2s;}
         .genre-card.drag-over { border-top: 3px solid var(--accent); }
         .genre-card.disabled { opacity: 0.4; filter: grayscale(100%); }
-        .genre-card:hover { border-color: var(--accent); }
+        .genre-card:hover { border-color: var(--accent); transform: translateY(-3px);}
         .genre-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8;}
         .genre-card .overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);}
         .genre-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: var(--accent-light);}
-        .genre-settings-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px; border-radius: 50%; display: flex; transition: 0.2s; z-index: 10;}
-        .genre-settings-icon:hover { background: var(--accent); }
+        .genre-check-wrap { position: absolute; top:10px; right:10px; z-index:10; }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
+        /* UPLOAD SPECIFIC UI */
+        .upload-tabs { display: flex; gap: 0; background: #0f0f13; border-radius: 8px; overflow: hidden; width: max-content; margin-bottom: 15px; border: 1px solid var(--border-color); }
+        .upload-tab { background: transparent; border: none; color: var(--text-muted); padding: 8px 20px; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .upload-tab.active { background: rgba(165,42,42,0.2); color: white; font-weight: bold; }
+        .drop-zone { border: 1px dashed var(--border-color); border-radius: 8px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); }
+        .drop-zone:hover { border-color: var(--accent-light); background: rgba(165,42,42,0.05); }
+
+        /* PAGINATION */
         .pagination-bar { display:flex; justify-content:center; align-items:center; padding:15px; gap:15px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); }
         .page-btn { background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main); padding:6px 12px; border-radius:4px; cursor:pointer; transition:0.2s;}
         .page-btn:hover { border-color:var(--accent-light); color:var(--accent-light); }
@@ -199,7 +206,7 @@
         .icon-btn:hover { color: white; background: rgba(255,255,255,0.1); }
         svg { width: 18px; height: 18px; fill: currentColor; }
 
-        .act-stats-row { font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; }
+        .input-label { font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 5px; display: block; margin-top: 15px;}
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
@@ -211,14 +218,14 @@
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
+            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
+            .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
+            .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
             .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
-            .act-stats-row { flex-wrap: wrap; gap: 5px !important; line-height: 1.5; }
             .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
             .genre-card .overlay h4 { font-size: 12px; }
             .genre-card .overlay div { font-size: 10px; }
-            .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
-            .genre-settings-icon svg { width: 14px; height: 14px; }
         }
     </style>
 </head>
@@ -231,7 +238,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
@@ -255,7 +262,7 @@
             <div class="sub-nav" id="sub-songs">
                 <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 全部歌曲')">全部歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
-                <button class="sub-nav-item" onclick="openUploadModal()">上传歌曲</button>
+                <button class="sub-nav-item" onclick="switchView('upload', '歌曲管理 / 上传歌曲')">上传歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('wip', '歌曲管理 / 批量上传')">批量上传</button>
             </div>
         </div>
@@ -294,7 +301,7 @@
 
 <div class="main-content">
     <div class="top-bar">
-        <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
+        <div class="breadcrumb" id="breadcrumb-current">后台 / 总览</div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
             <button class="btn-top highlight">● 开发环境</button>
@@ -326,6 +333,87 @@
 
     <div id="view-wip" class="view-section"><div style="display:flex; height:100%; align-items:center; justify-content:center; color:var(--text-muted); font-size:20px; font-weight:500;">此页正在开发中...</div></div>
 
+    <div id="view-upload" class="view-section">
+        <div class="dash-header" style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div><h2>上传歌曲</h2><p>管理员直接上传歌曲到平台</p></div>
+            <button class="btn-text-action" onclick="switchView('songs', '歌曲管理')">返回</button>
+        </div>
+        
+        <div class="glass-panel" style="padding: 30px;">
+            <div style="font-size:16px; font-weight:bold; margin-bottom:20px; border-bottom:1px solid var(--border-color); padding-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                歌曲信息 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">未选择 VIP 时，歌曲将归属于 FULLKIK 账号。默认免费上传，如需收费请在价格栏填入钻石数量。</span>
+            </div>
+
+            <label class="input-label">歌曲文件 (MP3 / WAV / M4A) <span style="color:var(--danger)">*</span></label>
+            <div class="upload-tabs" id="audioTabs">
+                <button class="upload-tab active" data-mode="file" onclick="switchUploadTab('audio', 'file')">上传文件</button>
+                <button class="upload-tab" data-mode="link" onclick="switchUploadTab('audio', 'link')">粘贴链接</button>
+            </div>
+            
+            <div id="audioFileContainer" class="drop-zone" onclick="document.getElementById('uploadFileInput').click()">
+                <div style="color:var(--text-muted); font-size:13px;" id="audioDropText">拖拽 MP3 / M4A 文件到此处，或 <span style="color:var(--accent-light);">点击选择</span></div>
+                <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;" onchange="handleAudioSelect(this)">
+            </div>
+            
+            <div id="audioLinkContainer" style="display:none;">
+                <input type="text" id="transloadUrlInput" class="modal-input" placeholder="输入音频直链 (例如: https://.../song.m4a) (转运歌曲)">
+            </div>
+
+            <div style="display:flex; gap:20px; margin-top:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:250px;">
+                    <label class="input-label">歌曲标题 <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="uploadTitleInput" class="modal-input" placeholder="拖入文件后自动填充">
+                </div>
+                <div style="flex:1; min-width:250px;">
+                    <label class="input-label">价格 (钻石，0 = 免费)</label>
+                    <input type="number" id="uploadPriceInput" class="modal-input" value="0" min="0">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:250px;">
+                    <label class="input-label">归属 VIP</label>
+                    <input type="text" id="uploadUploaderInput" class="modal-input" placeholder="FULLKIK (默认)">
+                </div>
+                <div style="flex:1; min-width:250px;">
+                    <label class="input-label">分类选择</label>
+                    <select id="uploadGenreSelect" class="modal-input" style="background:var(--bg-dark); cursor:pointer;">
+                        </select>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:250px;">
+                    <label class="input-label">显示艺人 (可选)</label>
+                    <input type="text" class="modal-input" placeholder="留空则显示 FULLKIK 或归属 VIP 用户名">
+                </div>
+            </div>
+
+            <label class="input-label" style="margin-top:10px;">封面图片 (可选)</label>
+            <div class="upload-tabs" id="coverTabs">
+                <button class="upload-tab active" data-mode="file" onclick="switchUploadTab('cover', 'file')">上传文件</button>
+                <button class="upload-tab" data-mode="link" onclick="switchUploadTab('cover', 'link')">粘贴链接</button>
+            </div>
+            
+            <div id="coverFileContainer" class="drop-zone" style="display:flex; align-items:center; justify-content:center; gap:15px; padding:20px;" onclick="document.getElementById('songCoverUpload').click()">
+                <img id="songCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50%25' y='50%25' font-size='40' text-anchor='middle' alignment-baseline='central'%3E🎧%3C/text%3E%3C/svg%3E" style="width:60px; height:60px; border-radius:8px; object-fit:cover;">
+                <div style="color:var(--text-muted); font-size:13px;" id="coverDropText">拖拽图片到此处，或 <span style="color:var(--accent-light);">点击选择</span></div>
+                <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
+            </div>
+            
+            <div id="coverLinkContainer" style="display:none;">
+                <input type="text" id="coverUrlInput" class="modal-input" placeholder="输入图片直链">
+            </div>
+
+            <div id="uploadProgressUI" style="display:none; margin-top:20px; text-align:center;">
+                <div style="font-size:13px; color:var(--accent-light); margin-bottom:10px; font-weight:bold; animation: pulseFade 1s infinite;">音乐正在上传 ^-^</div>
+                <div class="content-loader-bar-wrap" style="width:100%; height:6px;"><div id="uploadProgressBar" style="width:0%; height:100%; background:var(--accent-light); transition:width 0.2s;"></div></div>
+            </div>
+
+            <button class="btn-submit" id="btnExecuteUpload" style="margin-top:30px; width:100%; padding:14px; background:linear-gradient(90deg, var(--accent), var(--accent-light)); border:none; color:white; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer;" onclick="executeUpload()">上传歌曲</button>
+        </div>
+    </div>
+
     <div id="view-activity" class="view-section">
         <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
         <div class="glass-panel" style="padding:20px;">
@@ -346,11 +434,17 @@
     <div id="view-categories" class="view-section">
         <div class="dash-header"><h2 style="margin-bottom:10px;">分类管理</h2><p>管理首页推荐和歌曲分类</p></div>
         <div class="glass-panel" style="padding: 15px 20px; display:flex; flex-wrap:wrap; gap: 10px; align-items:flex-end;">
-            <div style="flex:1;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">WEBSITE NAME</label><input type="text" id="headerInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
-            <div style="flex:2;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">HERO TITLE (Ex: 专属DJ节奏空间)</label><input type="text" id="heroTitleInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+            <div style="flex:1;"><label class="input-label">WEBSITE NAME</label><input type="text" id="headerInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+            <div style="flex:2;"><label class="input-label">HERO TITLE (Ex: 专属DJ节奏空间)</label><input type="text" id="heroTitleInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
             <button class="btn-primary" style="height:38px;" onclick="saveSettings()">Save Configuration</button>
         </div>
-        <div class="glass-panel"><div class="genre-grid" id="genreGrid"></div></div>
+        <div class="glass-panel">
+            <div class="panel-header">
+                <div>分类列表</div>
+                <button class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="bulkDeleteGenres()">批量删除</button>
+            </div>
+            <div class="genre-grid" id="genreGrid"></div>
+        </div>
     </div>
 
     <div id="view-pending" class="view-section">
@@ -534,6 +628,26 @@
 <div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="banConfirmModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">封禁账号</h3><p style="font-size:12px; color:var(--text-muted);" id="banConfirmTarget"></p><input type="text" id="banConfirmReason" class="modal-input" placeholder="请输入封禁原因(必填)"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeBanTarget()">封禁</button></div></div></div>
 
+<div class="modal-overlay" id="genreModal">
+    <div class="modal-box">
+        <div class="modal-content">
+            <h3 style="margin: 0 0 15px 0; text-align:center;" id="genreModalTitle">Add Genre</h3>
+            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('genreCoverUpload').click()">
+                <img id="genreCoverPreview" src="" style="width: 100%; height: 100%; object-fit: cover; background: #333;">
+                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">EDIT IMG</div>
+            </div>
+            <input type="file" id="genreCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'genreCoverPreview', 'genre')">
+            <label class="input-label">Sequence (排序)</label><input type="number" id="genreSeqInput" class="modal-input" min="1">
+            <label class="input-label">Genre Name</label><input type="text" id="genreNameInput" class="modal-input">
+            
+            <div class="modal-actions" style="border:none;">
+                <button class="modal-btn" onclick="viewSongsInGenre()" style="background:var(--accent-light); border-radius:6px; color:white; width:100%;">查看歌曲</button>
+            </div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="saveGenre()" style="color:var(--accent-light);">Save</button></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="songSettingsModal">
     <div class="modal-box">
         <div class="modal-content">
@@ -551,54 +665,12 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="genreModal">
-    <div class="modal-box">
-        <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;" id="genreModalTitle">Add Genre</h3>
-            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('genreCoverUpload').click()">
-                <img id="genreCoverPreview" src="" style="width: 100%; height: 100%; object-fit: cover; background: #333;">
-                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">EDIT IMG</div>
-            </div>
-            <input type="file" id="genreCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'genreCoverPreview', 'genre')">
-            <label class="input-label">Sequence (排序)</label><input type="number" id="genreSeqInput" class="modal-input" min="1">
-            <label class="input-label">Genre Name</label><input type="text" id="genreNameInput" class="modal-input">
-            <div id="genreToggleArea" style="margin-top:10px;"></div>
-            <div id="genreDeleteArea"></div>
-        </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="saveGenre()" style="color:var(--accent-light);">Save</button></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="uploadSongModal">
-    <div class="modal-box">
-        <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;" id="uploadModalTitle">Upload Audio</h3>
-            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('songCoverUpload').click()">
-                <img id="songCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
-                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
-            </div>
-            <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
-            <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
-            <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label></div>
-            
-            <div style="margin-bottom:10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                <label class="input-label">转运歌曲 (Transload .m4a URL)</label>
-                <input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;" placeholder="https://.../song.m4a">
-            </div>
-
-            <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
-            <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
-        </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="executeUpload()" style="color:var(--accent-light);">Upload</button></div>
-    </div>
-</div>
-
 <script>
     const API_URL = '/api'; 
     let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
-    let chartInstances = {}; let globalSettings = {};
+    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {};
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -641,6 +713,29 @@
         if(viewId === 'transactions') loadTransactions();
         if(viewId === 'orders') loadOrders();
         if(viewId === 'downloads') loadDlMonitor();
+    }
+
+    function switchUploadTab(group, mode) {
+        document.querySelectorAll(`#${group}Tabs .upload-tab`).forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`#${group}Tabs .upload-tab[data-mode="${mode}"]`).classList.add('active');
+        
+        if(group === 'audio') {
+            isTransloadMode = (mode === 'link');
+            document.getElementById('audioFileContainer').style.display = isTransloadMode ? 'none' : 'flex';
+            document.getElementById('audioLinkContainer').style.display = isTransloadMode ? 'block' : 'none';
+        } else {
+            const isLink = (mode === 'link');
+            document.getElementById('coverFileContainer').style.display = isLink ? 'none' : 'flex';
+            document.getElementById('coverLinkContainer').style.display = isLink ? 'block' : 'none';
+        }
+    }
+
+    function handleAudioSelect(input) {
+        const file = input.files[0];
+        if(file) {
+            document.getElementById('audioDropText').innerHTML = `已选择: <span style="color:var(--accent-light);">${file.name}</span>`;
+            document.getElementById('uploadTitleInput').value = file.name.replace(/\.[^/.]+$/, "");
+        }
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -883,16 +978,28 @@
             card.addEventListener('drop', (e) => { e.preventDefault(); card.classList.remove('drag-over'); if (draggedGenreId && draggedGenreId !== g.id) handleGenreReorder(draggedGenreId, g.id); });
 
             card.innerHTML = `
+                <input type="checkbox" class="genre-check" value="${g.id}" onclick="event.stopPropagation()" style="position:absolute; top:10px; right:10px; z-index:10; width:18px; height:18px; accent-color:var(--danger);">
                 <div class="genre-badge">${g.sequence}</div>
-                <img src="${cover}">
-                <div class="overlay" style="flex-direction:column; align-items:flex-start; justify-content:flex-end;">
+                <img src="${cover}" onclick="openGenreModal('${g.id}', '${g.name.replace(/'/g, "\\'")}', '${cover}', '${g.status}', ${g.sequence})">
+                <div class="overlay" onclick="openGenreModal('${g.id}', '${g.name.replace(/'/g, "\\'")}', '${cover}', '${g.status}', ${g.sequence})">
                     <h4>${g.name}</h4><div style="font-size:12px; color:var(--text-muted);">${count} 首歌曲</div>
                 </div>
-                <div class="genre-settings-icon" onclick="openGenreModal('${g.id}', '${g.name.replace(/'/g, "\\'")}', '${cover}', '${g.status}', ${g.sequence})"><svg viewBox="0 0 24 24"><path d="M19.14... (icon omitted) ...15.6z"/><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></div>
             `;
             grid.appendChild(card);
         });
         grid.innerHTML += `<div class="genre-card add-genre-card" onclick="openGenreModal()"><div style="font-size:30px; font-weight:100; margin-bottom:5px;">+</div><div>添加分类</div></div>`;
+    }
+
+    async function bulkDeleteGenres() {
+        const checked = Array.from(document.querySelectorAll('.genre-check:checked')).map(cb => cb.value);
+        if(!checked.length) return showToast("未选择分类 (No categories selected)", true);
+        if(!confirm(`删除 ${checked.length} 个分类? (Delete ${checked.length} categories?)`)) return;
+        
+        showGlobalLoader();
+        for(let id of checked) { await fetch(`${API_URL}/genres/${id}`, { method: 'DELETE' }); }
+        await loadInitial();
+        hideGlobalLoader();
+        showToast("批量删除成功 (Bulk Deleted Successfully!)");
     }
 
     async function handleGenreReorder(dragId, dropId) {
@@ -915,6 +1022,12 @@
         document.getElementById('genreToggleArea').innerHTML = toggleHTML;
         document.getElementById('genreDeleteArea').innerHTML = id ? `<button class="btn-danger-full" onclick="deleteGenre('${id}')">删除分类 (Delete)</button>` : '';
         document.getElementById('genreModal').dataset.editId = id || ''; document.getElementById('genreModal').style.display = 'flex';
+    }
+
+    function viewSongsInGenre() {
+        const id = document.getElementById('genreModal').dataset.editId;
+        const name = document.getElementById('genreNameInput').value;
+        if(!id) return; closeModals(); openGenreSongs(id, name);
     }
 
     async function toggleGenreStatus(id, newStatus) { showGlobalLoader(); await fetch(`${API_URL}/genres/${id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); closeModals(); await loadInitial(); hideGlobalLoader();}
@@ -996,23 +1109,86 @@
     async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'REMOVED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
-    function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; pendingUploadBase64 = null; }
-    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Upload Audio'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-    function openTransloadModal() { isTransloadMode = true; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Transload Audio'; document.getElementById('uploadFileArea').style.display = 'none'; document.getElementById('transloadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-
-    async function executeUpload() {
-        const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value;
-        const urlInput = document.getElementById('transloadUrlInput'); const url = urlInput.value.trim(); const file = document.getElementById('uploadFileInput').files[0];
+    function resetUploadModal() { 
+        document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('uploadUploaderInput').value = '';
+        document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50%25' y='50%25' font-size='40' text-anchor='middle' alignment-baseline='central'%3E🎧%3C/text%3E%3C/svg%3E"; 
+        pendingUploadBase64 = null; 
         
-        if(isTransloadMode || url) {
-            if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
-            showGlobalLoader(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
-            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        } else if(file) {
-            showGlobalLoader(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
-            const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        } else { showToast("Please provide file or URL", true); }
+        document.getElementById('uploadProgressUI').style.display = 'none';
+        document.getElementById('btnExecuteUpload').style.display = 'block';
+        document.getElementById('uploadProgressBar').style.width = '0%';
+        isUploading = false;
+        
+        switchUploadTab('audio', 'file'); switchUploadTab('cover', 'file');
+    }
+
+    function switchUploadTab(group, mode) {
+        document.querySelectorAll(`#${group}Tabs .upload-tab`).forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`#${group}Tabs .upload-tab[data-mode="${mode}"]`).classList.add('active');
+        if(group === 'audio') {
+            document.getElementById('audioFileContainer').style.display = (mode === 'link') ? 'none' : 'flex';
+            document.getElementById('audioLinkContainer').style.display = (mode === 'link') ? 'block' : 'none';
+        } else {
+            document.getElementById('coverFileContainer').style.display = (mode === 'link') ? 'none' : 'flex';
+            document.getElementById('coverLinkContainer').style.display = (mode === 'link') ? 'block' : 'none';
+        }
+    }
+
+    function handleAudioSelect(input) {
+        const file = input.files[0];
+        if(file) {
+            document.getElementById('audioDropText').innerHTML = `已选择: <span style="color:var(--accent-light);">${file.name}</span>`;
+            document.getElementById('uploadTitleInput').value = file.name.replace(/\.[^/.]+$/, "");
+        }
+    }
+
+    let isUploading = false; let upInterval;
+    async function executeUpload() {
+        if(isUploading) return;
+        const modeAudio = document.querySelector('#audioTabs .active').dataset.mode; 
+        const modeCover = document.querySelector('#coverTabs .active').dataset.mode;
+        
+        const title = document.getElementById('uploadTitleInput').value.trim();
+        const price = document.getElementById('uploadPriceInput').value;
+        const genreId = document.getElementById('uploadGenreSelect').value;
+        const uploader = document.getElementById('uploadUploaderInput').value.trim() || 'FULLKIK';
+        const audioUrl = document.getElementById('transloadUrlInput').value.trim();
+        const coverUrl = document.getElementById('coverUrlInput').value.trim();
+        const file = document.getElementById('uploadFileInput').files[0];
+
+        if(modeAudio === 'link') {
+            const urlInput = document.getElementById('transloadUrlInput');
+            if(!audioUrl || !audioUrl.startsWith('http') || !audioUrl.includes('.m4a')) {
+                urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); return showToast("无效的音频链接 (Invalid URL or not .m4a)", true);
+            }
+        } else { if(!file) return showToast("请选择音频文件 (Select an audio file)", true); }
+        if(!title) return showToast("请输入歌曲标题 (Title required)", true);
+
+        isUploading = true;
+        document.getElementById('btnExecuteUpload').style.display = 'none'; document.getElementById('uploadProgressUI').style.display = 'block';
+        const pBar = document.getElementById('uploadProgressBar'); pBar.style.width = '0%';
+        let progress = 0; upInterval = setInterval(() => { progress += Math.random()*10; if(progress > 90) progress = 90; pBar.style.width = `${progress}%`; }, 300);
+
+        try {
+            let reqBody = { title, price, genreId, uploader, status: 'APPROVED' };
+            if(modeCover === 'file' && pendingUploadBase64) reqBody.coverBase64 = pendingUploadBase64;
+            else if(modeCover === 'link' && coverUrl) reqBody.coverUrl = coverUrl;
+
+            let res;
+            if(modeAudio === 'link') {
+                reqBody.url = audioUrl;
+                res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqBody) });
+            } else {
+                const fd = new FormData(); fd.append('mp3file', file);
+                for (let key in reqBody) fd.append(key, reqBody[key]);
+                res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+            }
+
+            if(res.ok) {
+                pBar.style.width = '100%'; clearInterval(upInterval);
+                setTimeout(() => { showToast("上传成功！ (Upload Successful)"); resetUploadModal(); switchView('songs', '歌曲管理'); }, 500);
+            } else { throw new Error(await res.text()); }
+        } catch(e) { clearInterval(upInterval); showToast("上传失败 (Upload Failed): " + e.message, true); resetUploadModal(); }
     }
 
     function openQuickPrice(id, currentPrice) { currentQuickEditId = id; document.getElementById('quickPriceInput').value = currentPrice; document.getElementById('quickPriceModal').style.display = 'flex'; }
@@ -1035,7 +1211,16 @@
     }
 
     // --- USERS ---
-    async function loadUsers() { showContentLoader(); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); handleUserSearch(); hideContentLoader(); }
+    async function loadUsers() {
+        const overlay = document.getElementById('user-loading-overlay'); const bar = document.getElementById('user-loading-bar');
+        hideContentLoader(); overlay.style.display = 'flex'; bar.style.width = '0%';
+        let progress = 0; const interval = setInterval(() => { progress += Math.random()*15; if(progress > 90) progress = 90; bar.style.width = `${progress}%`; }, 100);
+        
+        allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+        
+        clearInterval(interval); bar.style.width = '100%';
+        setTimeout(() => { overlay.style.display = 'none'; handleUserSearch(); }, 300);
+    }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
     
     function handleUserSearch() {
@@ -1067,6 +1252,8 @@
             `;
         });
     }
+
+    function toggleManageDrop(username, e) { e.stopPropagation(); document.querySelectorAll('.manage-dropdown').forEach(d => { if(d.id !== `manage-drop-${username}`) d.classList.remove('show'); }); document.getElementById(`manage-drop-${username}`).classList.toggle('show'); }
 
     function openUserDetail(uName) {
         currentEditUser = allUsers.find(u => u.username === uName);
@@ -1136,7 +1323,7 @@
     async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
     async function clearLogs(type, isAll) { showGlobalLoader(); await fetch(`${API_URL}/logs/${type}/all`, { method: 'DELETE' }); hideGlobalLoader(); loadLogs(type); showToast("Logs cleared."); }
 
-    document.addEventListener("DOMContentLoaded", () => { loadInitial(); });
+    document.addEventListener("DOMContentLoaded", () => { loadInitial(); resetUploadModal(); });
 </script>
 </body>
 </html>
