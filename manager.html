@@ -43,22 +43,18 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- LOADERS --- */
-        /* 1. Global Action Loader (Transparent Overlay) */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; }
         
-        /* 2. Splash Initialization Loader (Sphere) */
         #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
         .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); }
-        .welcome-text.show span { animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .welcome-text.show span:nth-child(1) { animation-delay: 0.1s; } .welcome-text.show span:nth-child(2) { animation-delay: 0.2s; } .welcome-text.show span:nth-child(3) { animation-delay: 0.3s; } .welcome-text.show span:nth-child(4) { animation-delay: 0.4s; }
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         
-        /* 3. Local Content View Loader (Progress Bar) */
         #contentLoader { display:none; position:absolute; inset:0; background:var(--bg-main); z-index:50; flex-direction:column; align-items:center; justify-content:center; }
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); }
-        #contentLoaderBar { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; border-radius:4px; }
+        #contentLoaderBar { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
 
         @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
@@ -108,7 +104,7 @@
         .data-row:hover { background: rgba(255,255,255,0.02); }
         
         .grid-users { grid-template-columns: 1.5fr 2fr 100px 100px 120px 100px 120px 100px; }
-        .grid-dl { grid-template-columns: 50px 2fr 80px 100px 80px 140px 60px 80px; gap: 10px; }
+        .grid-dl { grid-template-columns: 60px 2fr 80px 120px 100px 150px 80px 80px; }
         .grid-logs { grid-template-columns: 40px 1fr 180px; }
         .grid-songs-complex { grid-template-columns: 40px 40px 3fr 100px 100px 60px 80px 80px 100px 100px 60px; gap: 10px;}
         .grid-pending { grid-template-columns: 40px 40px 3fr 120px 100px 120px 140px; gap: 10px;}
@@ -116,7 +112,7 @@
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; }
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; }
-        
+
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
         .song-cell-text { display: flex; flex-direction: column; gap: 5px; overflow: hidden; min-width: 0;}
@@ -154,7 +150,6 @@
         .drop-btn { padding: 12px 15px; background: none; border: none; color: white; font-size: 13px; text-align: left; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
         .drop-btn:hover { background: rgba(255,255,255,0.1); }
         
-        /* GENRES GRID */
         .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px;}
         .genre-card { aspect-ratio: 1; border-radius: 12px; position: relative; overflow: hidden; cursor: grab; background: #1a1a24; border: 1px solid transparent; transition: 0.2s;}
         .genre-card.drag-over { border-top: 3px solid var(--accent); }
@@ -186,7 +181,7 @@
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s; z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .toast.show { transform: translateX(-50%) translateY(0); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;}
         .modal-box { background: var(--bg-main); width: 100%; max-width: 360px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.2s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; text-align: left; }
@@ -214,9 +209,7 @@
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
-            .grid-users { grid-template-columns: 120px 150px 100px 100px; } 
-            .grid-dl { grid-template-columns: 50px 1fr; gap:10px; }
-            .grid-dl > div:nth-child(n+3) { display: none; } 
+            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
             .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
             .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
@@ -230,19 +223,19 @@
     <div class="splash-circle-wrap">
         <svg width="80" height="80" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="none" stroke="#2a1515" stroke-width="6"></circle>
-            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s linear; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
 <div id="contentLoader">
-    <div style="font-size:14px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1.5s infinite;">努力加载中 >.<</div>
+    <div style="font-size:14px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力加载中 >.<</div>
     <div class="content-loader-bar-wrap"><div id="contentLoaderBar"></div></div>
 </div>
 
-<div id="globalLoader"><div style="font-size:14px; font-weight:bold; color:var(--accent-light); animation: pulseFade 1.5s infinite;">努力加载中 >.<</div></div>
+<div id="globalLoader"><div style="font-size:14px; font-weight:bold; color:var(--accent-light); animation: pulseFade 1s infinite;">努力加载中 >.<</div></div>
 <div id="toast" class="toast"></div>
 
 <div class="sidebar">
@@ -299,7 +292,6 @@
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
-            <button class="btn-top">EN</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
     </div>
@@ -669,11 +661,11 @@
         
         setTimeout(() => {
             document.getElementById('initLoadText').style.display = 'none'; document.querySelector('.splash-circle-wrap').style.display = 'none';
-            const wt = document.getElementById('welcomeText'); wt.style.display = 'block'; wt.classList.add('show');
+            document.getElementById('welcomeText').style.display = 'block';
             setTimeout(() => {
                 const sp = document.getElementById('splashLoader'); sp.style.opacity = 0;
                 setTimeout(() => sp.style.display = 'none', 800);
-            }, 1500); 
+            }, 1000);
         }, 400);
     }
     
@@ -746,7 +738,7 @@
             listDiv.innerHTML += `
                 <div class="data-row grid-orders">
                     <div style="font-weight:bold;" class="truncate">${o.user}<br><span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${o.email}</span></div>
-                    <div class="truncate" style="font-size:11px; color:var(--text-muted);">${o.orderId}<br>-</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${o.orderId}<br>-</div>
                     <div style="font-weight:bold;">${parseFloat(o.price).toFixed(2)}</div>
                     <div style="font-weight:bold;">${o.currency||'RMB'}</div>
                     <div style="color:var(--token); font-weight:bold;">💎 ${o.amount}</div>
@@ -784,7 +776,7 @@
                     <div style="font-weight:bold;">${u.dlCount}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${lastDate}</div>
                     <div>${statusNode}</div>
-                    <div style="text-align:center;">${actionBtn}</div>
+                    <div style="text-align:center; display:flex; gap:10px;">${actionBtn} <button class="btn-manage" onclick="openUserDetail('${u.username}')">管理 →</button></div>
                 </div>
             `;
         });
@@ -883,7 +875,6 @@
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            if(g.status === 'DISABLED') return;
             const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
@@ -898,7 +889,7 @@
                 <div class="genre-badge">${g.sequence}</div>
                 <img src="${cover}">
                 <div class="overlay" style="flex-direction:column; align-items:flex-start; justify-content:flex-end;">
-                    <h4 class="truncate" style="width:100%;">${g.name}</h4><div style="font-size:12px; color:var(--text-muted);">${count} 首歌曲</div>
+                    <h4>${g.name}</h4><div style="font-size:12px; color:var(--text-muted);">${count} 首歌曲</div>
                 </div>
                 <div class="genre-settings-icon" onclick="openGenreModal('${g.id}', '${g.name.replace(/'/g, "\\'")}', '${cover}', '${g.status}', ${g.sequence})"><svg viewBox="0 0 24 24"><path d="M19.14... (icon omitted) ...15.6z"/><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></div>
             `;
@@ -1046,16 +1037,7 @@
     }
 
     // --- USERS ---
-    async function loadUsers() {
-        const overlay = document.getElementById('user-loading-overlay'); const bar = document.getElementById('user-loading-bar');
-        hideContentLoader(); overlay.style.display = 'flex'; bar.style.width = '0%';
-        let progress = 0; const interval = setInterval(() => { progress += Math.random()*15; if(progress > 90) progress = 90; bar.style.width = `${progress}%`; }, 100);
-        
-        allUsers = await (await fetch(`${API_URL}/all-users`)).json();
-        
-        clearInterval(interval); bar.style.width = '100%';
-        setTimeout(() => { overlay.style.display = 'none'; handleUserSearch(); }, 300);
-    }
+    async function loadUsers() { showContentLoader(); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); handleUserSearch(); hideContentLoader(); }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
     
     function handleUserSearch() {
