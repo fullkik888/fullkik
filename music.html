@@ -22,7 +22,7 @@
         .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
 
-        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s;}
+        .profile-trigger { display: flex; align-items: center; gap: 10px; background: transparent; padding: 0; border-radius: 30px; cursor: pointer; transition: 0.2s;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
         .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
@@ -63,7 +63,7 @@
         .song-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .song-info { padding: 15px; }
-        .song-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
+        .song-title { font-size: 15px; font-weight: 600; margin-bottom: 5px;}
         .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
 
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
@@ -89,7 +89,7 @@
         input[type=range].seeker::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; cursor: pointer; }
         input[type=range].seeker::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
 
-        .action-row { display: flex; gap: 15px;}
+        .action-row { display: flex; gap: 15px; align-items:center;}
         .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px;}
         .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(128, 0, 0, 0.4);}
         
@@ -121,8 +121,8 @@
         .vip-stat-val { font-size: 28px; font-weight: bold; }
         .vip-stat-lbl { font-size: 12px; color: var(--text-muted); }
         .vip-tabs { display: flex; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
-        .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none;}
-        .vip-tab.active { color: var(--accent-light); font-weight: bold; }
+        .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none; transition:0.2s;}
+        .vip-tab.active { color: var(--accent-light); font-weight: bold; border-bottom: 2px solid var(--accent-light); }
 
         .vip-upload-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
@@ -146,13 +146,14 @@
 
         /* --- HISTORY LISTS --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
-        .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a1a24; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
+        .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: rgba(255,255,255,0.02); border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
-        .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
+        .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px; transition:0.2s;}
+        .lib-row:hover { background: rgba(255,255,255,0.02); }
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; text-decoration: none;}
-        .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.1); color:var(--accent-light);}
         .icon-btn svg { width: 20px; height: 20px; fill: currentColor;}
 
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
@@ -164,24 +165,23 @@
         .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
-        .modal-btn:hover { background: rgba(255,255,255,0.05); }
+        .modal-btn:hover { background: rgba(255,255,255,0.05); color:var(--accent-light); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
-        /* SPLASH & LOADERS */
-        #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        /* ANIMATED LOADERS */
+        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 5, 5, 0.85); backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
-        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #splashLogoFade { font-size:20px; font-weight:bold; letter-spacing:2px; margin-bottom:15px; animation: pulseFade 1.5s infinite; color:var(--text-main); }
+        .pop-text { display:none; font-size:28px; font-weight:900; letter-spacing:4px; color:var(--text-main); }
+        .pop-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .pop-text span:nth-child(1){animation-delay:0.1s} .pop-text span:nth-child(2){animation-delay:0.2s} .pop-text span:nth-child(3){animation-delay:0.3s} .pop-text span:nth-child(4){animation-delay:0.4s} .pop-text span:nth-child(5){animation-delay:0.5s} .pop-text span:nth-child(6){animation-delay:0.6s} .pop-text span:nth-child(7){animation-delay:0.7s} .pop-text span:nth-child(8){animation-delay:0.8s} .pop-text span:nth-child(9){animation-delay:0.9s} .pop-text span:nth-child(10){animation-delay:1.0s} .pop-text span:nth-child(11){animation-delay:1.1s} .pop-text span:nth-child(12){animation-delay:1.2s} .pop-text span:nth-child(13){animation-delay:1.3s} .pop-text span:nth-child(14){animation-delay:1.4s} .pop-text span:nth-child(15){animation-delay:1.5s} .pop-text span:nth-child(16){animation-delay:1.6s} .pop-text span:nth-child(17){animation-delay:1.7s} .pop-text span:nth-child(18){animation-delay:1.8s}
         
-        .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
-        .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
+        .content-loader-bar-wrap { width:250px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); }
+        .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.2s ease; }
 
         @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
-        @keyframes popChar { 0% { opacity:0; transform:translateY(10px); } 100% { opacity:1; transform:translateY(0); } }
 
-        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
         @media (max-width: 768px) {
@@ -204,20 +204,29 @@
 <body onclick="closeDropdowns(event)">
 
 <div id="splashLoader">
-    <div class="splash-text" id="initLoadText" style="margin-bottom:10px;">FULLKIK</div>
+    <div id="splashLogoFade">FULLKIK</div>
     <div class="splash-circle-wrap">
         <svg width="80" height="80" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="45" fill="none" stroke="#2a1515" stroke-width="6"></circle>
-            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.3s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="welcome-text" id="welcomeText" style="font-size:20px; font-weight:bold; letter-spacing:2px;"></div>
+    <div class="pop-text" id="welcomeText">
+        <span>欢</span><span>迎</span><span>来</span><span>到</span><span>F</span><span>U</span><span>L</span><span>L</span><span>K</span><span>I</span><span>K</span>
+    </div>
 </div>
 
-<div id="vipUploadLoader" class="modal-overlay" style="z-index:100000; flex-direction:column; background:rgba(11,11,11,0.9);">
-    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;" id="vipUploadText">努力上传歌曲 >w<</div>
-    <div class="content-loader-bar-wrap" id="vipUploadBarWrap"><div id="vipUploadBar" class="loader-bar-fill" style="width:0%;"></div></div>
-    <div id="vipUploadSuccessText" style="display:none; font-size:18px; font-weight:bold; color:var(--success); letter-spacing:1px;"></div>
+<div id="vipUploadProgressOverlay" class="modal-overlay" style="z-index: 999999; flex-direction:column; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px);">
+    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
+    <div class="content-loader-bar-wrap" style="width:250px;">
+        <div id="vipUploadBar" class="loader-bar-fill" style="width:0%;"></div>
+    </div>
+</div>
+
+<div id="vipUploadSuccessOverlay" class="modal-overlay" style="z-index: 999999; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px);">
+    <div class="pop-text" id="vipSuccessText">
+        <span>提</span><span>交</span><span>成</span><span>功</span><span> </span><span>请</span><span>等</span><span>待</span><span> </span><span>1</span><span>-</span><span>3</span><span> </span><span>天</span><span>审</span><span>核</span><span>时</span><span>间</span>
+    </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -307,7 +316,7 @@
         
         <div class="topup-grid-large" id="topupGridRender"></div>
 
-        <p style="font-size:12px; color:var(--text-muted);">支付方式 (Payment Method)</p>
+        <p style="font-size:12px; color:var(--text-muted);" data-i18n="lblPayMethod">支付方式 (Payment Method)</p>
         <div class="pay-methods">
             <button class="pay-btn active" id="btnCurrRMB" onclick="setCurrency('RMB')">RMB</button>
             <button class="pay-btn" id="btnCurrMYR" onclick="setCurrency('MYR')">MYR</button>
@@ -317,10 +326,10 @@
         <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
 
         <div class="topup-footer">
-            <div style="color:var(--text-muted); font-size:14px;">总计 (Total)</div>
+            <div style="color:var(--text-muted); font-size:14px;" data-i18n="lblTotal">总计 (Total)</div>
             <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥0</div>
         </div>
-        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
+        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()" data-i18n="btnPay">确认支付 (Simulated)</button>
     </div>
 
     <div id="view-history" class="view-section">
@@ -329,9 +338,9 @@
             <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pHist">我的消费</h2>
         </div>
         <div class="vip-tabs">
-            <button class="vip-tab active" onclick="renderHistory('ALL')" id="histTabALL">全部</button>
-            <button class="vip-tab" onclick="renderHistory('BUY')" id="histTabBUY">购买历史</button>
-            <button class="vip-tab" onclick="renderHistory('TOPUP')" id="histTabTOPUP">消费记录</button>
+            <button class="vip-tab active" onclick="renderHistory('ALL')" id="histTabALL" data-i18n="tabAll">全部</button>
+            <button class="vip-tab" onclick="renderHistory('BUY')" id="histTabBUY" data-i18n="tabBuy">购买历史</button>
+            <button class="vip-tab" onclick="renderHistory('TOPUP')" id="histTabTOPUP" data-i18n="tabTopup">消费记录</button>
         </div>
         <div class="hist-list" id="historyList"></div>
     </div>
@@ -428,7 +437,8 @@
 </div>
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
-<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
+<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent-light); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
+<div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
 
 <div class="modal-overlay" id="vipUploadModal">
     <div class="modal-box">
@@ -443,8 +453,8 @@
             <div style="margin-bottom:10px;"><label class="btn-submit" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="vipFileInput" accept="audio/*" style="display:none;"></label></div>
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:10px;"></div>
 
-            <label style="font-size:12px; color:var(--text-muted);">Song Title</label><input type="text" id="vipTitleInput" class="modal-input" style="margin-bottom:10px;">
-            <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
+            <label style="font-size:12px; color:var(--text-muted);">Song Title</label><input type="text" id="vipTitleInput" class="input-field" style="margin-bottom:10px; width:100%; box-sizing:border-box;">
+            <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="input-field" value="10" min="0" style="margin-bottom:0; width:100%; box-sizing:border-box;">
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:5px;"></div>
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="submitReview">提交审核</button></div>
@@ -458,51 +468,14 @@
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
     let currentTopupAmt = 500, currentTopupPrice = 850;
-    
-    // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
     let currentCurrency = 'RMB';
     const EX_RATE = 0.65; // Approx MYR to RMB conversion
     const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
 
-    function setCurrency(curr) {
-        currentCurrency = curr;
-        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
-        document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
-        
-        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
-        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
-        
-        renderTopupPacks();
-    }
-
-    function renderTopupPacks() {
-        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
-        packs.forEach((pk, i) => {
-            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
-            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
-            
-            grid.innerHTML += `
-                <div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">
-                    ${bonusStr}<div class="prc">${sym}${price}</div>
-                </div>`;
-            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
-        });
-    }
-
-    function selectTopup(amt, bonus, price, el) {
-        if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
-        currentTopupAmt = amt + bonus; currentTopupPrice = price;
-        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
-    }
-
-    // --- LANGUAGE SYSTEM ---
     const dict = {
-        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", submitReview: "Submit for Review" },
-        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒。", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", submitReview: "提交审核" }
+        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", lblPayMethod: "Payment Method", lblTotal: "Total", btnPay: "Confirm Payment", submitReview: "Submit for Review", tabAll: "All", tabBuy: "Purchases", tabTopup: "Top Ups" },
+        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒。", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", lblPayMethod: "支付方式", lblTotal: "总计", btnPay: "确认支付 (Simulated)", submitReview: "提交审核", tabAll: "全部", tabBuy: "购买历史", tabTopup: "消费记录" }
     };
-    let currentLang = localStorage.getItem('djLang') || 'cn';
 
     function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
 
@@ -511,6 +484,7 @@
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
         
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
+        const profileBtnT = document.getElementById('profileBtnText'); if(!username && profileBtnT) profileBtnT.innerText = dict[currentLang].login;
         
         if(currentSong) openSong(currentSong.id);
         
@@ -523,7 +497,8 @@
     }
 
     function generateWaveform() { const wf = document.getElementById('waveform'); if(!wf) return; wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
-    function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
+    
+    function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent-light)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
@@ -549,23 +524,11 @@
     // --- INITIALIZATION ---
     async function init() {
         let loadProgress = 0; const circle = document.getElementById('initLoadCircle');
-        const updateProgress = (pct) => { circle.style.strokeDashoffset = 283 - (283 * pct / 100); };
-        updateProgress(10);
+        const sInt = setInterval(() => { if(loadProgress < 90) loadProgress += Math.random() * 10; if(circle) circle.style.strokeDashoffset = 283 - (283 * loadProgress / 100); }, 100);
 
         try {
-            if(!username) {
-                const pbtn = document.getElementById('profileBtn');
-                if(pbtn) {
-                    pbtn.innerHTML = `<span style="padding: 4px 12px; font-weight: bold; background: var(--accent); border-radius: 12px; color: white;" id="profileBtnText">${dict[currentLang].login}</span>`;
-                    pbtn.style.background = 'transparent'; pbtn.style.border = 'none';
-                    pbtn.onclick = (e) => { e.stopPropagation(); window.location.href = '/register.html'; };
-                }
-                const tu = document.getElementById('tokenUI'); if(tu) tu.style.display = 'none';
-                const nl = document.getElementById('nav-library'); if(nl) nl.style.display = 'none';
-                updateProgress(30);
-            } else {
+            if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
-                updateProgress(30);
                 if(uRes.ok) { 
                     const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
                     updateTokenUI(); 
@@ -576,52 +539,42 @@
                     const pbn = document.getElementById('profileBannerName'); if(pbn) pbn.innerText = username;
                     
                     if(isUserVip) {
-                        const pvTag = document.getElementById('profileBannerVipTag'); if(pvTag) pvTag.style.display = 'inline-block'; 
-                        const vReg = document.getElementById('vipRegSection'); if(vReg) vReg.style.display = 'none'; 
-                        const vCon = document.getElementById('vipConfigSection'); if(vCon) vCon.style.display = 'block'; 
-                        const vCen = document.getElementById('btnVipCenterTop'); if(vCen) vCen.style.display = 'block';
-                        
-                        const cw = document.getElementById('configWechat'); if(cw) cw.value = data.wechat || ''; 
-                        const cwp = document.getElementById('configWechatPub'); if(cwp) cwp.checked = data.wechatPublic;
-                        
-                        if(data.wechatPublic && data.wechat) { const pwDisp = document.getElementById('profileWechatDisplay'); if(pwDisp) { pwDisp.style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; } }
-                    } else { const bUp = document.getElementById('btnUpgradeTop'); if(bUp) bUp.style.display = 'block'; }
+                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
+                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
+                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
+                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
+            } else {
+                const profileBtn = document.getElementById('profileBtn');
+                if(profileBtn) {
+                    profileBtn.innerHTML = `<span style="padding: 6px 16px; font-weight: bold; background: linear-gradient(90deg, var(--accent), var(--accent-light)); border-radius: 20px; font-size:13px; color:white;" id="profileBtnText">Login</span>`;
+                    profileBtn.onclick = (e) => { e.stopPropagation(); window.location.href = '/register.html'; };
+                }
             }
             
             const setRes = await fetch(`${API_URL}/settings`);
-            updateProgress(50);
             if(setRes.ok) { const settings = await setRes.json(); if(settings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = settings.headerTitle; } if(settings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = settings.heroTitle; } }
 
-            allGenres = await (await fetch(`${API_URL}/genres`)).json(); updateProgress(75);
-            allSongs = await (await fetch(`${API_URL}/songs`)).json(); updateProgress(100);
+            allGenres = await (await fetch(`${API_URL}/genres`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            setCurrency('RMB'); 
-            renderGenres(); applyLang(); 
-        } catch(e) { console.error("Init Error:", e); updateProgress(100); } 
-
+            setCurrency('RMB'); renderGenres(); applyLang(); 
+            
+            loadProgress = 100; if(circle) circle.style.strokeDashoffset = 0;
+        } catch(e) { console.error("Init Error:", e); } 
+        
+        clearInterval(sInt);
         setTimeout(() => {
-            document.getElementById('initLoadText').style.display = 'none'; document.querySelector('.splash-circle-wrap').style.display = 'none';
-            
-            const welcomeStr = currentLang === 'en' ? "Welcome to FULLKIK" : "欢迎来到FULLKIK";
-            const welcomeEl = document.getElementById('welcomeText');
-            welcomeEl.innerHTML = ''; welcomeEl.style.display = 'block';
-            for(let i=0; i<welcomeStr.length; i++) {
-                const span = document.createElement('span');
-                span.innerText = welcomeStr[i] === ' ' ? '\u00A0' : welcomeStr[i];
-                span.style.opacity = '0'; span.style.display = 'inline-block';
-                span.style.animation = `popUp 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
-                span.style.animationDelay = `${i * 0.05}s`;
-                welcomeEl.appendChild(span);
-            }
-
-            setTimeout(() => {
-                const sp = document.getElementById('splashLoader'); sp.style.opacity = 0;
+            const lt = document.getElementById('initLoadText'); if(lt) lt.style.display = 'none'; 
+            const cw = document.querySelector('.splash-circle-wrap'); if(cw) cw.style.display = 'none';
+            const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
+            setTimeout(() => { 
+                const sp = document.getElementById('splashLoader'); if(!sp) return;
+                sp.style.opacity = 0; 
                 setTimeout(() => {
                     sp.style.display = 'none';
                     const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
-                }, 800);
-            }, welcomeStr.length * 50 + 1000);
+                }, 800); 
+            }, 1500);
         }, 300);
     }
 
@@ -653,7 +606,6 @@
         cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
         cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
     }
-
     async function executePfpCrop() { const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } }
 
     // --- PERSONAL CENTER ACTIONS ---
@@ -661,9 +613,28 @@
     async function saveWechatConfig() { const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked; const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) }); if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { showToast("Error saving", true); } }
     async function submitPasswordChange() { const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value; document.getElementById('errPw').innerText = ''; if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; } if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; } const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) }); if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; showToast("Password Updated!"); } else { showToast(await res.text(), true); } }
 
+    // --- TOPUP CENTER & CURRENCY ---
+    function setCurrency(curr) {
+        currentCurrency = curr;
+        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
+        document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
+        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        renderTopupPacks();
+    }
+    function renderTopupPacks() {
+        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
+        packs.forEach((pk, i) => {
+            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
+            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
+            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
+            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
+        });
+    }
+    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
     async function executeRealTopup() { const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } else { showToast("Top up failed", true); } }
 
-    // --- HISTORY UI ---
     function renderHistory(filter) {
         document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
         if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
@@ -710,6 +681,7 @@
         mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
+
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
             if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
@@ -726,7 +698,7 @@
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
         filtered.forEach(s => {
-            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `
                 <div class="lib-row">
                     <img src="${cover}" class="lib-cover">
@@ -743,7 +715,7 @@
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = '批量上传 (Batch Upload)'; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = '上传音乐 (Upload Audio)'; }
+        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle; }
         document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = (e) => { document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
         document.getElementById('vipUploadModal').style.display = 'flex';
     }
@@ -754,29 +726,26 @@
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
         if(!files.length) return errRow.innerText = "Please select MP3 file(s)."; if(!titleBase) return errRow.innerText = "Title is required."; if(!pendingVipCover) return errRow.innerText = "Cover image is required.";
         
-        document.getElementById('vipUploadModal').style.display = 'none';
-        const ul = document.getElementById('vipUploadLoader');
-        ul.style.display = 'flex'; ul.style.opacity = 1;
-        document.getElementById('vipUploadText').style.display = 'block'; document.getElementById('vipUploadBarWrap').style.display = 'block'; document.getElementById('vipUploadSuccessText').style.display = 'none';
-        const uBar = document.getElementById('vipUploadBar'); uBar.style.width = '0%';
-        
-        let p = 0; const pInt = setInterval(() => { p += Math.random()*10; if(p>90) p=90; uBar.style.width = `${p}%`; }, 300);
+        const progOverlay = document.getElementById('vipUploadProgressOverlay'); const progBar = document.getElementById('vipUploadBar');
+        progOverlay.style.display = 'flex'; progBar.style.width = '0%';
+        let fakeProgress = 0; const pInt = setInterval(() => { fakeProgress += 5; if(fakeProgress>90) fakeProgress=90; progBar.style.width = fakeProgress+'%'; }, 200);
 
         for(let i=0; i<files.length; i++) {
             const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('coverBase64', pendingVipCover); fd.append('uploader', username); fd.append('status', 'PENDING');  
             await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
         }
-        clearInterval(pInt); uBar.style.width = '100%';
+        
+        clearInterval(pInt); progBar.style.width = '100%';
         
         setTimeout(() => {
-            document.getElementById('vipUploadText').style.display = 'none'; document.getElementById('vipUploadBarWrap').style.display = 'none';
-            const successText = currentLang === 'en' ? "Submitted successfully. Please wait 1-3 days for review." : "提交成功 请等待 1-3 天审核时间";
-            const sucEl = document.getElementById('vipUploadSuccessText'); sucEl.innerHTML = ''; sucEl.style.display = 'block';
-            for(let i=0; i<successText.length; i++) {
-                const span = document.createElement('span'); span.innerText = successText[i] === ' ' ? '\u00A0' : successText[i]; span.style.opacity = '0'; span.style.display = 'inline-block'; span.style.animation = `popUp 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275)`; span.style.animationDelay = `${i * 0.1}s`; sucEl.appendChild(span);
-            }
-            setTimeout(async () => { ul.style.opacity = 0; setTimeout(() => { ul.style.display = 'none'; ul.style.opacity = 1; }, 500); await init(); switchView('vip'); }, successText.length * 100 + 1500);
-        }, 400);
+            progOverlay.style.display = 'none'; closeModals();
+            const succOverlay = document.getElementById('vipUploadSuccessOverlay'); succOverlay.style.display = 'flex';
+            setTimeout(async () => {
+                succOverlay.style.opacity = '0';
+                setTimeout(() => { succOverlay.style.display = 'none'; succOverlay.style.opacity = '1'; }, 500);
+                await fetch(`${API_URL}/songs`).then(r=>r.json()).then(d=>allSongs=d); switchView('vip');
+            }, 3000);
+        }, 500);
     }
 
     // --- GENRES & SONGS ---
@@ -857,7 +826,7 @@
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader' && m.id !== 'vipUploadLoader') m.style.display = 'none'; }); }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader' && m.id !== 'vipUploadProgressOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
     function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
     async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
