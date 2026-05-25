@@ -8,7 +8,7 @@
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
-        .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;}
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
         .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
@@ -45,7 +45,8 @@
         
         /* SEARCH DROPDOWN UI */
         .search-wrapper { position: relative; max-width: 600px; margin: 0 auto; }
-        .search-bar { width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box;}
+        .search-bar { width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.2s;}
+        .search-bar:focus { border-color: var(--accent-light); box-shadow: 0 0 10px rgba(128,0,0,0.3); }
         .search-dropdown { position: absolute; top: calc(100% + 10px); left: 0; width: 100%; background: #1a1a24; border: 1px solid var(--border-color); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; text-align:left;}
         .search-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;}
         .search-item:hover { background: rgba(255,255,255,0.05); }
@@ -59,12 +60,12 @@
         .genre-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%); display: flex; align-items: flex-end; padding: 20px;}
         .genre-title { font-size: 24px; font-weight: 800; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
 
-        .song-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); }
+        .song-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); display:flex; flex-direction:column;}
         .song-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
-        .song-info { padding: 15px; }
-        .song-title { font-size: 15px; font-weight: 600; margin-bottom: 5px;}
-        .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
+        .song-info { padding: 15px; flex:1; display:flex; flex-direction:column; justify-content:space-between; min-width:0;}
+        .song-title { font-size: 15px; font-weight: 600; margin-bottom: 5px; width:100%;}
+        .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; align-items:center; width:100%;}
 
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
         .btn-back { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
@@ -72,14 +73,14 @@
         
         .player-container { display: flex; gap: 40px; background: rgba(255,255,255,0.02); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color);}
         .player-left { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0;}
-        .player-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0;}
-        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 30px;}
+        .player-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0; width:100%;}
+        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; width:100%;}
         
         .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 20px;}
         .wave-bar { flex: 1; background: var(--border-color); border-radius: 2px; transition: 0.2s;}
         
         .audio-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 16px;}
-        .play-circle { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
+        .play-circle { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink:0;}
         .play-circle:hover { transform: scale(1.05); background: var(--accent-light); }
         .play-circle svg { width: 24px; height: 24px; fill: white; }
         
@@ -89,8 +90,8 @@
         input[type=range].seeker::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; cursor: pointer; }
         input[type=range].seeker::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
 
-        .action-row { display: flex; gap: 15px;}
-        .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px;}
+        .action-row { display: flex; gap: 15px; align-items:center;}
+        .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px; flex-shrink:0;}
         .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(128, 0, 0, 0.4);}
         
         .player-right { width: 350px; flex-shrink: 0;}
@@ -152,8 +153,8 @@
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
-        .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
-        .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; text-decoration: none;}
+        .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink:0;}
+        .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; justify-content:center; text-decoration: none;}
         .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
         .icon-btn svg { width: 20px; height: 20px; fill: currentColor;}
 
@@ -161,7 +162,7 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
-        .modal-box { background: rgba(30, 20, 20, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
+        .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
@@ -169,11 +170,20 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
-        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
-        .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* LOADING ANIMATIONS */
+        #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-color); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+        .splash-text-top { position:absolute; top:-30px; font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
+        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:4px; color:var(--text-main); text-align:center;}
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .content-loader-bar-wrap { width:200px; height:6px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); }
+        .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
+
+        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes popUp { to { opacity:1; transform:translateY(0); } }
 
         @media (max-width: 768px) {
             .header-top { padding: 15px 20px; }
@@ -189,12 +199,35 @@
             .topup-grid-large { grid-template-columns: 1fr 1fr; }
             .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
             .hist-row > div:nth-child(n+3) { display: none; } /* Squash history on mobile */
+            .search-item > div { min-width: 0; flex:1; }
         }
     </style>
 </head>
 <body onclick="closeDropdowns(event)">
 
-<div id="globalLoader" class="modal-overlay" style="display:flex; z-index: 99999; background: var(--bg-color);"><div class="apple-spinner"></div></div>
+<div id="splashLoader">
+    <div class="splash-circle-wrap">
+        <div class="splash-text-top">FULLKIK</div>
+        <svg width="80" height="80" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#2a1515" stroke-width="6"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
+        </svg>
+    </div>
+    <div class="welcome-text" id="welcomeText">
+        <span style="animation-delay:0.1s">欢</span><span style="animation-delay:0.2s">迎</span><span style="animation-delay:0.3s">来</span><span style="animation-delay:0.4s">到</span><span style="animation-delay:0.5s">F</span><span style="animation-delay:0.6s">U</span><span style="animation-delay:0.7s">L</span><span style="animation-delay:0.8s">L</span><span style="animation-delay:0.9s">K</span><span style="animation-delay:1.0s">I</span><span style="animation-delay:1.1s">K</span>
+    </div>
+</div>
+
+<div id="vipProgressOverlay" class="modal-overlay" style="z-index:100000; flex-direction:column; align-items:center; justify-content:center; background:var(--bg-color);">
+    <div id="vipProgContainer" style="display:flex; flex-direction:column; align-items:center;">
+        <div style="font-size:16px; font-weight:bold; color:var(--accent-light); margin-bottom:15px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
+        <div class="content-loader-bar-wrap"><div id="vipProgBar" class="loader-bar-fill" style="width:0%;"></div></div>
+    </div>
+    <div id="vipSuccessText" class="welcome-text" style="display:none; font-size:18px;">
+        <span style="animation-delay:0.1s">提</span><span style="animation-delay:0.2s">交</span><span style="animation-delay:0.3s">成</span><span style="animation-delay:0.4s">功</span><span style="animation-delay:0.5s">&nbsp;</span><span style="animation-delay:0.6s">请</span><span style="animation-delay:0.7s">等</span><span style="animation-delay:0.8s">待</span><span style="animation-delay:0.9s">&nbsp;</span><span style="animation-delay:1.0s">1</span><span style="animation-delay:1.1s">-</span><span style="animation-delay:1.2s">3</span><span style="animation-delay:1.3s">&nbsp;</span><span style="animation-delay:1.4s">天</span><span style="animation-delay:1.5s">审</span><span style="animation-delay:1.6s">核</span><span style="animation-delay:1.7s">时</span><span style="animation-delay:1.8s">间</span>
+    </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
@@ -208,7 +241,7 @@
         <button class="btn-upgrade-top" id="btnUpgradeTop" onclick="switchView('profile')" style="display:none;" data-i18n="upVip">升级至VIP</button>
         <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
         
-        <div style="position:relative;">
+        <div style="position:relative;" id="profileArea">
             <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
             <div class="profile-dropdown" id="profileDropdown">
                 <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
@@ -250,7 +283,7 @@
         <div class="player-container">
             <div class="player-left">
                 <h1 class="player-title truncate" id="playerTitle">Song Title</h1>
-                <div class="player-meta" id="playerMeta">FULLKIK • MP3 0.0MB</div>
+                <div class="player-meta truncate" id="playerMeta">FULLKIK • MP3 0.0MB</div>
                 <div class="waveform-ui" id="waveform"></div>
                 <div class="audio-controls">
                     <div class="play-circle" onclick="togglePlayerAudio()" id="playerPlayBtn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
@@ -319,7 +352,7 @@
             </div>
             <div>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <h2 id="profileBannerName" style="margin:0; font-size:32px;">Username</h2>
+                    <h2 id="profileBannerName" style="margin:0; font-size:32px;" class="truncate">Username</h2>
                     <span id="profileBannerVipTag" style="display:none; color:#ffcc00; font-size:12px; font-weight:bold; border:1px solid #ffcc00; padding:2px 6px; border-radius:10px;">VIP</span>
                 </div>
                 <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
@@ -425,7 +458,7 @@
             <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:5px;"></div>
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="save">Upload</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="btnSubRev">提交审核</button></div>
     </div>
 </div>
 
@@ -435,10 +468,10 @@
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
+    let currentTopupAmt = 500, currentTopupPrice = 850;
     
     // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
     let currentCurrency = 'RMB';
-    let currentTopupAmt = 500, currentTopupPrice = 850;
     const EX_RATE = 0.65; // Approx MYR to RMB conversion
     const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
 
@@ -477,8 +510,8 @@
 
     // --- LANGUAGE SYSTEM ---
     const dict = {
-        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload" },
-        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "未登录仅可试听 30 秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传" }
+        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", loginBtn: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", btnSubRev: "Submit Review" },
+        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", loginBtn: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒。", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", btnSubRev: "提交审核" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -489,7 +522,8 @@
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
         
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
-        const profileBtnT = document.getElementById('profileBtnText'); if(!username && profileBtnT) profileBtnT.innerText = dict[currentLang].login;
+        const profileBtn = document.getElementById('profileBtn'); 
+        if(!username && profileBtn) profileBtn.innerHTML = `<button style="background:linear-gradient(90deg, var(--accent), var(--accent-light)); color:white; border:none; padding:6px 16px; border-radius:20px; font-weight:bold; cursor:pointer;" onclick="window.location.href='/register.html'">${dict[currentLang].loginBtn}</button>`;
         
         if(currentSong) openSong(currentSong.id);
         
@@ -502,8 +536,6 @@
     }
 
     function generateWaveform() { const wf = document.getElementById('waveform'); if(!wf) return; wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
-    function showLoader() { const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; }
-    function hideLoader() { const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'none'; }
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
@@ -520,16 +552,19 @@
         else {
             filtered.forEach(s => {
                 const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
-                drop.innerHTML += `<div class="search-item" onclick="openSong('${s.id}')"><img src="${cover}"><div><div class="truncate" style="font-weight:bold; font-size:14px;">${s.filename}</div><div class="truncate" style="font-size:12px; color:var(--text-muted);">${s.uploader || 'FULLKIK'}</div></div></div>`;
+                drop.innerHTML += `<div class="search-item" onclick="openSong('${s.id}')"><img src="${cover}"><div><div class="truncate" style="font-weight:bold; font-size:14px; max-width:400px;">${s.filename}</div><div class="truncate" style="font-size:12px; color:var(--text-muted);">${s.uploader || 'FULLKIK'}</div></div></div>`;
             });
         }
         drop.style.display = 'block';
     }
     document.addEventListener('click', (e) => { const sw = e.target.closest('.search-wrapper'); const dr = document.getElementById('searchResults'); if(!sw && dr) dr.style.display = 'none'; });
 
-
     // --- INITIALIZATION ---
     async function init() {
+        // SPLASH SCREEN LOGIC
+        let loadProgress = 0; const circle = document.getElementById('initLoadCircle');
+        const sInt = setInterval(() => { loadProgress += Math.random() * 15; if(loadProgress >= 100) loadProgress = 100; if(circle) circle.style.strokeDashoffset = 283 - (283 * loadProgress / 100); }, 100);
+
         try {
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
@@ -559,8 +594,18 @@
             setCurrency('RMB'); 
             renderGenres(); applyLang(); 
         } catch(e) { console.error("Init Error:", e); } finally {
-            hideLoader();
-            const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
+            clearInterval(sInt); if(circle) circle.style.strokeDashoffset = 0;
+            
+            setTimeout(() => {
+                const initTxt = document.getElementById('initLoadText'); if(initTxt) initTxt.style.display = 'none'; 
+                const circWrap = document.querySelector('.splash-circle-wrap'); if(circWrap) circWrap.style.display = 'none';
+                const wTxt = document.getElementById('welcomeText'); if(wTxt) wTxt.style.display = 'block';
+                setTimeout(() => {
+                    const sp = document.getElementById('splashLoader'); 
+                    if(sp) { sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 800); }
+                    const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
+                }, 1000);
+            }, 400);
         }
     }
 
@@ -593,14 +638,14 @@
         cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
     }
 
-    async function executePfpCrop() { showLoader(); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } hideLoader(); }
+    async function executePfpCrop() { document.getElementById('globalLoader').style.display='flex'; const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } document.getElementById('globalLoader').style.display='none'; }
 
     // --- PERSONAL CENTER ACTIONS ---
-    async function submitVipUpgrade() { const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim(); document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true; if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;} if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;} if(!pass) return; showLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) }); if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideLoader(); showToast("Failed to upgrade", true); } }
-    async function saveWechatConfig() { const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked; showLoader(); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) }); if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { hideLoader(); showToast("Error saving", true); } }
-    async function submitPasswordChange() { const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value; document.getElementById('errPw').innerText = ''; if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; } if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; } showLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) }); if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; hideLoader(); showToast("Password Updated!"); } else { hideLoader(); showToast(await res.text(), true); } }
+    async function submitVipUpgrade() { const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim(); document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true; if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;} if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;} if(!pass) return; document.getElementById('globalLoader').style.display='flex'; const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) }); if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { document.getElementById('globalLoader').style.display='none'; showToast("Failed to upgrade", true); } }
+    async function saveWechatConfig() { const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked; document.getElementById('globalLoader').style.display='flex'; const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) }); if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { document.getElementById('globalLoader').style.display='none'; showToast("Error saving", true); } }
+    async function submitPasswordChange() { const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value; document.getElementById('errPw').innerText = ''; if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; } if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; } document.getElementById('globalLoader').style.display='flex'; const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) }); if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; document.getElementById('globalLoader').style.display='none'; showToast("Password Updated!"); } else { document.getElementById('globalLoader').style.display='none'; showToast(await res.text(), true); } }
 
-    async function executeRealTopup() { showLoader(); const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); hideLoader(); showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } else { hideLoader(); showToast("Top up failed", true); } }
+    async function executeRealTopup() { document.getElementById('globalLoader').style.display='flex'; const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); document.getElementById('globalLoader').style.display='none'; showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } else { document.getElementById('globalLoader').style.display='none'; showToast("Top up failed", true); } }
 
     // --- HISTORY UI ---
     function renderHistory(filter) {
@@ -615,7 +660,7 @@
         if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
         
         combined.sort((a,b) => new Date(b.date) - new Date(a.date));
-        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
+        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
 
         combined.forEach(item => {
             if(item.type === 'topup') {
@@ -649,6 +694,7 @@
         mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
+
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
             if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
@@ -662,7 +708,7 @@
         
         const listDiv = document.getElementById('vipSongList'); listDiv.innerHTML = '';
         const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
-        if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
+        if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无记录</div>`; return; }
         
         filtered.forEach(s => {
             const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%232a2a35"/%3E%3C/svg%3E';
@@ -693,12 +739,27 @@
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
         if(!files.length) return errRow.innerText = "Please select MP3 file(s)."; if(!titleBase) return errRow.innerText = "Title is required."; if(!pendingVipCover) return errRow.innerText = "Cover image is required.";
         
-        showLoader();
+        document.getElementById('vipProgressOverlay').style.display = 'flex';
+        document.getElementById('vipProgContainer').style.display = 'flex';
+        document.getElementById('vipSuccessText').style.display = 'none';
+        let p = 0; let vInt = setInterval(() => { p+=Math.random()*10; if(p>90) p=90; document.getElementById('vipProgBar').style.width = p+'%'; }, 200);
+
         for(let i=0; i<files.length; i++) {
             const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('coverBase64', pendingVipCover); fd.append('uploader', username); fd.append('status', 'PENDING');  
             await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
         }
-        closeModals(); hideLoader(); showToast("Uploaded to Pending Queue!"); await init(); switchView('vip');
+        
+        clearInterval(vInt); document.getElementById('vipProgBar').style.width = '100%';
+        setTimeout(() => {
+            document.getElementById('vipProgContainer').style.display = 'none'; document.getElementById('vipSuccessText').style.display = 'block';
+            setTimeout(async () => {
+                document.getElementById('vipProgressOverlay').style.opacity = '0';
+                setTimeout(async () => {
+                    document.getElementById('vipProgressOverlay').style.display = 'none'; document.getElementById('vipProgressOverlay').style.opacity = '1'; 
+                    closeModals(); await init(); switchView('vip');
+                }, 500);
+            }, 3000);
+        }, 300);
     }
 
     // --- GENRES & SONGS ---
@@ -706,7 +767,7 @@
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             grid.innerHTML += `<div class="genre-card" onclick="openGenre('${g.id}', '${g.name}')"><img src="${cover}" class="genre-img"><div class="genre-overlay"><div class="genre-title">${g.name}</div></div></div>`;
         });
     }
@@ -738,7 +799,7 @@
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `FULLKIK • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
+        document.getElementById('playerMeta').innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
         document.getElementById('playerCover').src = currentSong.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
         
         const price = currentSong.price || 10; const actionsDiv = document.getElementById('playerActions');
@@ -755,7 +816,7 @@
         if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         myUploads.forEach(s => {
             const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231e0f0f"/%3E%3C/svg%3E';
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
+            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500; min-width:0;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
         });
     }
 
@@ -779,10 +840,9 @@
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader') m.style.display = 'none'; }); }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
     function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
-    async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
+    async function executePurchase(songId, songName, filepath, price) { document.getElementById('globalLoader').style.display='flex'; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('globalLoader').style.display='none'; document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); document.getElementById('globalLoader').style.display='none'; const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
