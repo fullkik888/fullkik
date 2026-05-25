@@ -44,7 +44,6 @@
 
         /* --- LOADERS --- */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; }
-        
         #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
         .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
@@ -162,6 +161,8 @@
         .genre-settings-icon:hover { background: var(--accent); }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
+        .activity-row { display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px; }
+
         /* PAGINATION */
         .pagination-bar { display:flex; justify-content:center; align-items:center; padding:15px; gap:15px; border-top:1px solid var(--border-color); font-size:13px; color:var(--text-muted); }
         .page-btn { background:var(--bg-dark); border:1px solid var(--border-color); color:var(--text-main); padding:6px 12px; border-radius:4px; cursor:pointer; transition:0.2s;}
@@ -177,6 +178,9 @@
         
         .admin-action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; padding: 20px;}
         .admin-col { display:flex; flex-direction:column; gap:10px; }
+
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} }
+        .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; }
 
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s; z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .toast.show { transform: translateX(-50%) translateY(0); }
@@ -206,14 +210,20 @@
             .nav-section { display: flex; margin: 0; }
             .nav-title { display: none; }
             .nav-item { white-space: nowrap; padding: 0 20px; }
+            
+            .sub-nav { position: fixed; top: 60px; left: 0; width: 100vw; background: var(--bg-dark); border-bottom: 1px solid var(--border-color); flex-direction: row; overflow-x: auto; margin: 0; padding: 10px; z-index: 90; display: none; }
+            .sub-nav.show { display: flex !important; }
+            .sub-nav-item { white-space: nowrap; padding: 6px 15px; border: 1px solid var(--border-color); border-radius: 20px; margin-right: 10px; background: var(--bg-main); }
+            
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
-            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
-            .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
-            .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
-            .admin-action-grid { grid-template-columns: 1fr; }
-            .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
+            
+            /* Enforce 1-line tables horizontally on mobile */
+            .table-inner { min-width: 900px; }
+            .genre-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 10px; padding: 10px; }
+            
+            .activity-row { min-width: 550px; }
         }
     </style>
 </head>
@@ -226,7 +236,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="splash-text" id="initLoadText">努力加载中 >.<</div>
+    <div class="splash-text" id="initLoadText">加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>回</span><span>来</span></div>
 </div>
 
@@ -246,7 +256,7 @@
     <div class="nav-section">
         <div class="nav-title">内容</div>
         <div class="nav-item-group">
-            <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理</button>
+            <button class="nav-item" onclick="toggleSubNav('sub-songs')" id="nav-songs">♪ 歌曲管理</button>
             <div class="sub-nav" id="sub-songs">
                 <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 全部歌曲')">全部歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
@@ -292,6 +302,7 @@
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
             <button class="btn-top" onclick="publishChanges()">Publish</button>
+            <button class="btn-top">EN</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
     </div>
@@ -323,13 +334,13 @@
 
     <div id="view-activity" class="view-section">
         <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
-        <div class="glass-panel" style="padding:20px;">
-            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>全部活动</div><div>共 1 个活动</div></div>
-            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
+        <div class="glass-panel" style="padding:20px; overflow-x: auto;">
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px; min-width: 550px;"><div>全部活动</div><div>共 1 个活动</div></div>
+            <div class="activity-row">
                 <div style="color:var(--text-muted); font-size:12px;">#1</div>
                 <div style="flex:1;">
                     <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
-                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                         <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
                     </div>
                 </div>
@@ -573,9 +584,14 @@
                 <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
             </div>
             <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
+            
             <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
-            <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label></div>
-            <div id="transloadFileArea" style="margin-bottom:10px; display:none;"><label class="input-label">URL (.m4a)</label><input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;"></div>
+            
+            <div id="uploadFileArea" style="margin-bottom:10px;">
+                <label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box; margin-bottom:10px;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*" style="display:none;"></label>
+                <input type="text" id="transloadUrlInput" class="modal-input" placeholder="转运歌曲 (URL .m4a)" style="margin-bottom:0;">
+            </div>
+
             <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
             <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
         </div>
@@ -585,10 +601,10 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
+    let allSongs = [], allUsers = [], logData = { register: [], admin: [] }, allGenres = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
-    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {};
+    let chartInstances = {}; let globalSettings = {};
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -613,11 +629,21 @@
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
     function closeDropdowns(e) { if(!e.target.closest('.btn-manage')) { document.querySelectorAll('.manage-dropdown').forEach(d => d.classList.remove('show')); } }
 
+    function toggleSubNav(id) {
+        document.querySelectorAll('.sub-nav').forEach(n => { if(n.id !== id) n.classList.remove('show'); });
+        document.getElementById(id).classList.toggle('show');
+    }
+
     function switchView(viewId, titleStr = '') {
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.sub-nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
         
+        // If mobile, hide sub-nav after selection
+        if(window.innerWidth <= 768) {
+            document.querySelectorAll('.sub-nav').forEach(n => n.classList.remove('show'));
+        }
+
         if(document.getElementById(`nav-${viewId}`)) document.getElementById(`nav-${viewId}`).classList.add('active');
         if(document.getElementById(`view-${viewId}`)) document.getElementById(`view-${viewId}`).classList.add('active');
         if(titleStr) {
@@ -776,7 +802,7 @@
                     <div style="font-weight:bold;">${u.dlCount}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${lastDate}</div>
                     <div>${statusNode}</div>
-                    <div style="text-align:center; display:flex; gap:10px;">${actionBtn} <button class="btn-manage" onclick="openUserDetail('${u.username}')">管理 →</button></div>
+                    <div style="text-align:center;">${actionBtn}</div>
                 </div>
             `;
         });
@@ -875,7 +901,8 @@
     function renderGenres() {
         const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
         allGenres.forEach(g => {
-            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+            if(g.status === 'DISABLED') return;
+            const cover = g.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a1a24"/%3E%3C/svg%3E';
             const count = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').length;
             const card = document.createElement('div'); card.className = 'genre-card'; card.draggable = true; card.dataset.id = g.id;
             if(g.status === 'DISABLED') card.classList.add('disabled');
@@ -942,6 +969,26 @@
         window._tmpFnP = (dir) => onPageChange(current + dir); window._tmpFnL = (l) => onLimitChange(parseInt(l));
     }
 
+    // --- UPLOAD ---
+    function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; pendingUploadBase64 = null; }
+    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = '上传音频 / Transload'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
+    
+    async function executeUpload() {
+        const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value;
+        const file = document.getElementById('uploadFileInput').files[0]; const url = document.getElementById('transloadUrlInput').value.trim();
+        if (!file && !url) return showToast("Please select a file or enter a URL");
+        
+        if (url && !file) {
+            if (!url.includes('.m4a') && !url.includes('.mp3') && !url.includes('.mp4')) { const urlInput = document.getElementById('transloadUrlInput'); urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); return; }
+            showGlobalLoader(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
+            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
+        } else if (file) {
+            showGlobalLoader(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
+            const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
+            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
+        }
+    }
+
     // --- SONGS ---
     async function loadSongs() { showContentLoader(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); songPage = 1; handleSongSearch(); hideContentLoader(); }
     function clearSongFilters() { document.getElementById('songSearchInput').value=''; document.getElementById('songStatusFilter').value='ALL'; document.getElementById('songGenreFilter').value='ALL'; handleSongSearch(); }
@@ -958,8 +1005,7 @@
         songFiltered.forEach(song => { if(song.status === 'REMOVED') remCount++; else appCount++; });
         document.getElementById('count-all').innerText = songFiltered.length; document.getElementById('count-approved').innerText = appCount; document.getElementById('count-removed').innerText = remCount;
 
-        const totalPages = Math.ceil(songFiltered.length / songLimit) || 1;
-        if(songPage > totalPages) songPage = totalPages;
+        const totalPages = Math.ceil(songFiltered.length / songLimit) || 1; if(songPage > totalPages) songPage = totalPages;
         const start = (songPage - 1) * songLimit; const paged = songFiltered.slice(start, start + songLimit);
 
         paged.forEach(song => {
@@ -998,24 +1044,6 @@
 
     async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'REMOVED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
-
-    function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; pendingUploadBase64 = null; }
-    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Upload Audio'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-    function openTransloadModal() { isTransloadMode = true; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Transload Audio'; document.getElementById('uploadFileArea').style.display = 'none'; document.getElementById('transloadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-
-    async function executeUpload() {
-        const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value;
-        if(isTransloadMode) {
-            const url = document.getElementById('transloadUrlInput').value; if(!url) return; showGlobalLoader();
-            const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64 }) });
-            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        } else {
-            const file = document.getElementById('uploadFileInput').files[0]; if(!file) return; showGlobalLoader();
-            const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
-            const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalLoader(); showToast("Failed: " + await res.text(), true); }
-        }
-    }
 
     function openQuickPrice(id, currentPrice) { currentQuickEditId = id; document.getElementById('quickPriceInput').value = currentPrice; document.getElementById('quickPriceModal').style.display = 'flex'; }
     async function confirmQuickPrice() { showGlobalLoader(); await fetch(`${API_URL}/songs/${currentQuickEditId}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newPrice: document.getElementById('quickPriceInput').value}) }); closeModals(); hideGlobalLoader(); loadSongs(); showToast("Price Updated"); }
