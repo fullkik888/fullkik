@@ -39,22 +39,6 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* SPLASH & LOADERS */
-        @keyframes heartbeat { 0%, 100% { transform: rotate(-90deg) scale(1); } 50% { transform: rotate(-90deg) scale(1.1); } }
-        #initLoadCircle { transform-origin: 50% 50%; animation: heartbeat 1s infinite ease-in-out; }
-        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
-        .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
-        
-        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
-        .welcome-text span:nth-child(5) { animation-delay: 0.5s; } .welcome-text span:nth-child(6) { animation-delay: 0.6s; } .welcome-text span:nth-child(7) { animation-delay: 0.7s; } .welcome-text span:nth-child(8) { animation-delay: 0.8s; }
-        .welcome-text span:nth-child(9) { animation-delay: 0.9s; } .welcome-text span:nth-child(10) { animation-delay: 1.0s; } .welcome-text span:nth-child(11) { animation-delay: 1.1s; }
-        
-        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes popUp { to { opacity:1; transform:translateY(0); } }
-
         .hero { text-align: center; margin-bottom: 40px; }
         .hero h1 { font-size: 36px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 2px;}
         .hero p { color: var(--text-muted); font-size: 14px; margin: 0 0 30px 0;}
@@ -79,7 +63,7 @@
         .song-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
         .song-info { padding: 15px; }
-        .song-title { font-size: 15px; font-weight: 600; margin-bottom: 5px;}
+        .song-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px;}
         .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
 
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
@@ -144,7 +128,7 @@
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
         .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
 
-        /* --- TOPUP CENTER --- */
+        /* --- TOPUP CENTER (NEW UI) --- */
         .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
         .topup-pack { background: #1a0f0f; border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
         .topup-pack.active { border-color: var(--accent-light); background: rgba(128, 0, 0, 0.1); }
@@ -162,7 +146,7 @@
 
         .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
 
-        /* --- HISTORY LISTS --- */
+        /* --- HISTORY VIEW (NEW UI) --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
@@ -193,6 +177,22 @@
         /* Custom Loaders */
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
         .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
+        
+        /* SPLASH & LOADERS */
+        @keyframes heartbeat { 0%, 100% { transform: rotate(-90deg) scale(1); } 50% { transform: rotate(-90deg) scale(1.1); } }
+        #initLoadCircle { transform-origin: 50% 50%; animation: heartbeat 1s infinite ease-in-out; }
+        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
+        
+        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
+        .welcome-text span:nth-child(5) { animation-delay: 0.5s; } .welcome-text span:nth-child(6) { animation-delay: 0.6s; } .welcome-text span:nth-child(7) { animation-delay: 0.7s; } .welcome-text span:nth-child(8) { animation-delay: 0.8s; }
+        .welcome-text span:nth-child(9) { animation-delay: 0.9s; } .welcome-text span:nth-child(10) { animation-delay: 1.0s; } .welcome-text span:nth-child(11) { animation-delay: 1.1s; }
+        
+        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes popUp { to { opacity:1; transform:translateY(0); } }
 
         @media (max-width: 768px) {
             .header-top { padding: 15px 20px; }
@@ -207,7 +207,7 @@
             .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
             .topup-grid-large { grid-template-columns: 1fr 1fr; }
             .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
-            .hist-row > div:nth-child(n+3) { display: none; } 
+            .hist-row > div:nth-child(n+3) { display: none; } /* Squash history on mobile */
         }
     </style>
 </head>
@@ -220,6 +220,7 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s;"></circle>
         </svg>
     </div>
+    <div class="splash-text" id="initLoadText">加载中 >.<</div>
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>来</span><span>到</span><span>F</span><span>U</span><span>L</span><span>L</span><span>K</span><span>I</span><span>K</span></div>
 </div>
 
@@ -231,6 +232,7 @@
     <div class="welcome-text" id="vipSuccessText" style="display:block; font-size:18px;"></div>
 </div>
 
+<div id="globalLoader" class="modal-overlay" style="display:flex; z-index: 99999; background: var(--bg-color);"><div class="apple-spinner"></div></div>
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
@@ -476,6 +478,45 @@
     const audioEl = document.getElementById('mainAudio');
     let currentTopupAmt = 500, currentTopupPrice = 850;
     
+    // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
+    let currentCurrency = 'RMB';
+    let currentTopupAmtCalc = 500, currentTopupPriceCalc = 850;
+    const EX_RATE = 0.65; // Approx MYR to RMB conversion
+    const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
+
+    function setCurrency(curr) {
+        currentCurrency = curr;
+        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
+        document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        
+        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
+        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        
+        renderTopupPacks();
+    }
+
+    function renderTopupPacks() {
+        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
+        packs.forEach((pk, i) => {
+            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
+            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
+            
+            grid.innerHTML += `
+                <div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">
+                    ${bonusStr}<div class="prc">${sym}${price}</div>
+                </div>`;
+            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
+        });
+    }
+
+    function selectTopup(amt, bonus, price, el) {
+        if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
+        currentTopupAmt = amt + bonus; currentTopupPrice = price;
+        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
+    }
+
     // --- LANGUAGE SYSTEM ---
     const dict = {
         en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
@@ -507,6 +548,7 @@
     function handleGlobalSearch(e) {
         const query = e.target.value.toLowerCase(); const drop = document.getElementById('searchResults');
         if(!query) { drop.style.display = 'none'; return; }
+        
         const filtered = allSongs.filter(s => s.status === 'APPROVED' && (s.filename.toLowerCase().includes(query) || (s.uploader && s.uploader.toLowerCase().includes(query))));
         drop.innerHTML = '';
         if(filtered.length === 0) { drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found</div>`; } 
@@ -522,22 +564,10 @@
 
     // --- INITIALIZATION ---
     async function init() {
-        const circle = document.getElementById('initLoadCircle');
-        function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
-        setProg(10);
-        
-        if(!username) { 
-            const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
-            if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
-            if(document.getElementById('nav-library')) document.getElementById('nav-library').style.display = 'none';
-        }
+        let loadProgress = 0; const circle = document.getElementById('initLoadCircle');
+        const sInt = setInterval(() => { loadProgress += Math.random() * 15; if(loadProgress >= 100) loadProgress = 100; if(circle) circle.style.strokeDashoffset = 283 - (283 * loadProgress / 100); }, 100);
 
         try {
-            const res = await fetch(`${API_URL}/settings`);
-            if(res.ok) { const settings = await res.json(); if(settings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = settings.headerTitle; } if(settings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = settings.heroTitle; } }
-            setProg(30);
-
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
@@ -557,14 +587,17 @@
                     } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
             }
-            setProg(50);
+
+            const setRes = await fetch(`${API_URL}/settings`);
+            if(setRes.ok) { const settings = await setRes.json(); if(settings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = settings.headerTitle; } if(settings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = settings.heroTitle; } }
+
+            allGenres = await (await fetch(`${API_URL}/genres`)).json();
+            allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            allGenres = await (await fetch(`${API_URL}/genres`)).json(); setProg(75);
-            allSongs = await (await fetch(`${API_URL}/songs`)).json(); setProg(100);
-            
-            setCurrency('RMB'); renderGenres(); applyLang(); 
+            setCurrency('RMB'); renderGenres(); applyLang();
         } catch(e) { console.error("Init Error:", e); } 
 
+        clearInterval(sInt); if(circle) circle.style.strokeDashoffset = 0;
         setTimeout(() => {
             const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
             const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
@@ -598,40 +631,76 @@
     // --- CROPPER IMPLEMENTATION ---
     let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas'), ctx = cropCanvas ? cropCanvas.getContext('2d') : null;
     let offsetX = 0, offsetY = 0, isDragging = false, startX, startY;
-    function handlePfpSelect(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { cropImg.src = e.target.result; cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; }; }; reader.readAsDataURL(file); }
-    function drawCrop() { if(!ctx) return; ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value); const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom; const w = cropImg.width * scale; const h = cropImg.height * scale; if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0; if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h; ctx.drawImage(cropImg, offsetX, offsetY, w, h); }
+    
+    function handlePfpSelect(event) {
+        const file = event.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            cropImg.src = e.target.result; 
+            cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; };
+        };
+        reader.readAsDataURL(file);
+    }
+    function drawCrop() {
+        ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value);
+        const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom;
+        const w = cropImg.width * scale; const h = cropImg.height * scale;
+        if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0;
+        if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h;
+        ctx.drawImage(cropImg, offsetX, offsetY, w, h);
+    }
     if(document.getElementById('cropZoom')) {
         document.getElementById('cropZoom').addEventListener('input', drawCrop);
         cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
         cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
     }
-    async function executePfpCrop() { document.getElementById('cropModal').style.display='none'; const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; showToast("Profile Updated"); } }
+
+    async function executePfpCrop() {
+        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; 
+        const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
+        const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
+        if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; closeModals(); showToast("Profile Updated"); } 
+        if(gl) gl.style.display = 'none';
+    }
 
     // --- PERSONAL CENTER ACTIONS ---
-    async function submitVipUpgrade() { const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim(); document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true; if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;} if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;} if(!pass) return; const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) }); if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { showToast("Failed to upgrade", true); } }
-    async function saveWechatConfig() { const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked; const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) }); if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { showToast("Error saving", true); } }
-    async function submitPasswordChange() { const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value; document.getElementById('errPw').innerText = ''; if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; } if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; } const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) }); if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; showToast("Password Updated!"); } else { showToast(await res.text(), true); } }
+    async function submitVipUpgrade() {
+        const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim();
+        document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true;
+        if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;}
+        if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;}
+        if(!pass) return;
 
-    // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
-    let currentCurrency = 'RMB'; let currentTopupAmt = 500, currentTopupPrice = 850;
-    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
-    function setCurrency(curr) {
-        currentCurrency = curr; document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
-        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
-        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
-        renderTopupPacks();
+        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; 
+        const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
+        if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { if(gl) gl.style.display = 'none'; showToast("Failed to upgrade", true); }
     }
-    function renderTopupPacks() {
-        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
-        packs.forEach((pk, i) => {
-            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE); const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
-            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
-            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
-        });
+
+    async function saveWechatConfig() {
+        const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked;
+        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; 
+        const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
+        if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { if(gl) gl.style.display = 'none'; showToast("Error saving", true); }
     }
-    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
-    async function executeRealTopup() { const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } else { showToast("Top up failed", true); } }
+
+    async function submitPasswordChange() {
+        const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
+        document.getElementById('errPw').innerText = '';
+        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
+        if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
+
+        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; 
+        const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
+        if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; if(gl) gl.style.display = 'none'; showToast("Password Updated!"); }
+        else { if(gl) gl.style.display = 'none'; showToast(await res.text(), true); }
+    }
+
+    async function executeRealTopup() { 
+        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; 
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); 
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); if(gl) gl.style.display = 'none'; showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } 
+        else { if(gl) gl.style.display = 'none'; showToast("Top up failed", true); } 
+    }
 
     // --- HISTORY UI ---
     function renderHistory(filter) {
@@ -680,6 +749,7 @@
         mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
+
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
             if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
@@ -794,7 +864,8 @@
         if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download</a>`; } 
         else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        if(audioEl) { audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; }
+        document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
         switchView('song');
     }
 
@@ -828,6 +899,7 @@
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
     function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
     async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
