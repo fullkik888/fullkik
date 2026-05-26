@@ -337,6 +337,9 @@ app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
 
+// New default cover injection
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
     if(fileBuffer) {
@@ -346,7 +349,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = ''; 
+    let coverUrl = DEFAULT_COVER; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
     }
