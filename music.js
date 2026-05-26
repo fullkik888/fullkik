@@ -67,7 +67,23 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>403 - Forbidden</title><style>body{background-color:#3a0000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;font-size:36px;font-weight:900;letter-spacing:4px;text-shadow:0 5px 20px rgba(0,0,0,0.8);}</style></head><body>禁止盗取歌曲</body></html>`);
+            return res.status(403).send(`
+                <!DOCTYPE html>
+                <html lang="zh-CN">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>403 Forbidden</title>
+                    <style>
+                        body { background-color: #1a0f0f; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                        .text { font-size: 32px; font-weight: 800; letter-spacing: 5px; text-shadow: 0 0 20px rgba(255, 69, 58, 0.5); }
+                    </style>
+                </head>
+                <body>
+                    <div class="text">禁止盗取歌曲</div>
+                </body>
+                </html>
+            `);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -180,7 +196,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -233,6 +248,7 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
         const newTokens = (user.tokens || 0) + req.body.amount; 
+        
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
         topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
@@ -317,20 +333,14 @@ app.get('/api/songs', async (req, res) => {
 });
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
-    let url = '';
-    if(fileBuffer) {
-        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
-        url = audioResult.secure_url;
-    } else if(reqBody.url) {
-        url = reqBody.url;
-    }
-
-    let coverUrl = ''; if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
+    const url = audioResult.secure_url;
+    let coverUrl = ''; if(reqBody.coverBase64) coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
 
     const snapshot = await db.collection('songs').get();
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
-        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
+        size: fileBuffer.length, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
@@ -343,7 +353,9 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 
 app.post('/api/transload', async (req, res) => {
     try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+        const response = await fetch(req.body.url); if (!response.ok) throw new Error(`HTTP Error from source URL`);
+        const buffer = Buffer.from(await response.arrayBuffer());
+        res.json(await saveSongData(buffer, 'TransloadedTrack.m4a', req.body));
     } catch (e) { res.status(400).send(e.message); }
 });
 
@@ -355,7 +367,7 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         if (req.body.status) updates.status = req.body.status; 
         if (req.body.genreId) updates.genreId = req.body.genreId;
         if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
-        if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
+        if (req.body.coverBase64) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
         await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
