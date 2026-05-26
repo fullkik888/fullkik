@@ -29,6 +29,7 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
+    console.log('✅ Cloudinary Storage Connected!');
 }
 
 const upload = multer({ 
@@ -67,7 +68,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #1a0505; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 28px; letter-spacing: 2px; font-weight: bold; text-shadow: 0 0 20px rgba(255,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -85,6 +86,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -134,6 +136,7 @@ app.get('/api/users/:username', async (req, res) => {
 
 app.get('/api/all-users', async (req, res) => { try { res.json((await db.collection('users').get()).docs.map(d => d.data())); } catch (e) { res.status(500).json([]); }});
 
+// --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -177,6 +180,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
+
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -285,12 +289,25 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.get('/api/orders', async (req, res) => { try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/orders/all', async (req, res) => { try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
-app.get('/api/transactions', async (req, res) => { try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/transactions/all', async (req, res) => { try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
+// --- ADMIN TRANSACTIONS & ORDERS ---
+app.get('/api/orders', async (req, res) => {
+    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/orders/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
 
-app.get('/api/genres', async (req, res) => { try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); } });
+app.get('/api/transactions', async (req, res) => {
+    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/transactions/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
+// --- GENRES ---
+app.get('/api/genres', async (req, res) => {
+    try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
+});
 app.post('/api/genres', async (req, res) => {
     try {
         let coverUrl = req.body.coverBase64 ? await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_genres') : '';
@@ -309,19 +326,30 @@ app.put('/api/genres/:id', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 app.put('/api/genres/reorder', async (req, res) => {
-    try { const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered'); } catch(e) { res.status(500).send(e.message); }
+    try {
+        const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+    } catch(e) { res.status(500).send(e.message); }
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-app.get('/api/songs', async (req, res) => { try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); } });
+// --- SONGS ---
+app.get('/api/songs', async (req, res) => {
+    try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
+});
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
-    if(fileBuffer) { const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music"); url = audioResult.secure_url; } 
-    else if(reqBody.url) { url = reqBody.url; }
+    if(fileBuffer) {
+        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
+        url = audioResult.secure_url;
+    } else if(reqBody.url) {
+        url = reqBody.url;
+    }
 
     let coverUrl = ''; 
-    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) { coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers'); }
+    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
+        coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    }
 
     const snapshot = await db.collection('songs').get();
     const newSong = {
@@ -338,7 +366,9 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
+    try {
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+    } catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
@@ -354,9 +384,12 @@ app.put('/api/songs/:id/settings', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.put('/api/songs/reorder', async (req, res) => { const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered'); });
+app.put('/api/songs/reorder', async (req, res) => {
+    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+});
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
+// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
@@ -372,7 +405,9 @@ app.put('/api/settings', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.get('/api/logs/:type', async (req, res) => { try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); } });
+app.get('/api/logs/:type', async (req, res) => {
+    try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); }
+});
 app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
 app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
 
