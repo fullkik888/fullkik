@@ -155,11 +155,9 @@
         .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
         .pay-btn { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
         .pay-btn.active { border-color: var(--accent-light); color: white;}
-
         .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
         .promo-bar input { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
-
         .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
 
         /* --- HISTORY LISTS --- */
@@ -198,7 +196,7 @@
             .player-right { width: 100%; }
             .lib-row { grid-template-columns: 60px 1fr 50px; }
             .lib-row .col-size, .lib-row .col-id { display: none; }
-            .grid-layout { grid-template-columns: repeat(3, 1fr); gap: 10px; } /* Mobile 3 column genre */
+            .grid-layout { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
@@ -218,11 +216,12 @@
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="initLoadCircle" style="transition: stroke-dashoffset 0.1s; transform: rotate(-90deg); transform-origin: 50% 50%;"></circle>
         </svg>
     </div>
-    <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>来</span><span>到</span><span style="margin-left:8px;">F</span><span>U</span><span>L</span><span>L</span><span>K</span><span>I</span><span>K</span></div>
+    <div class="splash-text" id="initLoadText">加载中 >.<</div>
+    <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>来</span><span>到</span><span>F</span><span>U</span><span>L</span><span>L</span><span>K</span><span>I</span><span>K</span></div>
 </div>
 
 <div id="vipUploadProgOverlay" class="modal-overlay" style="z-index:10005; flex-direction:column; background: rgba(0,0,0,0.8);">
-    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">音乐正在上传 ^-^</div>
+    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
     <div class="content-loader-bar-wrap" style="width: 250px;"><div id="vipUploadBarFill" class="loader-bar-fill" style="width:0%;"></div></div>
 </div>
 <div id="vipUploadSuccessOverlay" class="modal-overlay" style="z-index:10006; background: rgba(0,0,0,0.8); transition: opacity 0.5s;">
@@ -425,8 +424,6 @@
     </div>
 </div>
 
-<audio id="mainAudio" preload="metadata"></audio>
-
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
 <div class="modal-overlay" id="cropModal">
@@ -450,18 +447,16 @@
         <div class="modal-content">
             <h3 style="margin: 0 0 15px 0; text-align:center;" id="vipUpTitle">上传音乐</h3>
             <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('vipCoverUpload').click()">
-                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
                 <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
             </div>
             <input type="file" id="vipCoverUpload" accept="image/*" style="display:none;" onchange="handleVipCover(event)">
             
-            <label style="font-size:12px; color:var(--text-muted);">Category</label><select id="vipGenreSelect" class="input-field" style="background:#1a0f0f; border:1px solid var(--border-color); color:white; width:100%; box-sizing:border-box; margin-bottom:10px;"></select>
-
             <div style="margin-bottom:10px;"><label class="btn-submit" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="vipFileInput" accept="audio/*" style="display:none;"></label></div>
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:10px;"></div>
 
-            <label style="font-size:12px; color:var(--text-muted);">Song Title</label><input type="text" id="vipTitleInput" class="input-field" style="background:#1a0f0f; border:1px solid var(--border-color); color:white; width:100%; box-sizing:border-box; margin-bottom:10px;">
-            <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="input-field" value="10" min="0" style="background:#1a0f0f; border:1px solid var(--border-color); color:white; width:100%; box-sizing:border-box; margin-bottom:0;">
+            <label style="font-size:12px; color:var(--text-muted);">Song Title</label><input type="text" id="vipTitleInput" class="modal-input" style="margin-bottom:10px;">
+            <label style="font-size:12px; color:var(--text-muted);">Tokens 💎</label><input type="number" id="vipPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:5px;"></div>
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="submitReview">提交审核</button></div>
@@ -472,9 +467,10 @@
     const API_URL = '/api';
     let allGenres = [], allSongs = [], userPurchases = [], userTopups = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
+    let currentTopupAmt = 500, currentTopupPrice = 850; let currentCurrency = 'RMB';
+    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
-    let currentTopupAmt = 500, currentTopupPrice = 850;
     
     // --- LANGUAGE SYSTEM ---
     const dict = {
@@ -500,427 +496,26 @@
         } catch(e) {}
     }
 
-    function generateWaveform() { const wf = document.getElementById('waveform'); if(!wf) return; wf.innerHTML = ''; for(let i=0; i<40; i++) { const h = Math.random() * 100 + 10; wf.innerHTML += `<div class="wave-bar" style="height:${h}%; opacity:${Math.random()*0.5+0.5}"></div>`; } } generateWaveform();
-    function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
-    
-    function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
-    function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
-
-    // --- SEARCH UI LOGIC ---
-    function handleGlobalSearch(e) {
-        const query = e.target.value.toLowerCase(); const drop = document.getElementById('searchResults');
-        if(!query) { drop.style.display = 'none'; return; }
-        
-        const filtered = allSongs.filter(s => s.status === 'APPROVED' && (s.filename.toLowerCase().includes(query) || (s.uploader && s.uploader.toLowerCase().includes(query))));
-        drop.innerHTML = '';
-        if(filtered.length === 0) { drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found</div>`; } 
-        else {
-            filtered.forEach(s => {
-                const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
-                drop.innerHTML += `<div class="search-item" onclick="openSong('${s.id}')"><img src="${cover}"><div><div class="truncate" style="font-weight:bold; font-size:14px; max-width:400px;">${s.filename}</div><div class="truncate" style="font-size:12px; color:var(--text-muted);">${s.uploader || 'FULLKIK'}</div></div></div>`;
-            });
-        }
-        drop.style.display = 'block';
-    }
-    document.addEventListener('click', (e) => { const sw = e.target.closest('.search-wrapper'); const dr = document.getElementById('searchResults'); if(!sw && dr) dr.style.display = 'none'; });
-
-
-    // --- INITIALIZATION ---
-    async function init() {
-        // Safe Loader Engine
-        let loadProgress = 0; const circle = document.getElementById('initLoadCircle');
-        function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
-        setProg(10);
-        
-        if(!username) { 
-            const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
-            if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
-            if(document.getElementById('nav-library')) document.getElementById('nav-library').style.display = 'none';
-        }
-
-        try {
-            const res = await fetch(`${API_URL}/settings`);
-            if(res.ok) { const settings = await res.json(); if(settings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = settings.headerTitle; } if(settings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = settings.heroTitle; } }
-            setProg(30);
-
-            if(username) {
-                const uRes = await fetch(`${API_URL}/users/${username}`);
-                if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
-                    updateTokenUI(); 
-                    
-                    const pfpUrl = data.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 24 24\\\' fill=\\\'%2386868b\\\'%3E%3Cpath d=\\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\\'/%3E%3C/svg%3E';
-                    const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
-                    
-                    const pbp = document.getElementById('profileBannerPic'); if(pbp) pbp.src = pfpUrl; 
-                    const pbn = document.getElementById('profileBannerName'); if(pbn) pbn.innerText = username;
-                    
-                    if(isUserVip) {
-                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
-                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
-                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
-                } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
-            }
-            setProg(50);
-            
-            allGenres = await (await fetch(`${API_URL}/genres`)).json(); setProg(75);
-            allSongs = await (await fetch(`${API_URL}/songs`)).json(); setProg(100);
-            
-            const vipSel = document.getElementById('vipGenreSelect');
-            if(vipSel) { vipSel.innerHTML = ''; allGenres.forEach(g => { if(g.status !== 'DISABLED') vipSel.innerHTML += `<option value="${g.id}">${g.name}</option>`; }); }
-
-            setCurrency('RMB'); renderGenres(); applyLang(); 
-        } catch(e) { console.error("Init Error:", e); } 
-        finally {
-            setTimeout(() => {
-                const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
-                const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
-                const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
-                setTimeout(() => { 
-                    const sp = document.getElementById('splashLoader'); 
-                    if(sp) { sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 800); }
-                    const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
-                }, 1500);
-            }, 400);
-        }
-    }
-
-    function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
-    function closeDropdowns(e) { const d = document.getElementById('profileDropdown'); if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show'); }
-    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); window.location.href = '/register.html'; }
-
-    function switchView(view) {
-        if(audioEl) audioEl.pause(); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
-        
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        if(view === 'home' || view === 'genre' || view === 'song') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
-        if(view === 'library') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderLibrary(); }
-        if(view === 'purchased') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderPurchased(); }
-        if(view === 'vip') renderVipCenter();
-        if(view === 'history') renderHistory('ALL');
-
-        if(['home', 'library', 'profile', 'vip', 'topup', 'history', 'purchased'].includes(view)) localStorage.setItem('djLastView', view);
-    }
-
-    // --- CROPPER IMPLEMENTATION ---
-    let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas'), ctx = cropCanvas ? cropCanvas.getContext('2d') : null;
-    let offsetX = 0, offsetY = 0, isDragging = false, startX, startY;
-    
-    function handlePfpSelect(event) {
-        const file = event.target.files[0]; if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => { 
-            cropImg.src = e.target.result; 
-            cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; };
-        };
-        reader.readAsDataURL(file);
-    }
-    function drawCrop() {
-        if(!ctx) return;
-        ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value);
-        const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom;
-        const w = cropImg.width * scale; const h = cropImg.height * scale;
-        if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0;
-        if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h;
-        ctx.drawImage(cropImg, offsetX, offsetY, w, h);
-    }
-    if(document.getElementById('cropZoom')) {
-        document.getElementById('cropZoom').addEventListener('input', drawCrop);
-        cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
-        cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
-    }
-
-    async function executePfpCrop() {
-        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex';
-        const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
-        const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
-        if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; document.getElementById('cropModal').style.display = 'none'; showToast("Profile Updated"); } 
-        if(gl) gl.style.display = 'none';
-    }
-
-    // --- PERSONAL CENTER ACTIONS ---
-    async function submitVipUpgrade() {
-        const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim();
-        document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true;
-        if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;}
-        if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;}
-        if(!pass) return;
-
-        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex';
-        const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
-        if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { if(gl) gl.style.display = 'none'; showToast("Failed to upgrade", true); }
-    }
-
-    async function saveWechatConfig() {
-        const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked;
-        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex';
-        const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
-        if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { if(gl) gl.style.display = 'none'; showToast("Error saving", true); }
-    }
-
-    async function submitPasswordChange() {
-        const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
-        document.getElementById('errPw').innerText = '';
-        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
-        if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
-
-        const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex';
-        const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
-        if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; if(gl) gl.style.display = 'none'; showToast("Password Updated!"); }
-        else { if(gl) gl.style.display = 'none'; showToast(await res.text(), true); }
-    }
-
-    // --- TOPUP CENTER & HISTORY ---
-    let currentCurrency = 'RMB';
-    let currentTopupAmt = 500, currentTopupPrice = 850;
-    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
-
+    // --- CURRENCY ENGINE ---
     function setCurrency(curr) {
         currentCurrency = curr;
         document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
         document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
-        
         const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
         document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
-        
         renderTopupPacks();
     }
-
     function renderTopupPacks() {
         const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
         packs.forEach((pk, i) => {
-            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
-            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE); const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
             const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
-            
-            grid.innerHTML += `
-                <div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">
-                    ${bonusStr}<div class="prc">${sym}${price}</div>
-                </div>`;
+            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
             if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
         });
     }
-
-    function selectTopup(amt, bonus, price, el) {
-        if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
-        currentTopupAmt = amt + bonus; currentTopupPrice = price;
-        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
-    }
-
-    async function executeRealTopup() {
-        const cl = document.getElementById('contentLoader'); if(cl) cl.style.display = 'flex';
-        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { 
-            const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; 
-            updateTokenUI(); if(cl) cl.style.display = 'none'; showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); 
-        } else { if(cl) cl.style.display = 'none'; showToast("Top up failed", true); }
-    }
-
-    function renderHistory(filter) {
-        document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
-        if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
-        if(filter==='BUY') document.getElementById('histTabBUY').classList.add('active');
-        if(filter==='TOPUP') document.getElementById('histTabTOPUP').classList.add('active');
-
-        const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
-        let combined = [];
-        if(filter==='ALL' || filter==='TOPUP') userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price, curr: t.currency }));
-        if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
-        
-        combined.sort((a,b) => new Date(b.date) - new Date(a.date));
-        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
-
-        combined.forEach(item => {
-            if(item.type === 'topup') {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
-                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
-                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
-                        <div><div style="font-weight:bold;">${item.curr||'RMB'} ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
-                    </div>`;
-            } else {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
-                        <div style="min-width:0;"><div class="truncate" style="font-weight:bold;">${item.name}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">上传者: ${item.uploader||'FULLKIK'}</div></div>
-                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
-                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
-                    </div>`;
-            }
-        });
-    }
-
-    // --- VIP CENTER ---
-    let currentVipTab = 'APPROVED';
-    function renderVipCenter() {
-        if(!isUserVip) return;
-        const mySongs = allSongs.filter(s => s.uploader === username);
-        let downloads = 0; let rev = 0;
-        mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
-        
-        document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
-
-        ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
-            const count = mySongs.filter(s => s.status === status).length;
-            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
-        });
-        filterVipSongs(currentVipTab);
-    }
-
-    function filterVipSongs(status) {
-        currentVipTab = status; document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active')); 
-        if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).classList.add('active');
-        
-        const listDiv = document.getElementById('vipSongList'); listDiv.innerHTML = '';
-        const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
-        if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
-        
-        filtered.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `
-                <div class="lib-row">
-                    <img src="${cover}" class="lib-cover">
-                    <div class="truncate" style="font-weight: 500;">${s.filename}</div>
-                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
-                    <div>${status === 'APPROVED' ? `<button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>` : '-'}</div>
-                    <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
-                </div>`;
-        });
-    }
-
-    let pendingVipCover = null;
-    function openVipUpload(isBatch) {
-        pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-        document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
-        const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle; }
-        document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = (e) => { document.getElementById('vipFileCount').innerText = e.target.files.length > 0 ? `${e.target.files.length} file(s) selected` : ''; };
-        document.getElementById('vipUploadModal').style.display = 'flex';
-    }
-    function handleVipCover(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { pendingVipCover = ev.target.result; document.getElementById('vipCoverPreview').src = pendingVipCover; }; reader.readAsDataURL(file); }
-
-    async function executeVipUpload() {
-        const files = document.getElementById('vipFileInput').files; const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value; const genreId = document.getElementById('vipGenreSelect').value;
-        const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        if(!files.length) return errRow.innerText = "Please select MP3 file(s)."; if(!titleBase) return errRow.innerText = "Title is required."; 
-        
-        document.getElementById('vipUploadModal').style.display = 'none';
-        document.getElementById('vipUploadProgOverlay').style.display = 'flex';
-        let p = 0; const bF = document.getElementById('vipUploadBarFill'); bF.style.width = '0%';
-        const pInt = setInterval(() => { p += Math.random()*10; if(p>90) p=90; bF.style.width = `${p}%`; }, 100);
-
-        for(let i=0; i<files.length; i++) {
-            const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('genreId', genreId); if(pendingVipCover) fd.append('coverBase64', pendingVipCover); fd.append('uploader', username); fd.append('status', 'PENDING');  
-            await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
-        }
-
-        clearInterval(pInt); bF.style.width = '100%';
-        setTimeout(async () => {
-            document.getElementById('vipUploadProgOverlay').style.display = 'none';
-            const msg = "提交成功 请等待 1-3 天审核时间.";
-            const sText = document.getElementById('vipSuccessText'); sText.innerHTML = '';
-            msg.split('').forEach((char, i) => { sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.1}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.1}s;">${char}</span>`; });
-            
-            const sucOver = document.getElementById('vipUploadSuccessOverlay');
-            sucOver.style.opacity = 1; sucOver.style.display = 'flex';
-            
-            setTimeout(() => {
-                sucOver.style.opacity = 0;
-                setTimeout(() => { sucOver.style.display = 'none'; init(); switchView('vip'); }, 500);
-            }, msg.length * 100 + 1500);
-        }, 300);
-    }
-
-    // --- GENRES & SONGS ---
-    function renderGenres() {
-        const grid = document.getElementById('genreGrid'); grid.innerHTML = '';
-        allGenres.forEach(g => {
-            if(g.status === 'DISABLED') return;
-            const cover = g.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            grid.innerHTML += `<div class="genre-card" onclick="openGenre('${g.id}', '${g.name}')"><img src="${cover}" class="genre-img"><div class="genre-overlay"><div class="genre-title">${g.name}</div></div></div>`;
-        });
-    }
-
-    function openGenre(id, name) {
-        currentGenreId = id; document.getElementById('genreViewTitle').innerText = name;
-        const grid = document.getElementById('genreSongGrid'); grid.innerHTML = '';
-        const songs = allSongs.filter(s => s.genreId === id && s.status === 'APPROVED'); 
-        
-        if(songs.length === 0) grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`;
-        songs.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            grid.innerHTML += `
-                <div class="song-card" onclick="openSong('${s.id}')">
-                    <img src="${cover}" class="song-cover">
-                    <div class="song-info">
-                        <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
-                        <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
-                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
-                    </div>
-                </div>
-            `;
-        });
-        switchView('genre');
-    }
-
-    function openSong(id) {
-        currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
-        const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
-        
-        document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
-        document.getElementById('playerCover').src = currentSong.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-        
-        const price = currentSong.price || 10; const actionsDiv = document.getElementById('playerActions');
-        if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download</a>`; } 
-        else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
-
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
-        switchView('song');
-    }
-
-    function renderLibrary() {
-        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
-        const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
-        if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
-        myUploads.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
-        });
-    }
-
-    function renderPurchased() {
-        const listDiv = document.getElementById('purchasedList'); listDiv.innerHTML = '';
-        if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
-        userPurchases.forEach(p => {
-            const cover = p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${p.songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${p.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="openSong('${p.songId}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
-        });
-    }
-
-    // AUDIO LOGIC
-    const MAX_PREVIEW = 30;
-    if(audioEl) {
-        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= MAX_PREVIEW) { audioEl.pause(); audioEl.currentTime = MAX_PREVIEW; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
-        audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
-    }
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
-
-    function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
-    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;" class="truncate">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
-    async function executePurchase(songId, songName, filepath, price) { document.getElementById('purchaseContent').innerHTML = `<div style="padding:30px 0;"><div class="apple-spinner"></div><p style="margin-top:15px; color:var(--text-muted);">Processing...</p></div>`; document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
-    function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
+    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
+    async function executeRealTopup() { const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); showToast(`Added ${currentTopupAmt} Tokens!`); switchView('history'); } else { showToast("Top up failed", true); } }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
 </script>
