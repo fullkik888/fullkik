@@ -29,6 +29,7 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
+    console.log('✅ Cloudinary Storage Connected!');
 }
 
 const upload = multer({ 
@@ -67,7 +68,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #0b0b13; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } .container { text-align: center; background: rgba(30, 15, 15, 0.8); padding: 50px 40px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.8); max-width: 320px; animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); } @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } } .icon { width: 80px; height: 80px; fill: #ff453a; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(255,69,58,0.5)); } h1 { font-size: 24px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: -0.5px; } p { color: #a0a0b0; font-size: 15px; margin: 0 0 25px 0; line-height: 1.5; } .btn { background: #800000; color: white; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 15px; transition: 0.2s; display: inline-block; } .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(255,69,58,0.4); }</style></head><body><div class="container"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><h1>403 Forbidden</h1><p>Direct linking is not allowed. Please play or download music directly through the platform.</p><a href="/" class="btn">Return to Portal</a></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -180,6 +181,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -226,6 +228,11 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         res.json({ success: true, username: req.body.newUsername });
     } catch (e) { res.status(500).send(e.message); }
 });
+
+app.put('/api/users/:username/change-email', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ email: req.body.newEmail }); res.send('Updated'); });
+app.put('/api/users/:username/change-phone', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ phone: req.body.newPhone }); res.send('Updated'); });
+app.put('/api/users/:username/set-tokens', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ tokens: parseInt(req.body.tokens) || 0 }); await logEvent('admin', `Modified token balance for <span style="font-weight:600;">${req.params.username}</span> to ${req.body.tokens}`); res.send('Updated'); });
+app.delete('/api/users/:username', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).delete(); await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); res.send('Deleted'); });
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
@@ -282,6 +289,21 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// --- ADMIN TRANSACTIONS & ORDERS ---
+app.get('/api/orders', async (req, res) => {
+    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/orders/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/transactions', async (req, res) => {
+    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/transactions/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
 // --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
@@ -315,8 +337,6 @@ app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
 
-const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
     if(fileBuffer) {
@@ -326,7 +346,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = DEFAULT_COVER; 
+    let coverUrl = ''; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
     }
@@ -390,11 +410,5 @@ app.get('/api/logs/:type', async (req, res) => {
 });
 app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
 app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
-
-app.get('/api/orders', async (req, res) => { try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/orders/all', async (req, res) => { try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
-
-app.get('/api/transactions', async (req, res) => { try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/transactions/all', async (req, res) => { try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server bound to 0.0.0.0 on Port ${PORT}`));
