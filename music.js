@@ -59,6 +59,7 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); }
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
+// --- 403 FORBIDDEN PAGE ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -228,6 +229,11 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+app.put('/api/users/:username/change-email', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ email: req.body.newEmail }); res.send('Updated'); });
+app.put('/api/users/:username/change-phone', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ phone: req.body.newPhone }); res.send('Updated'); });
+app.put('/api/users/:username/set-tokens', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).update({ tokens: parseInt(req.body.tokens) || 0 }); await logEvent('admin', `Modified token balance for <span style="font-weight:600;">${req.params.username}</span> to ${req.body.tokens}`); res.send('Updated'); });
+app.delete('/api/users/:username', async (req, res) => { await db.collection('users').doc(req.params.username.toLowerCase()).delete(); await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); res.send('Deleted'); });
+
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
@@ -331,6 +337,8 @@ app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
 
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
     if(fileBuffer) {
@@ -340,7 +348,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = ''; 
+    let coverUrl = DEFAULT_COVER; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
     }
