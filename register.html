@@ -41,8 +41,6 @@
 
         .lang-toggle { position: absolute; top: 20px; right: 20px; font-size: 13px; font-weight: bold; cursor: pointer; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 20px; color: var(--text-muted); transition: 0.2s; z-index: 100; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);}
         .lang-toggle:hover { color: white; border-color: white;}
-
-        @media (max-width: 400px) { .auth-container { padding: 30px 20px; } h2 { font-size: 22px; } }
     </style>
 </head>
 <body>
@@ -74,7 +72,7 @@
     </div>
 
     <div id="registerView" class="view-section">
-        <h2 data-i18n="regTitle">欢迎来到FULL KIK</h2><p data-i18n="regSub">Setup your profile</p>
+        <h2 data-i18n="loginTitle">欢迎来到FULL KIK</h2><p data-i18n="regSub">Setup your profile</p>
         <div class="input-group"><input type="text" id="regContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
         <div class="input-group"><input type="text" id="regUsername" placeholder="Choose a Username" data-placeholder="userPH"></div>
         <div class="input-group"><input type="password" id="regPass" placeholder="Password" data-placeholder="passPH"></div>
@@ -84,14 +82,14 @@
     </div>
 
     <div id="forgotView" class="view-section">
-        <h2 data-i18n="resetTitle">欢迎来到FULL KIK</h2><p data-i18n="resetSub">We'll send a secure link to your contact.</p>
+        <h2 data-i18n="loginTitle">欢迎来到FULL KIK</h2><p data-i18n="resetSub">We'll send a secure link to your contact.</p>
         <div class="input-group"><input type="text" id="forgotContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
         <button class="btn-primary" onclick="requestReset()" data-i18n="sendLnk">Send Link</button><br>
         <span class="toggle-link" onclick="switchView('loginView')" data-i18n="backLnk">Back to Sign in</span>
     </div>
 
     <div id="resetView" class="view-section">
-        <h2 data-i18n="newPassTitle">欢迎来到FULL KIK</h2><p data-i18n="newPassSub">Enter your new credentials</p>
+        <h2 data-i18n="loginTitle">欢迎来到FULL KIK</h2><p data-i18n="newPassSub">Enter your new credentials</p>
         <div class="input-group"><input type="password" id="newPass" placeholder="New Password" data-placeholder="newPassPH"></div>
         <div class="input-group"><input type="password" id="confirmNewPass" placeholder="Confirm New Password" data-placeholder="confirmNewPH"></div>
         <button class="btn-primary" onclick="executeReset()" data-i18n="resetBtn">Reset & Login</button>
@@ -102,15 +100,12 @@
     const API_URL = '/api'; let currentResetToken = null;
     
     const dict = {
-        en: { loginTitle: "Welcome to FULL KIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Welcome to FULL KIK", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Welcome to FULL KIK", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "Welcome to FULL KIK", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "Successfully Registered", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
-        cn: { loginTitle: "欢迎来到FULL KIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "欢迎来到FULL KIK", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "欢迎来到FULL KIK", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "欢迎来到FULL KIK", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功", errFill: "请填写所有字段", errMatch: "密码不匹配" }
+        en: { loginTitle: "Welcome to FULL KIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "Successfully Registered", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
+        cn: { loginTitle: "欢迎来到FULL KIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功", errFill: "请填写所有字段", errMatch: "密码不匹配" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
-    function toggleLang() {
-        currentLang = currentLang === 'en' ? 'cn' : 'en';
-        localStorage.setItem('djLang', currentLang); applyLang();
-    }
+    function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
 
     function applyLang() {
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
