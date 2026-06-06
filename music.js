@@ -180,6 +180,13 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.delete('/api/users/:username', async (req, res) => { 
+    await db.collection('users').doc(req.params.username.toLowerCase()).delete(); 
+    await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`); 
+    res.send('Deleted'); 
+});
+
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -395,7 +402,6 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         
-        // Process Array of Banners
         if (req.body.banners !== undefined) {
             let processedBanners = [];
             for(let b of req.body.banners) {
