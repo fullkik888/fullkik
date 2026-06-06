@@ -180,7 +180,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -385,15 +384,31 @@ app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
-    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
-    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0} });
+    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
+    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
 });
+
 app.put('/api/settings', async (req, res) => { 
     try {
         let updates = {};
         if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
+        
+        // Process Array of Banners
+        if (req.body.banners !== undefined) {
+            let processedBanners = [];
+            for(let b of req.body.banners) {
+                if(b && b.startsWith('data:image')) {
+                    const url = await uploadToCloudinaryBase64(b, 'dj_banners');
+                    processedBanners.push(url);
+                } else if(b) {
+                    processedBanners.push(b);
+                }
+            }
+            updates.banners = processedBanners;
+        }
+
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
         res.send('Updated'); 
     } catch(e) { res.status(500).send(e.message); }
