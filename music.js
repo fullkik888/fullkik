@@ -59,7 +59,6 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); }
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// 🛠️ Updated 403 Forbidden Page to match "禁止盗取歌曲" in Dark Maroon
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -68,7 +67,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #1a0f0f; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 42px; font-weight: 900; letter-spacing: 4px; text-shadow: 0 4px 20px rgba(255,69,58,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -134,7 +133,22 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
-app.get('/api/all-users', async (req, res) => { try { res.json((await db.collection('users').get()).docs.map(d => d.data())); } catch (e) { res.status(500).json([]); }});
+app.get('/api/all-users', async (req, res) => { 
+    try { 
+        // 🛠️ Sanitized response for public fetch (removes passwords/emails for security)
+        const users = (await db.collection('users').get()).docs.map(d => {
+            const data = d.data();
+            return {
+                username: data.username,
+                profilePic: data.profilePic,
+                isVip: data.isVip,
+                status: data.status,
+                createdAt: data.createdAt
+            };
+        });
+        res.json(users);
+    } catch (e) { res.status(500).json([]); }
+});
 
 // --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
