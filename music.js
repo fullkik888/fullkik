@@ -133,20 +133,15 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
+// 🛠️ SECURITY FIX: Strip passwords before sending user list to frontend
 app.get('/api/all-users', async (req, res) => { 
     try { 
-        // 🛠️ Sanitized response for public fetch (removes passwords/emails for security)
         const users = (await db.collection('users').get()).docs.map(d => {
-            const data = d.data();
-            return {
-                username: data.username,
-                profilePic: data.profilePic,
-                isVip: data.isVip,
-                status: data.status,
-                createdAt: data.createdAt
-            };
+            let data = d.data();
+            delete data.password; // Do not expose passwords
+            return data;
         });
-        res.json(users);
+        res.json(users); 
     } catch (e) { res.status(500).json([]); }
 });
 
@@ -194,6 +189,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
+
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -345,6 +341,8 @@ app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
 
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
     if(fileBuffer) {
@@ -354,7 +352,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = ''; 
+    let coverUrl = DEFAULT_COVER; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
     }
@@ -416,9 +414,7 @@ app.put('/api/settings', async (req, res) => {
                 if(b && b.startsWith('data:image')) {
                     const url = await uploadToCloudinaryBase64(b, 'dj_banners');
                     processedBanners.push(url);
-                } else if(b) {
-                    processedBanners.push(b);
-                }
+                } else if(b) { processedBanners.push(b); }
             }
             updates.banners = processedBanners;
         }
