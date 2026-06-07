@@ -133,12 +133,11 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
+// Strip passwords for safe client-side consumption
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data();
-            delete data.password; 
-            return data;
+            let data = d.data(); delete data.password; return data;
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
@@ -192,11 +191,10 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
 app.delete('/api/users/:username', async (req, res) => { 
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).delete(); 
-        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`); 
+        await logEvent('admin', `Deleted user account: <span style="font-weight:600; color:var(--danger);">${req.params.username}</span>`); 
         res.send('Deleted'); 
     } catch(e) { res.status(500).send(e.message); }
 });
-
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -415,16 +413,13 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         
-        // Process Array of Banners
         if (req.body.banners !== undefined) {
             let processedBanners = [];
             for(let b of req.body.banners) {
                 if(b && b.startsWith('data:image')) {
                     const url = await uploadToCloudinaryBase64(b, 'dj_banners');
                     processedBanners.push(url);
-                } else if(b) {
-                    processedBanners.push(b);
-                }
+                } else if(b) { processedBanners.push(b); }
             }
             updates.banners = processedBanners;
         }
