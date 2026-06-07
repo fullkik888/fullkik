@@ -11,7 +11,7 @@
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; }
         .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -25,7 +25,7 @@
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
-        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index:101;}
+        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
         .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
         .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
@@ -56,31 +56,17 @@
 
         /* GLOBAL ACTION LOADER */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
+        .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- HOME PAGE NEW LAYOUT --- */
+        .banner-carousel { display:flex; gap:15px; overflow-x:auto; padding-bottom:15px; -webkit-overflow-scrolling:touch; margin-bottom:20px; display:none;}
+        .banner-carousel img { min-width:300px; height:180px; object-fit:cover; border-radius:16px; border:1px solid var(--border-color);}
         
         .hero { text-align: center; margin-bottom: 40px; }
         .hero h1 { font-size: 36px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 2px;}
         .hero p { color: var(--text-muted); font-size: 14px; margin: 0 0 30px 0;}
         
-        /* BANNERS */
-        .banner-container { display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; overflow-x: auto; padding-bottom:10px; scroll-snap-type: x mandatory;}
-        .banner-container img { border-radius: 12px; width: 100%; max-width: 380px; height: 180px; object-fit: cover; flex-shrink: 0; scroll-snap-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
-
-        /* HOT DJS */
-        .hot-dj-section { margin-bottom: 40px; }
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .section-header h2 { margin: 0; font-size: 20px; }
-        .btn-more { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; }
-        .btn-more:hover { color: white; }
-
-        .hot-dj-list { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 15px; scroll-snap-type: x mandatory; }
-        .hot-dj-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; width: 140px; flex-shrink: 0; text-align: center; position: relative; scroll-snap-align: start; transition: 0.2s;}
-        .hot-dj-card:hover { border-color: var(--accent); transform: translateY(-5px); }
-        .dj-rank { position: absolute; top: -10px; left: 15px; background: var(--accent-light); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid var(--bg-color);}
-        .dj-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px auto; background: #1a0f0f; display: flex; align-items: center; justify-content: center; font-size: 30px;}
-        .dj-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
-        .dj-works { font-size: 12px; color: var(--text-muted); }
-
-        /* SEARCH DROPDOWN UI */
         .search-wrapper { position: relative; max-width: 600px; margin: 0 auto; }
         .search-bar { width: 100%; padding: 16px 24px; border-radius: 30px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; font-size: 16px; outline: none; box-sizing: border-box;}
         .search-dropdown { position: absolute; top: calc(100% + 10px); left: 0; width: 100%; background: #1a0f0f; border: 1px solid var(--border-color); border-radius: 12px; max-height: 400px; overflow-y: auto; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; text-align:left;}
@@ -88,27 +74,45 @@
         .search-item:hover { background: rgba(255,255,255,0.05); }
         .search-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
         
-        /* HOME GENRE 3x3 GRID */
-        .home-genre-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 40px;}
-        .list-song-card { display: flex; align-items: center; gap: 15px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.2s; }
-        .list-song-card:hover { border-color: var(--accent); background: rgba(128,0,0,0.1); }
-        .list-song-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
-        .list-song-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-        .list-song-title { font-size: 14px; font-weight: bold; color: white; }
-        .list-song-uploader { font-size: 11px; color: var(--text-muted); display:flex; align-items:center; gap:5px;}
-        .list-song-price { font-size: 12px; font-weight: bold; color: var(--token); display:flex; align-items:center; gap:2px; justify-content:flex-end;}
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin: 40px 0 20px 0; }
+        .section-title { font-size: 20px; font-weight: bold; color: white; margin: 0; }
+        .btn-more { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-more:hover { color: white; }
 
-        /* DETAILED LIST VIEW (MORE / 更多) */
-        .detail-list-row { display: grid; grid-template-columns: 60px 1fr 100px; padding: 15px; align-items: center; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;}
-        .detail-list-row:hover { background: rgba(255,255,255,0.05); }
+        .dj-grid { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .dj-card { min-width: 100px; display: flex; flex-direction: column; align-items: center; gap: 8px; background: rgba(30,15,15,0.4); padding: 15px 10px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+        .dj-card:hover { border-color: var(--accent); background: rgba(128,0,0,0.2); }
+        .dj-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #222; display:flex; align-items:center; justify-content:center; font-size:24px;}
+        .dj-name { font-size: 13px; font-weight: bold; color: white; width:100%; text-align:center;}
+        .dj-count { font-size: 11px; color: var(--text-muted); }
+
+        .home-song-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .song-card-h { display: flex; align-items: center; gap: 15px; background: rgba(30,15,15,0.6); padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.2s; border: 1px solid var(--border-color); }
+        .song-card-h:hover { background: rgba(165,42,42,0.1); border-color: var(--accent); }
+        .song-card-h img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; flex-shrink:0;}
+        .song-card-h-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+        .song-card-h-title { font-size: 14px; font-weight: bold; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .song-card-h-sub { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .song-card-h-sub .vip-tag { color: var(--accent-light); border: 1px solid var(--accent-light); padding: 1px 4px; border-radius: 4px; font-size: 9px; font-weight: bold; flex-shrink:0;}
+        .song-card-h-price { font-size: 13px; font-weight: bold; color: var(--token); display:flex; align-items:center; gap:3px; flex-shrink:0; padding-right:10px;}
+
+        /* Traditional Box Grid for Full Genre View */
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .song-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; cursor: pointer; transition: 0.3s; border: 1px solid var(--border-color); }
+        .song-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .song-cover { width: 100%; aspect-ratio: 1; object-fit: cover; }
+        .song-info { padding: 15px; }
+        .song-title { font-size: 14px; font-weight: 600; margin-bottom: 5px;}
+        .song-tag { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between;}
 
         /* PAGINATION */
-        .pagination-container { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-        .page-box { background: #1a0f0f; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 15px; cursor: pointer; color: var(--text-muted); transition: 0.2s; font-size:14px;}
-        .page-box:hover { color: white; border-color: rgba(255,255,255,0.3); }
-        .page-box.active { background: var(--accent-light); color: white; border-color: var(--accent-light); }
-        .page-box.disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination-bar { display:flex; justify-content:center; align-items:center; padding:30px 15px; gap:10px; font-size:14px; color:var(--text-muted); margin-top:20px;}
+        .page-btn { background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-main); padding:8px 15px; border-radius:8px; cursor:pointer; transition:0.2s;}
+        .page-btn:hover:not(:disabled) { border-color:var(--accent-light); color:var(--accent-light); }
+        .page-btn.active { background:linear-gradient(90deg, var(--accent), var(--accent-light)); border-color:var(--accent); color:white; font-weight:bold;}
+        .page-btn:disabled { opacity:0.3; cursor:not-allowed; }
 
+        /* SINGLE SONG PAGE */
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
         .btn-back { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
         .btn-back:hover { color: white; }
@@ -165,7 +169,7 @@
         .vip-stat-lbl { font-size: 12px; color: var(--text-muted); }
         .vip-tabs { display: flex; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
         .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none;}
-        .vip-tab.active { color: var(--accent-light); font-weight: bold; border-bottom: 2px solid var(--accent-light); padding-bottom: 8px; margin-bottom: -11px;}
+        .vip-tab.active { color: var(--accent-light); font-weight: bold; }
 
         .vip-upload-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
@@ -182,7 +186,6 @@
         .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
         .pay-btn { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
         .pay-btn.active { border-color: var(--accent-light); color: white;}
-
         .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
         .promo-bar input { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
@@ -202,8 +205,8 @@
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .toast.show { transform: translateX(-50%) translateY(0); }
         
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px;}
-        .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 420px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
+        .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
@@ -211,6 +214,7 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
+        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
         /* Custom Loaders */
@@ -223,8 +227,8 @@
             .player-right { width: 100%; }
             .lib-row { grid-template-columns: 60px 1fr 50px; }
             .lib-row .col-size, .lib-row .col-id { display: none; }
+            .home-song-grid { grid-template-columns: 1fr; }
             .grid-layout { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .home-genre-grid { grid-template-columns: 1fr; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
@@ -247,23 +251,26 @@
     <div class="welcome-text" id="welcomeText"><span>欢</span><span>迎</span><span>来</span><span>到</span><span>F</span><span>U</span><span>L</span><span>L</span><span>K</span><span>I</span><span>K</span></div>
 </div>
 
+<div id="vipUploadProgOverlay" class="modal-overlay" style="z-index:10005; flex-direction:column; background: rgba(0,0,0,0.8);">
+    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
+    <div class="content-loader-bar-wrap" style="width: 250px;"><div id="vipUploadBarFill" class="loader-bar-fill" style="width:0%;"></div></div>
+</div>
+<div id="vipUploadSuccessOverlay" class="modal-overlay" style="z-index:10006; background: rgba(0,0,0,0.8); transition: opacity 0.5s;">
+    <div class="welcome-text" id="vipSuccessText" style="display:block; font-size:18px;"></div>
+</div>
+
 <div id="globalLoader" class="modal-overlay" style="z-index:99999; flex-direction:column; background: rgba(0,0,0,0.8);">
     <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;" id="gLoadText">正在处理订单...</div>
     <div class="content-loader-bar-wrap" id="gLoadBarWrap" style="display:none;"><div id="gLoadBar" class="loader-bar-fill"></div></div>
 </div>
 
-<div id="vipUploadSuccessOverlay" class="modal-overlay" style="z-index:10006; background: rgba(0,0,0,0.8); transition: opacity 0.5s;">
-    <div class="welcome-text" id="vipSuccessText" style="display:block; font-size:18px;"></div>
-</div>
-
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <div class="logo-container" id="logoText">FULLKIK</div>
+    <div class="logo-container" id="logoText" onclick="switchView('home')">FULLKIK</div>
     <div class="nav-tabs">
         <button class="nav-tab active" id="nav-store" onclick="switchView('home')" data-i18n="store">首页</button>
         <button class="nav-tab" id="nav-library" onclick="switchView('library')" data-i18n="library">我的音乐</button>
-        <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
         <button class="btn-upgrade-top" id="btnUpgradeTop" onclick="switchView('profile')" style="display:none;" data-i18n="upVip">升级至VIP</button>
@@ -284,35 +291,31 @@
 
 <div class="container">
     <div id="view-home" class="view-section active">
-        <div id="homeBanners" class="banner-container" style="display:none;"></div>
-
+        <div class="banner-carousel" id="homeBanners"></div>
         <div class="hero">
             <h1 id="heroTitle">专属DJ节奏空间</h1>
             <p data-i18n="heroSub">专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品</p>
-            
             <div class="search-wrapper">
                 <input type="text" class="search-bar" id="mainSearch" placeholder="Search songs..." oninput="handleGlobalSearch(event)">
                 <div id="searchResults" class="search-dropdown"></div>
             </div>
         </div>
-
-        <div class="hot-dj-section" id="hotDjsSection" style="display:none;">
-            <div class="section-header"><h2>热门 DJ</h2></div>
-            <div class="hot-dj-list" id="hotDjList"></div>
+        
+        <div id="djSection" style="display:none;">
+            <div class="section-header"><h2 class="section-title">热门 DJ</h2><button class="btn-more" onclick="showToast('更多DJ开发中')">查看全部 ></button></div>
+            <div class="dj-grid" id="djGrid"></div>
         </div>
 
-        <div id="homeGenresSection"></div>
+        <div id="homeGenreSections"></div>
     </div>
 
-    <div id="view-genre-list" class="view-section">
+    <div id="view-genre" class="view-section">
         <div class="player-header">
-            <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> <span data-i18n="back">返回</span></button>
-            <h2 id="genreListTitle" style="margin: 0 0 0 20px;">Category</h2>
+            <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
+            <h2 id="genreViewTitle" style="margin: 0 0 0 20px;">Category</h2>
         </div>
-        <div style="background:var(--card-bg); border-radius:16px; border:1px solid var(--border-color); overflow:hidden;">
-            <div id="genreListContent"></div>
-        </div>
-        <div class="pagination-container" id="genreListPagination"></div>
+        <div class="grid-layout" id="genreSongGrid"></div>
+        <div class="pagination-bar" id="genrePagination"></div>
     </div>
 
     <div id="view-song" class="view-section">
@@ -334,7 +337,7 @@
             </div>
             <div class="player-right">
                 <img class="player-cover" id="playerCover" src="">
-                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="showToast('已举报 (Report Submitted)')"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
+                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="showToast('已提交举报。我们将会审核。')"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
             </div>
         </div>
     </div>
@@ -485,11 +488,15 @@
 
 <div class="modal-overlay" id="vipUploadModal">
     <div class="modal-box" style="max-width:800px; padding:0; text-align:left;">
-        <div class="dash-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; padding:20px 20px 0 20px;">
-            <h2 style="margin:0;" id="vipUpTitle">上传歌曲</h2>
+        <div style="padding: 20px 30px; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;" id="vipUpTitle">上传歌曲</h3>
             <button class="btn-text-action" onclick="closeModals()">返回</button>
         </div>
-        <div class="form-section" style="margin-bottom:0; border:none; background:transparent;">
+        <div class="modal-content" style="padding: 30px;">
+            <div style="font-size:14px; font-weight:bold; margin-bottom:20px; display:flex; justify-content:space-between;">
+                歌曲信息 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">默认免费上传，如需收费请在价格栏填入钻石数量。</span>
+            </div>
+            
             <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
             <div class="upload-tabs" id="vip-audio-tabs">
                 <button class="active" id="vip-btn-file" onclick="setVipUploadMode(false)">上传文件</button>
@@ -500,7 +507,7 @@
                 拖拽 MP3 / WAV 文件到此处，或 <span style="color:var(--accent-light)">点击选择</span>
             </div>
             <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-top:10px;">
-            <input type="file" id="vipFileInput" accept="audio/*" style="display:none;" onchange="handleVipAudioSelect(event)">
+            <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vip-audio-filename" style="font-size:12px; color:var(--accent-light); margin-top:5px; text-align:center;"></div>
 
             <div style="display:flex; gap:20px; margin-top:20px;">
@@ -521,7 +528,7 @@
                 </div>
                 <div style="flex:1;">
                     <label class="input-label">分类选择</label>
-                    <select class="input-field" id="vipGenreSelect" style="width:100%; box-sizing:border-box; background:var(--card-bg); color:white;"></select>
+                    <select class="input-field" id="vipGenreSelect" style="width:100%; box-sizing:border-box; background:var(--bg-color); color:white;"></select>
                 </div>
             </div>
 
@@ -534,37 +541,39 @@
             <input type="file" id="vipCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'vipCoverPreview', 'vip')">
 
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:15px;"></div>
-            <button class="btn-submit" style="margin-top:10px;" onclick="executeVipUpload()" data-i18n="submitReview">提交审核</button>
         </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">取消</button><button class="modal-btn" onclick="executeVipUpload()" style="color:white; background:linear-gradient(90deg, var(--accent), var(--accent-light));" data-i18n="submitReview">提交审核</button></div>
     </div>
 </div>
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [];
+    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [], allUsers = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
+    let currentTopupAmt = 500, currentTopupPrice = 850;
     
     // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
     let currentCurrency = 'RMB';
-    let currentTopupAmt = 500, currentTopupPrice = 850;
     const EX_RATE = 0.65; // Approx MYR to RMB conversion
     const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
 
     function setCurrency(curr) {
         currentCurrency = curr;
-        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
-        document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        const btnRmb = document.getElementById('btnCurrRMB'); if(btnRmb) btnRmb.classList.toggle('active', curr === 'RMB');
+        const btnMyr = document.getElementById('btnCurrMYR'); if(btnMyr) btnMyr.classList.toggle('active', curr === 'MYR');
         
         const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
-        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        const pml = document.getElementById('payMethodList');
+        if(pml) pml.innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
         
         renderTopupPacks();
     }
 
     function renderTopupPacks() {
-        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
+        const grid = document.getElementById('topupGridRender'); if(!grid) return;
+        grid.innerHTML = '';
         packs.forEach((pk, i) => {
             const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
             const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
@@ -582,7 +591,7 @@
         if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
         currentTopupAmt = amt + bonus; currentTopupPrice = price;
         const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
+        const display = document.getElementById('topupTotalDisplay'); if(display) display.innerText = `${sym}${price}`;
     }
 
     // --- LANGUAGE SYSTEM ---
@@ -597,8 +606,10 @@
     function applyLang() {
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
+        
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
-        if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
+        const profileBtnT = document.getElementById('profileBtnText'); if(!username && profileBtnT) profileBtnT.innerText = dict[currentLang].login;
+        
         if(currentSong) openSong(currentSong.id);
         
         try {
@@ -609,15 +620,15 @@
         } catch(e) {}
     }
 
-    function showGlobalLoader(txt = "正在处理订单...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('gLoadBarWrap').style.display = 'none'; document.getElementById('globalLoader').style.display = 'flex'; }
+    function showGlobalLoader(txt = "正在处理订单...") { const t = document.getElementById('gLoadText'); if(t) t.innerText = txt; const w = document.getElementById('gLoadBarWrap'); if(w) w.style.display = 'none'; const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex'; }
     function showGlobalProgress(txt = "音乐正在上传 ^-^") {
-        document.getElementById('gLoadText').innerText = txt; document.getElementById('gLoadBarWrap').style.display = 'block'; document.getElementById('globalLoader').style.display = 'flex';
-        let p = 0; document.getElementById('gLoadBar').style.width = '0%';
-        window._gProgInt = setInterval(() => { p += Math.random()*15; if(p>95) p=95; document.getElementById('gLoadBar').style.width = `${p}%`; }, 200);
+        const t = document.getElementById('gLoadText'); if(t) t.innerText = txt; const w = document.getElementById('gLoadBarWrap'); if(w) w.style.display = 'block'; const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'flex';
+        let p = 0; const bar = document.getElementById('gLoadBar'); if(bar) bar.style.width = '0%';
+        window._gProgInt = setInterval(() => { p += Math.random()*15; if(p>95) p=95; if(bar) bar.style.width = `${p}%`; }, 200);
     }
-    function hideGlobalLoader() { if(window._gProgInt) clearInterval(window._gProgInt); document.getElementById('gLoadBar').style.width = '100%'; setTimeout(() => { document.getElementById('globalLoader').style.display = 'none'; }, 300); }
+    function hideGlobalLoader() { if(window._gProgInt) clearInterval(window._gProgInt); const bar = document.getElementById('gLoadBar'); if(bar) bar.style.width = '100%'; setTimeout(() => { const gl = document.getElementById('globalLoader'); if(gl) gl.style.display = 'none'; }, 300); }
 
-    function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
+    function showToast(msg, isError = false) { const t = document.getElementById('toast'); if(!t) return; t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
 
@@ -631,7 +642,7 @@
         if(filtered.length === 0) { drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found</div>`; } 
         else {
             filtered.forEach(s => {
-                const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+                const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                 drop.innerHTML += `<div class="search-item" onclick="openSong('${s.id}')"><img src="${cover}"><div><div class="truncate" style="font-weight:bold; font-size:14px; max-width:400px;">${s.filename}</div><div class="truncate" style="font-size:12px; color:var(--text-muted);">${s.uploader || 'FULLKIK'}</div></div></div>`;
             });
         }
@@ -644,7 +655,9 @@
     // --- INITIALIZATION ---
     async function init() {
         const circle = document.getElementById('initLoadCircle');
-        let loadProgress = 0; function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
+        
+        let loadProgress = 0;
+        function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
         setProg(10);
         
         if(!username) { 
@@ -674,14 +687,24 @@
                     
                     const pbp = document.getElementById('profileBannerPic'); if(pbp) pbp.src = pfpUrl; 
                     const pbn = document.getElementById('profileBannerName'); if(pbn) pbn.innerText = username;
-                    
-                    if(document.getElementById('vipUploaderInput')) document.getElementById('vipUploaderInput').value = username;
+                    const vipUpInp = document.getElementById('vipUploaderInput'); if(vipUpInp) vipUpInp.value = username;
                     
                     if(isUserVip) {
-                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
-                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
-                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
+                        const pvTag = document.getElementById('profileBannerVipTag'); if(pvTag) pvTag.style.display = 'inline-block'; 
+                        const vRegSec = document.getElementById('vipRegSection'); if(vRegSec) vRegSec.style.display = 'none'; 
+                        const vConfSec = document.getElementById('vipConfigSection'); if(vConfSec) vConfSec.style.display = 'block'; 
+                        const btnVct = document.getElementById('btnVipCenterTop'); if(btnVct) btnVct.style.display = 'block';
+                        
+                        const cfgWc = document.getElementById('configWechat'); if(cfgWc) cfgWc.value = data.wechat || ''; 
+                        const cfgWcP = document.getElementById('configWechatPub'); if(cfgWcP) cfgWcP.checked = data.wechatPublic;
+                        
+                        if(data.wechatPublic && data.wechat) { 
+                            const pwd = document.getElementById('profileWechatDisplay'); if(pwd) pwd.style.display = 'flex'; 
+                            const wid = document.getElementById('wechatIdText'); if(wid) wid.innerText = data.wechat; 
+                        }
+                    } else { 
+                        const btnUp = document.getElementById('btnUpgradeTop'); if(btnUp) btnUp.style.display = 'block'; 
+                    }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
             }
             setProg(50);
@@ -690,10 +713,12 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json(); setProg(75);
             allSongs = await (await fetch(`${API_URL}/songs`)).json(); setProg(100);
             
-            setCurrency('RMB'); renderHomeBanners(); renderHotDjs(); renderHomeGenres(); populateGenreDropdowns(); applyLang(); 
+            setCurrency('RMB'); 
+            renderHome(); 
+            populateGenreDropdowns(); 
+            applyLang(); 
         } catch(e) { console.error("Init Error:", e); } 
 
-        // Splash Loader Sequence
         setTimeout(() => {
             const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
             const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
@@ -725,205 +750,369 @@
     }
 
     function populateGenreDropdowns() {
-        const uploadSel = document.getElementById('vipGenreSelect'); if(!uploadSel) return;
-        uploadSel.innerHTML = '';
-        allGenres.forEach(g => { if(g.status !== 'DISABLED') uploadSel.innerHTML += `<option value="${g.id}">${g.name}</option>`; });
+        const uploadSel = document.getElementById('vipGenreSelect'); if(uploadSel) uploadSel.innerHTML = '';
+        allGenres.forEach(g => { if(g.status !== 'DISABLED' && uploadSel) uploadSel.innerHTML += `<option value="${g.id}">${g.name}</option>`; });
     }
 
-    // --- HOMEPAGE BANNERS & HOT DJS & GENRES ---
-    function renderHomeBanners() {
-        const banners = globalSettings.banners || [];
-        const validBanners = banners.filter(b => b.trim() !== '');
-        const container = document.getElementById('homeBanners');
-        if(!container) return;
-        if(validBanners.length === 0) { container.style.display = 'none'; return; }
-        container.style.display = 'flex'; container.innerHTML = '';
-        validBanners.forEach(src => { container.innerHTML += `<img src="${src}">`; });
+    // --- HOME PAGE LOGIC (Banners, DJs, Genres) ---
+    function renderHome() {
+        renderBanners();
+        renderDJs();
+        renderHomeGenres();
     }
 
-    function renderHotDjs() {
-        const djSection = document.getElementById('hotDjsSection'); const djList = document.getElementById('hotDjList');
-        if(!djSection || !djList) return;
+    function renderBanners() {
+        const cont = document.getElementById('homeBanners'); if(!cont) return;
+        if(!globalSettings.banners || globalSettings.banners.length === 0 || globalSettings.banners.every(b => !b)) {
+            cont.style.display = 'none'; return;
+        }
+        cont.style.display = 'flex';
+        cont.innerHTML = globalSettings.banners.filter(b => b).map(b => `<img src="${b}" style="flex:1; min-width:300px; height:180px; object-fit:cover; border-radius:16px; border:1px solid var(--border-color);">`).join('');
+    }
+
+    function renderDJs() {
         const vips = allUsers.filter(u => u.isVip);
-        if(vips.length === 0) { djSection.style.display = 'none'; return; }
-        djSection.style.display = 'block'; djList.innerHTML = '';
+        const sec = document.getElementById('djSection'); const grid = document.getElementById('djGrid');
+        if(!sec || !grid) return;
+        if(vips.length === 0) { sec.style.display = 'none'; return; }
         
-        const djData = vips.map(u => ({ username: u.username, profilePic: u.profilePic, count: allSongs.filter(s => s.uploader === u.username && s.status === 'APPROVED').length }));
-        djData.sort((a,b) => b.count - a.count);
-        
-        djData.forEach((dj, index) => {
-            let pfpContent = dj.profilePic ? `<img src="${dj.profilePic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : `🎧`;
-            djList.innerHTML += `
-                <div class="hot-dj-card">
-                    <div class="dj-rank">${index + 1}</div>
-                    <div class="dj-avatar">${pfpContent}</div>
-                    <div class="dj-name truncate" title="${dj.username}">${dj.username}</div>
-                    <div class="dj-works">${dj.count} 首作品</div>
-                </div>
-            `;
-        });
+        sec.style.display = 'block';
+        grid.innerHTML = vips.map((v, i) => {
+            const count = allSongs.filter(s => s.uploader === v.username && s.status === 'APPROVED').length;
+            const pfp = v.profilePic || `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E`;
+            return `
+                <div class="dj-card">
+                    ${i<3 ? `<div style="position:absolute; top:-5px; left:-5px; background:var(--accent-light); width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:bold; color:white; z-index:10;">${i+1}</div>` : ''}
+                    <img src="${pfp}" class="dj-avatar">
+                    <div class="dj-name" title="${v.username}">${v.username}</div>
+                    <div class="dj-count">${count} 首作品</div>
+                </div>`;
+        }).join('');
     }
 
     function renderHomeGenres() {
-        const grid = document.getElementById('genreGrid'); if(!grid) return; grid.innerHTML = '';
+        const cont = document.getElementById('homeGenreSections'); if(!cont) return;
+        cont.innerHTML = '';
+        
+        const recent = allSongs.filter(s => s.status === 'APPROVED').slice().reverse().slice(0, 9);
+        if(recent.length > 0) cont.innerHTML += buildGenreSectionHTML('ALL', '最新歌曲', recent);
+
         allGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
-            const genreSongs = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED');
-            if(genreSongs.length === 0) return; // Skip empty genres on home page
-            
-            let songsHTML = '';
-            genreSongs.slice(0, 9).forEach(s => {
-                const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                songsHTML += `
-                    <div class="list-song-card" onclick="openSong('${s.id}')">
-                        <img src="${cover}" class="list-song-cover">
-                        <div class="list-song-info">
-                            <div class="list-song-title truncate">${s.filename}</div>
-                            <div class="list-song-uploader truncate">${s.uploader || 'FULLKIK'}</div>
-                        </div>
-                        <div class="list-song-price">💎 ${s.price || 10}</div>
-                    </div>
-                `;
-            });
-
-            grid.outerHTML += `
-                <div class="home-section" style="margin-bottom: 50px; width:100%;">
-                    <div class="section-header"><h2>${g.name}</h2><button class="btn-more" onclick="openGenreList('${g.id}', '${g.name.replace(/'/g, "\\'")}')">更多 ></button></div>
-                    <div class="home-genre-grid">${songsHTML}</div>
-                </div>
-            `;
+            const gSongs = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED').slice().reverse().slice(0, 9);
+            if(gSongs.length > 0) cont.innerHTML += buildGenreSectionHTML(g.id, g.name, gSongs);
         });
     }
 
-    // --- DETAILED GENRE LIST (PAGINATED) ---
-    let currentListGenreId = null, currentListPage = 1;
-    const LIST_LIMIT = 50;
-    function openGenreList(genreId, genreName, page = 1) {
-        currentListGenreId = genreId; currentListPage = page;
-        document.getElementById('genreListTitle').innerText = genreName;
-        const listDiv = document.getElementById('genreListContent'); listDiv.innerHTML = '';
-        
-        const genreSongs = allSongs.filter(s => s.genreId === genreId && s.status === 'APPROVED');
-        if(genreSongs.length === 0) { listDiv.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无歌曲</div>`; switchView('genre-list'); return; }
+    function buildGenreSectionHTML(id, name, songs) {
+        let html = `<div class="section-header"><h2 class="section-title">${name}</h2><button class="btn-more" onclick="openGenre('${id}', '${name.replace(/'/g, "\\'")}')">更多 ></button></div><div class="home-song-grid">`;
+        songs.forEach(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            html += `
+                <div class="song-card-h" onclick="openSong('${s.id}')">
+                    <img src="${cover}">
+                    <div class="song-card-h-info">
+                        <div class="song-card-h-title">${s.filename}</div>
+                        <div class="song-card-h-sub"><span class="vip-tag">VIPERMIX</span> <span class="truncate" style="max-width:100px;">${s.uploader || 'FULLKIK'}</span></div>
+                    </div>
+                    <div class="song-card-h-price"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${s.price||10}</div>
+                </div>`;
+        });
+        html += `</div>`; return html;
+    }
 
-        const totalPages = Math.ceil(genreSongs.length / LIST_LIMIT) || 1;
-        if(currentListPage > totalPages) currentListPage = totalPages;
-        const start = (currentListPage - 1) * LIST_LIMIT; const paged = genreSongs.slice(start, start + LIST_LIMIT);
+    // --- GENRE PAGE WITH PAGINATION ---
+    let activeGenreId = 'ALL'; let currentGenrePage = 1; const GENRE_LIMIT = 50;
+    function openGenre(id, name) { activeGenreId = id; const t = document.getElementById('genreViewTitle'); if(t) t.innerText = name; currentGenrePage = 1; renderGenrePage(); switchView('genre'); }
+
+    function renderGenrePage() {
+        let songs = allSongs.filter(s => s.status === 'APPROVED');
+        if(activeGenreId !== 'ALL') songs = songs.filter(s => s.genreId === activeGenreId);
+        songs = songs.slice().reverse();
+
+        const grid = document.getElementById('genreSongGrid'); if(!grid) return; grid.innerHTML = '';
+        const totalPages = Math.ceil(songs.length / GENRE_LIMIT) || 1;
+        if(currentGenrePage > totalPages) currentGenrePage = totalPages;
+        
+        const start = (currentGenrePage - 1) * GENRE_LIMIT;
+        const paged = songs.slice(start, start + GENRE_LIMIT);
 
         paged.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `
-                <div class="detail-list-row" onclick="openSong('${s.id}')">
-                    <img src="${cover}" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">
-                    <div style="min-width:0; padding-right:15px;">
-                        <div class="truncate" style="font-size:14px; font-weight:bold; color:white; margin-bottom:4px;">${s.filename}</div>
-                        <div class="truncate" style="font-size:11px; color:var(--text-muted);">${s.uploader || 'FULLKIK'}</div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; color:var(--token); font-weight:bold; font-size:14px;">
-                        <div>💎 ${s.price || 10}</div>
-                        <svg viewBox="0 0 24 24" style="width:16px;fill:var(--text-muted);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            grid.innerHTML += `
+                <div class="song-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}" class="song-cover">
+                    <div class="song-info">
+                        <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
+                        <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
+                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||10}</span></div>
                     </div>
                 </div>
             `;
         });
 
-        // Render Pagination (Picture 3 Style)
-        const pageDiv = document.getElementById('genreListPagination'); pageDiv.innerHTML = '';
-        if(totalPages > 1) {
-            let pageHTML = `<div class="page-box ${currentListPage === 1 ? 'disabled' : ''}" onclick="${currentListPage === 1 ? '' : `openGenreList('${genreId}', '${genreName.replace(/'/g, "\\'")}', ${currentListPage - 1})`}">&laquo; 上一页</div>`;
-            for(let i=1; i<=totalPages; i++) {
-                if(i === 1 || i === totalPages || (i >= currentListPage - 2 && i <= currentListPage + 2)) {
-                    pageHTML += `<div class="page-box ${i === currentListPage ? 'active' : ''}" onclick="openGenreList('${genreId}', '${genreName.replace(/'/g, "\\'")}', ${i})">${i}</div>`;
-                } else if(i === currentListPage - 3 || i === currentListPage + 3) {
-                    pageHTML += `<div style="color:var(--text-muted); padding: 8px 5px;">...</div>`;
-                }
-            }
-            pageHTML += `<div class="page-box ${currentListPage === totalPages ? 'disabled' : ''}" onclick="${currentListPage === totalPages ? '' : `openGenreList('${genreId}', '${genreName.replace(/'/g, "\\'")}', ${currentListPage + 1})`}">下一页 &raquo;</div>`;
-            pageDiv.innerHTML = pageHTML;
-        }
+        const pageBar = document.getElementById('genrePagination'); if(!pageBar) return;
+        if(totalPages <= 1) { pageBar.innerHTML = ''; return; }
 
-        switchView('genre-list');
+        let pHTML = `<button class="page-btn" ${currentGenrePage===1?'disabled':''} onclick="changeGenrePage(${currentGenrePage-1})">« 上一页</button>`;
+        for(let i=1; i<=totalPages; i++) {
+            if(i===1 || i===totalPages || (i >= currentGenrePage-2 && i <= currentGenrePage+2)) {
+                pHTML += `<button class="page-btn ${i===currentGenrePage?'active':''}" onclick="changeGenrePage(${i})">${i}</button>`;
+            } else if(i === currentGenrePage-3 || i === currentGenrePage+3) {
+                pHTML += `<span style="color:var(--text-muted);">...</span>`;
+            }
+        }
+        pHTML += `<button class="page-btn" ${currentGenrePage===totalPages?'disabled':''} onclick="changeGenrePage(${currentGenrePage+1})">下一页 »</button>`;
+        pageBar.innerHTML = pHTML;
     }
+    window.changeGenrePage = function(page) { currentGenrePage = page; renderGenrePage(); document.querySelector('.container').scrollIntoView(); };
 
     // --- CROPPER IMPLEMENTATION ---
     let cropImg = new Image(), cropCanvas = document.getElementById('cropperCanvas'), ctx = cropCanvas ? cropCanvas.getContext('2d') : null;
     let offsetX = 0, offsetY = 0, isDragging = false, startX, startY;
-    function handlePfpSelect(event) { const file = event.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { cropImg.src = e.target.result; cropImg.onload = () => { offsetX=0; offsetY=0; document.getElementById('cropZoom').value = 1; drawCrop(); document.getElementById('cropModal').style.display='flex'; }; }; reader.readAsDataURL(file); }
-    function drawCrop() { if(!ctx) return; ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value); const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom; const w = cropImg.width * scale; const h = cropImg.height * scale; if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0; if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h; ctx.drawImage(cropImg, offsetX, offsetY, w, h); }
-    if(document.getElementById('cropZoom')) {
-        document.getElementById('cropZoom').addEventListener('input', drawCrop);
+    
+    function handlePfpSelect(event) {
+        const file = event.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+            cropImg.src = e.target.result; 
+            cropImg.onload = () => { offsetX=0; offsetY=0; const cz = document.getElementById('cropZoom'); if(cz) cz.value = 1; drawCrop(); const cm = document.getElementById('cropModal'); if(cm) cm.style.display='flex'; };
+        };
+        reader.readAsDataURL(file);
+    }
+    function drawCrop() {
+        if(!ctx) return; ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value);
+        const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom;
+        const w = cropImg.width * scale; const h = cropImg.height * scale;
+        if(offsetX > 0) offsetX = 0; if(offsetY > 0) offsetY = 0;
+        if(w + offsetX < cropCanvas.width) offsetX = cropCanvas.width - w; if(h + offsetY < cropCanvas.height) offsetY = cropCanvas.height - h;
+        ctx.drawImage(cropImg, offsetX, offsetY, w, h);
+    }
+    const cZoom = document.getElementById('cropZoom');
+    if(cZoom) {
+        cZoom.addEventListener('input', drawCrop);
         cropCanvas.addEventListener('mousedown', e => { isDragging = true; startX = e.clientX - offsetX; startY = e.clientY - offsetY; }); cropCanvas.addEventListener('mousemove', e => { if(!isDragging) return; offsetX = e.clientX - startX; offsetY = e.clientY - startY; drawCrop(); }); cropCanvas.addEventListener('mouseup', () => { isDragging = false; }); cropCanvas.addEventListener('mouseleave', () => { isDragging = false; });
         cropCanvas.addEventListener('touchstart', e => { isDragging = true; startX = e.touches[0].clientX - offsetX; startY = e.touches[0].clientY - offsetY; }); cropCanvas.addEventListener('touchmove', e => { if(!isDragging) return; e.preventDefault(); offsetX = e.touches[0].clientX - startX; offsetY = e.touches[0].clientY - startY; drawCrop(); }, {passive: false}); cropCanvas.addEventListener('touchend', () => { isDragging = false; });
     }
 
-    async function executePfpCrop() { document.getElementById('cropModal').style.display='none'; showGlobalLoader("正在上传..."); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9); const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) }); if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; showToast("Profile Updated"); } hideGlobalLoader(); }
+    async function executePfpCrop() {
+        const cm = document.getElementById('cropModal'); if(cm) cm.style.display='none'; showGlobalLoader("正在上传..."); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
+        const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
+        if(res.ok) { const pbp = document.getElementById('profileBannerPic'); if(pbp) pbp.src = base64; const hpp = document.getElementById('headerProfilePic'); if(hpp) hpp.src = base64; showToast("Profile Updated"); } hideGlobalLoader();
+    }
 
     // --- PERSONAL CENTER ACTIONS ---
-    async function submitVipUpgrade() { const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim(); document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true; if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;} if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;} if(!pass) return; showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) }); if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideGlobalLoader(); showToast("Failed to upgrade", true); } }
-    async function saveWechatConfig() { const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked; showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) }); if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { hideGlobalLoader(); showToast("Error saving", true); } }
-    async function submitPasswordChange() { const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value; document.getElementById('errPw').innerText = ''; if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; } if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; } showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) }); if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; hideGlobalLoader(); showToast("Password Updated!"); } else { hideGlobalLoader(); showToast(await res.text(), true); } }
+    async function submitVipUpgrade() {
+        const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim();
+        const errD = document.getElementById('errDj'); if(errD) errD.innerText = ''; const errW = document.getElementById('errWechat'); if(errW) errW.innerText = ''; let pass = true;
+        if(!djName) { if(errD) errD.innerText = dict[currentLang].reqFill; pass=false;}
+        if(!wechat) { if(errW) errW.innerText = dict[currentLang].reqFill; pass=false;}
+        if(!pass) return;
 
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
+        if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideGlobalLoader(); showToast("Failed to upgrade", true); }
+    }
+
+    async function saveWechatConfig() {
+        const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked;
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
+        if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { hideGlobalLoader(); showToast("Error saving", true); }
+    }
+
+    async function submitPasswordChange() {
+        const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
+        const errP = document.getElementById('errPw'); if(errP) errP.innerText = '';
+        if(!curr || !newP || !conf) { if(errP) errP.innerText = dict[currentLang].reqFill; return; }
+        if(newP !== conf) { if(errP) errP.innerText = "Mismatch"; return; }
+
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
+        if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; hideGlobalLoader(); showToast("Password Updated!"); }
+        else { hideGlobalLoader(); showToast(await res.text(), true); }
+    }
+
+    // --- HISTORY UI ---
+    function renderHistory(filter) {
+        document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
+        const tabA = document.getElementById('histTabALL'); if(filter==='ALL' && tabA) tabA.classList.add('active');
+        const tabB = document.getElementById('histTabBUY'); if(filter==='BUY' && tabB) tabB.classList.add('active');
+        const tabT = document.getElementById('histTabTOPUP'); if(filter==='TOPUP' && tabT) tabT.classList.add('active');
+
+        const listDiv = document.getElementById('historyList'); if(!listDiv) return; listDiv.innerHTML = '';
+        let combined = [];
+        if(filter==='ALL' || filter==='TOPUP') userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price, curr: t.currency }));
+        if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
+        
+        combined.sort((a,b) => new Date(b.date) - new Date(a.date));
+        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
+
+        combined.forEach(item => {
+            if(item.type === 'topup') {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
+                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
+                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
+                        <div><div style="font-weight:bold;">${item.curr||'RMB'} ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
+                    </div>`;
+            } else {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
+                        <div style="min-width:0;"><div class="truncate" style="font-weight:bold;">${item.name}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">上传者: ${item.uploader||'FULLKIK'}</div></div>
+                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
+                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
+                    </div>`;
+            }
+        });
+    }
+
+    // --- VIP CENTER & UPLOAD ---
+    let currentVipTab = 'APPROVED';
+    function renderVipCenter() {
+        if(!isUserVip) return;
+        const mySongs = allSongs.filter(s => s.uploader === username);
+        let downloads = 0; let rev = 0;
+        mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
+        
+        const vsU = document.getElementById('vipStatUp'); if(vsU) vsU.innerText = mySongs.length; 
+        const vsD = document.getElementById('vipStatDl'); if(vsD) vsD.innerText = downloads; 
+        const vsR = document.getElementById('vipStatRev'); if(vsR) vsR.innerText = rev;
+
+        ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
+            const count = mySongs.filter(s => s.status === status).length;
+            const tab = document.getElementById(`vipTab-${status}`);
+            if(tab) tab.innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
+        });
+        filterVipSongs(currentVipTab);
+    }
+
+    function filterVipSongs(status) {
+        currentVipTab = status; document.querySelectorAll('.vip-tab').forEach(t => t.classList.remove('active')); 
+        const tab = document.getElementById(`vipTab-${status}`); if(tab) tab.classList.add('active');
+        
+        const listDiv = document.getElementById('vipSongList'); if(!listDiv) return; listDiv.innerHTML = '';
+        const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
+        if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
+        
+        filtered.forEach(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            listDiv.innerHTML += `
+                <div class="lib-row">
+                    <img src="${cover}" class="lib-cover">
+                    <div class="truncate" style="font-weight: 500;">${s.filename}</div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
+                    <div>${status === 'APPROVED' ? `<button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>` : '-'}</div>
+                    <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
+                </div>`;
+        });
+    }
+
+    let pendingVipCover = null; let isVipTransload = false;
+    function setVipUploadMode(isTransload) {
+        isVipTransload = isTransload;
+        const vf = document.getElementById('vip-btn-file'); if(vf) vf.classList.toggle('active', !isTransload);
+        const vl = document.getElementById('vip-btn-link'); if(vl) vl.classList.toggle('active', isTransload);
+        const dz = document.getElementById('vip-audio-dropzone'); if(dz) dz.style.display = isTransload ? 'none' : 'block';
+        const fn = document.getElementById('vip-audio-filename'); if(fn) fn.style.display = isTransload ? 'none' : 'block';
+        const tu = document.getElementById('vipTransloadUrlInput'); if(tu) tu.style.display = isTransload ? 'block' : 'none';
+    }
+
+    function handleVipAudioSelect(e) {
+        const file = e.target.files[0];
+        if(file) {
+            const fn = document.getElementById('vip-audio-filename'); if(fn) fn.innerText = file.name;
+            const ti = document.getElementById('vipTitleInput'); if(ti) ti.value = file.name.replace(/\.[^/.]+$/, "");
+        }
+    }
+
+    async function executeVipUpload() {
+        const titleBase = document.getElementById('vipTitleInput').value.trim(); 
+        const price = document.getElementById('vipPriceInput').value;
+        const genreId = document.getElementById('vipGenreSelect').value;
+        const errRow = document.getElementById('vipErrRow'); if(errRow) errRow.innerText = '';
+        
+        if(!titleBase) { if(errRow) errRow.innerText = "请输入歌曲标题 (Title is required)"; return;}
+        
+        let fd = new FormData();
+        fd.append('title', titleBase); fd.append('price', price); fd.append('genreId', genreId); fd.append('uploader', username); fd.append('status', 'PENDING');
+        if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
+
+        showGlobalProgress("音乐正在上传 ^-^");
+
+        if(isVipTransload) {
+            const urlInput = document.getElementById('vipTransloadUrlInput'); const url = urlInput.value.trim();
+            if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); hideGlobalProgress(); if(errRow) errRow.innerText = "Invalid URL or not .m4a"; return; }
+            const payload = { url, title: titleBase, price, genreId, uploader: username, status: 'PENDING', coverBase64: pendingVipCover };
+            await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        } else {
+            const file = document.getElementById('vipFileInput').files[0];
+            if(!file) { hideGlobalProgress(); if(errRow) errRow.innerText = "请选择音频文件 (Please select an audio file)"; return; }
+            fd.append('mp3file', file);
+            await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+        }
+
+        hideGlobalProgress();
+        setTimeout(async () => {
+            const msg = "完成提交～ 请等待 1-3 天审核时间.";
+            const sText = document.getElementById('vipSuccessText'); if(sText) sText.innerHTML = '';
+            msg.split('').forEach((char, i) => { if(sText) sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.1}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.1}s;">${char}</span>`; });
+            
+            const sucOver = document.getElementById('vipUploadSuccessOverlay');
+            if(sucOver) { sucOver.style.opacity = 1; sucOver.style.display = 'flex'; }
+            
+            setTimeout(() => {
+                if(sucOver) sucOver.style.opacity = 0;
+                setTimeout(() => { if(sucOver) sucOver.style.display = 'none'; closeModals(); init(); switchView('vip'); }, 500);
+            }, msg.length * 100 + 1500);
+        }, 300);
+    }
+
+    // --- OTHER PLAYER / PURCHASE LOGIC ---
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
         
-        document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
-        document.getElementById('playerCover').src = currentSong.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+        const pt = document.getElementById('playerTitle'); if(pt) pt.innerText = currentSong.filename;
+        const pm = document.getElementById('playerMeta'); if(pm) pm.innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
+        const pc = document.getElementById('playerCover'); if(pc) pc.src = currentSong.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         
         const price = currentSong.price || 10; const actionsDiv = document.getElementById('playerActions');
-        if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>`; } 
-        else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
+        if(actionsDiv) {
+            if(isPurchased) { actionsDiv.innerHTML = `<a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>`; } 
+            else { actionsDiv.innerHTML = `<button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${dict[currentLang].buyBtn} 💎 ${price}</button><div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>`; }
+        }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        if(audioEl) { audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; }
+        const pb = document.getElementById('playerPlayBtn'); if(pb) pb.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; 
+        const ps = document.getElementById('playerSeek'); if(ps) ps.value = 0; 
+        const pp = document.getElementById('playerProg'); if(pp) pp.style.width = '0%';
         switchView('song');
     }
 
     function renderLibrary() {
-        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('libraryList'); if(!listDiv) return; listDiv.innerHTML = '';
         const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
         if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         myUploads.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
         });
     }
 
     function renderPurchased() {
-        const listDiv = document.getElementById('purchasedList'); listDiv.innerHTML = '';
+        const listDiv = document.getElementById('purchasedList'); if(!listDiv) return; listDiv.innerHTML = '';
         if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         userPurchases.forEach(p => {
-            const cover = p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const cover = p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${p.songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${p.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="openSong('${p.songId}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
         });
     }
 
-    // AUDIO LOGIC
-    if(audioEl) {
-        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= MAX_PREVIEW) { audioEl.pause(); audioEl.currentTime = MAX_PREVIEW; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > MAX_PREVIEW) ? MAX_PREVIEW : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
-        audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
-    }
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
-
-    function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
-    function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
-    async function executePurchase(songId, songName, filepath, price) { showGlobalLoader("正在处理订单..."); document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); hideGlobalLoader(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { hideGlobalLoader(); closeModals(); const err = await res.text(); if(!checkOfflineError(res, err)) showToast("Purchase Failed", true); } }
-    function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
-
-    let isVipTransload = false;
-    function setVipUploadMode(isTransload) {
-        isVipTransload = isTransload;
-        document.getElementById('vip-btn-file').classList.toggle('active', !isTransload); document.getElementById('vip-btn-link').classList.toggle('active', isTransload);
-        document.getElementById('vip-audio-dropzone').style.display = isTransload ? 'none' : 'block'; document.getElementById('vip-audio-filename').style.display = isTransload ? 'none' : 'block'; document.getElementById('vipTransloadUrlInput').style.display = isTransload ? 'block' : 'none';
-    }
-
-    function handleVipAudioSelect(e) {
-        const file = e.target.files[0];
-        if(file) { document.getElementById('vip-audio-filename').innerText = file.name; document.getElementById('vipTitleInput').value = file.name.replace(/\.[^/.]+$/, ""); }
-    }
+    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); const pc = document.getElementById('purchaseContent'); if(pc) pc.innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; const pa = document.getElementById('purchaseActions'); if(pa) pa.innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; const pm = document.getElementById('purchaseModal'); if(pm) pm.style.display = 'flex'; }
+    async function executePurchase(songId, songName, filepath, price) { showGlobalLoader("正在处理订单..."); const pa = document.getElementById('purchaseActions'); if(pa) pa.innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); hideGlobalLoader(); const spm = document.getElementById('successPurchaseModal'); if(spm) spm.style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { hideGlobalLoader(); closeModals(); const err = await res.text(); showToast("Purchase Failed", true); } }
+    function showInfo(purchaseId, dateStr, cost) { const iid = document.getElementById('infoId'); if(iid) iid.innerText = purchaseId || "N/A"; const idt = document.getElementById('infoDate'); if(idt) idt.innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; const ic = document.getElementById('infoCost'); if(ic) ic.innerText = cost || "0"; const im = document.getElementById('infoModal'); if(im) im.style.display = 'flex'; }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
 </script>
