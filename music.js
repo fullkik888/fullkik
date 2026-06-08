@@ -85,7 +85,6 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -133,17 +132,17 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
-// Securely fetch all users without leaking passwords
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data(); delete data.password; return data;
+            let data = d.data();
+            delete data.password; 
+            return data;
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -266,9 +265,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
 
         const price = song.price !== undefined ? song.price : 10;
-        
-        // Allow purchase if price is 0, even with 0 tokens
-        if (price === 0 || user.tokens >= price) {
+        if (user.tokens >= price) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
             
@@ -292,7 +289,6 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
@@ -307,7 +303,6 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -335,7 +330,6 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SONGS ---
 app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -394,7 +388,6 @@ app.put('/api/songs/reorder', async (req, res) => {
 });
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
