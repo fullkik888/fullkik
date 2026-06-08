@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FULLKIK - 个人中心</title>
+    <title>FULLKIK - Profile</title>
     <style>
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+        /* HEADER */
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
         .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
-        .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; }
-        .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration: none;}
+        .nav-tab:hover { color: white; }
         .lang-toggle { font-size: 13px; font-weight: bold; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-muted); transition: 0.2s;}
         .lang-toggle:hover { color: white; border-color: white;}
 
@@ -30,16 +31,25 @@
         .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
 
+        .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color);}
+        .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
         .view-section { display: none; animation: fadeIn 0.4s ease; width: 100%;}
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* GLOBAL ACTION LOADER */
+        /* --- GLOBAL LOADERS --- */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
         @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
+        .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
         
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
+        .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
+
         /* --- PROFILE CENTER UI --- */
         .profile-banner { background: linear-gradient(135deg, #1c1010 0%, #0b0b0b 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; gap: 30px; border: 1px solid var(--border-color); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .profile-pic-large-wrap { position: relative; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); flex-shrink:0;}
@@ -104,8 +114,7 @@
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
         .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-content { padding: 30px 20px; text-align: left; }
+        .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
@@ -120,15 +129,8 @@
         .upload-dropzone { border:2px dashed var(--border-color); border-radius:12px; padding:40px 20px; text-align:center; color:var(--text-muted); cursor:pointer; background:rgba(0,0,0,0.2); transition:0.2s;}
         .upload-dropzone:hover { border-color:var(--accent-light); background:rgba(165,42,42,0.05); }
 
-        .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
-        .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
-        @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
-        .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
-
         @media (max-width: 768px) {
             .header-top { padding: 15px 20px; }
-            .lib-row { grid-template-columns: 60px 1fr 50px; }
-            .lib-row .col-size, .lib-row .col-id { display: none; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
@@ -136,6 +138,8 @@
             .topup-grid-large { grid-template-columns: 1fr 1fr; }
             .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
             .hist-row > div:nth-child(n+3) { display: none; } 
+            .lib-row { grid-template-columns: 60px 1fr 50px; }
+            .lib-row .col-size, .lib-row .col-id { display: none; }
         }
     </style>
 </head>
@@ -147,11 +151,11 @@
 </div>
 
 <div id="vipUploadSuccessOverlay" class="modal-overlay" style="z-index:10006; background: rgba(0,0,0,0.8); transition: opacity 0.5s;">
-    <div class="welcome-text" id="vipSuccessText" style="display:block; font-size:18px; font-weight:bold; color:white; letter-spacing:2px;"></div>
+    <div class="welcome-text" id="vipSuccessText" style="display:block; font-size:18px;"></div>
 </div>
 
 <div id="globalLoader" class="modal-overlay" style="z-index:99999; flex-direction:column; background: rgba(0,0,0,0.8);">
-    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;" id="gLoadText">正在处理...</div>
+    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;" id="gLoadText">正在处理订单...</div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -159,9 +163,8 @@
 <div class="header-top">
     <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
-        <button class="nav-tab" id="nav-store" onclick="crossNavigate('home')" data-i18n="store">首页</button>
-        <button class="nav-tab" id="nav-ranking" onclick="crossNavigate('ranking')" data-i18n="ranking">排行榜</button>
-        <button class="nav-tab active" id="nav-library" onclick="switchView('library')" data-i18n="library">我的音乐</button>
+        <a href="/music.html" class="nav-tab" data-i18n="store">首页</a>
+        <a href="/music.html" class="nav-tab" data-i18n="ranking">排行榜</a>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
@@ -174,7 +177,6 @@
                 <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
                 <button class="dropdown-item" onclick="switchView('topup')" data-i18n="pTopup">充值中心</button>
                 <button class="dropdown-item" onclick="switchView('history')" data-i18n="pHist">个人消费</button>
-                <button class="dropdown-item" onclick="switchView('purchased')" data-i18n="pBought">已购音乐</button>
                 <button class="dropdown-item" style="color: var(--danger);" onclick="logout()" data-i18n="logout">登出</button>
             </div>
         </div>
@@ -182,15 +184,6 @@
 </div>
 
 <div class="container">
-    <div id="view-library" class="view-section active">
-        <h2 style="margin-top:0;" data-i18n="library">Library (My Uploads)</h2>
-        <div id="libraryList"></div>
-    </div>
-    
-    <div id="view-purchased" class="view-section">
-        <h2 style="margin-top:0;" data-i18n="pBought">Purchased Music</h2>
-        <div id="purchasedList"></div>
-    </div>
 
     <div id="view-topup" class="view-section">
         <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
@@ -352,9 +345,7 @@
             </div>
 
             <label class="input-label" style="margin-top:20px;">封面图片 (可选)</label>
-            <div class="upload-tabs">
-                <button class="active">上传图片</button>
-            </div>
+            <div class="upload-tabs"><button class="active">上传图片</button></div>
             <div class="upload-dropzone" style="min-height:100px; display:flex; align-items:center; justify-content:center; padding:20px;" onclick="document.getElementById('vipCoverUpload').click()">
                 <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="max-height:80px; border-radius:4px; margin-right:15px; border:1px solid var(--border-color);">
                 <span>拖拽图片文件到此处，或 <span style="color:var(--accent-light)">点击选择</span></span>
@@ -438,8 +429,6 @@
     function applyLang() {
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
-        const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
-        if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
         
         try {
             const vLib = document.getElementById('view-library'); if(vLib && vLib.classList.contains('active')) renderLibrary();
@@ -449,76 +438,69 @@
         } catch(e) {}
     }
 
-    function showGlobalLoader(txt = "正在处理订单...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
-    function hideGlobalLoader() { document.getElementById('globalLoader').style.display = 'none'; }
-    function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
-    function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
+    function showGlobalLoader(txt = "正在处理订单...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('gLoadBarWrap').style.display = 'none'; document.getElementById('globalLoader').style.display = 'flex'; }
+    function showGlobalProgress(txt = "音乐正在上传 ^-^") {
+        document.getElementById('gLoadText').innerText = txt; document.getElementById('gLoadBarWrap').style.display = 'block'; document.getElementById('globalLoader').style.display = 'flex';
+        let p = 0; document.getElementById('gLoadBar').style.width = '0%';
+        window._gProgInt = setInterval(() => { p += Math.random()*15; if(p>95) p=95; document.getElementById('gLoadBar').style.width = `${p}%`; }, 200);
+    }
+    function hideGlobalLoader() { if(window._gProgInt) clearInterval(window._gProgInt); document.getElementById('gLoadBar').style.width = '100%'; setTimeout(() => { document.getElementById('globalLoader').style.display = 'none'; }, 300); }
 
-    let globalSettings = {};
+    function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
 
     // --- INITIALIZATION ---
     async function init() {
-        if(!username) { 
-            const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
-        }
-
+        if(!username) return window.location.href = '/register.html';
+        
         try {
-            const res = await fetch(`${API_URL}/settings`);
-            if(res.ok) { 
-                globalSettings = await res.json(); 
-                if(globalSettings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = globalSettings.headerTitle; } 
-                if(globalSettings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = globalSettings.heroTitle; } 
-            }
-
-            if(username) {
-                const uRes = await fetch(`${API_URL}/users/${username}`);
-                if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
-                    const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                    const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
-                    const pbp = document.getElementById('profileBannerPic'); if(pbp) pbp.src = pfpUrl; 
-                    const pbn = document.getElementById('profileBannerName'); if(pbn) pbn.innerText = username;
-                    document.getElementById('vipUploaderInput').value = username;
-                    
-                    if(isUserVip) {
-                        document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
-                        document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
-                        if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
-                    } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
-                } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
-            }
+            const uRes = await fetch(`${API_URL}/users/${username}`);
+            if(uRes.ok) { 
+                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false;
+                updateTokenUI(); 
+                
+                const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+                const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
+                
+                const pbp = document.getElementById('profileBannerPic'); if(pbp) pbp.src = pfpUrl; 
+                const pbn = document.getElementById('profileBannerName'); if(pbn) pbn.innerText = username;
+                document.getElementById('vipUploaderInput').value = username;
+                
+                if(isUserVip) {
+                    document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
+                    document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
+                    if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
+                } else { document.getElementById('btnUpgradeTop').style.display = 'block'; }
+            } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.href = '/register.html'; }
             
-            allUsers = await (await fetch(`${API_URL}/all-users`)).json();
-            allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
+            allGenres = await (await fetch(`${API_URL}/genres`)).json();
             
-            setCurrency('RMB'); populateGenreDropdowns(); applyLang(); 
+            setCurrency('RMB'); 
+            populateGenreDropdowns();
+            applyLang(); 
+            
+            const savedView = localStorage.getItem('djProfileView') || 'profile';
+            switchView(savedView);
+            
         } catch(e) { console.error("Init Error:", e); } 
-
-        const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('library');
     }
 
     function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
     function closeDropdowns(e) { const d = document.getElementById('profileDropdown'); if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show'); }
-    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); window.location.href = '/register.html'; }
+    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('djProfileView'); window.location.href = '/register.html'; }
 
-    function crossNavigate(view) {
-        localStorage.setItem('djLastView', view);
-        window.location.href = '/music.html';
-    }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
 
     function switchView(view) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        if(view === 'library') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderLibrary(); }
-        if(view === 'purchased') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderPurchased(); }
+        if(view === 'library') renderLibrary();
+        if(view === 'purchased') renderPurchased();
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory('ALL');
 
-        if(['library', 'profile', 'vip', 'topup', 'history', 'purchased', 'vip-upload'].includes(view)) localStorage.setItem('djLastView', view);
+        if(['profile', 'vip', 'topup', 'history', 'purchased'].includes(view)) localStorage.setItem('djProfileView', view);
     }
 
     // --- CROPPER IMPLEMENTATION ---
@@ -563,13 +545,13 @@
         if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;}
         if(!pass) return;
 
-        showGlobalLoader("处理中..."); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
         if(res.ok) { showToast("You are now a VIP!"); setTimeout(() => window.location.reload(), 1500); } else { hideGlobalLoader(); showToast("Failed to upgrade", true); }
     }
 
     async function saveWechatConfig() {
         const wc = document.getElementById('configWechat').value.trim(); const pub = document.getElementById('configWechatPub').checked;
-        showGlobalLoader("处理中..."); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ wechat: wc, wechatPublic: pub }) });
         if(res.ok) { showToast("Settings Saved!"); setTimeout(() => window.location.reload(), 1000); } else { hideGlobalLoader(); showToast("Error saving", true); }
     }
 
@@ -579,17 +561,21 @@
         if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
         if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
 
-        showGlobalLoader("处理中..."); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
+        showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
         if(res.ok) { document.getElementById('pwCurrent').value=''; document.getElementById('pwNew').value=''; document.getElementById('pwConfirm').value=''; hideGlobalLoader(); showToast("Password Updated!"); }
         else { hideGlobalLoader(); showToast(await res.text(), true); }
     }
 
+    // --- TOPUP CENTER ---
     async function executeRealTopup() {
         showGlobalLoader("正在处理订单...");
         const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
     }
 
+    function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
+
+    // --- HISTORY UI ---
     function renderHistory(filter) {
         document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
         if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
@@ -633,7 +619,7 @@
         if(!isUserVip) return;
         const mySongs = allSongs.filter(s => s.uploader === username);
         let downloads = 0; let rev = 0;
-        mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 0); });
+        mySongs.forEach(s => { downloads += (s.downloads || 0); rev += (s.downloads || 0) * (s.price || 10); });
         
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
@@ -652,13 +638,13 @@
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
         filtered.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `
                 <div class="lib-row">
                     <img src="${cover}" class="lib-cover">
                     <div class="truncate" style="font-weight: 500;">${s.filename}</div>
-                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div>
-                    <div><button class="icon-btn" onclick="crossNavigate('song')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
+                    <div>${status === 'APPROVED' ? `<button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>` : '-'}</div>
                     <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
                 </div>`;
         });
@@ -723,18 +709,19 @@
             
             setTimeout(() => {
                 sucOver.style.opacity = 0;
-                setTimeout(() => { sucOver.style.display = 'none'; closeModals(); init(); switchView('vip'); }, 500);
+                setTimeout(() => { sucOver.style.display = 'none'; init(); switchView('vip'); }, 500);
             }, msg.length * 100 + 1500);
         }, 300);
     }
 
+    // --- LIBRARY & PURCHASED ---
     function renderLibrary() {
         const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
         const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
         if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         myUploads.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div><div><button class="icon-btn" onclick="crossNavigate('song')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div><div><button class="icon-btn" onclick="window.location.href='/music.html'"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
         });
     }
 
@@ -743,7 +730,7 @@
         if(userPurchases.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         userPurchases.forEach(p => {
             const cover = p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${p.songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${p.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="crossNavigate('song')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
+            listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${p.songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${p.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div><button class="icon-btn" onclick="window.location.href='/music.html'"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="showInfo('${p.purchaseId}', '${p.purchaseTime}', ${p.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button></div></div>`;
         });
     }
 
