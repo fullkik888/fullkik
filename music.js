@@ -193,6 +193,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -369,13 +370,17 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
 }
 
 app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
-    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
-    catch (e) { res.status(500).send(e.message); }
+    try { 
+        if (!req.file) return res.status(400).send('No file.'); 
+        const result = await saveSongData(req.file.buffer, req.file.originalname, req.body);
+        res.json({ success: true, ...result }); 
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/transload', async (req, res) => {
     try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+        const result = await saveSongData(null, 'TransloadedTrack.m4a', req.body);
+        res.json({ success: true, ...result });
     } catch (e) { res.status(400).send(e.message); }
 });
 
