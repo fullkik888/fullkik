@@ -57,12 +57,12 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 // --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/register.html', (req, res) => { res.sendFile(path.join(__dirname, 'register.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -89,7 +89,6 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -148,7 +147,6 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -192,7 +190,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
-
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -296,7 +293,6 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
@@ -311,7 +307,6 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -339,7 +334,6 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SONGS ---
 app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -370,18 +364,13 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
 }
 
 app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
-    try { 
-        if (!req.file) return res.status(400).send('No file.'); 
-        const result = await saveSongData(req.file.buffer, req.file.originalname, req.body);
-        res.json({ success: true, ...result }); 
-    } catch (e) { res.status(500).send(e.message); }
+    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
+    catch (e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/transload', async (req, res) => {
-    try {
-        const result = await saveSongData(null, 'TransloadedTrack.m4a', req.body);
-        res.json({ success: true, ...result });
-    } catch (e) { res.status(400).send(e.message); }
+    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } 
+    catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
@@ -402,7 +391,6 @@ app.put('/api/songs/reorder', async (req, res) => {
 });
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
