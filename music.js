@@ -15,7 +15,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
-let db;
+let db, bucket;
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     console.error("❌ FATAL ERROR: Missing FIREBASE_SERVICE_ACCOUNT_JSON!");
 } else {
@@ -54,13 +54,15 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ROUTING
+// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
+// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -137,11 +139,16 @@ app.get('/api/users/:username', async (req, res) => {
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
-        const users = (await db.collection('users').get()).docs.map(d => { let data = d.data(); delete data.password; return data; });
+        const users = (await db.collection('users').get()).docs.map(d => {
+            let data = d.data();
+            delete data.password; 
+            return data;
+        });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
 });
 
+// --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -245,8 +252,12 @@ app.post('/api/users/:username/topup', async (req, res) => {
         await userRef.update({ tokens: newTokens, topups: topups }); 
         
         await db.collection('orders').add({
-            user: req.params.username, email: user.email || '-', orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT', status: 'COMPLETED', time: new Date().toISOString()
+            user: req.params.username, email: user.email || '-',
+            orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
+            method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
+            status: 'COMPLETED', time: new Date().toISOString()
         });
+
         res.json({ tokens: newTokens, topups: topups });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -260,26 +271,49 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
 
         const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price || price === 0) {
+        if (user.tokens >= price) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            user.purchases.push({ songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, uploader: song.uploader || 'FULLKIK', tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() });
+            
+            user.purchases.push({ 
+                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
+                uploader: song.uploader || 'FULLKIK', 
+                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+            });
+            
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
-            await db.collection('transactions').add({ buyer: req.params.username, email: user.email || '-', songName: song.filename, uploader: song.uploader || 'FULLKIK', tokens: price, time: new Date().toISOString() });
+
+            await db.collection('transactions').add({
+                buyer: req.params.username, email: user.email || '-',
+                songName: song.filename, uploader: song.uploader || 'FULLKIK',
+                tokens: price, time: new Date().toISOString()
+            });
 
             res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.get('/api/orders', async (req, res) => { try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/orders/all', async (req, res) => { try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
+// --- ADMIN TRANSACTIONS & ORDERS ---
+app.get('/api/orders', async (req, res) => {
+    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/orders/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
 
-app.get('/api/transactions', async (req, res) => { try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); } });
-app.delete('/api/transactions/all', async (req, res) => { try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } });
+app.get('/api/transactions', async (req, res) => {
+    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/transactions/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
 
-app.get('/api/genres', async (req, res) => { try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); } });
+// --- GENRES ---
+app.get('/api/genres', async (req, res) => {
+    try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
+});
 app.post('/api/genres', async (req, res) => {
     try {
         let coverUrl = req.body.coverBase64 ? await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_genres') : '';
@@ -298,25 +332,53 @@ app.put('/api/genres/:id', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 app.put('/api/genres/reorder', async (req, res) => {
-    try { const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered'); } catch(e) { res.status(500).send(e.message); }
+    try {
+        const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+    } catch(e) { res.status(500).send(e.message); }
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-app.get('/api/songs', async (req, res) => { try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); } });
+// --- SONGS ---
+app.get('/api/songs', async (req, res) => {
+    try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
+});
 
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
     let url = '';
-    if(fileBuffer) { const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music"); url = audioResult.secure_url; } else if(reqBody.url) { url = reqBody.url; }
-    let coverUrl = DEFAULT_COVER; if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) { coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers'); }
+    if(fileBuffer) {
+        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
+        url = audioResult.secure_url;
+    } else if(reqBody.url) {
+        url = reqBody.url;
+    }
+
+    let coverUrl = DEFAULT_COVER; 
+    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
+        coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    }
+
     const snapshot = await db.collection('songs').get();
-    const newSong = { filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none', size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0, downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: '' };
+    const newSong = {
+        filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
+        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0,
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
+    };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
 }
 
-app.post('/api/upload', upload.single('mp3file'), async (req, res) => { try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } catch (e) { res.status(500).send(e.message); } });
-app.post('/api/transload', async (req, res) => { try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); } });
+app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
+    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
+    catch (e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/transload', async (req, res) => {
+    try {
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+    } catch (e) { res.status(400).send(e.message); }
+});
+
 app.put('/api/songs/:id/settings', async (req, res) => {
     try {
         let updates = {};
@@ -329,29 +391,44 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
-app.put('/api/songs/reorder', async (req, res) => { const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered'); });
+
+app.put('/api/songs/reorder', async (req, res) => {
+    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+});
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
+// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
 });
+
 app.put('/api/settings', async (req, res) => { 
     try {
         let updates = {};
         if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
+        
         if (req.body.banners !== undefined) {
             let processedBanners = [];
-            for(let b of req.body.banners) { if(b && b.startsWith('data:image')) { const url = await uploadToCloudinaryBase64(b, 'dj_banners'); processedBanners.push(url); } else if(b) { processedBanners.push(b); } }
+            for(let b of req.body.banners) {
+                if(b && b.startsWith('data:image')) {
+                    const url = await uploadToCloudinaryBase64(b, 'dj_banners');
+                    processedBanners.push(url);
+                } else if(b) { processedBanners.push(b); }
+            }
             updates.banners = processedBanners;
         }
-        await db.collection('settings').doc('global').set(updates, { merge: true }); res.send('Updated'); 
+
+        await db.collection('settings').doc('global').set(updates, { merge: true }); 
+        res.send('Updated'); 
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.get('/api/logs/:type', async (req, res) => { try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); } });
+app.get('/api/logs/:type', async (req, res) => {
+    try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); }
+});
 app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
 app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
 
