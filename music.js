@@ -59,7 +59,6 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); }
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// 🛠️ Anti-Theft Dark Maroon UI (禁止盗取歌曲)
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -68,11 +67,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`
-                <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title>
-                <style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style>
-                </head><body><h1>禁止盗取歌曲</h1></body></html>
-            `);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -194,6 +189,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
+
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -364,7 +360,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const snapshot = await db.collection('songs').get();
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
-        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 10,
+        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0,
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
