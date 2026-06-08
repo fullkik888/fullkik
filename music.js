@@ -133,13 +133,11 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
-// Securely fetch all users without leaking passwords to the frontend
+// Securely fetch all users without leaking passwords
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data();
-            delete data.password; 
-            return data;
+            let data = d.data(); delete data.password; return data;
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
@@ -189,7 +187,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
-
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -269,7 +266,9 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
 
         const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price) {
+        
+        // Allow purchase if price is 0, even with 0 tokens
+        if (price === 0 || user.tokens >= price) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
             
