@@ -11,7 +11,7 @@
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor:pointer;}
+        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; }
         .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -44,6 +44,8 @@
         #initLoadCircle { transform-origin: 50% 50%; animation: heartbeat 1s infinite ease-in-out; }
         #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
+        
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
@@ -71,7 +73,6 @@
         /* HOMEPAGE BANNERS */
         .banners-container { display:flex; gap:10px; margin: 0 auto 20px auto; width:100%; max-width:800px; justify-content:center; overflow-x:auto; }
         .banners-container img { width:30%; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); }
-        @media (max-width:768px) { .banners-container img { width: 250px; flex-shrink: 0;} }
 
         /* SEARCH DROPDOWN UI */
         .search-wrapper { position: relative; max-width: 600px; margin: 0 auto; }
@@ -98,8 +99,9 @@
         .dj-name { font-size: 12px; font-weight: bold; width:100%; text-align:center;}
         .dj-count { font-size: 10px; color: var(--text-muted); }
 
+        /* Strict 3x3 Grid Layout */
         .home-song-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .home-song-row-card { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s;}
+        .home-song-row-card { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; min-width: 0;}
         .home-song-row-card:hover { border-color: var(--accent-light); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(128,0,0,0.3);}
         .home-song-row-card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
         .home-song-row-card .info { flex: 1; min-width: 0; display:flex; flex-direction:column; gap:5px;}
@@ -108,18 +110,15 @@
         .home-song-row-card .price { font-size: 12px; font-weight: bold; color: var(--token); white-space:nowrap;}
 
         /* --- RANKING LIST (排行榜) --- */
-        .ranking-list { display: flex; flex-direction: column; gap: 10px;}
-        .rank-row { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); cursor:pointer; transition:0.2s;}
-        .rank-row:hover { border-color: var(--accent); }
-        .rank-num { font-size: 20px; font-weight: 900; width: 30px; text-align: center; color: var(--text-muted); }
-        .rank-row:nth-child(1) .rank-num { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-        .rank-row:nth-child(2) .rank-num { color: #C0C0C0; }
-        .rank-row:nth-child(3) .rank-num { color: #CD7F32; }
-        .rank-row img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
-
-        /* --- MORE SONGS LIST VIEW --- */
-        .list-song-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); border-radius: 8px; margin-bottom: 10px; cursor:pointer; transition:0.2s;}
+        .ranking-list { display: flex; flex-direction: column; gap: 10px; }
+        .list-song-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); border-radius: 8px; cursor:pointer; transition:0.2s;}
         .list-song-row:hover { border-color: var(--accent); }
+        .ranking-num { width: 30px; font-size: 18px; font-weight: bold; text-align: center; }
+        .rank-gold { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        .rank-silver { color: #C0C0C0; }
+        .rank-bronze { color: #CD7F32; }
+        .rank-normal { color: var(--text-muted); }
+
         .custom-pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; }
         .p-btn { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size:13px;}
         .p-btn:hover:not(:disabled) { border-color: var(--accent-light); color: white;}
@@ -150,22 +149,11 @@
         input[type=range].seeker::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; cursor: pointer; }
         input[type=range].seeker::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
 
-        .action-row { display: flex; gap: 15px; align-items: center;}
+        .action-row { display: flex; gap: 15px;}
+        .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px;}
+        .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(128, 0, 0, 0.4);}
         
-        /* New Song Buttons */
-        .btn-dl-blue { background: linear-gradient(90deg, #4facfe, #00f2fe); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:8px; text-decoration:none;}
-        .btn-dl-blue:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);}
-        
-        .btn-buy-red { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:8px;}
-        .btn-buy-red:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(128, 0, 0, 0.4);}
-
-        .btn-purchased-tag { background: #2a1515; color: #ccc; border: 1px solid #4a2525; padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: default;}
-        .btn-icon-circle { background: none; border: 1px solid var(--border-color); color: var(--text-muted); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; font-size:18px;}
-        .btn-icon-circle:hover { color: var(--danger); border-color: var(--danger); background: rgba(255,69,58,0.1); }
-        .btn-report { background: none; border: 1px solid var(--border-color); color: var(--text-muted); padding: 10px 16px; border-radius: 12px; font-size: 13px; cursor: pointer; transition: 0.2s;}
-        .btn-report:hover { color: white; border-color: white; background: rgba(255,255,255,0.1); }
-
-        .player-right { width: 350px; flex-shrink: 0; position:relative;}
+        .player-right { width: 350px; flex-shrink: 0;}
         .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
 
         /* --- PROFILE CENTER UI --- */
@@ -222,7 +210,7 @@
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
-        .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
+        .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; text-decoration: none;}
         .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
         .icon-btn svg { width: 20px; height: 20px; fill: currentColor;}
@@ -233,7 +221,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
         .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-content { padding: 30px 20px; text-align: left; }
+        .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
@@ -255,7 +243,7 @@
             .player-right { width: 100%; }
             .lib-row { grid-template-columns: 60px 1fr 50px; }
             .lib-row .col-size, .lib-row .col-id { display: none; }
-            .grid-layout { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .home-song-grid { grid-template-columns: 1fr; } /* Stack on mobile */
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
@@ -263,7 +251,6 @@
             .topup-grid-large { grid-template-columns: 1fr 1fr; }
             .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
             .hist-row > div:nth-child(n+3) { display: none; } 
-            .home-song-grid { grid-template-columns: 1fr; }
             .search-wrapper { max-width: 90%; }
         }
     </style>
@@ -296,10 +283,10 @@
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <div class="logo-container" id="logoText" onclick="switchView('home')">FULLKIK</div>
+    <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
         <button class="nav-tab active" id="nav-store" onclick="switchView('home')" data-i18n="store">首页</button>
-        <button class="nav-tab" onclick="switchView('ranking')" id="nav-ranking">排行榜</button>
+        <button class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</button>
         <button class="nav-tab" id="nav-library" onclick="switchView('library')" data-i18n="library">我的音乐</button>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
@@ -338,10 +325,11 @@
     </div>
 
     <div id="view-ranking" class="view-section">
-        <div class="dash-header" style="margin-bottom:30px;">
-            <h2 style="font-size:28px;">排行榜</h2><p style="color:var(--text-muted);">最受欢迎的热门下载</p>
+        <div class="dash-header" style="margin-bottom: 30px;">
+            <h2 style="font-size:32px; font-weight:800; margin:0;" data-i18n="ranking">排行榜</h2>
+            <p style="color:var(--text-muted); margin-top:5px;">下载与购买量 Top 50 热播单曲</p>
         </div>
-        <div class="ranking-list" id="rankingListArea"></div>
+        <div class="ranking-list" id="rankingList"></div>
     </div>
 
     <div id="view-more-songs" class="view-section">
@@ -372,6 +360,7 @@
             </div>
             <div class="player-right">
                 <img class="player-cover" id="playerCover" src="">
+                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="showToast('已举报 (Report Submitted)')"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
             </div>
         </div>
     </div>
@@ -498,9 +487,66 @@
 
         <div id="vipSongList"></div>
     </div>
-</div>
 
-<audio id="mainAudio" preload="metadata"></audio>
+    <div id="view-vip-upload" class="view-section">
+        <div class="dash-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div><h2 style="margin:0;" id="vipUpTitle">上传歌曲</h2><p style="margin:0; font-size:12px; color:var(--text-muted);">VIP 创作者上传歌曲到平台</p></div>
+            <button class="btn-text-action" onclick="switchView('vip')">← 返回</button>
+        </div>
+        
+        <div class="form-section">
+            <div style="font-size:14px; font-weight:bold; margin-bottom:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                歌曲信息 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</span>
+            </div>
+            
+            <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
+            <div class="upload-tabs" id="vip-audio-tabs">
+                <button class="active" id="vip-btn-file" onclick="setVipUploadMode(false)">上传文件</button>
+                <button id="vip-btn-link" onclick="setVipUploadMode(true)">粘贴链接</button>
+            </div>
+            
+            <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()">
+                拖拽 MP3 / WAV 文件到此处，或 <span style="color:var(--accent-light)">点击选择</span>
+            </div>
+            <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-top:10px;">
+            <input type="file" id="vipFileInput" accept="audio/*,audio/mpeg,audio/mp4,audio/wav,audio/x-m4a,.mp3,.m4a,.wav" style="display:none;" onchange="handleVipAudioSelect(event)">
+            <div id="vip-audio-filename" style="font-size:12px; color:var(--accent-light); margin-top:5px; text-align:center;"></div>
+
+            <div style="display:flex; gap:20px; margin-top:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <label class="input-label">歌曲标题 <span style="color:var(--danger)">*</span></label>
+                    <input type="text" class="input-field" id="vipTitleInput" placeholder="拖入文件后自动填充" style="width:100%; box-sizing:border-box;">
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label class="input-label">价格 (钻石，0 = 免费)</label>
+                    <input type="number" class="input-field" id="vipPriceInput" value="0" min="0" style="width:100%; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:20px; margin-top:20px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <label class="input-label">归属 VIP</label>
+                    <input type="text" class="input-field" id="vipUploaderInput" disabled style="width:100%; box-sizing:border-box; background:rgba(0,0,0,0.2); color:var(--text-muted);">
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label class="input-label">分类选择</label>
+                    <select class="input-field" id="vipGenreSelect" style="width:100%; box-sizing:border-box; background:var(--bg-color); color:white;"></select>
+                </div>
+            </div>
+
+            <label class="input-label" style="margin-top:20px;">封面图片 (可选)</label>
+            <div class="upload-tabs"><button class="active">上传图片</button></div>
+            <div class="upload-dropzone" style="min-height:100px; display:flex; align-items:center; justify-content:center; padding:20px;" onclick="document.getElementById('vipCoverUpload').click()">
+                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="max-height:80px; border-radius:4px; margin-right:15px; border:1px solid var(--border-color);">
+                <span>拖拽图片文件到此处，或 <span style="color:var(--accent-light)">点击选择</span></span>
+            </div>
+            <input type="file" id="vipCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'vipCoverPreview', 'vip')">
+
+            <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:15px;"></div>
+            <button class="btn-submit" style="margin-top:10px;" onclick="executeVipUpload()" data-i18n="submitReview">提交审核</button>
+        </div>
+    </div>
+</div>
 
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
@@ -520,52 +566,9 @@
 <div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
 <div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
 
-<div class="modal-overlay" id="vipUploadModal">
-    <div class="modal-box" style="max-width: 600px; padding:30px;">
-        <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;" id="vipUpTitle">上传音乐</h3>
-            
-            <label class="input-label" style="display:block;text-align:center;margin-bottom:5px;">封面图片</label>
-            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 15px auto; cursor: pointer; border-radius: 8px; overflow:hidden; border:2px dashed var(--border-color);" onclick="document.getElementById('vipCoverUpload').click()">
-                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
-                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0; color:white;">EDIT COVER</div>
-            </div>
-            <input type="file" id="vipCoverUpload" accept="image/*" style="display:none;" onchange="handleVipCover(event)">
-            
-            <div class="upload-tabs" id="vip-audio-tabs">
-                <button class="active" id="vip-btn-file" onclick="setVipUploadMode(false)">上传文件</button>
-                <button id="vip-btn-link" onclick="setVipUploadMode(true)">粘贴链接</button>
-            </div>
-            <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()" style="padding:20px; font-size:12px; margin-bottom:10px;">
-                点击选择 MP3 / WAV
-            </div>
-            <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-bottom:10px;">
-            <input type="file" id="vipFileInput" accept="audio/*, video/mp4, .mp3, .m4a, .wav" style="display:none;" onchange="handleVipAudioSelect(event)">
-            <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:15px;"></div>
-
-            <label style="font-size:12px; color:var(--text-muted);">歌曲标题 <span style="color:var(--danger)">*</span></label>
-            <input type="text" id="vipTitleInput" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
-            
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1;">
-                    <label style="font-size:12px; color:var(--text-muted);">价格 (钻石)</label>
-                    <input type="number" id="vipPriceInput" class="input-field" value="10" min="0" style="width:100%; box-sizing:border-box;">
-                </div>
-                <div style="flex:1;">
-                    <label style="font-size:12px; color:var(--text-muted);">分类选择</label>
-                    <select id="vipGenreSelect" class="input-field" style="width:100%; box-sizing:border-box; background:var(--bg-color); color:white;"></select>
-                </div>
-            </div>
-
-            <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:10px;"></div>
-        </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">取消</button><button class="modal-btn" onclick="executeVipUpload()" style="color:var(--accent-light);" data-i18n="submitReview">提交审核</button></div>
-    </div>
-</div>
-
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userTopups = [];
+    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
@@ -611,8 +614,8 @@
 
     // --- LANGUAGE SYSTEM ---
     const dict = {
-        en: { store: "Store", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
-        cn: { store: "首页", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
+        en: { store: "Store", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
+        cn: { store: "首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -630,6 +633,7 @@
             const vPur = document.getElementById('view-purchased'); if(vPur && vPur.classList.contains('active')) renderPurchased();
             const vVip = document.getElementById('view-vip'); if(vVip && vVip.classList.contains('active')) renderVipCenter();
             const vHist = document.getElementById('view-history'); if(vHist && vHist.classList.contains('active')) renderHistory('ALL');
+            const vRank = document.getElementById('view-ranking'); if(vRank && vRank.classList.contains('active')) renderRanking();
         } catch(e) {}
     }
 
@@ -687,6 +691,7 @@
             }
             setProg(30);
 
+            let allUsers = [];
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
@@ -741,14 +746,14 @@
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        if(view === 'home' || view === 'genre' || view === 'song' || view === 'more-songs' || view === 'ranking') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
+        if(view === 'home' || view === 'genre' || view === 'song' || view === 'more-songs') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
+        if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
         if(view === 'library') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderLibrary(); }
         if(view === 'purchased') { const nl = document.getElementById('nav-library'); if(nl) nl.classList.add('active'); renderPurchased(); }
-        if(view === 'ranking') { const nr = document.getElementById('nav-ranking'); if(nr) nr.classList.add('active'); renderRanking(); }
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory('ALL');
 
-        if(['home', 'library', 'profile', 'vip', 'topup', 'history', 'purchased', 'ranking'].includes(view)) localStorage.setItem('djLastView', view);
+        if(['home', 'ranking', 'library', 'profile', 'vip', 'topup', 'history', 'purchased'].includes(view)) localStorage.setItem('djLastView', view);
     }
 
     // --- HOME RENDERING ---
@@ -823,10 +828,56 @@
         return html;
     }
 
+    // --- RANKING LIST (排行榜) ---
+    function renderRanking() {
+        const listDiv = document.getElementById('rankingList');
+        listDiv.innerHTML = '';
+        
+        let rankedSongs = [...allSongs]
+            .filter(s => s.status === 'APPROVED')
+            .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
+            .slice(0, 50); 
+
+        if(rankedSongs.length === 0) {
+            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排行榜数据</div>`;
+            return;
+        }
+
+        rankedSongs.forEach((s, index) => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : 'rank-normal';
+            const isPurchased = username ? userPurchases.some(p => p.songId === s.id) : false;
+            
+            let priceHtml = '';
+            if(isPurchased) {
+                priceHtml = `<div style="color:var(--success); font-size:12px; border:1px solid var(--success); padding:2px 8px; border-radius:12px; white-space:nowrap;">已购买</div>`;
+            } else if(s.price === 0) {
+                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">免费下载</div>`;
+            } else {
+                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price}</div>`;
+            }
+
+            listDiv.innerHTML += `
+                <div class="list-song-row" onclick="openSong('${s.id}')">
+                    <div style="display:flex; align-items:center; gap:15px; width:70%;">
+                        <div class="ranking-num ${rankClass}">${index + 1}</div>
+                        <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
+                        <div style="min-width:0;">
+                            <div class="truncate" style="font-weight:bold; font-size:15px;">${s.filename}</div>
+                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">👑 ${s.uploader || 'FULLKIK'}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px; flex-shrink:0;">
+                        ${priceHtml}
+                        <svg viewBox="0 0 24 24" style="width:18px; fill:none; stroke:var(--text-muted); stroke-width:2;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
     // --- MORE SONGS PAGINATION ---
-    let currentMoreSongs = [];
-    let currentMorePage = 1;
-    const MORE_LIMIT = 50;
+    let currentMoreSongs = []; let currentMorePage = 1; const MORE_LIMIT = 50;
 
     function openMoreSongs(title, filterId) {
         document.getElementById('moreSongsTitle').innerText = title;
@@ -870,35 +921,6 @@
         }
         pagHtml += `<button class="p-btn" ${currentMorePage===totalPages?'disabled':''} onclick="changeMorePage(1)">下一页 »</button>`;
         pagDiv.innerHTML = pagHtml;
-    }
-
-    // --- RANKING PAGE ---
-    function renderRanking() {
-        const listDiv = document.getElementById('rankingListArea'); listDiv.innerHTML = '';
-        let sorted = [...allSongs].filter(s => s.status === 'APPROVED').sort((a,b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 50);
-        
-        if(sorted.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排名数据</div>`; return; }
-
-        sorted.forEach((s, index) => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            const isPurchased = username ? userPurchases.some(p => p.songId === s.id) : false;
-            let priceNode = isPurchased ? `<span style="color:var(--success); border:1px solid var(--success); padding:2px 8px; border-radius:12px; font-size:11px;">✓ 已购买</span>` : `<span style="color:var(--token); font-weight:bold;">💎 ${s.price||0}</span>`;
-            
-            listDiv.innerHTML += `
-                <div class="rank-row" onclick="openSong('${s.id}')">
-                    <div class="rank-num">${index+1} <span style="font-size:14px; font-weight:normal;">—</span></div>
-                    <img src="${cover}">
-                    <div style="flex:1; min-width:0;">
-                        <div class="truncate" style="font-weight:bold; font-size:15px; margin-bottom:4px;">${s.filename}</div>
-                        <div class="truncate" style="font-size:11px; color:var(--text-muted);">👑 ${s.uploader || 'FULLKIK'}</div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px; white-space:nowrap;">
-                        ${priceNode}
-                        <span style="color:#666;">♡</span>
-                    </div>
-                </div>
-            `;
-        });
     }
 
     // --- CROPPER IMPLEMENTATION ---
@@ -1009,7 +1031,7 @@
         });
     }
 
-    // --- VIP CENTER & UPLOAD ---
+    // --- VIP CENTER ---
     let currentVipTab = 'APPROVED';
     function renderVipCenter() {
         if(!isUserVip) return;
@@ -1070,9 +1092,8 @@
     }
 
     async function executeVipUpload() {
-        const files = document.getElementById('vipFileInput').files; const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value; const genreId = document.getElementById('vipGenreSelect').value;
+        const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value; const genreId = document.getElementById('vipGenreSelect').value;
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        
         if(!titleBase) return errRow.innerText = "请输入歌曲标题 (Title is required)";
 
         document.getElementById('vipUploadProgOverlay').style.display = 'flex';
@@ -1085,6 +1106,7 @@
             const payload = { url, title: titleBase, price, genreId, uploader: username, status: 'PENDING', coverBase64: pendingVipCover };
             await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         } else {
+            const files = document.getElementById('vipFileInput').files;
             if(!files.length) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
             for(let i=0; i<files.length; i++) {
                 const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('genreId', genreId); fd.append('uploader', username); fd.append('status', 'PENDING');  
@@ -1111,28 +1133,6 @@
     }
 
     // --- GENRES & SONGS ---
-    function openGenre(id, name) {
-        currentGenreId = id; document.getElementById('genreViewTitle').innerText = name;
-        const grid = document.getElementById('genreSongGrid'); grid.innerHTML = '';
-        const songs = allSongs.filter(s => s.genreId === id && s.status === 'APPROVED'); 
-        
-        if(songs.length === 0) grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`;
-        songs.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            grid.innerHTML += `
-                <div class="song-card" onclick="openSong('${s.id}')">
-                    <img src="${cover}" class="song-cover">
-                    <div class="song-info">
-                        <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
-                        <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">👑 ${s.uploader || 'FULLKIK'}</div>
-                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||0}</span></div>
-                    </div>
-                </div>
-            `;
-        });
-        switchView('genre');
-    }
-
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
@@ -1143,22 +1143,22 @@
         
         const price = currentSong.price || 0; const actionsDiv = document.getElementById('playerActions');
         
-        if (isPurchased || price === 0) {
-            let dlText = price === 0 && !isPurchased ? '免费下载' : '下载歌曲';
+        if(isPurchased) { 
             actionsDiv.innerHTML = `
-                <a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" class="btn-dl-blue">${dlText}</a>
-                ${isPurchased ? '<div class="btn-purchased-tag">已购买</div>' : ''}
-                <button class="btn-icon-circle">♡</button>
-                <button class="btn-report" onclick="showToast('已举报: 版权问题')">举报</button>
-            `;
+                <a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>
+                <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-muted); padding:10px 20px; border-radius:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; cursor:default;">已购买</div>
+            `; 
         } else {
+            const btnText = price === 0 ? "免费下载" : `购买 💎 ${price}`;
             actionsDiv.innerHTML = `
-                <button class="btn-buy-red" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> 购买 💎 ${price}</button>
-                <div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">试听只有30秒</div>
+                <button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})">
+                    ${btnText}
+                </button>
+                <div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>
             `;
         }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = (isPurchased || price === 0); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
         switchView('song');
     }
 
@@ -1167,7 +1167,7 @@
         const myUploads = allSongs.filter(s => s.uploader === username && s.status === 'APPROVED');
         if(myUploads.length === 0) { listDiv.innerHTML = `<p style="color:var(--text-muted)">${dict[currentLang].emptyLib}</p>`; return; }
         myUploads.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div><div><button class="icon-btn" onclick="openSong('${s.id}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div><div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div></div>`;
         });
     }
@@ -1192,8 +1192,23 @@
 
     function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; if(document.getElementById('profileBannerTokens')) document.getElementById('profileBannerTokens').innerText = userTokens; if(document.getElementById('modalTokenCount')) document.getElementById('modalTokenCount').innerText = userTokens; }
     function openTopUpModal() { if(!username) return window.location.href = '/register.html'; closeModals(); document.getElementById('topUpModal').style.display = 'flex'; }
-    function promptPurchase(songId, songName, filepath, price) { if(!username) return window.location.href = '/register.html'; if(userTokens < price) return showToast("Insufficient tokens!", true); document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; document.getElementById('purchaseModal').style.display = 'flex'; }
-    async function executePurchase(songId, songName, filepath, price) { showGlobalLoader("正在处理订单..."); document.getElementById('purchaseActions').innerHTML = ''; const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); if(res.ok) { const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); closeModals(); hideGlobalLoader(); document.getElementById('successPurchaseModal').style.display = 'flex'; setTimeout(() => { closeModals(); openSong(songId); }, 2000); } else { hideGlobalLoader(); closeModals(); const err = await res.text(); if(!err.includes('Not found')) showToast("Purchase Failed", true); } }
+    function promptPurchase(songId, songName, filepath, price) { 
+        if(!username) return window.location.href = '/register.html'; 
+        if(price === 0) return executePurchase(songId, songName, filepath, 0); // Free songs skip the prompt
+        if(userTokens < price) return showToast("Insufficient tokens!", true); 
+        document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">Confirm Purchase</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} Tokens</div>`; 
+        document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; 
+        document.getElementById('purchaseModal').style.display = 'flex'; 
+    }
+    async function executePurchase(songId, songName, filepath, price) { 
+        showGlobalLoader("正在处理订单..."); document.getElementById('purchaseActions').innerHTML = ''; 
+        const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); 
+        if(res.ok) { 
+            const data = await res.json(); userTokens = data.tokens; userPurchases = data.purchases; updateTokenUI(); 
+            closeModals(); hideGlobalLoader(); document.getElementById('successPurchaseModal').style.display = 'flex'; 
+            setTimeout(() => { closeModals(); openSong(songId); }, 2000); 
+        } else { hideGlobalLoader(); closeModals(); const err = await res.text(); if(!err.includes('Not found')) showToast("Purchase Failed", true); } 
+    }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
