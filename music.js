@@ -54,6 +54,7 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
+// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -61,6 +62,7 @@ app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.h
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
+// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -144,6 +146,27 @@ app.get('/api/all-users', async (req, res) => {
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
+});
+
+// --- FAVORITES (NEW) ---
+app.post('/api/users/:username/favorite', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (!doc.exists) return res.status(404).send('User not found');
+        
+        let favs = doc.data().favorites || [];
+        const songId = req.body.songId;
+        
+        if (favs.includes(songId)) {
+            favs = favs.filter(id => id !== songId);
+        } else {
+            favs.push(songId);
+        }
+        
+        await userRef.update({ favorites: favs });
+        res.json({ success: true, favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN USER ENDPOINTS ---
@@ -236,27 +259,6 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); await oldRef.delete();
         res.json({ success: true, username: req.body.newUsername });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-// 🛠️ User Favorites Toggle Endpoint
-app.post('/api/users/:username/toggle-favorite', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        
-        let favorites = doc.data().favorites || [];
-        const songId = req.body.songId;
-        
-        if (favorites.includes(songId)) {
-            favorites = favorites.filter(id => id !== songId);
-        } else {
-            favorites.push(songId);
-        }
-        
-        await userRef.update({ favorites: favorites });
-        res.json({ success: true, favorites: favorites });
     } catch (e) { res.status(500).send(e.message); }
 });
 
