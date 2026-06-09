@@ -56,6 +56,8 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -106,7 +108,6 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        // Added "favorites: []" to user creation
         await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
@@ -143,22 +144,6 @@ app.get('/api/all-users', async (req, res) => {
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
-});
-
-// --- NEW API: TOGGLE FAVORITE ---
-app.post('/api/users/:username/favorite', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let favs = userDoc.data().favorites || [];
-        if (req.body.action === 'add' && !favs.includes(req.body.songId)) favs.push(req.body.songId);
-        if (req.body.action === 'remove') favs = favs.filter(id => id !== req.body.songId);
-        
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
-    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN USER ENDPOINTS ---
@@ -206,6 +191,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -250,6 +236,27 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); await oldRef.delete();
         res.json({ success: true, username: req.body.newUsername });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// 🛠️ User Favorites Toggle Endpoint
+app.post('/api/users/:username/toggle-favorite', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (!doc.exists) return res.status(404).send('User not found');
+        
+        let favorites = doc.data().favorites || [];
+        const songId = req.body.songId;
+        
+        if (favorites.includes(songId)) {
+            favorites = favorites.filter(id => id !== songId);
+        } else {
+            favorites.push(songId);
+        }
+        
+        await userRef.update({ favorites: favorites });
+        res.json({ success: true, favorites: favorites });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -387,7 +394,9 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
+    try {
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+    } catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
