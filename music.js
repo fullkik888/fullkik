@@ -56,12 +56,9 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING & ANTI-THEFT ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -109,6 +106,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
+        // Added "favorites: []" to user creation
         await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
@@ -147,21 +145,64 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- USER ACTIONS ---
-app.post('/api/users/:username/toggle-favorite', async (req, res) => {
+// --- NEW API: TOGGLE FAVORITE ---
+app.post('/api/users/:username/favorite', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        const user = doc.data();
-        let favs = user.favorites || [];
-        const songId = req.body.songId;
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
         
-        if(favs.includes(songId)) { favs = favs.filter(id => id !== songId); } 
-        else { favs.push(songId); }
+        let favs = userDoc.data().favorites || [];
+        if (req.body.action === 'add' && !favs.includes(req.body.songId)) favs.push(req.body.songId);
+        if (req.body.action === 'remove') favs = favs.filter(id => id !== req.body.songId);
         
         await userRef.update({ favorites: favs });
         res.json({ success: true, favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- ADMIN USER ENDPOINTS ---
+app.put('/api/admin/users/:username/role', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
+        res.send('Updated');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        const amt = parseInt(req.body.amount) || 0;
+        const newTokens = (doc.data().tokens || 0) + amt;
+        await userRef.update({ tokens: newTokens });
+        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
+        res.send('Adjusted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/force-password', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
+        await logEvent('admin', `Forced password reset for ${req.params.username}`);
+        res.send('Reset');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/ban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
+        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
+        res.send('Banned');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/unban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
+        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
+        res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -212,60 +253,6 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN USER ENDPOINTS ---
-app.put('/api/admin/users/:username/role', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
-        res.send('Updated');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        const amt = parseInt(req.body.amount) || 0;
-        const newTokens = (doc.data().tokens || 0) + amt;
-        await userRef.update({ tokens: newTokens });
-        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
-        res.send('Adjusted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/force-password', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
-        await logEvent('admin', `Forced password reset for ${req.params.username}`);
-        res.send('Reset');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/ban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
-        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
-        res.send('Banned');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/unban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
-        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
-        res.send('Unbanned');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).delete();
-        await logEvent('admin', `Deleted user account: <span style="color:var(--danger)">${req.params.username}</span>`);
-        res.send('Deleted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-// --- TRANSACTIONS ---
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
@@ -321,6 +308,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
@@ -399,9 +387,7 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
-    } catch (e) { res.status(400).send(e.message); }
+    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
