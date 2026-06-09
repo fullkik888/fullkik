@@ -54,15 +54,11 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -71,7 +67,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         const isFromApp = referer.includes(req.get('host'));
 
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #1a0f0f; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -110,7 +106,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], favorites: [], topups: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -140,29 +136,10 @@ app.get('/api/users/:username', async (req, res) => {
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data();
-            delete data.password; 
-            return data;
+            let data = d.data(); delete data.password; return data;
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
-});
-
-// --- FAVORITES API ---
-app.post('/api/users/:username/toggle-favorite', async (req, res) => {
-    try {
-        const { songId } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        let favs = doc.data().favorites || [];
-        if (favs.includes(songId)) {
-            favs = favs.filter(id => id !== songId);
-        } else {
-            favs.push(songId);
-        }
-        await userRef.update({ favorites: favs });
-        res.json({ favorites: favs });
-    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN USER ENDPOINTS ---
@@ -210,7 +187,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -247,14 +223,33 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// 🛠️ Profile Edit Username Endpoint
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
+        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('用户名已存在');
         const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); await oldRef.delete();
         res.json({ success: true, username: req.body.newUsername });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// 🛠️ User Toggle Favorite
+app.post('/api/users/:username/toggle-favorite', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (!doc.exists) return res.status(404).send('User not found');
+        const user = doc.data();
+        let favs = user.favorites || [];
+        const songId = req.body.songId;
+        
+        if (favs.includes(songId)) favs = favs.filter(id => id !== songId);
+        else favs.push(songId);
+        
+        await userRef.update({ favorites: favs });
+        res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -372,11 +367,9 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = ''; 
+    let coverUrl = DEFAULT_COVER; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
-    } else if(!reqBody.coverBase64) {
-        coverUrl = DEFAULT_COVER;
     }
 
     const snapshot = await db.collection('songs').get();
@@ -394,9 +387,7 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
-    } catch (e) { res.status(400).send(e.message); }
+    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
