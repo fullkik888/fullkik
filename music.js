@@ -54,15 +54,11 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -110,7 +106,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -146,6 +142,28 @@ app.get('/api/all-users', async (req, res) => {
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
+});
+
+// --- USER FAVORITES ENGINE ---
+app.post('/api/users/:username/favorite', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (!doc.exists) return res.status(404).send('User not found');
+        
+        const user = doc.data();
+        let favs = user.favorites || [];
+        const songId = req.body.songId;
+        
+        if (favs.includes(songId)) {
+            favs = favs.filter(id => id !== songId);
+        } else {
+            favs.push(songId);
+        }
+        
+        await userRef.update({ favorites: favs });
+        res.json({ success: true, favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN USER ENDPOINTS ---
@@ -192,6 +210,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
+
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
