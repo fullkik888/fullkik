@@ -54,7 +54,6 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -62,7 +61,6 @@ app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.h
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -148,27 +146,6 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- FAVORITES (NEW) ---
-app.post('/api/users/:username/favorite', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        
-        let favs = doc.data().favorites || [];
-        const songId = req.body.songId;
-        
-        if (favs.includes(songId)) {
-            favs = favs.filter(id => id !== songId);
-        } else {
-            favs.push(songId);
-        }
-        
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
 // --- ADMIN USER ENDPOINTS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
@@ -213,7 +190,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
-
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -262,6 +238,19 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+app.post('/api/users/:username/favorite', async (req, res) => {
+    try {
+        const { songId } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (!doc.exists) return res.status(404).send('User not found');
+        let favs = doc.data().favorites || [];
+        if (favs.includes(songId)) { favs = favs.filter(id => id !== songId); } else { favs.push(songId); }
+        await userRef.update({ favorites: favs });
+        res.json({ favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
@@ -293,26 +282,28 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
 
         const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price) {
-            user.tokens -= price;
+        if (user.tokens >= price || price === 0) { // Support Free Downloads
+            let newTokens = user.tokens;
+            if (price > 0) newTokens -= price;
+
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            
             user.purchases.push({ 
                 songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
-                uploader: song.uploader || 'FULLKIK', 
-                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+                uploader: song.uploader || 'FULLKIK', tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
             });
             
-            await userRef.update({ tokens: user.tokens, purchases: user.purchases });
+            await userRef.update({ tokens: newTokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
 
-            await db.collection('transactions').add({
-                buyer: req.params.username, email: user.email || '-',
-                songName: song.filename, uploader: song.uploader || 'FULLKIK',
-                tokens: price, time: new Date().toISOString()
-            });
+            if (price > 0) {
+                await db.collection('transactions').add({
+                    buyer: req.params.username, email: user.email || '-',
+                    songName: song.filename, uploader: song.uploader || 'FULLKIK',
+                    tokens: price, time: new Date().toISOString()
+                });
+            }
 
-            res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
+            res.json({ success: true, tokens: newTokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
     } catch (e) { res.status(500).send(e.message); }
 });
