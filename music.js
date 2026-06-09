@@ -56,6 +56,8 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -85,7 +87,6 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -136,13 +137,30 @@ app.get('/api/users/:username', async (req, res) => {
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data(); delete data.password; return data;
+            let data = d.data();
+            delete data.password; 
+            return data;
         });
         res.json(users); 
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- ADMIN USER ENDPOINTS ---
+app.post('/api/users/:username/favorites', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        await userRef.update({ favorites: admin.firestore.FieldValue.arrayUnion(req.body.songId) });
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/favorites/:songId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        await userRef.update({ favorites: admin.firestore.FieldValue.arrayRemove(req.params.songId) });
+        res.json({ success: true });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -223,33 +241,14 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// 🛠️ Profile Edit Username Endpoint
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('用户名已存在');
+        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
         const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); await oldRef.delete();
         res.json({ success: true, username: req.body.newUsername });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-// 🛠️ User Toggle Favorite
-app.post('/api/users/:username/toggle-favorite', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        const user = doc.data();
-        let favs = user.favorites || [];
-        const songId = req.body.songId;
-        
-        if (favs.includes(songId)) favs = favs.filter(id => id !== songId);
-        else favs.push(songId);
-        
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -308,7 +307,6 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
@@ -323,7 +321,6 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -351,7 +348,6 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SONGS ---
 app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -387,7 +383,9 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
+    try {
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+    } catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
@@ -408,7 +406,6 @@ app.put('/api/songs/reorder', async (req, res) => {
 });
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
