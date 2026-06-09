@@ -15,9 +15,6 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
-// ==========================================
-// 1. DATABASE & STORAGE INITIALIZATION
-// ==========================================
 let db, bucket;
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     console.error("❌ FATAL ERROR: Missing FIREBASE_SERVICE_ACCOUNT_JSON!");
@@ -57,14 +54,15 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
-// ==========================================
+// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
+// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -72,13 +70,8 @@ app.get('/api/stream/:songId', async (req, res) => {
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
 
-        // Anti-Theft Interceptor
         if (!isFromApp && !isAudioTag) {
-            return res.status(403).send(`
-                <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title>
-                <style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style>
-                </head><body><h1>禁止盗取歌曲</h1></body></html>
-            `);
+            return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #1a0f0f; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
@@ -96,9 +89,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
-// ==========================================
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -119,11 +110,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ 
-            username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], 
-            isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
-        });
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], favorites: [], topups: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -150,7 +137,6 @@ app.get('/api/users/:username', async (req, res) => {
     } else res.status(404).send('User not found');
 });
 
-// Securely fetch all users without leaking passwords to the frontend
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
@@ -162,35 +148,74 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// ==========================================
-// 4. USER PROFILE & SETTINGS
-// ==========================================
-app.put('/api/users/:username/change-username', async (req, res) => {
+// --- FAVORITES API ---
+app.post('/api/users/:username/toggle-favorite', async (req, res) => {
     try {
-        const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
-        const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
-        const data = doc.data(); data.username = req.body.newUsername; 
-        await db.collection('users').doc(newId).set(data); await oldRef.delete();
-        res.json({ success: true, username: req.body.newUsername });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.post('/api/users/:username/profile-pic', async (req, res) => {
-    try {
-        const url = await uploadToCloudinaryBase64(req.body.imageBase64, 'dj_profiles');
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ profilePic: url }); res.json({ profilePic: url });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/update-password', async (req, res) => {
-    try {
-        const { oldPassword, newPassword } = req.body;
+        const { songId } = req.body;
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
-        if (doc.data().password !== oldPassword) return res.status(400).send('Incorrect current password');
-        await userRef.update({ password: newPassword });
-        res.send('Password updated');
+        let favs = doc.data().favorites || [];
+        if (favs.includes(songId)) {
+            favs = favs.filter(id => id !== songId);
+        } else {
+            favs.push(songId);
+        }
+        await userRef.update({ favorites: favs });
+        res.json({ favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- ADMIN USER ENDPOINTS ---
+app.put('/api/admin/users/:username/role', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
+        res.send('Updated');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        const amt = parseInt(req.body.amount) || 0;
+        const newTokens = (doc.data().tokens || 0) + amt;
+        await userRef.update({ tokens: newTokens });
+        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
+        res.send('Adjusted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/force-password', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
+        await logEvent('admin', `Forced password reset for ${req.params.username}`);
+        res.send('Reset');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/ban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
+        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
+        res.send('Banned');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/users/:username/unban', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
+        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
+        res.send('Unbanned');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+
+app.put('/api/users/:username/vip', async (req, res) => {
+    try {
+        const { djName, wechat } = req.body;
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, djName: djName, wechat: wechat, wechatPublic: true });
+        res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -204,17 +229,35 @@ app.put('/api/users/:username/settings', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.put('/api/users/:username/vip', async (req, res) => {
+app.put('/api/users/:username/update-password', async (req, res) => {
     try {
-        const { djName, wechat } = req.body;
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, djName: djName, wechat: wechat, wechatPublic: true });
-        res.send('VIP Activated');
+        const { oldPassword, newPassword } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if (doc.data().password !== oldPassword) return res.status(400).send('Incorrect current password');
+        await userRef.update({ password: newPassword });
+        res.send('Password updated');
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 5. TRANSACTIONS: TOPUP, PURCHASE, FAVORITES
-// ==========================================
+app.post('/api/users/:username/profile-pic', async (req, res) => {
+    try {
+        const url = await uploadToCloudinaryBase64(req.body.imageBase64, 'dj_profiles');
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ profilePic: url }); res.json({ profilePic: url });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/change-username', async (req, res) => {
+    try {
+        const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
+        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
+        const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
+        const data = doc.data(); data.username = req.body.newUsername; 
+        await db.collection('users').doc(newId).set(data); await oldRef.delete();
+        res.json({ success: true, username: req.body.newUsername });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
@@ -270,80 +313,22 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.post('/api/users/:username/toggle-favorite', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        const user = doc.data();
-        let favs = user.favorites || [];
-        const songId = req.body.songId;
-        
-        if (favs.includes(songId)) favs = favs.filter(id => id !== songId);
-        else favs.push(songId);
-        
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
-    } catch (e) { res.status(500).send(e.message); }
+// --- ADMIN TRANSACTIONS & ORDERS ---
+app.get('/api/orders', async (req, res) => {
+    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/orders/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 6. CONTENT MANAGEMENT (SONGS & GENRES)
-// ==========================================
-const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-
-app.get('/api/songs', async (req, res) => {
-    try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
+app.get('/api/transactions', async (req, res) => {
+    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.delete('/api/transactions/all', async (req, res) => {
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-async function saveSongData(fileBuffer, originalName, reqBody) {
-    let url = '';
-    if(fileBuffer) {
-        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
-        url = audioResult.secure_url;
-    } else if(reqBody.url) { url = reqBody.url; }
-
-    let coverUrl = DEFAULT_COVER; 
-    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
-        coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
-    }
-
-    const snapshot = await db.collection('songs').get();
-    const newSong = {
-        filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
-        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
-    };
-    const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
-}
-
-app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
-    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
-    catch (e) { res.status(500).send(e.message); }
-});
-
-app.post('/api/transload', async (req, res) => {
-    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } catch (e) { res.status(400).send(e.message); }
-});
-
-app.put('/api/songs/:id/settings', async (req, res) => {
-    try {
-        let updates = {};
-        if (req.body.newName) updates.filename = req.body.newName;
-        if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
-        if (req.body.status) updates.status = req.body.status; 
-        if (req.body.genreId) updates.genreId = req.body.genreId;
-        if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
-        if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
-        await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/songs/reorder', async (req, res) => {
-    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
-});
-app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
-
+// --- GENRES ---
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -371,9 +356,68 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// ==========================================
-// 7. SYSTEM SETTINGS & ADMIN ONLY ROUTES
-// ==========================================
+// --- SONGS ---
+app.get('/api/songs', async (req, res) => {
+    try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
+});
+
+const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+
+async function saveSongData(fileBuffer, originalName, reqBody) {
+    let url = '';
+    if(fileBuffer) {
+        const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
+        url = audioResult.secure_url;
+    } else if(reqBody.url) {
+        url = reqBody.url;
+    }
+
+    let coverUrl = ''; 
+    if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
+        coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
+    } else if(!reqBody.coverBase64) {
+        coverUrl = DEFAULT_COVER;
+    }
+
+    const snapshot = await db.collection('songs').get();
+    const newSong = {
+        filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
+        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0,
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
+    };
+    const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
+}
+
+app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
+    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
+    catch (e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/transload', async (req, res) => {
+    try {
+        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
+    } catch (e) { res.status(400).send(e.message); }
+});
+
+app.put('/api/songs/:id/settings', async (req, res) => {
+    try {
+        let updates = {};
+        if (req.body.newName) updates.filename = req.body.newName;
+        if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
+        if (req.body.status) updates.status = req.body.status; 
+        if (req.body.genreId) updates.genreId = req.body.genreId;
+        if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
+        if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
+        await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/songs/reorder', async (req, res) => {
+    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+});
+app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
+
+// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
     if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
     const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
@@ -400,64 +444,6 @@ app.put('/api/settings', async (req, res) => {
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
         res.send('Updated'); 
     } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/role', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
-        res.send('Updated');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        const amt = parseInt(req.body.amount) || 0;
-        const newTokens = (doc.data().tokens || 0) + amt;
-        await userRef.update({ tokens: newTokens });
-        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
-        res.send('Adjusted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/force-password', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
-        await logEvent('admin', `Forced password reset for ${req.params.username}`);
-        res.send('Reset');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/ban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
-        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
-        res.send('Banned');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/unban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
-        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
-        res.send('Unbanned');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.get('/api/orders', async (req, res) => {
-    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
-});
-app.delete('/api/orders/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
-});
-
-app.get('/api/transactions', async (req, res) => {
-    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
-});
-app.delete('/api/transactions/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/logs/:type', async (req, res) => {
