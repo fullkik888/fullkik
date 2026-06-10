@@ -10,9 +10,6 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
-// ==========================================
-// 1. MIDDLEWARE & CONFIGURATION
-// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -34,7 +31,6 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
 }
 
-// Memory storage for immediate processing
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -58,9 +54,6 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
-// ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -93,9 +86,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
-// ==========================================
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -237,6 +228,17 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
     } catch (e) { res.status(500).send(e.message); }
+});
+
+// 🛠️ NEW: Allow users to permanently reorder their Purchased/Library playlist.
+app.put('/api/users/:username/update-purchases-order', async (req, res) => {
+    try {
+        const newOrder = req.body.purchases;
+        if(!newOrder || !Array.isArray(newOrder)) return res.status(400).send("Invalid format");
+        
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ purchases: newOrder });
+        res.json({ success: true, purchases: newOrder });
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 // ==========================================
