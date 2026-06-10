@@ -5,26 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FULLKIK</title>
     <style>
-        :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
+        :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff; --success: #34c759;}
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
         .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-        .nav-tabs { display: flex; gap: 30px; align-items: center; }
+        
+        /* DYNAMIC NAV */
+        .nav-tabs { display: flex; gap: 30px; align-items: center; overflow-x: auto; scrollbar-width: none; white-space:nowrap;}
+        .nav-tabs::-webkit-scrollbar { display: none; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration:none;}
         .nav-tab:hover { color: white; }
         .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .lang-toggle { font-size: 13px; font-weight: bold; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-muted); transition: 0.2s;}
-        .lang-toggle:hover { color: white; border-color: white;}
 
         .header-right { display: flex; align-items: center; gap: 15px; }
+        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
 
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
-        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
+        .profile-dropdown { position: absolute; top: 50px; right: 0; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index:200;}
         .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
         .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
@@ -41,14 +44,12 @@
         /* --- SPLASH LOADER --- */
         #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
-        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; }
         
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         .welcome-text span:nth-child(5) { animation-delay: 0.5s; } .welcome-text span:nth-child(6) { animation-delay: 0.6s; } .welcome-text span:nth-child(7) { animation-delay: 0.7s; } .welcome-text span:nth-child(8) { animation-delay: 0.8s; }
         .welcome-text span:nth-child(9) { animation-delay: 0.9s; } .welcome-text span:nth-child(10) { animation-delay: 1.0s; } .welcome-text span:nth-child(11) { animation-delay: 1.1s; }
-        
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
 
         /* --- GLOBAL LOADERS --- */
@@ -72,8 +73,6 @@
         .search-item:hover { background: rgba(255,255,255,0.05); }
         .search-item img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
         
-        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
-        
         /* --- HOMEPAGE GRIDS & DJ SCROLL --- */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-top:40px; margin-bottom: 15px;}
         .section-header h3 { margin: 0; font-size: 20px; font-weight: 700;}
@@ -91,10 +90,21 @@
         .dj-name { font-size: 12px; font-weight: bold; width:100%; text-align:center;}
         .dj-count { font-size: 10px; color: var(--text-muted); }
 
+        /* CREATOR GRID (Picture 1 style) */
+        .creator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .creator-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; position:relative;}
+        .creator-card:hover { border-color: var(--accent-light); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(128,0,0,0.3);}
+        .creator-card .c-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border-color); margin-bottom: 10px; background:#1a0f0f;}
+        .creator-card .c-name { font-size: 16px; font-weight: bold; display:flex; align-items:center; gap:5px;}
+        .creator-card .c-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 15px;}
+        .c-song-previews { display:flex; gap:10px; width:100%; justify-content:center;}
+        .c-song-previews img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border:1px solid rgba(255,255,255,0.1); background:#1a0f0f;}
+
+        /* 3x3 SONG GRID */
         .home-song-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .home-song-row-card { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; min-width: 0;}
         .home-song-row-card:hover { border-color: var(--accent-light); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(128,0,0,0.3);}
-        .home-song-row-card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
+        .home-song-row-card img { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background:#1a0f0f;}
         .home-song-row-card .info { flex: 1; min-width: 0; display:flex; flex-direction:column; gap:5px;}
         .home-song-row-card .info .title { font-size: 14px; font-weight: bold; color: white;}
         .home-song-row-card .info .sub { font-size: 11px; color: var(--text-muted);}
@@ -116,7 +126,7 @@
         .p-btn.active { background: var(--accent-light); color: white; border-color: var(--accent-light);}
         .p-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* PLAYER */
+        /* INDIVIDUAL PLAYER (Picture 1 & 2 styles) */
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
         .btn-back { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
         .btn-back:hover { color: white; }
@@ -124,7 +134,7 @@
         .player-container { display: flex; gap: 40px; background: rgba(255,255,255,0.02); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color); position:relative;}
         .player-left { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0;}
         .player-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0;}
-        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 30px;}
+        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; display:flex; align-items:center; gap:10px;}
         
         .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 20px;}
         .wave-bar { flex: 1; background: var(--border-color); border-radius: 2px; transition: 0.2s;}
@@ -140,17 +150,18 @@
         input[type=range].seeker::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; cursor: pointer; }
         input[type=range].seeker::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: #fff; cursor: pointer; margin-top: -5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
 
-        .action-row { display: flex; gap: 15px;}
-        .btn-buy-big { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px; text-decoration:none;}
-        .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(128, 0, 0, 0.4);}
+        .action-row { display: flex; gap: 15px; align-items:center;}
+        .btn-buy-big { background: linear-gradient(90deg, #6a5acd, #836fff); color: white; border: none; padding: 16px 30px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; gap:10px;}
+        .btn-buy-big:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(106, 90, 205, 0.4);}
+        .btn-purchased { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: bold; display:flex; align-items:center; cursor:default; }
         
-        .player-right { width: 350px; flex-shrink: 0; position:relative;}
-        .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
-
-        .heart-btn { background:none; border:1px solid var(--border-color); border-radius:12px; padding:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;}
-        .heart-btn svg { width:24px; height:24px; stroke:white; stroke-width:2; fill:none; transition:0.2s;}
+        .heart-btn { background:none; border:1px solid var(--border-color); border-radius:12px; padding:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;}
+        .heart-btn svg { width:22px; height:22px; stroke:white; stroke-width:2; fill:none; transition:0.2s;}
         .heart-btn.liked { border-color:var(--danger); }
         .heart-btn.liked svg { fill:var(--danger); stroke:var(--danger); }
+
+        .player-right { width: 350px; flex-shrink: 0; position:relative;}
+        .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
 
         /* --- TOPUP CENTER --- */
         .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
@@ -188,7 +199,8 @@
             .player-right { width: 100%; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
-            .home-song-grid { grid-template-columns: 1fr; } /* Stack on mobile */
+            .home-song-grid { grid-template-columns: 1fr; } 
+            .creator-grid { grid-template-columns: 1fr; }
             .search-wrapper { max-width: 90%; }
             .banners-container img { width: 250px; flex-shrink: 0;}
             .topup-grid-large { grid-template-columns: 1fr 1fr; }
@@ -215,11 +227,8 @@
 
 <div class="header-top">
     <div class="logo-container" id="logoText">FULLKIK</div>
-    <div class="nav-tabs">
-        <button class="nav-tab active" id="nav-store" onclick="switchView('home')" data-i18n="store">首页</button>
-        <button class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</button>
-        <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
-    </div>
+    <div class="nav-tabs" id="mainNavTabs">
+        </div>
     <div class="header-right">
         <a href="profile.html" class="token-pill" id="tokenUI">
             <svg viewBox="0 0 24 24" style="width:16px; fill:currentColor;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.64-2.14 1.64-1.4 0-2.1-.68-2.14-1.7H8.08c.04 1.56 1.27 2.65 2.82 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
@@ -253,6 +262,24 @@
         </div>
 
         <div id="homeContentAreas" style="width:100%;"></div>
+    </div>
+
+    <div id="view-creators" class="view-section">
+        <div class="player-header">
+            <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
+            <h2 style="margin: 0 0 0 20px;">制作人 <span style="font-size:14px; color:var(--text-muted); font-weight:normal;" id="creatorCountLabel">(0)</span></h2>
+        </div>
+        
+        <div style="display:flex; gap:20px; border-bottom:1px solid var(--border-color); margin-bottom:20px;">
+            <button class="nav-tab active" onclick="filterCreators('PRODUCER', this)">制作人 <span id="tc-prod">0</span></button>
+            <button class="nav-tab" onclick="filterCreators('VIP', this)">DJ <span id="tc-dj">0</span></button>
+        </div>
+        
+        <div class="search-wrapper" style="margin:0 0 30px 0; max-width:100%;">
+            <input type="text" class="search-bar" id="creatorSearch" placeholder="搜索制作人名称..." oninput="filterCreators(currentCreatorRole, document.querySelector('.nav-tab.active'))">
+        </div>
+
+        <div class="creator-grid" id="creatorGrid"></div>
     </div>
 
     <div id="view-ranking" class="view-section">
@@ -324,11 +351,11 @@
 <audio id="mainAudio" preload="metadata"></audio>
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
-<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;">购买成功!</h2></div></div>
+<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--success); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;">购买成功!</h2></div></div>
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [], userFavorites = [];
+    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
@@ -385,12 +412,6 @@
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
-        if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
-        if(currentSong) openSong(currentSong.id);
-        
-        try {
-            const vRank = document.getElementById('view-ranking'); if(vRank && vRank.classList.contains('active')) renderRanking();
-        } catch(e) {}
     }
 
     function showGlobalLoader(txt = "正在处理订单...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
@@ -422,15 +443,8 @@
     // --- INITIALIZATION ---
     async function init() {
         const circle = document.getElementById('initLoadCircle');
-        
-        function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
+        let loadProgress = 0; function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
         setProg(10);
-        
-        if(!username) { 
-            const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
-            if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
-        }
 
         try {
             const res = await fetch(`${API_URL}/settings`);
@@ -441,18 +455,21 @@
             }
             setProg(30);
 
-            let allUsers = [];
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || [];
-                    updateTokenUI(); 
+                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; isUserVip = data.isVip || false;
+                    document.getElementById('tokenDisplay').innerText = userTokens; 
                     
                     const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                    const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
+                    document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
                     
                     if(isUserVip) { document.getElementById('btnVipCenterDrop').style.display = 'block'; }
-                } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
+                } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); }
+            } else {
+                const pb = document.getElementById('profileBtn');
+                if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
+                document.getElementById('tokenUI').style.display = 'none'; 
             }
             setProg(50);
             
@@ -461,19 +478,24 @@
             allSongs = await (await fetch(`${API_URL}/songs`)).json(); setProg(100);
             
             setCurrency('RMB'); 
+            buildTopNav();
             renderHome(allUsers);
             applyLang(); 
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const songParam = urlParams.get('songId');
+            if(songParam) { openSong(songParam); } else { switchView('home'); }
         } catch(e) { console.error("Init Error:", e); } 
 
+        // Splash Loader Sequence
         setTimeout(() => {
             const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
             const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
             const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
             setTimeout(() => { 
                 const sp = document.getElementById('splashLoader'); 
-                if(sp) { sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 800); }
-                const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
-            }, 1500);
+                if(sp) { sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 500); }
+            }, 1000);
         }, 400);
     }
 
@@ -486,12 +508,24 @@
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        if(view === 'home' || view === 'genre' || view === 'song' || view === 'more-songs') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
+        if(view === 'home' || view === 'genre' || view === 'song' || view === 'more-songs') { const ns = document.getElementById('nav-home'); if(ns) ns.classList.add('active'); }
         if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
 
         if(['home', 'ranking', 'more-songs', 'topup'].includes(view)) localStorage.setItem('djLastView', view);
     }
 
+    // --- DYNAMIC TOP NAV ---
+    function buildTopNav() {
+        let navHtml = `<a href="javascript:void(0)" class="nav-tab active" id="nav-home" onclick="switchView('home')" data-i18n="store">首页</a>`;
+        const topGenres = allGenres.filter(g => g.status !== 'DISABLED').slice(0, 3);
+        topGenres.forEach(g => { navHtml += `<a href="javascript:void(0)" class="nav-tab" onclick="openGenre('${g.id}', '${g.name}')">${g.name}</a>`; });
+        navHtml += `<a href="javascript:void(0)" class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</a>`;
+        navHtml += `<a href="/profile.html?view=library" class="nav-tab" id="nav-library">我的音乐</a>`;
+        navHtml += `<div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>`;
+        document.getElementById('mainNavTabs').innerHTML = navHtml;
+    }
+
+    // --- FAVORITES TOGGLE ---
     async function toggleFav(songId, event) {
         event.stopPropagation();
         if(!username) return window.location.href = '/register.html';
@@ -520,8 +554,9 @@
         if(!container) return;
         container.innerHTML = '';
 
+        // Render Popular DJs (Producers + VIPs)
         if(users && users.length) {
-            const vips = users.filter(u => u.isVip);
+            const vips = users.filter(u => u.isVip || u.role === 'PRODUCER');
             vips.sort((a,b) => {
                 const cA = allSongs.filter(s => s.uploader === a.username).length;
                 const cB = allSongs.filter(s => s.uploader === b.username).length;
@@ -529,13 +564,13 @@
             });
 
             if(vips.length > 0) {
-                let djHtml = `<div class="section-header"><h3>热门 DJ</h3></div><div class="dj-scroll-container">`;
+                let djHtml = `<div class="section-header"><h3>热门 DJ</h3><span onclick="switchView('creators')">查看全部 ></span></div><div class="dj-scroll-container">`;
                 vips.forEach((v, i) => {
                     const count = allSongs.filter(s => s.uploader === v.username).length;
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
                     const pfp = v.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                     djHtml += `
-                        <div class="dj-card">
+                        <div class="dj-card" onclick="window.location.href='/vip.html?u=${v.username}'">
                             ${rClass ? `<div class="dj-rank ${rClass}">${i+1}</div>` : ''}
                             <img src="${pfp}">
                             <div class="dj-name truncate">${v.djName || v.username}</div>
@@ -581,20 +616,53 @@
         return html;
     }
 
+    // --- CREATORS GRID ---
+    let currentCreatorRole = 'PRODUCER';
+    function filterCreators(role, btnEl) {
+        currentCreatorRole = role;
+        document.querySelectorAll('#view-creators .nav-tab').forEach(b => b.classList.remove('active'));
+        if(btnEl) btnEl.classList.add('active');
+
+        const query = document.getElementById('creatorSearch').value.toLowerCase();
+        let targetUsers = allUsers.filter(u => {
+            const matchesRole = role === 'PRODUCER' ? u.role === 'PRODUCER' : (u.role === 'VIP' || u.isVip);
+            const matchesQuery = (u.djName && u.djName.toLowerCase().includes(query)) || u.username.toLowerCase().includes(query);
+            return matchesRole && matchesQuery;
+        });
+
+        document.getElementById('creatorCountLabel').innerText = `(${targetUsers.length})`;
+        
+        // Update counts on tabs silently without removing active
+        const prods = allUsers.filter(u => u.role === 'PRODUCER').length;
+        const vips = allUsers.filter(u => u.role === 'VIP' || u.isVip).length;
+        document.getElementById('tc-prod').innerText = prods;
+        document.getElementById('tc-dj').innerText = vips;
+
+        const grid = document.getElementById('creatorGrid'); grid.innerHTML = '';
+        targetUsers.forEach(u => {
+            const pfp = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const count = allSongs.filter(s => s.uploader === u.username).length;
+            const topSongs = allSongs.filter(s => s.uploader === u.username && s.status === 'APPROVED').slice(0,3);
+            
+            let coversHtml = topSongs.map(s => `<img src="${s.coverUrl || pfp}">`).join('');
+
+            grid.innerHTML += `
+                <div class="creator-card" onclick="window.location.href='/vip.html?u=${u.username}'">
+                    <img src="${pfp}" class="c-avatar">
+                    <div class="c-name">👑 ${u.djName || u.username}</div>
+                    <div class="c-sub">${count} 首作品</div>
+                    <div class="c-song-previews">${coversHtml}</div>
+                </div>
+            `;
+        });
+    }
+
     // --- RANKING LIST (排行榜) ---
     function renderRanking() {
-        const listDiv = document.getElementById('rankingList');
-        listDiv.innerHTML = '';
-        
-        let rankedSongs = [...allSongs]
-            .filter(s => s.status === 'APPROVED')
-            .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
-            .slice(0, 50); 
+        const listDiv = document.getElementById('rankingList'); listDiv.innerHTML = '';
+        let rankedSongs = [...allSongs].filter(s => s.status === 'APPROVED').sort((a, b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 50); 
 
-        if(rankedSongs.length === 0) {
-            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排行榜数据</div>`;
-            return;
-        }
+        if(rankedSongs.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排行榜数据</div>`; return; }
 
         rankedSongs.forEach((s, index) => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
@@ -602,13 +670,9 @@
             const isPurchased = username ? userPurchases.some(p => p.songId === s.id) : false;
             
             let priceHtml = '';
-            if(isPurchased) {
-                priceHtml = `<div style="color:var(--success); font-size:12px; border:1px solid var(--success); padding:2px 8px; border-radius:12px; white-space:nowrap;">已购买</div>`;
-            } else if(s.price === 0) {
-                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">免费下载</div>`;
-            } else {
-                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price}</div>`;
-            }
+            if(isPurchased) { priceHtml = `<div style="color:var(--success); font-size:12px; border:1px solid var(--success); padding:2px 8px; border-radius:12px; white-space:nowrap;">已购买</div>`; } 
+            else if(s.price === 0) { priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">免费下载</div>`; } 
+            else { priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price}</div>`; }
 
             listDiv.innerHTML += `
                 <div class="list-song-row" onclick="openSong('${s.id}')">
@@ -622,6 +686,7 @@
                     </div>
                     <div style="display:flex; align-items:center; gap:15px; flex-shrink:0;">
                         ${priceHtml}
+                        <svg viewBox="0 0 24 24" style="width:18px; fill:none; stroke:var(--text-muted); stroke-width:2;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                     </div>
                 </div>
             `;
@@ -676,6 +741,28 @@
     }
 
     // --- GENRES & SONGS ---
+    function openGenre(id, name) {
+        currentGenreId = id; document.getElementById('genreViewTitle').innerText = name;
+        const grid = document.getElementById('genreSongGrid'); grid.innerHTML = '';
+        const songs = allSongs.filter(s => s.genreId === id && s.status === 'APPROVED'); 
+        
+        if(songs.length === 0) grid.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No songs here yet.</div>`;
+        songs.forEach(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            grid.innerHTML += `
+                <div class="song-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}" class="song-cover">
+                    <div class="song-info">
+                        <div class="song-title truncate" title="${s.filename}">${s.filename}</div>
+                        <div class="truncate" style="font-size:11px; color:var(--text-muted); margin-bottom:5px;">Upload: ${s.uploader || 'FULLKIK'}</div>
+                        <div class="song-tag"><span>FULLKIK</span> <span>💎 ${s.price||0}</span></div>
+                    </div>
+                </div>
+            `;
+        });
+        switchView('genre');
+    }
+
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
@@ -736,12 +823,12 @@
             setTimeout(() => { closeModals(); openSong(songId); }, 2000); 
         } else { hideGlobalLoader(); closeModals(); const err = await res.text(); if(!err.includes('Not found')) showToast("Purchase Failed", true); } 
     }
-
     async function executeRealTopup() {
         showGlobalLoader("正在处理订单...");
         const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); hideGlobalLoader(); showToast(`充值完成！`); switchView('home'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; updateTokenUI(); hideGlobalLoader(); showToast(`充值完成！`); } else { hideGlobalLoader(); showToast("Top up failed", true); }
     }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
 </script>
