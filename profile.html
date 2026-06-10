@@ -10,11 +10,26 @@
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+        /* HEADER */
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
         .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration:none;}
         .nav-tab:hover { color: white; }
+        .lang-toggle { font-size: 13px; font-weight: bold; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-muted); transition: 0.2s;}
+        .lang-toggle:hover { color: white; border-color: white;}
+
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
+
+        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
+        .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
+        
+        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
+        .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
+        .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
+        .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
@@ -23,23 +38,28 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- GLOBAL LOADERS --- */
+        #profileLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; align-items:center; justify-content:center; flex-direction:column;}
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
-        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        
+
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
         .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
+        
+        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes popUp { to { opacity:1; transform:translateY(0); } }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
         .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
+        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
 
         /* --- PROFILE CENTER UI --- */
-        .profile-banner { background: linear-gradient(135deg, #1c1010 0%, #0b0b0b 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; gap: 30px; border: 1px solid var(--border-color); margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position:relative;}
+        .profile-banner { background: linear-gradient(135deg, #1c1010 0%, #0b0b0b 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; justify-content:space-between; border: 1px solid var(--border-color); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .profile-pic-large-wrap { position: relative; width: 100px; height: 100px; border-radius: 50%; cursor: pointer; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); flex-shrink:0;}
         .profile-pic-large-wrap img { width: 100%; height: 100%; object-fit: cover; }
         .profile-pic-large-wrap .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; opacity: 0; transition: 0.2s;}
         .profile-pic-large-wrap:hover .overlay { opacity: 1; }
         
-        .profile-link-row { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer; transition: 0.2s; font-size:16px; font-weight:bold;}
-        .profile-link-row:hover { border-color: var(--accent-light); background: rgba(128,0,0,0.1); }
+        .list-btn { background:var(--card-bg); border:1px solid var(--border-color); padding:20px; border-radius:12px; margin-bottom:15px; cursor:pointer; font-weight:bold; transition:0.2s;}
+        .list-btn:hover { border-color:var(--accent-light); }
 
         .form-section { background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%; box-sizing:border-box;}
         .form-section h3 { margin: 0 0 10px 0; font-size: 20px;}
@@ -53,6 +73,9 @@
         .btn-submit { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s;}
         .btn-submit:hover { opacity: 0.9; }
 
+        .btn-text-action { background:rgba(255,255,255,0.05); border: 1px solid var(--border-color); font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; white-space:nowrap; padding:6px 12px; border-radius:20px;}
+        .btn-text-action:hover { color: white; border-color:var(--accent-light); }
+
         /* --- VIP CENTER SPECIFICS --- */
         .vip-stats-row { display: grid; grid-template-columns: repeat(4, 1fr) 150px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; margin-bottom: 30px; align-items: center; gap: 20px;}
         .vip-stat-item { display: flex; flex-direction: column; gap: 5px; }
@@ -65,6 +88,11 @@
         .vip-upload-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
         .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
+
+        /* --- HISTORY LISTS --- */
+        .hist-list { display: flex; flex-direction: column; gap: 10px; }
+        .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
+        .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
@@ -97,20 +125,24 @@
             .header-top { padding: 15px 20px; }
             .lib-row { grid-template-columns: 60px 1fr 50px; }
             .lib-row .col-size, .lib-row .col-id { display: none; }
-            .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .nav-tabs { gap: 15px; }
+            .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
+            .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
+            .hist-row > div:nth-child(n+3) { display: none; } 
+            .profile-banner { flex-direction:column; align-items:center; text-align:center; }
         }
     </style>
 </head>
-<body>
+<body onclick="closeDropdowns(event)">
 
-<div id="profileLoader" class="modal-overlay" style="display:flex; z-index:9999999; flex-direction:column; background:rgba(11,11,11,0.8); backdrop-filter:blur(15px);">
-    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力加载中 >.<</div>
+<div id="profileLoader">
     <div class="content-loader-bar-wrap" style="width: 250px;"><div id="profileLoaderBar" class="loader-bar-fill" style="width:0%;"></div></div>
 </div>
 
 <div id="vipUploadProgOverlay" class="modal-overlay" style="z-index:10005; flex-direction:column; background: rgba(0,0,0,0.8);">
-    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >.<</div>
+    <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
     <div class="content-loader-bar-wrap" style="width: 250px;"><div id="vipUploadBarFill" class="loader-bar-fill" style="width:0%;"></div></div>
 </div>
 
@@ -127,118 +159,131 @@
 <div class="header-top">
     <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
-        <a href="/music.html" class="nav-tab">返回首页</a>
+        <a href="/music.html" class="nav-tab" data-i18n="store">返回首页</a>
+        <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
+    </div>
+    <div class="header-right">
+        <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
+        <div style="position:relative;">
+            <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
+                <button class="dropdown-item" onclick="switchView('history')" data-i18n="pHist">个人消费</button>
+                <button class="dropdown-item" style="color: var(--danger);" onclick="logout()" data-i18n="logout">登出</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="container">
     <div id="view-profile" class="view-section active">
         <div class="profile-banner">
-            <div class="profile-pic-large-wrap" onclick="document.getElementById('pfpUploadInput').click()">
-                <img id="profileBannerPic" src="">
-                <div class="overlay">EDIT</div>
-            </div>
-            <div style="flex:1;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <h2 id="profileBannerName" style="margin:0; font-size:32px;">Username</h2>
-                    <span id="profileBannerVipTag" style="display:none; color:#ffcc00; font-size:12px; font-weight:bold; border:1px solid #ffcc00; padding:2px 6px; border-radius:10px;">VIP</span>
+            <div style="display:flex; align-items:center; gap:30px; flex-wrap:wrap; justify-content:center;">
+                <div class="profile-pic-large-wrap" onclick="document.getElementById('pfpUploadInput').click()">
+                    <img id="profileBannerPic" src="">
+                    <div class="overlay" data-i18n="editImg">EDIT</div>
                 </div>
-                <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
-                    <svg viewBox="0 0 24 24" style="width:16px;fill:currentColor;"><path d="M8.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S9.1,13.5,8.5,13.5z M12.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S13.1,13.5,12.5,13.5z M20,10.5c0-4.1-4-7.5-9-7.5s-9,3.4-9,7.5c0,2.3,1.3,4.4,3.4,5.7l-0.9,2.8l3.2-1.6 c1.1,0.3,2.2,0.5,3.4,0.5C16,18,20,14.6,20,10.5z"/></svg> <span id="wechatIdText"></span>
+                <div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h2 id="profileBannerName" style="margin:0; font-size:32px;">Username</h2>
+                        <span id="profileBannerVipTag" style="display:none; color:#ffcc00; font-size:12px; font-weight:bold; border:1px solid #ffcc00; padding:2px 6px; border-radius:10px;">VIP</span>
+                    </div>
+                    <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
+                        <svg viewBox="0 0 24 24" style="width:16px;fill:currentColor;"><path d="M8.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S9.1,13.5,8.5,13.5z M12.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S13.1,13.5,12.5,13.5z M20,10.5c0-4.1-4-7.5-9-7.5s-9,3.4-9,7.5c0,2.3,1.3,4.4,3.4,5.7l-0.9,2.8l3.2-1.6 c1.1,0.3,2.2,0.5,3.4,0.5C16,18,20,14.6,20,10.5z"/></svg> 微信: <span id="wechatIdText"></span>
+                    </div>
+                    <div style="color:var(--text-muted); margin-top:5px; font-size:14px;">💎 <span id="profileBannerTokens">0</span> | 关注 0 | 粉丝 0</div>
                 </div>
-                <div style="color:var(--text-muted); margin-top:5px; font-size:14px; display:flex; align-items:center; gap:10px;"><span style="color:var(--token)">💎</span> <span id="profileBannerTokens">0</span></div>
             </div>
-            <button class="btn-submit" style="width:auto; padding:8px 16px; font-size:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:white;" onclick="document.getElementById('editNameModal').style.display='flex'">修改名称</button>
+            <button class="btn-text-action" onclick="document.getElementById('editNameModal').style.display='flex'">⚙ 修改名称</button>
         </div>
 
-        <div style="width:100%; margin-top: 20px; margin-bottom:30px;">
-            <div class="profile-link-row" onclick="openMyMusic('purchased')">
-                <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:20px;">🎵</span> 已买歌曲</div>
-                <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted);"><span id="count-purchased" style="font-weight:bold; color:white;">0</span> ></div>
-            </div>
-            <div class="profile-link-row" onclick="openMyMusic('favorites')">
-                <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:20px;">❤️</span> 收藏歌曲</div>
-                <div style="display:flex; align-items:center; gap:10px; color:var(--text-muted);"><span id="count-favorites" style="font-weight:bold; color:white;">0</span> ></div>
-            </div>
-        </div>
+        <div class="list-btn" onclick="switchView('library')">🎵 已购歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
+        <div class="list-btn" onclick="switchView('library', 'favorites')">❤️ 收藏歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
 
-        <div class="form-section" id="vipRegSection">
-            <h3>升级为 VIP 创作者</h3>
-            <p>设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。</p>
+        <div class="form-section" id="vipRegSection" style="margin-top:40px;">
+            <h3 data-i18n="vipUpgradeTitle">升级为 VIP 创作者</h3>
+            <p data-i18n="vipUpgradeSub">设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。</p>
             <div class="input-row">
-                <div class="input-col"><label>DJ 用户名</label><input type="text" id="vipDjName" class="input-field" placeholder="例如: 12Private"><div class="error-msg" id="errDj"></div></div>
-                <div class="input-col"><label>微信联系方式</label><input type="text" id="vipWechat" class="input-field" placeholder="请输入您的微信号"><div class="error-msg" id="errWechat"></div><div style="font-size:11px; color:var(--text-muted); margin-top:-5px;">购买者将通过微信联系您完成交易</div></div>
+                <div class="input-col"><label data-i18n="lblDj">DJ 用户名</label><input type="text" id="vipDjName" class="input-field" placeholder="例如: 12Private" data-placeholder="phDj"><div class="error-msg" id="errDj"></div></div>
+                <div class="input-col"><label data-i18n="lblWechat">微信联系方式</label><input type="text" id="vipWechat" class="input-field" placeholder="请输入您的微信号" data-placeholder="phWechat"><div class="error-msg" id="errWechat"></div><div style="font-size:11px; color:var(--text-muted); margin-top:-5px;" data-i18n="lblWechatSub">购买者将通过微信联系您完成交易</div></div>
             </div>
-            <button class="btn-submit" onclick="submitVipUpgrade()">升级VIP</button>
+            <button class="btn-submit" onclick="submitVipUpgrade()" data-i18n="btnVip">升级VIP</button>
         </div>
 
-        <div class="form-section" id="vipConfigSection" style="display:none;">
-            <h3>微信联系设置</h3>
+        <div class="form-section" id="vipConfigSection" style="display:none; margin-top:40px;">
+            <h3 data-i18n="lblWechatConfig">微信联系设置</h3>
             <div class="input-row" style="align-items:flex-start;">
-                <div class="input-col"><label>微信号</label><input type="text" id="configWechat" class="input-field"></div>
+                <div class="input-col"><label data-i18n="lblWechat">微信号</label><input type="text" id="configWechat" class="input-field"></div>
                 <div class="input-col" style="justify-content:center; padding-top:25px;">
-                    <label style="display:flex; align-items:center; gap:8px; color:white; font-size:14px; cursor:pointer;"><input type="checkbox" id="configWechatPub" style="width:16px;height:16px;accent-color:var(--accent);"> <span>公开显示微信号 (让买家可以联系您)</span></label>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:25px;">关闭后，微信号仅对您自己可见</div>
+                    <label style="display:flex; align-items:center; gap:8px; color:white; font-size:14px; cursor:pointer;"><input type="checkbox" id="configWechatPub" style="width:16px;height:16px;accent-color:var(--accent);"> <span data-i18n="lblWechatPub">公开显示微信号 (让买家可以联系您)</span></label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:25px;" data-i18n="lblWechatPriv">关闭后，微信号仅对您自己可见</div>
                 </div>
             </div>
-            <button class="btn-submit" onclick="saveWechatConfig()">保存微信设置</button>
+            <button class="btn-submit" onclick="saveWechatConfig()" data-i18n="btnSaveWechat">保存微信设置</button>
         </div>
 
         <div class="form-section">
-            <h3>修改密码</h3>
-            <div class="input-col" style="margin-bottom:15px;"><label>当前密码</label><input type="password" id="pwCurrent" class="input-field"></div>
-            <div class="input-col" style="margin-bottom:15px;"><label>新密码</label><input type="password" id="pwNew" class="input-field"></div>
-            <div class="input-col" style="margin-bottom:20px;"><label>再次输入新密码</label><input type="password" id="pwConfirm" class="input-field"><div class="error-msg" id="errPw"></div></div>
-            <button class="btn-submit" onclick="submitPasswordChange()">更新密码</button>
+            <h3 data-i18n="pwTitle">修改密码</h3>
+            <div class="input-col" style="margin-bottom:15px;"><label data-i18n="lblCurrPw">当前密码</label><input type="password" id="pwCurrent" class="input-field"></div>
+            <div class="input-col" style="margin-bottom:15px;"><label data-i18n="lblNewPw">新密码</label><input type="password" id="pwNew" class="input-field"></div>
+            <div class="input-col" style="margin-bottom:20px;"><label data-i18n="lblConfPw">再次输入新密码</label><input type="password" id="pwConfirm" class="input-field"><div class="error-msg" id="errPw"></div></div>
+            <button class="btn-submit" onclick="submitPasswordChange()" data-i18n="btnPw">更新密码</button>
         </div>
     </div>
 
-    <div id="view-my-music" class="view-section">
+    <div id="view-library" class="view-section">
         <h2 style="margin-top:0;">我的音乐</h2>
         <div class="vip-tabs">
-            <button class="vip-tab active" onclick="renderMyMusic('purchased')" id="tab-purchased">已购买</button>
-            <button class="vip-tab" onclick="renderMyMusic('favorites')" id="tab-favorites">我的收藏</button>
+            <button class="vip-tab active" onclick="renderLibrary('BUY')" id="libTabBUY">已购买</button>
+            <button class="vip-tab" onclick="renderLibrary('FAV')" id="libTabFAV">我的收藏</button>
         </div>
-        <div id="myMusicList"></div>
+        <div id="libraryList"></div>
+    </div>
+
+    <div id="view-history" class="view-section">
+        <h2 style="margin-top:0;">我的消费</h2>
+        <div class="vip-tabs">
+            <button class="vip-tab active" onclick="renderHistory('ALL')" id="histTabALL">全部</button>
+            <button class="vip-tab" onclick="renderHistory('BUY')" id="histTabBUY">购买历史</button>
+            <button class="vip-tab" onclick="renderHistory('TOPUP')" id="histTabTOPUP">消费记录</button>
+        </div>
+        <div class="hist-list" id="historyList"></div>
     </div>
 
     <div id="view-vip" class="view-section">
-        <h2 style="margin-top:0;">数据总结</h2>
+        <h2 style="margin-top:0;" data-i18n="vipDataTitle">数据总结</h2>
         <div class="vip-stats-row">
-            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl">上传歌曲数量</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val">0</span><span class="vip-stat-lbl">歌曲被收藏次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl">歌曲下载次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" style="color:var(--token);">💎 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl">累计钻石</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl" data-i18n="vipStatUpLbl">上传歌曲数量</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val">0</span><span class="vip-stat-lbl" data-i18n="vipStatFavLbl">歌曲被收藏次数</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl" data-i18n="vipStatDlLbl">歌曲下载次数</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" style="color:var(--token);">💎 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计钻石</span></div>
             <div style="text-align:right;"><button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); width:auto; padding:10px 20px;" onclick="showToast('提现功能开发中...', true)">↓ 提现</button></div>
         </div>
 
-        <h2>我的歌曲</h2>
+        <h2 data-i18n="vipSongTitle">我的歌曲</h2>
         <div class="vip-tabs">
-            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED">已发布 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING">正在审核 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED">未提交审核 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED">驳回歌曲 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED">已下架 (0)</button>
+            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED" data-i18n="tabApp">已发布 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING" data-i18n="tabPen">正在审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED" data-i18n="tabUnsub">未提交审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED" data-i18n="tabRej">驳回歌曲 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED" data-i18n="tabRem">已下架 (0)</button>
         </div>
         
         <div class="vip-upload-bar">
-            <button class="vip-btn-upload" onclick="openVipUpload(false)">↑ 上传音乐</button>
-            <button class="vip-btn-upload" onclick="openVipUpload(true)">▤ 批量上传</button>
+            <button class="vip-btn-upload" onclick="openVipUpload(false)">↑ <span data-i18n="btnUpSingle">上传音乐</span></button>
+            <button class="vip-btn-upload" onclick="openVipUpload(true)">▤ <span data-i18n="btnUpBatch">批量上传</span></button>
         </div>
 
         <div id="vipSongList"></div>
     </div>
 
     <div id="view-vip-upload" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <div><h2 style="margin:0;" id="vipUpTitle">上传歌曲</h2><p style="margin:0; font-size:12px; color:var(--text-muted);">VIP 创作者上传歌曲到平台</p></div>
-            <button class="btn-submit" style="width:auto; padding:8px 16px; font-size:12px; background:transparent; border:1px solid var(--border-color); color:var(--text-muted);" onclick="switchView('vip')">← 返回</button>
-        </div>
-        
         <div class="form-section">
-            <div style="font-size:14px; font-weight:bold; margin-bottom:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                歌曲信息 <span style="font-size:11px; color:var(--text-muted); font-weight:normal;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h3 style="margin:0;" id="vipUpTitle">上传歌曲</h3>
+                <button class="btn-text-action" onclick="switchView('vip')">← 返回</button>
             </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</div>
             
             <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
             <div class="upload-tabs" id="vip-audio-tabs">
@@ -247,9 +292,9 @@
             </div>
             
             <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()">
-                拖拽 MP3 / WAV 文件到此处，或 <span style="color:var(--accent-light)">点击选择</span>
+                点击选择 MP3 / WAV
             </div>
-            <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-top:10px;">
+            <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-bottom:10px;">
             <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:10px;"></div>
 
@@ -275,18 +320,17 @@
                 </div>
             </div>
 
-            <label class="input-label" style="margin-top:20px;">封面图片 (可选)</label>
-            <div class="upload-tabs"><button class="active">上传图片</button></div>
-            <div class="upload-dropzone" style="min-height:100px; display:flex; align-items:center; justify-content:center; padding:20px;" onclick="document.getElementById('vipCoverUpload').click()">
-                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="max-height:80px; border-radius:4px; margin-right:15px; border:1px solid var(--border-color);">
-                <span>拖拽图片文件到此处，或 <span style="color:var(--accent-light)">点击选择</span></span>
+            <label class="input-label" style="margin-top:20px; display:block; text-align:center;">封面图片 (可选)</label>
+            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 15px auto; cursor: pointer; border-radius: 8px; overflow:hidden; border:2px dashed var(--border-color);" onclick="document.getElementById('vipCoverUpload').click()">
+                <img id="vipCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0; color:white;">EDIT COVER</div>
             </div>
             <input type="file" id="vipCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'vipCoverPreview', 'vip')">
 
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:15px;"></div>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); color:var(--text-muted);" onclick="switchView('vip')">取消</button>
-                <button class="btn-submit" onclick="executeVipUpload()">提交审核</button>
+                <button class="btn-submit" onclick="executeVipUpload()" style="color:var(--text-main);" data-i18n="submitReview">提交审核</button>
             </div>
         </div>
     </div>
@@ -297,12 +341,12 @@
 <div class="modal-overlay" id="cropModal">
     <div class="modal-box" style="max-width:400px;">
         <div class="modal-content" style="text-align:center;">
-            <h3 style="margin: 0 0 15px 0;">Adjust Profile Picture</h3>
+            <h3 style="margin: 0 0 15px 0;" data-i18n="cropTitle">Adjust Profile Picture</h3>
             <canvas id="cropperCanvas" width="200" height="200"></canvas>
             <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" style="width:200px; margin-bottom:10px;">
-            <p style="font-size:12px; color:var(--text-muted); margin:0;">Drag image to center, use slider to zoom.</p>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;" data-i18n="cropSub">Drag image to center, use slider to zoom.</p>
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="executePfpCrop()" style="color:var(--accent-light);">Save Crop</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executePfpCrop()" data-i18n="save" style="color:var(--accent-light);">Save Crop</button></div>
     </div>
 </div>
 
@@ -310,18 +354,31 @@
     <div class="modal-box">
         <div class="modal-content">
             <h3 style="margin: 0 0 15px 0; text-align:center;">修改名称</h3>
-            <input type="text" id="newUsernameInput" class="input-field" style="width:100%; box-sizing:border-box;" placeholder="输入新名称">
+            <input type="text" id="newNameInput" class="input-field" style="width:100%; box-sizing:border-box;" placeholder="输入新用户名">
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveNewUsername()" style="color:var(--accent-light);">保存</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeNameChange()" style="color:var(--accent-light);">保存</button></div>
     </div>
 </div>
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], userPurchases = [], userFavorites = [];
+    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [], userFavorites = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     if(!username) window.location.href = '/register.html';
+
+    const dict = {
+        en: { store: "Store", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
+        cn: { store: "首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
+    };
+    let currentLang = localStorage.getItem('djLang') || 'cn';
+
+    function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
+
+    function applyLang() {
+        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
+        document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
+    }
 
     function showGlobalLoader(txt = "正在处理...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
     function hideGlobalLoader() { document.getElementById('globalLoader').style.display = 'none'; }
@@ -330,25 +387,24 @@
     // --- INITIALIZATION ---
     async function init() {
         const bar = document.getElementById('profileLoaderBar');
-        let p = 0; const loadInt = setInterval(() => { p += Math.random()*15; if(p>95) p=95; bar.style.width = `${p}%`; }, 100);
+        document.getElementById('profileLoader').style.display = 'flex';
+        let p = 0; const pInt = setInterval(() => { p+=Math.random()*20; if(p>95) p=95; bar.style.width=`${p}%`; }, 50);
 
         try {
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
-                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; isUserVip = data.isVip || false;
-                userFavorites = data.favorites || [];
-                
-                document.getElementById('profileBannerTokens').innerText = userTokens; 
-                document.getElementById('count-purchased').innerText = userPurchases.length;
-                document.getElementById('count-favorites').innerText = userFavorites.length;
+                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || [];
                 
                 const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+                
                 document.getElementById('profileBannerPic').src = pfpUrl; 
                 document.getElementById('profileBannerName').innerText = username;
+                document.getElementById('profileBannerTokens').innerText = userTokens;
                 document.getElementById('vipUploaderInput').value = username;
+                document.getElementById('newNameInput').value = username;
                 
                 if(isUserVip) {
-                    document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block';
+                    document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
                     document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
                     if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
                 }
@@ -357,21 +413,36 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            populateGenreDropdowns();
+            populateGenreDropdowns(); applyLang(); 
             
             const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.get('view') === 'vip') switchView('vip');
-            else switchView('profile');
+            const viewParam = urlParams.get('view');
+            if(viewParam) { switchView(viewParam); } else { switchView('profile'); }
         } catch(e) { console.error("Init Error:", e); } 
 
-        clearInterval(loadInt); bar.style.width = '100%';
+        clearInterval(pInt); bar.style.width = '100%';
         setTimeout(() => { document.getElementById('profileLoader').style.display = 'none'; }, 300);
     }
 
-    function switchView(view) {
+    function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
+    function closeDropdowns(e) { const d = document.getElementById('profileDropdown'); if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show'); }
+    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); window.location.href = '/register.html'; }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
+
+    function switchView(view, arg) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
         if(view === 'vip') renderVipCenter();
+        if(view === 'history') renderHistory('ALL');
+        if(view === 'library') renderLibrary(arg || 'BUY');
+    }
+
+    async function executeNameChange() {
+        const newName = document.getElementById('newNameInput').value.trim();
+        if(!newName) return showToast("Name cannot be empty", true);
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/users/${username}/change-username`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newUsername: newName}) });
+        if(res.ok) { localStorage.setItem('djUsername', newName); window.location.reload(); } else { hideGlobalLoader(); showToast("Name Taken or Error", true); }
     }
 
     // --- CROPPER IMPLEMENTATION ---
@@ -388,7 +459,6 @@
         reader.readAsDataURL(file);
     }
     function drawCrop() {
-        if(!ctx) return;
         ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height); const zoom = parseFloat(document.getElementById('cropZoom').value);
         const minScale = Math.max(cropCanvas.width/cropImg.width, cropCanvas.height/cropImg.height); const scale = minScale * zoom;
         const w = cropImg.width * scale; const h = cropImg.height * scale;
@@ -408,23 +478,12 @@
         if(res.ok) { document.getElementById('profileBannerPic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
     }
 
-    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader') m.style.display = 'none'; }); }
-
-    // --- CHANGE USERNAME ---
-    async function saveNewUsername() {
-        const newName = document.getElementById('newUsernameInput').value.trim();
-        if(!newName) return showToast("名称不能为空", true);
-        showGlobalLoader();
-        const res = await fetch(`${API_URL}/users/${username}/change-username`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ newUsername: newName }) });
-        if(res.ok) { localStorage.setItem('djUsername', newName); window.location.reload(); } else { hideGlobalLoader(); showToast(await res.text(), true); }
-    }
-
     // --- PERSONAL CENTER ACTIONS ---
     async function submitVipUpgrade() {
         const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim();
         document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true;
-        if(!djName) { document.getElementById('errDj').innerText = "必须填写"; pass=false;}
-        if(!wechat) { document.getElementById('errWechat').innerText = "必须填写"; pass=false;}
+        if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;}
+        if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;}
         if(!pass) return;
 
         showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
@@ -440,7 +499,7 @@
     async function submitPasswordChange() {
         const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
         document.getElementById('errPw').innerText = '';
-        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = "必须填写"; return; }
+        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
         if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
 
         showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
@@ -448,34 +507,67 @@
         else { hideGlobalLoader(); showToast(await res.text(), true); }
     }
 
-    // --- MY MUSIC (Purchased & Favorites) ---
-    function openMyMusic(tab) {
-        switchView('my-music'); renderMyMusic(tab);
+    // --- LIBRARY ---
+    function renderLibrary(filter) {
+        document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active');
+        document.getElementById(`libTab${filter}`).classList.add('active');
+
+        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        
+        let targetList = filter === 'BUY' ? userPurchases : allSongs.filter(s => userFavorites.includes(s.id));
+        if(targetList.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
+
+        targetList.forEach(s => {
+            const songName = s.songName || s.filename;
+            const songId = s.songId || s.id;
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            
+            listDiv.innerHTML += `
+                <div class="lib-row" onclick="window.location.href='/music.html'">
+                    <img src="${cover}" class="lib-cover">
+                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
+                    <div style="color: var(--success); font-weight: bold; font-size:12px; border:1px solid var(--success); padding:2px 6px; border-radius:12px; text-align:center;">已保存</div>
+                    <div style="color:var(--text-muted); font-size:12px; text-align:right;">前往播放</div>
+                </div>`;
+        });
     }
-    
-    function renderMyMusic(tab) {
-        document.querySelectorAll('#view-my-music .vip-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(`tab-${tab}`).classList.add('active');
+
+    // --- HISTORY UI ---
+    function renderHistory(filter) {
+        document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
+        if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
+        if(filter==='BUY') document.getElementById('histTabBUY').classList.add('active');
+        if(filter==='TOPUP') document.getElementById('histTabTOPUP').classList.add('active');
+
+        const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
+        let combined = [];
+        if(filter==='ALL' || filter==='TOPUP') userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price, curr: t.currency }));
+        if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
         
-        const listDiv = document.getElementById('myMusicList'); listDiv.innerHTML = '';
-        let displaySongs = [];
-        
-        if(tab === 'purchased') {
-            displaySongs = userPurchases.sort((a,b) => new Date(b.purchaseTime) - new Date(a.purchaseTime));
-            if(displaySongs.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
-            displaySongs.forEach(p => {
-                const cover = p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${p.songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${p.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${p.tokensSpent}</div><div></div><div style="display:flex; align-items:center; gap: 5px;"><a href="/api/stream/${p.songId}" download="${p.songName}" class="icon-btn"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a></div></div>`;
-            });
-        } else {
-            const favIds = userFavorites || [];
-            displaySongs = allSongs.filter(s => favIds.includes(s.id));
-            if(displaySongs.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
-            displaySongs.forEach(s => {
-                const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                listDiv.innerHTML += `<div class="lib-row"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div><div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div><div></div><div style="display:flex; align-items:center; gap: 5px; color:var(--danger); font-size:24px;">♥</div></div>`;
-            });
-        }
+        combined.sort((a,b) => new Date(b.date) - new Date(a.date));
+        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
+
+        combined.forEach(item => {
+            if(item.type === 'topup') {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
+                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
+                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
+                        <div><div style="font-weight:bold;">${item.curr||'RMB'} ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
+                    </div>`;
+            } else {
+                listDiv.innerHTML += `
+                    <div class="hist-row">
+                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
+                        <div style="min-width:0;"><div class="truncate" style="font-weight:bold;">${item.name}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">上传者: ${item.uploader||'FULLKIK'}</div></div>
+                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
+                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
+                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
+                    </div>`;
+            }
+        });
     }
 
     // --- VIP CENTER ---
@@ -489,7 +581,7 @@
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
-            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${status} (${count})`;
+            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
         });
         filterVipSongs(currentVipTab);
     }
@@ -503,7 +595,7 @@
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
         filtered.forEach(s => {
-            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             listDiv.innerHTML += `
                 <div class="lib-row">
                     <img src="${cover}" class="lib-cover">
@@ -527,13 +619,13 @@
     }
 
     function handleVipAudioSelect(e) { const file = e.target.files[0]; if(file) { document.getElementById('vipFileCount').innerText = file.name; document.getElementById('vipTitleInput').value = file.name.replace(/\.[^/.]+$/, ""); } }
-    function handleVipCover(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { pendingVipCover = ev.target.result; document.getElementById('vipCoverPreview').src = pendingVipCover; }; reader.readAsDataURL(file); }
+    function handleImgPreview(e, targetId, mode) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { if(mode === 'vip') pendingVipCover = ev.target.result; document.getElementById(targetId).src = ev.target.result; }; reader.readAsDataURL(file); }
 
     function openVipUpload(isBatch) {
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = ''; document.getElementById('vipTransloadUrlInput').value = '';
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = "批量上传"; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = "上传音乐"; }
+        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle; }
         document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = handleVipAudioSelect;
         setVipUploadMode(false); switchView('vip-upload');
     }
@@ -565,7 +657,7 @@
         clearInterval(pInt); bF.style.width = '100%';
         setTimeout(async () => {
             document.getElementById('vipUploadProgOverlay').style.display = 'none';
-            const msg = "完成提交～ 请等待 1-3 天审核时间.";
+            const msg = "提交成功 请等待 1-3 天审核时间.";
             const sText = document.getElementById('vipSuccessText'); sText.innerHTML = '';
             msg.split('').forEach((char, i) => { sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.1}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.1}s;">${char}</span>`; });
             
