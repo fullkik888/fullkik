@@ -31,7 +31,7 @@
         .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
 
-        .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
+        .container { width: 100%; max-width: 1200px; padding: 100px 20px 100px 20px; box-sizing: border-box; }
         
         .view-section { display: none; animation: fadeIn 0.4s ease; width: 100%;}
         .view-section.active { display: block; }
@@ -89,6 +89,22 @@
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
         .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
 
+        /* --- TOPUP CENTER --- */
+        .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
+        .topup-pack { background: #1a0f0f; border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
+        .topup-pack.active { border-color: var(--accent-light); background: rgba(128, 0, 0, 0.1); }
+        .topup-pack .tag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: rgba(165, 42, 42, 0.2); color: var(--accent-light); font-size: 10px; font-weight: bold; padding: 2px 10px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;}
+        .topup-pack .amt { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; color: var(--token);}
+        .topup-pack .prc { font-size: 14px; color: var(--text-muted);}
+
+        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
+        .pay-btn { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
+        .pay-btn.active { border-color: var(--accent-light); color: white;}
+        .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
+        .promo-bar input { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
+        .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
+        .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
+
         /* --- HISTORY LISTS --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
@@ -96,6 +112,35 @@
 
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
+        
+        /* Persistent Global Audio Player */
+        .global-player { position:fixed; bottom:0; left:0; width:100%; background:rgba(20, 10, 10, 0.95); backdrop-filter:blur(20px); border-top:1px solid var(--border-color); z-index:1000; padding:15px 40px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; display:none; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+        @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
+        .gp-info { display:flex; align-items:center; gap:15px; width:30%; }
+        .gp-info img { width:50px; height:50px; border-radius:8px; object-fit:cover; }
+        .gp-controls { display:flex; flex-direction:column; align-items:center; width:40%; }
+        .gp-buttons { display:flex; align-items:center; gap:20px; margin-bottom:8px; }
+        .gp-btn { background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+        .gp-btn svg { width:20px; height:20px; fill:var(--text-muted); transition:0.2s;}
+        .gp-btn:hover svg { fill:white; }
+        .gp-btn.active svg { fill:var(--accent-light); }
+        .gp-play-btn { width:40px; height:40px; border-radius:50%; background:white; display:flex; align-items:center; justify-content:center; transition:0.2s;}
+        .gp-play-btn:hover { transform:scale(1.05); }
+        .gp-play-btn svg { width:20px; height:20px; fill:black; margin-left:3px; }
+        .gp-play-btn.playing svg { margin-left:0; }
+        
+        .gp-progress { display:flex; align-items:center; gap:10px; width:100%; font-size:11px; color:var(--text-muted); }
+        .gp-slider-container { position:relative; flex:1; height:4px; background:var(--border-color); border-radius:2px; cursor:pointer; }
+        .gp-slider-fill { position:absolute; left:0; height:100%; background:var(--accent-light); border-radius:2px; width:0%; pointer-events:none;}
+        .gp-slider-input { position:absolute; width:100%; -webkit-appearance:none; background:transparent; margin:0; outline:none; top:-5px; }
+        .gp-slider-input::-webkit-slider-thumb { -webkit-appearance:none; height:14px; width:14px; border-radius:50%; background:#fff; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.5); }
+
+        .gp-actions { width:30%; display:flex; justify-content:flex-end; align-items:center; gap:15px; }
+        
+        /* Playlist Order Editing */
+        .seq-input { width: 40px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: white; font-size: 14px; text-align: center; border-radius: 6px; padding: 4px; outline: none; transition: 0.2s;}
+        .seq-input:focus { border-color: var(--accent-light); }
+
         .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; text-decoration: none;}
         .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
         .icon-btn svg { width: 20px; height: 20px; fill: currentColor;}
@@ -112,6 +157,7 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
+        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
         /* UPLOAD PAGE CSS */
@@ -123,15 +169,20 @@
 
         @media (max-width: 768px) {
             .header-top { padding: 15px 20px; }
-            .lib-row { grid-template-columns: 60px 1fr 50px; }
-            .lib-row .col-size, .lib-row .col-id { display: none; }
+            .lib-row { grid-template-columns: 50px 50px 1fr 60px 40px; padding:10px;}
+            .lib-row > div:nth-child(5) { display: none; } 
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
             .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .topup-grid-large { grid-template-columns: 1fr 1fr; }
             .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
             .hist-row > div:nth-child(n+3) { display: none; } 
             .profile-banner { flex-direction:column; align-items:center; text-align:center; }
+            .global-player { padding: 10px; flex-direction: column; gap: 10px; height:auto; }
+            .gp-info { width: 100%; justify-content:space-between;}
+            .gp-controls { width: 100%; }
+            .gp-actions { display:none; } 
         }
     </style>
 </head>
@@ -168,6 +219,7 @@
             <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
             <div class="profile-dropdown" id="profileDropdown">
                 <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
+                <button class="dropdown-item" onclick="switchView('topup')" data-i18n="pTopup">充值中心</button>
                 <button class="dropdown-item" onclick="switchView('history')" data-i18n="pHist">个人消费</button>
                 <button class="dropdown-item" style="color: var(--danger);" onclick="logout()" data-i18n="logout">登出</button>
             </div>
@@ -198,7 +250,7 @@
         </div>
 
         <div class="list-btn" onclick="switchView('library')">🎵 已购歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
-        <div class="list-btn" onclick="switchView('library', 'favorites')">❤️ 收藏歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
+        <div class="list-btn" onclick="switchView('library', 'FAV')">❤️ 收藏歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
 
         <div class="form-section" id="vipRegSection" style="margin-top:40px;">
             <h3 data-i18n="vipUpgradeTitle">升级为 VIP 创作者</h3>
@@ -232,16 +284,26 @@
     </div>
 
     <div id="view-library" class="view-section">
-        <h2 style="margin-top:0;">我的音乐</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;">我的音乐</h2>
+            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+        </div>
         <div class="vip-tabs">
             <button class="vip-tab active" onclick="renderLibrary('BUY')" id="libTabBUY">已购买</button>
             <button class="vip-tab" onclick="renderLibrary('FAV')" id="libTabFAV">我的收藏</button>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button class="btn-text-action" onclick="savePlaylistOrder()">💾 保存排序 (Save Order)</button>
         </div>
         <div id="libraryList"></div>
     </div>
 
     <div id="view-history" class="view-section">
-        <h2 style="margin-top:0;">我的消费</h2>
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+            <h2 style="margin:0; cursor:pointer; color:var(--text-muted); font-size:18px;" onclick="switchView('topup')" data-i18n="pTopup">充值中心</h2>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pHist">我的消费</h2>
+            <button class="btn-text-action" style="margin-left:auto;" onclick="switchView('profile')">← 返回</button>
+        </div>
         <div class="vip-tabs">
             <button class="vip-tab active" onclick="renderHistory('ALL')" id="histTabALL">全部</button>
             <button class="vip-tab" onclick="renderHistory('BUY')" id="histTabBUY">购买历史</button>
@@ -250,8 +312,36 @@
         <div class="hist-list" id="historyList"></div>
     </div>
 
+    <div id="view-topup" class="view-section">
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pTopup">充值中心</h2>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-muted); font-size:18px;" onclick="switchView('history')" data-i18n="pHist">我的消费</h2>
+            <button class="btn-text-action" style="margin-left:auto;" onclick="switchView('profile')">← 返回</button>
+        </div>
+        
+        <div class="topup-grid-large" id="topupGridRender"></div>
+
+        <p style="font-size:12px; color:var(--text-muted);">支付方式 (Payment Method)</p>
+        <div class="pay-methods">
+            <button class="pay-btn active" id="btnCurrRMB" onclick="setCurrency('RMB')">RMB</button>
+            <button class="pay-btn" id="btnCurrMYR" onclick="setCurrency('MYR')">MYR</button>
+        </div>
+        <div class="pay-methods" id="payMethodList"></div>
+
+        <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
+
+        <div class="topup-footer">
+            <div style="color:var(--text-muted); font-size:14px;">总计 (Total)</div>
+            <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥0</div>
+        </div>
+        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
+    </div>
+
     <div id="view-vip" class="view-section">
-        <h2 style="margin-top:0;" data-i18n="vipDataTitle">数据总结</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;" data-i18n="vipDataTitle">数据总结</h2>
+            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+        </div>
         <div class="vip-stats-row">
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl" data-i18n="vipStatUpLbl">上传歌曲数量</span></div>
             <div class="vip-stat-item"><span class="vip-stat-val">0</span><span class="vip-stat-lbl" data-i18n="vipStatFavLbl">歌曲被收藏次数</span></div>
@@ -281,7 +371,7 @@
         <div class="form-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                 <h3 style="margin:0;" id="vipUpTitle">上传歌曲</h3>
-                <button class="btn-text-action" onclick="switchView('vip')">← 返回</button>
+                <button class="btn-text-action" onclick="switchView('vip')">← 取消</button>
             </div>
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</div>
             
@@ -335,6 +425,38 @@
         </div>
     </div>
 </div>
+
+<div class="global-player" id="globalPlayerUI">
+    <div class="gp-info" id="gpInfo" onclick="window.location.href='/music.html'">
+        <img id="gpCover" src="">
+        <div style="min-width:0; cursor:pointer;">
+            <div class="truncate" style="font-weight:bold; font-size:14px; color:white;" id="gpTitle">Title</div>
+            <div class="truncate" style="font-size:11px; color:var(--text-muted);" id="gpUploader">Uploader</div>
+        </div>
+    </div>
+    
+    <div class="gp-controls">
+        <div class="gp-buttons">
+            <button class="gp-btn" id="gpShuffleBtn" onclick="toggleShuffle()"><svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+            <button class="gp-btn" onclick="playPrev()"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+            <button class="gp-play-btn" id="gpPlayBtn" onclick="togglePlay()"><svg viewBox="0 0 24 24" id="gpPlayIcon"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="gp-btn" onclick="playNext()"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+            <button class="gp-btn" id="gpLoopBtn" onclick="toggleLoop()"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+        </div>
+        <div class="gp-progress">
+            <span id="gpCurrTime">0:00</span>
+            <div class="gp-slider-container">
+                <div class="gp-slider-fill" id="gpProgFill"></div>
+                <input type="range" class="gp-slider-input" id="gpSeek" value="0" step="0.1" oninput="seekAudio(this.value)">
+            </div>
+            <span id="gpDurTime">0:00</span>
+        </div>
+    </div>
+    
+    <div class="gp-actions"></div>
+</div>
+
+<audio id="coreAudio" preload="metadata"></audio>
 
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
@@ -396,6 +518,7 @@
                 const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || [];
                 
                 const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+                document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
                 
                 document.getElementById('profileBannerPic').src = pfpUrl; 
                 document.getElementById('profileBannerName').innerText = username;
@@ -413,7 +536,7 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            populateGenreDropdowns(); applyLang(); 
+            setCurrency('RMB'); populateGenreDropdowns(); applyLang(); 
             
             const urlParams = new URLSearchParams(window.location.search);
             const viewParam = urlParams.get('view');
@@ -475,7 +598,7 @@
     async function executePfpCrop() {
         document.getElementById('cropModal').style.display='none'; showGlobalLoader("正在上传..."); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
         const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
-        if(res.ok) { document.getElementById('profileBannerPic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
+        if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
     }
 
     // --- PERSONAL CENTER ACTIONS ---
@@ -507,23 +630,55 @@
         else { hideGlobalLoader(); showToast(await res.text(), true); }
     }
 
-    // --- LIBRARY ---
+    // --- TOPUP CENTER ---
+    let currentCurrency = 'RMB';
+    let currentTopupAmt = 500, currentTopupPrice = 850;
+    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
+    function setCurrency(curr) {
+        currentCurrency = curr; document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
+        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        renderTopupPacks();
+    }
+    function renderTopupPacks() {
+        const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
+        packs.forEach((pk, i) => {
+            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE); const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
+            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
+            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
+        });
+    }
+    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
+    async function executeRealTopup() {
+        showGlobalLoader("正在处理订单...");
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+    }
+
+    // --- PLAYLIST LIBRARY (WITH QUEUE ENGINE) ---
+    let currentPlaylist = [];
+    let currentPlayIndex = 0;
+    let isLooping = false;
+    let isShuffle = false;
+    const coreAudio = document.getElementById('coreAudio');
+
     function renderLibrary(filter) {
         document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active');
         document.getElementById(`libTab${filter}`).classList.add('active');
 
         const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        currentPlaylist = filter === 'BUY' ? userPurchases.map(p => ({...p, id: p.songId})) : allSongs.filter(s => userFavorites.includes(s.id));
         
-        let targetList = filter === 'BUY' ? userPurchases : allSongs.filter(s => userFavorites.includes(s.id));
-        if(targetList.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
+        if(currentPlaylist.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
 
-        targetList.forEach(s => {
+        currentPlaylist.forEach((s, index) => {
             const songName = s.songName || s.filename;
-            const songId = s.songId || s.id;
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             
             listDiv.innerHTML += `
-                <div class="lib-row" onclick="window.location.href='/music.html'">
+                <div class="lib-row" onclick="playFromPlaylist(${index})">
+                    <input type="text" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylist(${index}, this.value, '${filter}')">
                     <img src="${cover}" class="lib-cover">
                     <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
                     <div style="color: var(--success); font-weight: bold; font-size:12px; border:1px solid var(--success); padding:2px 6px; border-radius:12px; text-align:center;">已保存</div>
@@ -531,6 +686,84 @@
                 </div>`;
         });
     }
+
+    function reorderPlaylist(oldIndex, newSeqStr, filter) {
+        let newIndex = parseInt(newSeqStr) - 1;
+        if(isNaN(newIndex) || newIndex < 0) newIndex = 0;
+        if(newIndex >= currentPlaylist.length) newIndex = currentPlaylist.length - 1;
+        
+        const [moved] = currentPlaylist.splice(oldIndex, 1);
+        currentPlaylist.splice(newIndex, 0, moved);
+        
+        if(filter === 'BUY') userPurchases = currentPlaylist;
+        renderLibrary(filter);
+    }
+
+    async function savePlaylistOrder() {
+        if(document.getElementById('libTabBUY').classList.contains('active')) {
+            showGlobalLoader("Saving Order...");
+            await fetch(`${API_URL}/users/${username}/update-purchases-order`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ purchases: userPurchases }) });
+            hideGlobalLoader(); showToast("顺序已保存");
+        } else {
+            showToast("收藏歌曲顺序仅本地保存", true);
+        }
+    }
+
+    // --- GLOBAL PLAYER LOGIC ---
+    function playFromPlaylist(index) {
+        currentPlayIndex = index;
+        const s = currentPlaylist[index];
+        const songId = s.songId || s.id;
+        
+        document.getElementById('globalPlayerUI').style.display = 'flex';
+        document.getElementById('gpTitle').innerText = s.songName || s.filename;
+        document.getElementById('gpUploader').innerText = s.uploader || 'FULLKIK';
+        document.getElementById('gpCover').src = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+        
+        coreAudio.src = `/api/stream/${songId}`;
+        coreAudio.play();
+        document.getElementById('gpPlayBtn').classList.add('playing');
+        document.getElementById('gpPlayIcon').innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+    }
+
+    function togglePlay() {
+        if(coreAudio.paused) {
+            if(!coreAudio.src) return;
+            coreAudio.play();
+            document.getElementById('gpPlayBtn').classList.add('playing');
+            document.getElementById('gpPlayIcon').innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+        } else {
+            coreAudio.pause();
+            document.getElementById('gpPlayBtn').classList.remove('playing');
+            document.getElementById('gpPlayIcon').innerHTML = `<path d="M8 5v14l11-7z"/>`;
+        }
+    }
+
+    function playNext() {
+        if(currentPlaylist.length === 0) return;
+        if(isShuffle) { currentPlayIndex = Math.floor(Math.random() * currentPlaylist.length); } 
+        else { currentPlayIndex++; if(currentPlayIndex >= currentPlaylist.length) currentPlayIndex = 0; }
+        playFromPlaylist(currentPlayIndex);
+    }
+    
+    function playPrev() {
+        if(currentPlaylist.length === 0) return;
+        if(isShuffle) { currentPlayIndex = Math.floor(Math.random() * currentPlaylist.length); } 
+        else { currentPlayIndex--; if(currentPlayIndex < 0) currentPlayIndex = currentPlaylist.length - 1; }
+        playFromPlaylist(currentPlayIndex);
+    }
+
+    function toggleLoop() { isLooping = !isLooping; document.getElementById('gpLoopBtn').classList.toggle('active', isLooping); coreAudio.loop = isLooping; }
+    function toggleShuffle() { isShuffle = !isShuffle; document.getElementById('gpShuffleBtn').classList.toggle('active', isShuffle); }
+
+    function formatTimeGlobal(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
+    
+    if(coreAudio) {
+        coreAudio.addEventListener('loadedmetadata', () => { document.getElementById('gpDurTime').innerText = formatTimeGlobal(coreAudio.duration); document.getElementById('gpSeek').max = coreAudio.duration; });
+        coreAudio.addEventListener('timeupdate', () => { document.getElementById('gpCurrTime').innerText = formatTimeGlobal(coreAudio.currentTime); document.getElementById('gpSeek').value = coreAudio.currentTime; document.getElementById('gpProgFill').style.width = `${(coreAudio.currentTime / coreAudio.duration) * 100}%`; });
+        coreAudio.addEventListener('ended', () => { if(!isLooping) playNext(); });
+    }
+    function seekAudio(val) { coreAudio.currentTime = val; }
 
     // --- HISTORY UI ---
     function renderHistory(filter) {
@@ -595,7 +828,7 @@
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
         filtered.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `
                 <div class="lib-row">
                     <img src="${cover}" class="lib-cover">
@@ -657,7 +890,7 @@
         clearInterval(pInt); bF.style.width = '100%';
         setTimeout(async () => {
             document.getElementById('vipUploadProgOverlay').style.display = 'none';
-            const msg = "提交成功 请等待 1-3 天审核时间.";
+            const msg = "完成提交～ 请等待 1-3 天审核时间.";
             const sText = document.getElementById('vipSuccessText'); sText.innerHTML = '';
             msg.split('').forEach((char, i) => { sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.1}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.1}s;">${char}</span>`; });
             
