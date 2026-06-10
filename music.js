@@ -54,16 +54,14 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
+// --- HTML PAGE ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); // NEW VIP PROFILE PAGE
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -113,8 +111,8 @@ app.post('/api/register', async (req, res) => {
         const isEmail = contact.includes('@');
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], 
-            role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [],
+            isVip: false, role: 'NORMAL', wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
@@ -138,15 +136,15 @@ app.get('/api/users/:username', async (req, res) => {
     const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
     if (doc.exists) {
         if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
-        let data = doc.data(); delete data.password;
-        res.json(data);
+        res.json(doc.data());
     } else res.status(404).send('User not found');
 });
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data(); delete data.password; 
+            let data = d.data();
+            delete data.password; 
             return data;
         });
         res.json(users); 
@@ -164,35 +162,39 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- NEW FOLLOW SYSTEM ---
+// ==========================================
+// 4. FOLLOWERS, FAVORITES, TOPUPS & PURCHASES
+// ==========================================
 app.post('/api/users/:username/follow', async (req, res) => {
     try {
         const { targetUser } = req.body;
-        if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
-        
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const targetRef = db.collection('users').doc(targetUser.toLowerCase());
-        
-        const userDoc = await userRef.get(); const targetDoc = await targetRef.get();
-        if(!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
+        const currentUserId = req.params.username.toLowerCase();
+        const targetId = targetUser.toLowerCase();
+
+        const userRef = db.collection('users').doc(currentUserId);
+        const targetRef = db.collection('users').doc(targetId);
+
+        const [userDoc, targetDoc] = await Promise.all([userRef.get(), targetRef.get()]);
+        if (!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
 
         let following = userDoc.data().following || [];
         let followers = targetDoc.data().followers || [];
 
-        if(following.includes(targetUser)) {
+        if (following.includes(targetUser)) {
             following = following.filter(u => u !== targetUser);
-            followers = followers.filter(u => u !== userDoc.data().username);
+            followers = followers.filter(u => u !== req.params.username);
         } else {
             following.push(targetUser);
-            followers.push(userDoc.data().username);
+            followers.push(req.params.username);
         }
 
-        await userRef.update({ following }); await targetRef.update({ followers });
-        res.json({ success: true, following });
+        await userRef.update({ following });
+        await targetRef.update({ followers });
+
+        res.json({ success: true, following, followersCount: followers.length });
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- FAVORITES, TOPUPS & PURCHASES ---
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -273,14 +275,15 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN USER MANAGEMENT & LOGS ---
+// ==========================================
+// 5. ADMIN USER MANAGEMENT & LOGS
+// ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
-            isVip: req.body.role === 'VIP' || req.body.role === 'PRODUCER', 
-            role: req.body.role || 'NORMAL' 
-        });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.role}`);
+        const role = req.body.role || (req.body.isVip ? 'VIP' : 'NORMAL');
+        const isVip = role === 'VIP' || role === 'PRODUCER';
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: isVip, role: role });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${role}`);
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -372,7 +375,9 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- GENRES ---
+// ==========================================
+// 6. GENRES AND SONGS
+// ==========================================
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -400,7 +405,6 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SONGS ---
 app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
