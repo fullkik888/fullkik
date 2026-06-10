@@ -54,7 +54,6 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -62,7 +61,7 @@ app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.h
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft) ---
+// --- STREAMING (Anti-Theft 403) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -110,7 +109,11 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
+        await userRef.set({ 
+            username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], 
+            isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+        });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -148,21 +151,28 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- FAVORITES TOGGLE ---
+// --- FAVORITES (COLLECTIONS) ---
 app.post('/api/users/:username/favorite', async (req, res) => {
     try {
         const { songId } = req.body;
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if (!doc.exists) return res.status(404).send('User not found');
-        
-        let favs = doc.data().favorites || [];
-        if (favs.includes(songId)) { favs = favs.filter(id => id !== songId); } 
-        else { favs.push(songId); }
-        
+        const userDoc = await userRef.get();
+        let favs = userDoc.data().favorites || [];
+        if (!favs.includes(songId)) favs.push(songId);
         await userRef.update({ favorites: favs });
         res.json({ success: true, favorites: favs });
-    } catch(e) { res.status(500).send(e.message); }
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/favorite/:songId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        let favs = userDoc.data().favorites || [];
+        favs = favs.filter(id => id !== req.params.songId);
+        await userRef.update({ favorites: favs });
+        res.json({ success: true, favorites: favs });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN USER ENDPOINTS ---
@@ -210,6 +220,8 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+
+// --- PROFILE UPDATES ---
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -257,6 +269,7 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// --- PURCHASES & TOPUPS ---
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
@@ -288,7 +301,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
 
         const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price) {
+        if (user.tokens >= price || price === 0) {
             user.tokens -= price;
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
             
@@ -301,11 +314,13 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
 
-            await db.collection('transactions').add({
-                buyer: req.params.username, email: user.email || '-',
-                songName: song.filename, uploader: song.uploader || 'FULLKIK',
-                tokens: price, time: new Date().toISOString()
-            });
+            if(price > 0) {
+                await db.collection('transactions').add({
+                    buyer: req.params.username, email: user.email || '-',
+                    songName: song.filename, uploader: song.uploader || 'FULLKIK',
+                    tokens: price, time: new Date().toISOString()
+                });
+            }
 
             res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
