@@ -10,6 +10,9 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
+// ==========================================
+// 1. MIDDLEWARE & CONFIGURATION
+// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -31,6 +34,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
 }
 
+// Memory storage for immediate processing
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -54,14 +58,15 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
+// ==========================================
+// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
-// --- STREAMING (Anti-Theft 403) ---
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
@@ -88,7 +93,9 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
+// ==========================================
+// 3. AUTHENTICATION & USER MANAGEMENT
+// ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -109,11 +116,7 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ 
-            username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], 
-            isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
-        });
+        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -151,31 +154,94 @@ app.get('/api/all-users', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// --- FAVORITES (COLLECTIONS) ---
-app.post('/api/users/:username/favorite', async (req, res) => {
+app.put('/api/users/:username/change-username', async (req, res) => {
+    try {
+        const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
+        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
+        const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
+        const data = doc.data(); data.username = req.body.newUsername; 
+        await db.collection('users').doc(newId).set(data); await oldRef.delete();
+        res.json({ success: true, username: req.body.newUsername });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// ==========================================
+// 4. FAVORITES, TOPUPS & PURCHASES
+// ==========================================
+app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
         let favs = userDoc.data().favorites || [];
-        if (!favs.includes(songId)) favs.push(songId);
+        if(favs.includes(songId)) favs = favs.filter(id => id !== songId);
+        else favs.push(songId);
+        
         await userRef.update({ favorites: favs });
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.delete('/api/users/:username/favorite/:songId', async (req, res) => {
+app.post('/api/users/:username/topup', async (req, res) => {
     try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        let favs = userDoc.data().favorites || [];
-        favs = favs.filter(id => id !== req.params.songId);
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
+        const user = doc.data();
+        const newTokens = (user.tokens || 0) + req.body.amount; 
+        const topups = user.topups || [];
+        const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
+        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
+        
+        await userRef.update({ tokens: newTokens, topups: topups }); 
+        
+        await db.collection('orders').add({
+            user: req.params.username, email: user.email || '-',
+            orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
+            method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
+            status: 'COMPLETED', time: new Date().toISOString()
+        });
+
+        res.json({ tokens: newTokens, topups: topups });
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN USER ENDPOINTS ---
+app.post('/api/users/:username/purchase', async (req, res) => {
+    try {
+        const songDoc = await db.collection('songs').doc(req.body.songId).get(); if (!songDoc.exists) return res.status(404).send('Song not found');
+        const song = songDoc.data();
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const userDoc = await userRef.get();
+        const user = userDoc.data(); user.purchases = user.purchases || [];
+        if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
+
+        const price = song.price !== undefined ? song.price : 10;
+        if (user.tokens >= price) {
+            user.tokens -= price;
+            const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
+            
+            user.purchases.push({ 
+                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
+                uploader: song.uploader || 'FULLKIK', 
+                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+            });
+            
+            await userRef.update({ tokens: user.tokens, purchases: user.purchases });
+            await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
+
+            await db.collection('transactions').add({
+                buyer: req.params.username, email: user.email || '-',
+                songName: song.filename, uploader: song.uploader || 'FULLKIK',
+                tokens: price, time: new Date().toISOString()
+            });
+
+            res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
+        } else res.status(400).send('Insufficient tokens');
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// ==========================================
+// 5. ADMIN USER MANAGEMENT & LOGS
+// ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
@@ -220,8 +286,6 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-
-// --- PROFILE UPDATES ---
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
@@ -258,75 +322,6 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-app.put('/api/users/:username/change-username', async (req, res) => {
-    try {
-        const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
-        const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
-        const data = doc.data(); data.username = req.body.newUsername; 
-        await db.collection('users').doc(newId).set(data); await oldRef.delete();
-        res.json({ success: true, username: req.body.newUsername });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-// --- PURCHASES & TOPUPS ---
-app.post('/api/users/:username/topup', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
-        const user = doc.data();
-        const newTokens = (user.tokens || 0) + req.body.amount; 
-        const topups = user.topups || [];
-        const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
-        
-        await userRef.update({ tokens: newTokens, topups: topups }); 
-        
-        await db.collection('orders').add({
-            user: req.params.username, email: user.email || '-',
-            orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
-            method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
-            status: 'COMPLETED', time: new Date().toISOString()
-        });
-
-        res.json({ tokens: newTokens, topups: topups });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.post('/api/users/:username/purchase', async (req, res) => {
-    try {
-        const songDoc = await db.collection('songs').doc(req.body.songId).get(); if (!songDoc.exists) return res.status(404).send('Song not found');
-        const song = songDoc.data();
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const userDoc = await userRef.get();
-        const user = userDoc.data(); user.purchases = user.purchases || [];
-        if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
-
-        const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price || price === 0) {
-            user.tokens -= price;
-            const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            
-            user.purchases.push({ 
-                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
-                uploader: song.uploader || 'FULLKIK', 
-                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
-            });
-            
-            await userRef.update({ tokens: user.tokens, purchases: user.purchases });
-            await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
-
-            if(price > 0) {
-                await db.collection('transactions').add({
-                    buyer: req.params.username, email: user.email || '-',
-                    songName: song.filename, uploader: song.uploader || 'FULLKIK',
-                    tokens: price, time: new Date().toISOString()
-                });
-            }
-
-            res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
-        } else res.status(400).send('Insufficient tokens');
-    } catch (e) { res.status(500).send(e.message); }
-});
-
 // --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
@@ -342,7 +337,9 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- GENRES ---
+// ==========================================
+// 6. GENRES AND SONGS
+// ==========================================
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
 });
@@ -370,7 +367,6 @@ app.put('/api/genres/reorder', async (req, res) => {
 });
 app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SONGS ---
 app.get('/api/songs', async (req, res) => {
     try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
 });
