@@ -10,6 +10,9 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
+// ==========================================
+// 1. MIDDLEWARE & CONFIGURATION
+// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -31,6 +34,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
 }
 
+// Memory storage for immediate processing
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -54,10 +58,13 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML PAGE ROUTES ---
+// ==========================================
+// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
@@ -88,7 +95,9 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
+// ==========================================
+// 3. AUTHENTICATION & USER MANAGEMENT
+// ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -111,8 +120,8 @@ app.post('/api/register', async (req, res) => {
         const isEmail = contact.includes('@');
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [],
-            isVip: false, role: 'NORMAL', wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], 
+            role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
@@ -136,15 +145,15 @@ app.get('/api/users/:username', async (req, res) => {
     const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
     if (doc.exists) {
         if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
-        res.json(doc.data());
+        let data = doc.data(); delete data.password;
+        res.json(data);
     } else res.status(404).send('User not found');
 });
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data();
-            delete data.password; 
+            let data = d.data(); delete data.password; 
             return data;
         });
         res.json(users); 
