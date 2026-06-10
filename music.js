@@ -54,9 +54,11 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
+// --- HTML PAGE ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -107,7 +109,11 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() });
+        await userRef.set({ 
+            username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [],
+            isVip: false, role: 'NORMAL', wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+        });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { res.status(500).send(e.message); }
@@ -157,8 +163,38 @@ app.put('/api/users/:username/change-username', async (req, res) => {
 });
 
 // ==========================================
-// 4. FAVORITES, TOPUPS & PURCHASES
+// 4. FOLLOWERS, FAVORITES, TOPUPS & PURCHASES
 // ==========================================
+app.post('/api/users/:username/follow', async (req, res) => {
+    try {
+        const { targetUser } = req.body;
+        const currentUserId = req.params.username.toLowerCase();
+        const targetId = targetUser.toLowerCase();
+
+        const userRef = db.collection('users').doc(currentUserId);
+        const targetRef = db.collection('users').doc(targetId);
+
+        const [userDoc, targetDoc] = await Promise.all([userRef.get(), targetRef.get()]);
+        if (!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
+
+        let following = userDoc.data().following || [];
+        let followers = targetDoc.data().followers || [];
+
+        if (following.includes(targetUser)) {
+            following = following.filter(u => u !== targetUser);
+            followers = followers.filter(u => u !== req.params.username);
+        } else {
+            following.push(targetUser);
+            followers.push(req.params.username);
+        }
+
+        await userRef.update({ following });
+        await targetRef.update({ followers });
+
+        res.json({ success: true, following, followersCount: followers.length });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -230,12 +266,10 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// 🛠️ NEW: Allow users to permanently reorder their Purchased/Library playlist.
 app.put('/api/users/:username/update-purchases-order', async (req, res) => {
     try {
         const newOrder = req.body.purchases;
         if(!newOrder || !Array.isArray(newOrder)) return res.status(400).send("Invalid format");
-        
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ purchases: newOrder });
         res.json({ success: true, purchases: newOrder });
     } catch(e) { res.status(500).send(e.message); }
@@ -246,8 +280,10 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 // ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: req.body.isVip });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.isVip ? 'VIP' : 'NORMAL'}`);
+        const role = req.body.role || (req.body.isVip ? 'VIP' : 'NORMAL');
+        const isVip = role === 'VIP' || role === 'PRODUCER';
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: isVip, role: role });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${role}`);
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -291,7 +327,7 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, djName: djName, wechat: wechat, wechatPublic: true });
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
 });
