@@ -65,7 +65,7 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -177,12 +177,11 @@ app.put('/api/users/:username/change-username', async (req, res) => {
 app.post('/api/users/:username/follow', async (req, res) => {
     try {
         const { targetUser } = req.body;
-        const currentUserId = req.params.username.toLowerCase();
-        const targetId = targetUser.toLowerCase();
-
-        const userRef = db.collection('users').doc(currentUserId);
-        const targetRef = db.collection('users').doc(targetId);
-
+        if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
+        
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const targetRef = db.collection('users').doc(targetUser.toLowerCase());
+        
         const [userDoc, targetDoc] = await Promise.all([userRef.get(), targetRef.get()]);
         if (!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
 
