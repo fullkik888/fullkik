@@ -11,7 +11,7 @@
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; text-decoration: none;}
+        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; }
         .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
@@ -20,16 +20,19 @@
 
         .header-right { display: flex; align-items: center; gap: 15px; }
         
-        .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color);}
-        .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
 
-        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s;}
+        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
-        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden; z-index:999;}
+        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
         .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
-        .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left; text-decoration:none;}
+        .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
         .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
+
+        .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
+        .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
@@ -37,22 +40,23 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- SPLASH LOADER (NO BOUNCE) --- */
-        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        /* --- SPLASH LOADER --- */
+        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+        .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px;}
         
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         .welcome-text span:nth-child(5) { animation-delay: 0.5s; } .welcome-text span:nth-child(6) { animation-delay: 0.6s; } .welcome-text span:nth-child(7) { animation-delay: 0.7s; } .welcome-text span:nth-child(8) { animation-delay: 0.8s; }
         .welcome-text span:nth-child(9) { animation-delay: 0.9s; } .welcome-text span:nth-child(10) { animation-delay: 1.0s; } .welcome-text span:nth-child(11) { animation-delay: 1.1s; }
+        
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
 
         /* --- GLOBAL LOADERS --- */
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
-        .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
+        @keyframes pulseFade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
         .hero { text-align: center; margin-bottom: 40px; }
         .hero h1 { font-size: 36px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 2px;}
         .hero p { color: var(--text-muted); font-size: 14px; margin: 0 0 30px 0;}
@@ -75,7 +79,7 @@
         .section-header span { font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 12px; border-radius: 15px; background: rgba(255,255,255,0.05); transition:0.2s;}
         .section-header span:hover { color: white; background: rgba(255,255,255,0.1); }
 
-        .dj-scroll-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scrollbar-width: none; }
+        .dj-scroll-container { display: flex; overflow-x: auto; gap: 15px; padding-bottom: 15px; scrollbar-width: none; -webkit-overflow-scrolling: touch;}
         .dj-scroll-container::-webkit-scrollbar { display: none; }
         .dj-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 80px; flex-shrink: 0; position:relative; cursor:pointer;}
         .dj-card img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); background:#1a0f0f;}
@@ -86,6 +90,7 @@
         .dj-name { font-size: 12px; font-weight: bold; width:100%; text-align:center;}
         .dj-count { font-size: 10px; color: var(--text-muted); }
 
+        /* Strict 3x3 Grid Layout */
         .home-song-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .home-song-row-card { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; min-width: 0;}
         .home-song-row-card:hover { border-color: var(--accent-light); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(128,0,0,0.3);}
@@ -94,9 +99,6 @@
         .home-song-row-card .info .title { font-size: 14px; font-weight: bold; color: white;}
         .home-song-row-card .info .sub { font-size: 11px; color: var(--text-muted);}
         .home-song-row-card .price { font-size: 12px; font-weight: bold; color: var(--token); white-space:nowrap;}
-        .fav-btn-small { background:none; border:none; color:var(--text-muted); cursor:pointer; padding:5px; transition:0.2s; display:flex; align-items:center; justify-content:center; }
-        .fav-btn-small:hover { transform: scale(1.1); color: white; }
-        .fav-btn-small.active { color: var(--danger); }
 
         /* --- RANKING LIST (排行榜) --- */
         .ranking-list { display: flex; flex-direction: column; gap: 10px; }
@@ -145,7 +147,7 @@
         .player-right { width: 350px; flex-shrink: 0; position:relative;}
         .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
 
-        /* --- TOPUP CENTER (Moved Back) --- */
+        /* --- TOPUP CENTER --- */
         .topup-grid-large { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px;}
         .topup-pack { background: #1a0f0f; border: 2px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden;}
         .topup-pack.active { border-color: var(--accent-light); background: rgba(128, 0, 0, 0.1); }
@@ -169,22 +171,24 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
         .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
+        .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-main); padding: 8px; border-radius: 8px; transition: 0.2s; display: inline-flex; align-items: center; text-decoration: none;}
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
         @media (max-width: 768px) {
             .header-top { padding: 15px 20px; }
             .player-container { flex-direction: column-reverse; padding: 20px;}
             .player-right { width: 100%; }
-            .home-song-grid { grid-template-columns: 1fr; } /* Stack on mobile */
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
-            .topup-grid-large { grid-template-columns: 1fr 1fr; }
+            .home-song-grid { grid-template-columns: 1fr; } /* Stack on mobile */
             .search-wrapper { max-width: 90%; }
             .banners-container img { width: 250px; flex-shrink: 0;}
+            .topup-grid-large { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -207,22 +211,22 @@
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <a href="/music.html" class="logo-container" id="logoText">FULLKIK</a>
+    <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
         <button class="nav-tab active" id="nav-store" onclick="switchView('home')" data-i18n="store">首页</button>
         <button class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</button>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
-        <div class="token-pill" onclick="switchView('topup')" id="tokenUI" style="display:none;">💎 <span id="tokenDisplay">0</span></div>
+        <div class="token-pill" onclick="switchView('topup')" id="tokenUI" style="margin-right:10px;">
+            💎 <span id="navTokenDisplay">0</span>
+        </div>
         <div style="position:relative;">
-            <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)">
-                <button class="btn-upgrade-top" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;" data-i18n="login">Login</button>
-            </div>
+            <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
             <div class="profile-dropdown" id="profileDropdown">
-                <a href="/profile.html" class="dropdown-item">个人主页</a>
-                <a href="/profile.html#history" class="dropdown-item">我的消费</a>
-                <a href="/profile.html#vip" class="dropdown-item" id="vipDropOpt" style="display:none;">VIP 中心</a>
+                <button class="dropdown-item" onclick="window.location.href='/profile.html'">个人主页</button>
+                <button class="dropdown-item" onclick="window.location.href='/profile.html?view=history'">我的消费</button>
+                <button class="dropdown-item" onclick="window.location.href='/profile.html?view=vip'">VIP 中心</button>
                 <button class="dropdown-item" onclick="switchView('topup')">充值中心</button>
                 <button class="dropdown-item" style="color: var(--danger);" onclick="logout()">登出账号</button>
             </div>
@@ -290,7 +294,7 @@
 
     <div id="view-topup" class="view-section">
         <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
-            <h2 style="margin:0; color:var(--text-main);" data-i18n="pTopup">充值中心</h2>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pTopup">充值中心</h2>
         </div>
         
         <div class="topup-grid-large" id="topupGridRender"></div>
@@ -315,7 +319,7 @@
 <audio id="mainAudio" preload="metadata"></audio>
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
-<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">Purchased Successfully!</h2></div></div>
+<div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">购买成功!</h2></div></div>
 
 <script>
     const API_URL = '/api';
@@ -325,12 +329,16 @@
     const audioEl = document.getElementById('mainAudio');
     
     // --- DYNAMIC TOP UP & CURRENCY ENGINE ---
-    let currentCurrency = 'RMB'; let currentTopupAmt = 500, currentTopupPrice = 850;
-    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
+    let currentCurrency = 'RMB';
+    let currentTopupAmt = 500, currentTopupPrice = 850;
+    const EX_RATE = 0.65; // Approx MYR to RMB conversion
+    const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
 
     function setCurrency(curr) {
         currentCurrency = curr;
-        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB');
+        document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
+        
         const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
         document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
         renderTopupPacks();
@@ -339,23 +347,23 @@
     function renderTopupPacks() {
         const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
         packs.forEach((pk, i) => {
-            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE); const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE);
+            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
             const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
-            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
+            
+            grid.innerHTML += `
+                <div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">
+                    ${bonusStr}<div class="prc">${sym}${price}</div>
+                </div>`;
             if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
         });
     }
 
-    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
-
-    async function executeRealTopup() {
-        if(!username) return window.location.href = '/register.html';
-        showGlobalLoader("正在处理订单...");
-        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { 
-            const data = await res.json(); userTokens = data.tokens; updateTokenUI(); hideGlobalLoader(); showToast(`充值完成！`); 
-            setTimeout(() => { window.location.href = '/profile.html#history'; }, 1000);
-        } else { hideGlobalLoader(); showToast("Top up failed", true); }
+    function selectTopup(amt, bonus, price, el) {
+        if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
+        currentTopupAmt = amt + bonus; currentTopupPrice = price;
+        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`;
     }
 
     // --- LANGUAGE SYSTEM ---
@@ -386,6 +394,7 @@
     function handleGlobalSearch(e) {
         const query = e.target.value.toLowerCase(); const drop = document.getElementById('searchResults');
         if(!query) { drop.style.display = 'none'; return; }
+        
         const filtered = allSongs.filter(s => s.status === 'APPROVED' && (s.filename.toLowerCase().includes(query) || (s.uploader && s.uploader.toLowerCase().includes(query))));
         drop.innerHTML = '';
         if(filtered.length === 0) { drop.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">No results found</div>`; } 
@@ -404,12 +413,9 @@
     // --- INITIALIZATION ---
     async function init() {
         const circle = document.getElementById('initLoadCircle');
+        let loadProgress = 0; function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
+        setProg(10);
         
-        // Exact real-time network load tracking setup
-        let progress = 10;
-        function updateProg() { if(circle) circle.style.strokeDashoffset = 283 - (283 * progress / 100); }
-        updateProg();
-
         if(!username) { 
             const pb = document.getElementById('profileBtn');
             if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
@@ -423,41 +429,34 @@
                 if(globalSettings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = globalSettings.headerTitle; } 
                 if(globalSettings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = globalSettings.heroTitle; } 
             }
-            progress = 30; updateProg();
+            setProg(30);
 
             let allUsers = [];
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
                     const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; isUserVip = data.isVip || false;
-                    updateTokenUI(); 
-                    
+                    document.getElementById('navTokenDisplay').innerText = userTokens; 
                     const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                     const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
-                    
-                    document.getElementById('tokenUI').style.display = 'flex';
-                    if(isUserVip) { document.getElementById('vipDropOpt').style.display = 'block'; }
                 } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.reload(); }
             }
-            progress = 50; updateProg();
+            setProg(50);
             
-            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); progress = 70; updateProg();
-            allGenres = await (await fetch(`${API_URL}/genres`)).json(); progress = 85; updateProg();
-            allSongs = await (await fetch(`${API_URL}/songs`)).json(); progress = 100; updateProg();
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); setProg(60);
+            allGenres = await (await fetch(`${API_URL}/genres`)).json(); setProg(75);
+            allSongs = await (await fetch(`${API_URL}/songs`)).json(); setProg(100);
             
-            setCurrency('RMB'); 
-            renderHome(allUsers);
-            applyLang(); 
+            setCurrency('RMB'); renderHome(allUsers); applyLang(); 
         } catch(e) { console.error("Init Error:", e); } 
 
-        // Finished Loading Sequence: Pop out "欢迎来到FULLKIK"
         setTimeout(() => {
             const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
             const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
             setTimeout(() => { 
                 const sp = document.getElementById('splashLoader'); 
                 if(sp) { sp.style.opacity = 0; setTimeout(() => sp.style.display = 'none', 800); }
-                switchView('home');
+                const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
             }, 1500);
         }, 400);
     }
@@ -473,6 +472,27 @@
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         if(view === 'home' || view === 'genre' || view === 'song' || view === 'more-songs') { const ns = document.getElementById('nav-store'); if(ns) ns.classList.add('active'); }
         if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
+
+        if(['home', 'ranking', 'more-songs'].includes(view)) localStorage.setItem('djLastView', view);
+    }
+
+    // --- FAVORITES SYSTEM ---
+    async function toggleFavorite(songId, event) {
+        if(event) event.stopPropagation();
+        if(!username) return showToast("请先登录", true);
+        const res = await fetch(`${API_URL}/users/${username}/favorite`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songId }) });
+        if(res.ok) {
+            const data = await res.json(); userFavorites = data.favorites || []; const isFav = userFavorites.includes(songId);
+            document.querySelectorAll(`.fav-icon-${songId}`).forEach(icon => {
+                if(isFav) { icon.style.fill = 'var(--accent)'; icon.style.stroke = 'var(--accent)'; } else { icon.style.fill = 'none'; icon.style.stroke = 'currentColor'; }
+            });
+            showToast(isFav ? "已收藏" : "已取消收藏");
+        } else { showToast("操作失败", true); }
+    }
+
+    function getHeartSvg(songId) {
+        const isFav = userFavorites.includes(songId);
+        return `<svg class="fav-icon-${songId}" viewBox="0 0 24 24" style="width:20px; height:20px; stroke:${isFav ? 'var(--accent)' : 'currentColor'}; stroke-width:2; fill:${isFav ? 'var(--accent)' : 'none'}; transition:0.2s;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>`;
     }
 
     // --- HOME RENDERING ---
@@ -481,39 +501,24 @@
         const banDiv = document.getElementById('homeBanners');
         if(banDiv) {
             banDiv.innerHTML = '';
-            if(banners.some(b => b)) {
-                banners.forEach(b => { if(b) banDiv.innerHTML += `<img src="${b}">`; });
-            }
+            if(banners.some(b => b)) { banners.forEach(b => { if(b) banDiv.innerHTML += `<img src="${b}">`; }); }
         }
 
         const container = document.getElementById('homeContentAreas');
-        if(!container) return;
-        container.innerHTML = '';
+        if(!container) return; container.innerHTML = '';
 
         if(users && users.length) {
             const vips = users.filter(u => u.isVip);
-            vips.sort((a,b) => {
-                const cA = allSongs.filter(s => s.uploader === a.username).length;
-                const cB = allSongs.filter(s => s.uploader === b.username).length;
-                return cB - cA;
-            });
-
+            vips.sort((a,b) => { const cA = allSongs.filter(s => s.uploader === a.username).length; const cB = allSongs.filter(s => s.uploader === b.username).length; return cB - cA; });
             if(vips.length > 0) {
                 let djHtml = `<div class="section-header"><h3>热门 DJ</h3></div><div class="dj-scroll-container">`;
                 vips.forEach((v, i) => {
                     const count = allSongs.filter(s => s.uploader === v.username).length;
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
                     const pfp = v.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                    djHtml += `
-                        <div class="dj-card">
-                            ${rClass ? `<div class="dj-rank ${rClass}">${i+1}</div>` : ''}
-                            <img src="${pfp}">
-                            <div class="dj-name truncate">${v.djName || v.username}</div>
-                            <div class="dj-count">${count} 首作品</div>
-                        </div>`;
+                    djHtml += `<div class="dj-card">${rClass ? `<div class="dj-rank ${rClass}">${i+1}</div>` : ''}<img src="${pfp}"><div class="dj-name truncate">${v.djName || v.username}</div><div class="dj-count">${count} 首作品</div></div>`;
                 });
-                djHtml += `</div>`;
-                container.innerHTML += djHtml;
+                container.innerHTML += djHtml + `</div>`;
             }
         }
 
@@ -527,38 +532,11 @@
         });
     }
 
-    function toggleFavorite(e, songId) {
-        e.stopPropagation();
-        if(!username) return window.location.href = '/register.html';
-        const isFav = userFavorites.includes(songId);
-        
-        // Optimistic UI Update
-        if(isFav) { userFavorites = userFavorites.filter(id => id !== songId); showToast("取消收藏"); } 
-        else { userFavorites.push(songId); showToast("收藏成功"); }
-        
-        // Re-render UI elements holding this heart
-        const btns = document.querySelectorAll(`.fav-btn-${songId}`);
-        btns.forEach(btn => {
-            btn.innerHTML = userFavorites.includes(songId) ? 
-                `<svg viewBox="0 0 24 24" style="width:16px;fill:var(--danger);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` : 
-                `<svg viewBox="0 0 24 24" style="width:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-            if(userFavorites.includes(songId)) btn.classList.add('active'); else btn.classList.remove('active');
-        });
-
-        // Backend Sync
-        const method = isFav ? 'DELETE' : 'POST';
-        const endpoint = isFav ? `/api/users/${username}/favorites/${songId}` : `/api/users/${username}/favorites`;
-        fetch(endpoint, { method, headers: {'Content-Type':'application/json'}, body: isFav ? null : JSON.stringify({songId}) });
-    }
-
     function generateSongGridHtml(title, songs, filterId) {
         const top9 = songs.slice(0, 9);
         let html = `<div class="section-header"><h3>${title}</h3><span onclick="openMoreSongs('${title}', '${filterId}')">更多 ></span></div><div class="home-song-grid">`;
         top9.forEach(s => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            const isFav = userFavorites.includes(s.id);
-            const favIcon = isFav ? `<svg viewBox="0 0 24 24" style="width:16px;fill:var(--danger);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` : `<svg viewBox="0 0 24 24" style="width:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-            
             html += `
                 <div class="home-song-row-card" onclick="openSong('${s.id}')">
                     <img src="${cover}">
@@ -566,44 +544,27 @@
                         <div class="title truncate">${s.filename}</div>
                         <div class="sub truncate">👑 ${s.uploader || 'FULLKIK'}</div>
                     </div>
-                    <div class="price">💎 ${s.price||0} <button class="fav-btn-small fav-btn-${s.id} ${isFav?'active':''}" onclick="toggleFavorite(event, '${s.id}')" style="margin-left:5px;">${favIcon}</button></div>
-                </div>
-            `;
+                    <div class="price">💎 ${s.price||0} <span style="margin-left:5px;" onclick="toggleFavorite('${s.id}', event)">${getHeartSvg(s.id)}</span></div>
+                </div>`;
         });
-        html += `</div>`;
-        return html;
+        return html + `</div>`;
     }
 
     // --- RANKING LIST (排行榜) ---
     function renderRanking() {
-        const listDiv = document.getElementById('rankingList');
-        listDiv.innerHTML = '';
-        
-        let rankedSongs = [...allSongs]
-            .filter(s => s.status === 'APPROVED')
-            .sort((a, b) => (b.downloads || 0) - (a.downloads || 0))
-            .slice(0, 50); 
-
-        if(rankedSongs.length === 0) {
-            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排行榜数据</div>`;
-            return;
-        }
+        const listDiv = document.getElementById('rankingList'); listDiv.innerHTML = '';
+        let rankedSongs = [...allSongs].filter(s => s.status === 'APPROVED').sort((a, b) => (b.downloads || 0) - (a.downloads || 0)).slice(0, 50); 
+        if(rankedSongs.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无排行榜数据</div>`; return; }
 
         rankedSongs.forEach((s, index) => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             const rankClass = index === 0 ? 'rank-gold' : index === 1 ? 'rank-silver' : index === 2 ? 'rank-bronze' : 'rank-normal';
             const isPurchased = username ? userPurchases.some(p => p.songId === s.id) : false;
-            const isFav = userFavorites.includes(s.id);
-            const favIcon = isFav ? `<svg viewBox="0 0 24 24" style="width:16px;fill:var(--danger);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` : `<svg viewBox="0 0 24 24" style="width:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
             
             let priceHtml = '';
-            if(isPurchased) {
-                priceHtml = `<div style="color:var(--success); font-size:12px; border:1px solid var(--success); padding:2px 8px; border-radius:12px; white-space:nowrap;">已购买</div>`;
-            } else if(s.price === 0) {
-                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">免费下载</div>`;
-            } else {
-                priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price}</div>`;
-            }
+            if(isPurchased) { priceHtml = `<div style="color:var(--success); font-size:12px; border:1px solid var(--success); padding:2px 8px; border-radius:12px; white-space:nowrap;">已购买</div>`; } 
+            else if(s.price === 0) { priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">免费下载</div>`; } 
+            else { priceHtml = `<div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price}</div>`; }
 
             listDiv.innerHTML += `
                 <div class="list-song-row" onclick="openSong('${s.id}')">
@@ -616,11 +577,9 @@
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:15px; flex-shrink:0;">
-                        ${priceHtml}
-                        <button class="fav-btn-small fav-btn-${s.id} ${isFav?'active':''}" onclick="toggleFavorite(event, '${s.id}')">${favIcon}</button>
+                        ${priceHtml} <span onclick="toggleFavorite('${s.id}', event)">${getHeartSvg(s.id)}</span>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     }
 
@@ -645,9 +604,6 @@
 
         paged.forEach(s => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            const isFav = userFavorites.includes(s.id);
-            const favIcon = isFav ? `<svg viewBox="0 0 24 24" style="width:16px;fill:var(--danger);"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>` : `<svg viewBox="0 0 24 24" style="width:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
-
             listDiv.innerHTML += `
                 <div class="list-song-row" onclick="openSong('${s.id}')">
                     <div style="display:flex; align-items:center; gap:15px; width:70%;">
@@ -657,12 +613,8 @@
                             <div class="truncate" style="font-size:11px; color:var(--text-muted);">👑 ${s.uploader || 'FULLKIK'}</div>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price||0}</div>
-                        <button class="fav-btn-small fav-btn-${s.id} ${isFav?'active':''}" onclick="toggleFavorite(event, '${s.id}')">${favIcon}</button>
-                    </div>
-                </div>
-            `;
+                    <div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price||0} <span style="margin-left:10px;" onclick="toggleFavorite('${s.id}', event)">${getHeartSvg(s.id)}</span></div>
+                </div>`;
         });
 
         const pagDiv = document.getElementById('moreSongsPagination');
@@ -677,7 +629,7 @@
         pagDiv.innerHTML = pagHtml;
     }
 
-    // --- SONG DETAILS ---
+    // --- GENRES & SONGS ---
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
@@ -692,13 +644,13 @@
             actionsDiv.innerHTML = `
                 <a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>
                 <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-muted); padding:10px 20px; border-radius:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; cursor:default;">已购买</div>
+                <div style="margin-left:15px; display:flex; align-items:center; cursor:pointer;" onclick="toggleFavorite('${id}', event)">${getHeartSvg(id)}</div>
             `; 
         } else {
             const btnText = price === 0 ? "免费下载" : `购买 💎 ${price}`;
             actionsDiv.innerHTML = `
-                <button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})">
-                    ${btnText}
-                </button>
+                <button class="btn-buy-big" onclick="promptPurchase('${id}', '${currentSong.filename.replace(/'/g, "\\'")}', '/api/stream/${currentSong.id}', ${price})">${btnText}</button>
+                <div style="display:flex;align-items:center;margin-left:15px;cursor:pointer;" onclick="toggleFavorite('${id}', event)">${getHeartSvg(id)}</div>
                 <div style="display:flex;align-items:center;margin-left:15px;color:var(--text-muted);font-size:12px;">${dict[currentLang].previewLimit}</div>
             `;
         }
@@ -716,7 +668,14 @@
     function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
 
-    function updateTokenUI() { if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens; }
+    function updateTokenUI() { if(document.getElementById('navTokenDisplay')) document.getElementById('navTokenDisplay').innerText = userTokens; }
+    
+    async function executeRealTopup() {
+        showGlobalLoader("正在处理订单...");
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; updateTokenUI(); hideGlobalLoader(); showToast(`充值完成！`); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+    }
+
     function promptPurchase(songId, songName, filepath, price) { 
         if(!username) return window.location.href = '/register.html'; 
         if(price === 0) return executePurchase(songId, songName, filepath, 0); 
@@ -725,6 +684,7 @@
         document.getElementById('purchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">${dict[currentLang].cancel}</button><button class="modal-btn" onclick="executePurchase('${songId}', '${songName.replace(/'/g, "\\'")}', '${filepath}', ${price})" style="color:var(--accent-light);">Confirm</button>`; 
         document.getElementById('purchaseModal').style.display = 'flex'; 
     }
+    
     async function executePurchase(songId, songName, filepath, price) { 
         showGlobalLoader("正在处理订单..."); document.getElementById('purchaseActions').innerHTML = ''; 
         const res = await fetch(`${API_URL}/users/${username}/purchase`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({songId}) }); 
