@@ -10,6 +10,9 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
+// ==========================================
+// 1. MIDDLEWARE & CONFIGURATION
+// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -54,11 +57,14 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML PAGE ROUTES ---
+// ==========================================
+// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -88,7 +94,9 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
+// ==========================================
+// 3. AUTHENTICATION & USER MANAGEMENT
+// ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -111,8 +119,8 @@ app.post('/api/register', async (req, res) => {
         const isEmail = contact.includes('@');
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [],
-            isVip: false, role: 'NORMAL', wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], 
+            role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
@@ -136,15 +144,15 @@ app.get('/api/users/:username', async (req, res) => {
     const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
     if (doc.exists) {
         if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
-        res.json(doc.data());
+        let data = doc.data(); delete data.password;
+        res.json(data);
     } else res.status(404).send('User not found');
 });
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data();
-            delete data.password; 
+            let data = d.data(); delete data.password; 
             return data;
         });
         res.json(users); 
@@ -162,39 +170,36 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 4. FOLLOWERS, FAVORITES, TOPUPS & PURCHASES
-// ==========================================
 app.post('/api/users/:username/follow', async (req, res) => {
     try {
         const { targetUser } = req.body;
-        const currentUserId = req.params.username.toLowerCase();
-        const targetId = targetUser.toLowerCase();
-
-        const userRef = db.collection('users').doc(currentUserId);
-        const targetRef = db.collection('users').doc(targetId);
-
-        const [userDoc, targetDoc] = await Promise.all([userRef.get(), targetRef.get()]);
-        if (!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
+        if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
+        
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const targetRef = db.collection('users').doc(targetUser.toLowerCase());
+        
+        const userDoc = await userRef.get(); const targetDoc = await targetRef.get();
+        if(!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
 
         let following = userDoc.data().following || [];
         let followers = targetDoc.data().followers || [];
 
-        if (following.includes(targetUser)) {
+        if(following.includes(targetUser)) {
             following = following.filter(u => u !== targetUser);
-            followers = followers.filter(u => u !== req.params.username);
+            followers = followers.filter(u => u !== userDoc.data().username);
         } else {
             following.push(targetUser);
-            followers.push(req.params.username);
+            followers.push(userDoc.data().username);
         }
 
-        await userRef.update({ following });
-        await targetRef.update({ followers });
-
-        res.json({ success: true, following, followersCount: followers.length });
+        await userRef.update({ following }); await targetRef.update({ followers });
+        res.json({ success: true, following });
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// ==========================================
+// 4. FAVORITES, TOPUPS & PURCHASES
+// ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -280,10 +285,11 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 // ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
-        const role = req.body.role || (req.body.isVip ? 'VIP' : 'NORMAL');
-        const isVip = role === 'VIP' || role === 'PRODUCER';
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: isVip, role: role });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${role}`);
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
+            isVip: req.body.role === 'VIP' || req.body.role === 'PRODUCER', 
+            role: req.body.role || 'NORMAL' 
+        });
+        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.role}`);
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
