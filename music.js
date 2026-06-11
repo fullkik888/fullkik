@@ -10,9 +10,6 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
-// ==========================================
-// 1. MIDDLEWARE & CONFIGURATION
-// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -57,9 +54,7 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
-// ==========================================
+// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -94,9 +89,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
-// ==========================================
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -119,7 +112,7 @@ app.post('/api/register', async (req, res) => {
         const isEmail = contact.includes('@');
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], playlists: [], following: [], followers: [], 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
             role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
@@ -170,9 +163,85 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 4. FAVORITES, PLAYLISTS, TOPUPS & PURCHASES
-// ==========================================
+// --- USER PLAYLISTS ---
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const { name, songs } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
+        let playlists = userDoc.data().playlists || [];
+        const newPlaylist = { id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7), name, songs: songs || [], createdAt: new Date().toISOString() };
+        playlists.push(newPlaylist);
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const { name, songs } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
+        let playlists = userDoc.data().playlists || [];
+        const index = playlists.findIndex(p => p.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+
+        if(name !== undefined) playlists[index].name = name;
+        if(songs !== undefined) playlists[index].songs = songs;
+
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
+        let playlists = userDoc.data().playlists || [];
+        playlists = playlists.filter(p => p.id !== req.params.playlistId);
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- FOLLOW SYSTEM ---
+app.post('/api/users/:username/follow', async (req, res) => {
+    try {
+        const { targetUser } = req.body;
+        if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
+        
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const targetRef = db.collection('users').doc(targetUser.toLowerCase());
+        
+        const userDoc = await userRef.get(); const targetDoc = await targetRef.get();
+        if(!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
+
+        let following = userDoc.data().following || [];
+        let followers = targetDoc.data().followers || [];
+
+        if(following.includes(targetUser)) {
+            following = following.filter(u => u !== targetUser);
+            followers = followers.filter(u => u !== userDoc.data().username);
+        } else {
+            following.push(targetUser);
+            followers.push(userDoc.data().username);
+        }
+
+        await userRef.update({ following }); await targetRef.update({ followers });
+        res.json({ success: true, following });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- FAVORITES, TOPUPS & PURCHASES ---
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -188,53 +257,6 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
-
-// 🛠️ PLAYLIST ENGINE ENDPOINTS
-app.post('/api/users/:username/playlists', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        if(!name) return res.status(400).send("Name required");
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        let playlists = userDoc.data().playlists || [];
-        
-        const newPlaylist = { id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase(), name, songs: songs || [], createdAt: new Date().toISOString() };
-        playlists.push(newPlaylist);
-        
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        let playlists = userDoc.data().playlists || [];
-        
-        const index = playlists.findIndex(p => p.id === req.params.playlistId);
-        if(index === -1) return res.status(404).send("Playlist not found");
-        
-        if(name) playlists[index].name = name;
-        if(songs) playlists[index].songs = songs;
-        
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        let playlists = userDoc.data().playlists || [];
-        playlists = playlists.filter(p => p.id !== req.params.playlistId);
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
@@ -300,37 +322,7 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// --- FOLLOW SYSTEM ---
-app.post('/api/users/:username/follow', async (req, res) => {
-    try {
-        const { targetUser } = req.body;
-        if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
-        
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const targetRef = db.collection('users').doc(targetUser.toLowerCase());
-        
-        const userDoc = await userRef.get(); const targetDoc = await targetRef.get();
-        if(!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
-
-        let following = userDoc.data().following || [];
-        let followers = targetDoc.data().followers || [];
-
-        if(following.includes(targetUser)) {
-            following = following.filter(u => u !== targetUser);
-            followers = followers.filter(u => u !== userDoc.data().username);
-        } else {
-            following.push(targetUser);
-            followers.push(userDoc.data().username);
-        }
-
-        await userRef.update({ following }); await targetRef.update({ followers });
-        res.json({ success: true, following });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-// ==========================================
-// 5. ADMIN USER MANAGEMENT & LOGS
-// ==========================================
+// --- ADMIN USER MANAGEMENT & LOGS ---
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
