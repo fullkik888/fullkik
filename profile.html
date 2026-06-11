@@ -20,9 +20,6 @@
         .lang-toggle:hover { color: white; border-color: white;}
 
         .header-right { display: flex; align-items: center; gap: 15px; }
-        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
-
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         
@@ -58,7 +55,7 @@
         .profile-pic-large-wrap .overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; opacity: 0; transition: 0.2s;}
         .profile-pic-large-wrap:hover .overlay { opacity: 1; }
         
-        .list-btn { background:var(--card-bg); border:1px solid var(--border-color); padding:20px; border-radius:12px; margin-bottom:15px; cursor:pointer; font-weight:bold; transition:0.2s;}
+        .list-btn { background:var(--card-bg); border:1px solid var(--border-color); padding:20px; border-radius:12px; margin-bottom:15px; cursor:pointer; font-weight:bold; transition:0.2s; display:flex; justify-content:space-between; align-items:center;}
         .list-btn:hover { border-color:var(--accent-light); }
 
         .form-section { background: rgba(255,255,255,0.02); border-radius: 20px; padding: 30px; border: 1px solid var(--border-color); margin-bottom: 30px; width: 100%; box-sizing:border-box;}
@@ -251,6 +248,7 @@
 
         <div class="list-btn" onclick="switchView('library')">🎵 已购歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
         <div class="list-btn" onclick="switchView('library', 'FAV')">❤️ 收藏歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
+        <div class="list-btn" onclick="switchView('playlists')">🎧 我的歌单 <span style="float:right; color:var(--text-muted);">></span></div>
 
         <div class="form-section" id="vipRegSection" style="margin-top:40px;">
             <h3 data-i18n="vipUpgradeTitle">升级为 VIP 创作者</h3>
@@ -283,17 +281,26 @@
         </div>
     </div>
 
-    <div id="view-library" class="view-section">
+    <div id="view-playlists" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0;">我的音乐</h2>
+            <h2 style="margin:0;">我的歌单</h2>
             <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
         </div>
-        <div class="vip-tabs">
+        <button class="btn-submit" style="margin-bottom:20px; background:rgba(255,255,255,0.05); border:1px dashed var(--border-color); color:var(--text-muted);" onclick="document.getElementById('createPlaylistModal').style.display='flex'">+ 创建歌单</button>
+        <div id="playlistDirectoryList"></div>
+    </div>
+
+    <div id="view-library" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;" id="libraryTitle">我的音乐</h2>
+            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+        </div>
+        <div class="vip-tabs" id="libTabs">
             <button class="vip-tab active" onclick="renderLibrary('BUY')" id="libTabBUY">已购买</button>
             <button class="vip-tab" onclick="renderLibrary('FAV')" id="libTabFAV">我的收藏</button>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-            <button class="btn-text-action" onclick="savePlaylistOrder()">💾 保存排序 (Save Order)</button>
+            <button class="btn-text-action" onclick="savePlaylistOrder()" id="btnSaveOrder">💾 保存排序</button>
         </div>
         <div id="libraryList"></div>
     </div>
@@ -482,9 +489,24 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="createPlaylistModal">
+    <div class="modal-box">
+        <div class="modal-content">
+            <h3 style="margin: 0 0 15px 0; text-align:center;">创建歌单</h3>
+            <label class="input-label">歌单名称</label>
+            <input type="text" id="plNameInput" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:15px;" placeholder="例如: 车载电音">
+            
+            <label class="input-label">选择歌曲 (从已购买中选择)</label>
+            <div id="plSongSelector" style="max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:10px;">
+                </div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeCreatePlaylist()" style="color:var(--accent-light);">创建</button></div>
+    </div>
+</div>
+
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [], userFavorites = [];
+    let allGenres = [], allSongs = [], userPurchases = [], userTopups = [], userFavorites = [], userPlaylists = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     if(!username) window.location.href = '/register.html';
@@ -515,7 +537,7 @@
         try {
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
-                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || [];
+                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || []; userPlaylists = data.playlists || [];
                 
                 const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                 document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
@@ -536,7 +558,7 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            setCurrency('RMB'); populateGenreDropdowns(); applyLang(); 
+            setCurrency('RMB'); populateGenreDropdowns(); populatePlaylistCreator(); applyLang(); 
             
             const urlParams = new URLSearchParams(window.location.search);
             const viewParam = urlParams.get('view');
@@ -558,6 +580,7 @@
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory('ALL');
         if(view === 'library') renderLibrary(arg || 'BUY');
+        if(view === 'playlists') renderPlaylistsDirectory();
     }
 
     async function executeNameChange() {
@@ -656,20 +679,61 @@
         if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
     }
 
-    // --- PLAYLIST LIBRARY (WITH QUEUE ENGINE) ---
+    // --- PLAYLIST ENGINE (我的歌单) ---
+    function renderPlaylistsDirectory() {
+        const listDiv = document.getElementById('playlistDirectoryList'); listDiv.innerHTML = '';
+        if(userPlaylists.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无歌单</div>`; return; }
+        
+        userPlaylists.forEach(pl => {
+            const count = (pl.songIds || []).length;
+            listDiv.innerHTML += `
+                <div class="list-btn" onclick="openSinglePlaylist('${pl.id}')" style="display:flex; justify-content:space-between;">
+                    <div>${pl.name} <span style="font-size:11px; color:var(--text-muted); font-weight:normal; margin-left:10px;">${count} 首</span></div>
+                    <span style="color:var(--text-muted);">></span>
+                </div>`;
+        });
+    }
+
+    function populatePlaylistCreator() {
+        const sel = document.getElementById('plSongSelector'); sel.innerHTML = '';
+        userPurchases.forEach(p => {
+            sel.innerHTML += `<label style="display:flex; align-items:center; gap:10px; font-size:13px; color:white; cursor:pointer;"><input type="checkbox" class="pl-cb-new" value="${p.songId}"> ${p.songName}</label>`;
+        });
+        if(userPurchases.length === 0) sel.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">无已购歌曲</div>`;
+    }
+
+    async function executeCreatePlaylist() {
+        const name = document.getElementById('plNameInput').value.trim();
+        const selectedIds = Array.from(document.querySelectorAll('.pl-cb-new:checked')).map(cb => cb.value);
+        if(!name) return showToast("请输入歌单名称");
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/users/${username}/playlists`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, songIds: selectedIds }) });
+        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; closeModals(); renderPlaylistsDirectory(); showToast("创建成功"); }
+        hideGlobalLoader();
+    }
+
+    // --- LIBRARY (Purchases, Favs, Single Playlist) ---
     let currentPlaylist = [];
     let currentPlayIndex = 0;
     let isLooping = false;
     let isShuffle = false;
     const coreAudio = document.getElementById('coreAudio');
 
+    let viewingPlaylistId = null;
+
     function renderLibrary(filter) {
-        document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active');
-        document.getElementById(`libTab${filter}`).classList.add('active');
+        document.getElementById('libraryTitle').innerText = '我的音乐';
+        document.getElementById('libTabs').style.display = 'flex';
+        document.getElementById('btnSaveOrder').style.display = 'block';
+
+        if(filter === 'BUY' || filter === 'FAV') {
+            document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active');
+            document.getElementById(`libTab${filter}`).classList.add('active');
+            currentPlaylist = filter === 'BUY' ? userPurchases.map(p => ({...p, id: p.songId})) : allSongs.filter(s => userFavorites.includes(s.id));
+            viewingPlaylistId = null;
+        }
 
         const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
-        currentPlaylist = filter === 'BUY' ? userPurchases.map(p => ({...p, id: p.songId})) : allSongs.filter(s => userFavorites.includes(s.id));
-        
         if(currentPlaylist.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
 
         currentPlaylist.forEach((s, index) => {
@@ -687,6 +751,20 @@
         });
     }
 
+    function openSinglePlaylist(plId) {
+        const pl = userPlaylists.find(p => p.id === plId); if(!pl) return;
+        document.getElementById('libraryTitle').innerText = pl.name;
+        document.getElementById('libTabs').style.display = 'none';
+        document.getElementById('btnSaveOrder').style.display = 'block';
+        
+        currentPlaylist = [];
+        pl.songIds.forEach(id => { const song = allSongs.find(s => s.id === id); if(song) currentPlaylist.push(song); });
+        viewingPlaylistId = pl.id;
+        
+        renderLibrary('PLAYLIST');
+        switchView('library');
+    }
+
     function reorderPlaylist(oldIndex, newSeqStr, filter) {
         let newIndex = parseInt(newSeqStr) - 1;
         if(isNaN(newIndex) || newIndex < 0) newIndex = 0;
@@ -700,7 +778,12 @@
     }
 
     async function savePlaylistOrder() {
-        if(document.getElementById('libTabBUY').classList.contains('active')) {
+        if(viewingPlaylistId) {
+            showGlobalLoader("Saving Order...");
+            const newIds = currentPlaylist.map(s => s.id);
+            await fetch(`${API_URL}/users/${username}/playlists/${viewingPlaylistId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songIds: newIds }) });
+            hideGlobalLoader(); showToast("歌单顺序已保存");
+        } else if(document.getElementById('libTabBUY').classList.contains('active')) {
             showGlobalLoader("Saving Order...");
             await fetch(`${API_URL}/users/${username}/update-purchases-order`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ purchases: userPurchases }) });
             hideGlobalLoader(); showToast("顺序已保存");
