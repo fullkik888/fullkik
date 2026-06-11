@@ -120,6 +120,7 @@ app.post('/api/register', async (req, res) => {
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
             tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], 
+            playlists: [], // NEW: Initialize Playlists Array
             role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
@@ -198,7 +199,7 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. FAVORITES, TOPUPS & PURCHASES
+// 4. FAVORITES, PLAYLISTS, TOPUPS & PURCHASES
 // ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
@@ -215,6 +216,46 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
+
+// 🛠️ NEW: Endpoint to Create and Manage Playlists
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const { name, songIds } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
+        let playlists = userDoc.data().playlists || [];
+        const newPlaylist = {
+            id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase(),
+            name: name,
+            songIds: songIds || [],
+            createdAt: new Date().toISOString()
+        };
+        playlists.push(newPlaylist);
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+        
+        let playlists = userDoc.data().playlists || [];
+        const index = playlists.findIndex(pl => pl.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+
+        playlists[index].songIds = req.body.songIds; // Update the order/content
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
