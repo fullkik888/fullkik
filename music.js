@@ -72,29 +72,22 @@ app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
-        const isDownload = req.query.download === 'true';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
 
-        // Anti-theft block (allow downloads if query param is explicitly set)
-        if (!isFromApp && !isAudioTag && !isDownload) {
+        if (!isFromApp && !isAudioTag) {
             return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
         if (!songDoc.exists) return res.status(404).send('Song not found');
         
-        const fetchHeaders = {}; if (req.headers.range && !isDownload) fetchHeaders.Range = req.headers.range;
+        const fetchHeaders = {}; if (req.headers.range) fetchHeaders.Range = req.headers.range;
         const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
         if (!response.ok) throw new Error('Cloudinary fetch failed');
 
         const contentType = response.headers.get('content-type'); const contentLength = response.headers.get('content-length'); const contentRange = response.headers.get('content-range'); const acceptRanges = response.headers.get('accept-ranges');
         if (contentType) res.setHeader('Content-Type', contentType); if (contentLength) res.setHeader('Content-Length', contentLength); if (contentRange) res.setHeader('Content-Range', contentRange); if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
-
-        // Force download behavior
-        if(isDownload) {
-            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(songDoc.data().filename)}"`);
-        }
 
         res.status(response.status); 
         Readable.fromWeb(response.body).pipe(res);
@@ -177,6 +170,9 @@ app.put('/api/users/:username/change-username', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// ==========================================
+// 4. FAVORITES, PLAYLISTS, TOPUPS & PURCHASES
+// ==========================================
 app.post('/api/users/:username/follow', async (req, res) => {
     try {
         const { targetUser } = req.body;
@@ -204,9 +200,6 @@ app.post('/api/users/:username/follow', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 4. FAVORITES, TOPUPS & PURCHASES & PLAYLISTS
-// ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -222,6 +215,56 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
+
+// 🛠️ PLAYLIST API ENDPOINTS
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        
+        const newPlaylist = {
+            id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7),
+            name: req.body.name || '未命名歌单',
+            songs: req.body.songs || [],
+            createdAt: new Date().toISOString()
+        };
+        
+        playlists.push(newPlaylist);
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        
+        const index = playlists.findIndex(p => p.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+        
+        if(req.body.name) playlists[index].name = req.body.name;
+        if(req.body.songs) playlists[index].songs = req.body.songs;
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        
+        playlists = playlists.filter(p => p.id !== req.params.playlistId);
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
@@ -285,56 +328,6 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ purchases: newOrder });
         res.json({ success: true, purchases: newOrder });
     } catch(e) { res.status(500).send(e.message); }
-});
-
-// --- PLAYLISTS API ---
-app.post('/api/users/:username/playlists', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if(!userDoc.exists) return res.status(404).send('User not found');
-
-        let playlists = userDoc.data().playlists || [];
-        const newPl = { id: 'pl_' + Date.now(), name: name || 'New Playlist', songs: songs || [], createdAt: new Date().toISOString() };
-        playlists.push(newPl);
-        
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if(!userDoc.exists) return res.status(404).send('User not found');
-
-        let playlists = userDoc.data().playlists || [];
-        const index = playlists.findIndex(p => p.id === req.params.playlistId);
-        if(index === -1) return res.status(404).send('Playlist not found');
-
-        if(name !== undefined) playlists[index].name = name;
-        if(songs !== undefined) playlists[index].songs = songs;
-        
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if(!userDoc.exists) return res.status(404).send('User not found');
-
-        let playlists = userDoc.data().playlists || [];
-        playlists = playlists.filter(p => p.id !== req.params.playlistId);
-        
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) { res.status(500).send(e.message); }
 });
 
 // ==========================================
