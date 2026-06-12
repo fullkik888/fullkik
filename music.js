@@ -10,6 +10,9 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
+// ==========================================
+// 1. MIDDLEWARE & CONFIGURATION
+// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -31,6 +34,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
 }
 
+// Memory storage for immediate processing
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -54,12 +58,14 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// --- HTML ROUTES ---
+// ==========================================
+// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -89,7 +95,9 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// --- AUTH & USERS ---
+// ==========================================
+// 3. AUTHENTICATION & USER MANAGEMENT
+// ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -134,15 +142,12 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.get('/api/users/:username', async (req, res) => {
-    try {
-        const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
-        if (doc.exists) {
-            if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
-            let data = doc.data(); delete data.password;
-            if (!data.playlists) data.playlists = [];
-            res.json(data);
-        } else res.status(404).send('User not found');
-    } catch(e) { res.status(500).send(e.message); }
+    const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
+    if (doc.exists) {
+        if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
+        let data = doc.data(); delete data.password;
+        res.json(data);
+    } else res.status(404).send('User not found');
 });
 
 app.get('/api/all-users', async (req, res) => { 
@@ -194,7 +199,7 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. FAVORITES, PLAYLISTS, TOPUPS & PURCHASES
+// 4. FAVORITES, TOPUPS & PURCHASES
 // ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
@@ -211,64 +216,6 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
-
-// --- PLAYLIST ENGINE ---
-app.post('/api/users/:username/playlists', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        if(!name) return res.status(400).send("Playlist name required");
-        
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send("User not found");
-
-        let playlists = doc.data().playlists || [];
-        const newPlaylist = {
-            id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7),
-            name: name,
-            songs: songs || [],
-            createdAt: new Date().toISOString()
-        };
-        playlists.push(newPlaylist);
-        
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send("User not found");
-
-        let playlists = doc.data().playlists || [];
-        let pIndex = playlists.findIndex(p => p.id === req.params.playlistId);
-        if(pIndex === -1) return res.status(404).send("Playlist not found");
-
-        if(name !== undefined) playlists[pIndex].name = name;
-        if(songs !== undefined) playlists[pIndex].songs = songs;
-
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send("User not found");
-
-        let playlists = doc.data().playlists || [];
-        playlists = playlists.filter(p => p.id !== req.params.playlistId);
-
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch(e) { res.status(500).send(e.message); }
-});
-
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
@@ -325,6 +272,65 @@ app.post('/api/users/:username/purchase', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+// ==========================================
+// 5. PLAYLIST SYSTEM (NEW)
+// ==========================================
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const { name, songIds } = req.body;
+        if(!name) return res.status(400).send("Playlist name is required");
+
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        const playlists = userDoc.data().playlists || [];
+        const newPlaylist = {
+            id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7),
+            name: name,
+            songs: songIds || [],
+            createdAt: new Date().toISOString()
+        };
+        playlists.push(newPlaylist);
+        
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const { name, songs } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        let playlists = userDoc.data().playlists || [];
+        const index = playlists.findIndex(p => p.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+
+        if(name !== undefined) playlists[index].name = name;
+        if(songs !== undefined) playlists[index].songs = songs;
+
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        let playlists = userDoc.data().playlists || [];
+        playlists = playlists.filter(p => p.id !== req.params.playlistId);
+
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.put('/api/users/:username/update-purchases-order', async (req, res) => {
     try {
         const newOrder = req.body.purchases;
@@ -335,7 +341,7 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 });
 
 // ==========================================
-// 5. ADMIN USER MANAGEMENT & LOGS
+// 6. ADMIN USER MANAGEMENT & LOGS
 // ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
@@ -435,7 +441,7 @@ app.delete('/api/transactions/all', async (req, res) => {
 });
 
 // ==========================================
-// 6. GENRES AND SONGS
+// 7. GENRES AND SONGS
 // ==========================================
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
