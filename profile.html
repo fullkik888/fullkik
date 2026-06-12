@@ -12,21 +12,21 @@
 
         /* HEADER */
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration:none;}
-        .nav-tabs { display: flex; gap: 30px; align-items: center; overflow-x:auto; white-space:nowrap; scrollbar-width:none;}
-        .nav-tabs::-webkit-scrollbar { display:none; }
+        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+        .nav-tabs { display: flex; gap: 30px; align-items: center; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration:none;}
         .nav-tab:hover { color: white; }
-        .nav-tab.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .lang-toggle { font-size: 13px; font-weight: bold; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-muted); transition: 0.2s;}
+        .lang-toggle:hover { color: white; border-color: white;}
 
         .header-right { display: flex; align-items: center; gap: 15px; }
-        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
-
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
-        .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
-        .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        
+        .profile-dropdown { position: absolute; top: 70px; right: 40px; background: rgba(20, 10, 10, 0.95); backdrop-filter: blur(30px); border: 1px solid var(--border-color); border-radius: 14px; width: 160px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: none; flex-direction: column; overflow: hidden;}
+        .profile-dropdown.show { display: flex; animation: popIn 0.2s; }
+        .dropdown-item { padding: 14px 20px; color: var(--text-main); font-size: 14px; font-weight: 500; border-bottom: 1px solid var(--border-color); transition: 0.2s; cursor: pointer; background: none; border-left:none; border-right:none; border-top:none; text-align:left;}
+        .dropdown-item:hover { background: rgba(255,255,255,0.1); color: var(--accent-light); }
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 100px 20px; box-sizing: border-box; }
         
@@ -35,8 +35,9 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- GLOBAL LOADERS --- */
-        #profileLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; align-items:center; justify-content:center; flex-direction:column;}
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
+        .apple-spinner { width: 36px; height: 36px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
         .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
@@ -45,8 +46,6 @@
         @keyframes popUp { to { opacity:1; transform:translateY(0); } }
         @keyframes shake { 0%, 100% {transform: translateX(0);} 25%, 75% {transform: translateX(-5px);} 50% {transform: translateX(5px);} }
         .shake { animation: shake 0.2s ease-in-out; border-color: var(--danger) !important; box-shadow: 0 0 5px var(--danger); }
-        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
 
         /* --- PROFILE CENTER UI --- */
         .profile-banner { background: linear-gradient(135deg, #1c1010 0%, #0b0b0b 100%); border-radius: 20px; padding: 40px; display: flex; align-items: center; justify-content:space-between; border: 1px solid var(--border-color); margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
@@ -86,17 +85,6 @@
         .vip-btn-upload { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: white; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;}
         .vip-btn-upload:hover { border-color: var(--accent); background: rgba(128, 0, 0, 0.1); }
 
-        /* --- PLAYLIST CARDS --- */
-        .playlist-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:15px;}
-        .pl-card { background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:15px; cursor:pointer; transition:0.2s; position:relative;}
-        .pl-card:hover { border-color:var(--accent-light); transform:translateY(-2px); }
-        .pl-card .cover { width:100%; height:120px; background:#1a0f0f; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; font-size:30px; overflow:hidden;}
-        .pl-card .cover img { width:100%; height:100%; object-fit:cover; }
-        .pl-card .name { font-weight:bold; font-size:14px; margin-bottom:5px; color:white; }
-        .pl-card .count { font-size:11px; color:var(--text-muted); }
-        .pl-gear { position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.6); border-radius:50%; padding:5px; transition:0.2s; }
-        .pl-gear:hover { background:var(--accent); }
-
         /* --- HISTORY LISTS --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
@@ -105,6 +93,14 @@
         .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
         
+        /* PLAYLISTS */
+        .playlist-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px; }
+        .playlist-card { background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:20px; cursor:pointer; transition:0.2s; position:relative;}
+        .playlist-card:hover { border-color:var(--accent-light); transform:translateY(-3px); }
+        .pl-cover-placeholder { width:100%; aspect-ratio:1; background:rgba(0,0,0,0.4); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:40px; margin-bottom:10px; border:1px solid var(--border-color);}
+        .pl-title { font-weight:bold; font-size:16px; margin-bottom:5px; }
+        .pl-count { font-size:12px; color:var(--text-muted); }
+
         /* Persistent Global Audio Player */
         .global-player { position:fixed; bottom:0; left:0; width:100%; background:rgba(20, 10, 10, 0.95); backdrop-filter:blur(20px); border-top:1px solid var(--border-color); z-index:1000; padding:15px 40px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; display:none; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
         @keyframes slideUp { from{transform:translateY(100%);} to{transform:translateY(0);} }
@@ -141,7 +137,7 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;}
-        .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 380px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
+        .modal-box { background: rgba(30, 15, 15, 0.95); backdrop-filter: blur(30px); width: 100%; max-width: 480px; border-radius: 24px; text-align: center; border: 1px solid var(--border-color); animation: popIn 0.3s; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .modal-content { padding: 30px 20px; }
         .modal-actions { display: flex; border-top: 1px solid var(--border-color); }
@@ -149,10 +145,8 @@
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
 
-        /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
 
-        /* UPLOAD PAGE CSS */
         .upload-tabs { display:flex; margin-bottom:15px; border-bottom:1px solid var(--border-color);}
         .upload-tabs button { flex:1; background:none; border:none; color:var(--text-muted); padding:10px; cursor:pointer; border-bottom:2px solid transparent; transition:0.2s;}
         .upload-tabs button.active { color:white; border-bottom-color:var(--accent-light); font-weight:bold;}
@@ -177,11 +171,7 @@
         }
     </style>
 </head>
-<body>
-
-<div id="profileLoader">
-    <div class="content-loader-bar-wrap" style="width: 250px;"><div id="profileLoaderBar" class="loader-bar-fill" style="width:0%;"></div></div>
-</div>
+<body onclick="closeDropdowns(event)">
 
 <div id="vipUploadProgOverlay" class="modal-overlay" style="z-index:10005; flex-direction:column; background: rgba(0,0,0,0.8);">
     <div style="font-size:16px; margin-bottom:15px; color:var(--accent-light); font-weight:bold; letter-spacing:1px; animation: pulseFade 1s infinite;">努力上传歌曲 >w<</div>
@@ -201,9 +191,18 @@
 <div class="header-top">
     <a href="/music.html" class="logo-container">FULLKIK</a>
     <div class="nav-tabs" id="mainNavTabs">
-        <a href="/music.html" class="nav-tab">排行榜</a>
-        <a href="/profile.html?view=library" class="nav-tab">我的音乐</a>
-        <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
+        <a href="/music.html" class="nav-tab" data-i18n="store">返回首页</a>
+    </div>
+    <div class="header-right">
+        <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
+        <div style="position:relative;">
+            <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
+            <div class="profile-dropdown" id="profileDropdown">
+                <button class="dropdown-item" onclick="switchView('profile')" data-i18n="pCenter">个人中心</button>
+                <button class="dropdown-item" onclick="switchView('history')" data-i18n="pHist">个人消费</button>
+                <button class="dropdown-item" style="color: var(--danger);" onclick="logout()" data-i18n="logout">登出</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -213,135 +212,130 @@
             <div style="display:flex; align-items:center; gap:30px; flex-wrap:wrap; justify-content:center;">
                 <div class="profile-pic-large-wrap" onclick="document.getElementById('pfpUploadInput').click()">
                     <img id="profileBannerPic" src="">
-                    <div class="overlay">EDIT</div>
+                    <div class="overlay" data-i18n="editImg">EDIT</div>
                 </div>
                 <div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <h2 id="profileBannerName" style="margin:0; font-size:32px;">Username</h2>
                         <span id="profileBannerVipTag" style="display:none; color:#ffcc00; font-size:12px; font-weight:bold; border:1px solid #ffcc00; padding:2px 6px; border-radius:10px;">VIP</span>
                     </div>
-                    <div style="color:var(--text-muted); margin-top:5px; font-size:14px;">💎 <span id="profileBannerTokens">0</span> | 关注 0 | 粉丝 0</div>
+                    <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
+                        <svg viewBox="0 0 24 24" style="width:16px;fill:currentColor;"><path d="M8.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S9.1,13.5,8.5,13.5z M12.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S13.1,13.5,12.5,13.5z M20,10.5c0-4.1-4-7.5-9-7.5s-9,3.4-9,7.5c0,2.3,1.3,4.4,3.4,5.7l-0.9,2.8l3.2-1.6 c1.1,0.3,2.2,0.5,3.4,0.5C16,18,20,14.6,20,10.5z"/></svg> 微信: <span id="wechatIdText"></span>
+                    </div>
                 </div>
             </div>
-            <div>
-                <button class="btn-text-action" onclick="document.getElementById('editNameModal').style.display='flex'">⚙ 修改名称</button>
-                <button class="btn-text-action" id="btnVipCenterTop" style="display:none; margin-top:10px; background:var(--accent-light); color:white; border-color:var(--accent-light);" onclick="switchView('vip')">VIP 中心</button>
-            </div>
+            <button class="btn-text-action" onclick="document.getElementById('editNameModal').style.display='flex'">⚙ 修改名称</button>
         </div>
 
-        <div class="list-btn" onclick="switchView('library', 'BUY')">🎵 已购歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
-        <div class="list-btn" onclick="switchView('library', 'FAV')">❤️ 收藏歌曲 <span style="float:right; color:var(--text-muted);">></span></div>
-        <div class="list-btn" onclick="switchView('playlists')">📀 我的歌单 <span style="float:right; color:var(--text-muted);">></span></div>
-        
-        <div style="display:flex; gap:15px; margin-bottom:40px;">
-            <button class="btn-submit" style="background:rgba(255,255,255,0.05); color:white; border:1px solid var(--border-color);" onclick="switchView('history')">个人消费 (History)</button>
-            <button class="btn-submit" style="background:rgba(255,69,58,0.1); color:var(--danger); border:1px solid rgba(255,69,58,0.3);" onclick="logout()">退出登录 (Logout)</button>
+        <div style="display:flex; gap:15px; margin-bottom:30px; overflow-x:auto;">
+            <button class="vip-tab active" onclick="switchView('library', 'BUY')" style="font-size:18px;">已购买</button>
+            <button class="vip-tab" onclick="switchView('library', 'FAV')" style="font-size:18px;">收藏歌曲</button>
+            <button class="vip-tab" onclick="switchView('library', 'PL')" style="font-size:18px;">我的歌单</button>
         </div>
 
-        <div class="form-section" id="vipRegSection">
-            <h3>升级为 VIP 创作者</h3>
-            <p>设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。</p>
+        <div class="form-section" id="vipRegSection" style="margin-top:40px;">
+            <h3 data-i18n="vipUpgradeTitle">升级为 VIP 创作者</h3>
+            <p data-i18n="vipUpgradeSub">设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。</p>
             <div class="input-row">
-                <div class="input-col"><label>DJ 用户名</label><input type="text" id="vipDjName" class="input-field" placeholder="例如: 12Private"><div class="error-msg" id="errDj"></div></div>
-                <div class="input-col"><label>微信联系方式</label><input type="text" id="vipWechat" class="input-field" placeholder="请输入您的微信号"><div class="error-msg" id="errWechat"></div><div style="font-size:11px; color:var(--text-muted); margin-top:-5px;">购买者将通过微信联系您完成交易</div></div>
+                <div class="input-col"><label data-i18n="lblDj">DJ 用户名</label><input type="text" id="vipDjName" class="input-field" placeholder="例如: 12Private" data-placeholder="phDj"><div class="error-msg" id="errDj"></div></div>
+                <div class="input-col"><label data-i18n="lblWechat">微信联系方式</label><input type="text" id="vipWechat" class="input-field" placeholder="请输入您的微信号" data-placeholder="phWechat"><div class="error-msg" id="errWechat"></div><div style="font-size:11px; color:var(--text-muted); margin-top:-5px;" data-i18n="lblWechatSub">购买者将通过微信联系您完成交易</div></div>
             </div>
-            <button class="btn-submit" onclick="submitVipUpgrade()">升级VIP</button>
+            <button class="btn-submit" onclick="submitVipUpgrade()" data-i18n="btnVip">升级VIP</button>
         </div>
 
-        <div class="form-section" id="vipConfigSection" style="display:none;">
-            <h3>微信联系设置</h3>
+        <div class="form-section" id="vipConfigSection" style="display:none; margin-top:40px;">
+            <h3 data-i18n="lblWechatConfig">微信联系设置</h3>
             <div class="input-row" style="align-items:flex-start;">
-                <div class="input-col"><label>微信号</label><input type="text" id="configWechat" class="input-field"></div>
+                <div class="input-col"><label data-i18n="lblWechat">微信号</label><input type="text" id="configWechat" class="input-field"></div>
                 <div class="input-col" style="justify-content:center; padding-top:25px;">
-                    <label style="display:flex; align-items:center; gap:8px; color:white; font-size:14px; cursor:pointer;"><input type="checkbox" id="configWechatPub" style="width:16px;height:16px;accent-color:var(--accent);"> <span>公开显示微信号 (让买家可以联系您)</span></label>
-                    <div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:25px;">关闭后，微信号仅对您自己可见</div>
+                    <label style="display:flex; align-items:center; gap:8px; color:white; font-size:14px; cursor:pointer;"><input type="checkbox" id="configWechatPub" style="width:16px;height:16px;accent-color:var(--accent);"> <span data-i18n="lblWechatPub">公开显示微信号 (让买家可以联系您)</span></label>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:5px; margin-left:25px;" data-i18n="lblWechatPriv">关闭后，微信号仅对您自己可见</div>
                 </div>
             </div>
-            <button class="btn-submit" onclick="saveWechatConfig()">保存微信设置</button>
+            <button class="btn-submit" onclick="saveWechatConfig()" data-i18n="btnSaveWechat">保存微信设置</button>
         </div>
 
         <div class="form-section">
-            <h3>修改密码</h3>
-            <div class="input-col" style="margin-bottom:15px;"><label>当前密码</label><input type="password" id="pwCurrent" class="input-field"></div>
-            <div class="input-col" style="margin-bottom:15px;"><label>新密码</label><input type="password" id="pwNew" class="input-field"></div>
-            <div class="input-col" style="margin-bottom:20px;"><label>再次输入新密码</label><input type="password" id="pwConfirm" class="input-field"><div class="error-msg" id="errPw"></div></div>
-            <button class="btn-submit" onclick="submitPasswordChange()">更新密码</button>
+            <h3 data-i18n="pwTitle">修改密码</h3>
+            <div class="input-col" style="margin-bottom:15px;"><label data-i18n="lblCurrPw">当前密码</label><input type="password" id="pwCurrent" class="input-field"></div>
+            <div class="input-col" style="margin-bottom:15px;"><label data-i18n="lblNewPw">新密码</label><input type="password" id="pwNew" class="input-field"></div>
+            <div class="input-col" style="margin-bottom:20px;"><label data-i18n="lblConfPw">再次输入新密码</label><input type="password" id="pwConfirm" class="input-field"><div class="error-msg" id="errPw"></div></div>
+            <button class="btn-submit" onclick="submitPasswordChange()" data-i18n="btnPw">更新密码</button>
         </div>
     </div>
 
     <div id="view-library" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0;">我的音乐</h2>
-            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+            <button class="btn-text-action" onclick="switchView('profile')">← 返回主页</button>
         </div>
         <div class="vip-tabs">
             <button class="vip-tab active" onclick="renderLibrary('BUY')" id="libTabBUY">已购买</button>
-            <button class="vip-tab" onclick="renderLibrary('FAV')" id="libTabFAV">我的收藏</button>
+            <button class="vip-tab" onclick="renderLibrary('FAV')" id="libTabFAV">收藏歌曲</button>
+            <button class="vip-tab" onclick="renderLibrary('PL')" id="libTabPL">我的歌单</button>
         </div>
-        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-            <button class="btn-text-action" onclick="savePlaylistOrder()">💾 保存排序 (Save Order)</button>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;" id="libActionRow">
+            <button class="btn-text-action" id="btnCreatePl" style="display:none;" onclick="openCreatePlaylistModal()">+ 创建歌单</button>
+            <button class="btn-text-action" id="btnSaveOrder" onclick="savePlaylistOrder()">💾 保存排序</button>
         </div>
         <div id="libraryList"></div>
     </div>
-
-    <div id="view-playlists" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0;">我的歌单</h2>
-            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+    
+    <div id="view-playlist" class="view-section">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+            <div>
+                <h2 style="margin:0;" id="plViewTitle">Playlist Name</h2>
+                <div style="color:var(--text-muted); font-size:12px; margin-top:5px;"><span id="plViewCount">0</span> 首歌曲</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-text-action" onclick="document.getElementById('editPlModal').style.display='flex'">⚙ 设置</button>
+                <button class="btn-text-action" onclick="switchView('library', 'PL')">← 返回</button>
+            </div>
         </div>
-        <button class="btn-submit" style="margin-bottom:20px;" onclick="document.getElementById('createPlaylistModal').style.display='flex'">+ 创建歌单</button>
-        <div class="playlist-grid" id="playlistGrid"></div>
-    </div>
-
-    <div id="view-playlist-detail" class="view-section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0;" id="plDetailName">Playlist</h2>
-            <button class="btn-text-action" onclick="switchView('playlists')">← 返回歌单列表</button>
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button class="btn-text-action" onclick="savePlaylistOrder()">💾 保存排序</button>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <button class="btn-submit" style="width:auto; padding:8px 20px; background:var(--success);" onclick="playFromPlaylist(0, true)">▶ 播放全部</button>
-            <button class="btn-text-action" onclick="savePlaylistOrderInside()">💾 保存排序</button>
-        </div>
-        <div id="plDetailList"></div>
+        <div id="playlistSongList"></div>
     </div>
 
     <div id="view-history" class="view-section">
         <div style="display:flex; align-items:center; gap:20px; margin-bottom:30px; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
-            <h2 style="margin:0; cursor:pointer; color:var(--text-main);">个人消费</h2>
-            <button class="btn-text-action" style="margin-left:auto;" onclick="switchView('profile')">← 返回</button>
+            <h2 style="margin:0; cursor:pointer; color:var(--text-main);" data-i18n="pHist">我的消费</h2>
+            <button class="btn-text-action" style="margin-left:auto;" onclick="switchView('profile')">← 返回主页</button>
         </div>
         <div class="vip-tabs">
             <button class="vip-tab active" onclick="renderHistory('ALL')" id="histTabALL">全部</button>
             <button class="vip-tab" onclick="renderHistory('BUY')" id="histTabBUY">购买历史</button>
-            <button class="vip-tab" onclick="renderHistory('TOPUP')" id="histTabTOPUP">充值记录</button>
+            <button class="vip-tab" onclick="renderHistory('TOPUP')" id="histTabTOPUP">消费记录</button>
         </div>
         <div class="hist-list" id="historyList"></div>
     </div>
 
     <div id="view-vip" class="view-section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="margin:0;">VIP 数据总结</h2>
-            <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+            <h2 style="margin:0;" data-i18n="vipDataTitle">数据总结</h2>
+            <button class="btn-text-action" onclick="switchView('profile')">← 返回主页</button>
         </div>
         <div class="vip-stats-row">
-            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl">上传歌曲数量</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val">0</span><span class="vip-stat-lbl">歌曲被收藏次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl">歌曲下载次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" style="color:var(--token);">💎 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl">累计钻石</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl" data-i18n="vipStatUpLbl">上传歌曲数量</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val">0</span><span class="vip-stat-lbl" data-i18n="vipStatFavLbl">歌曲被收藏次数</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl" data-i18n="vipStatDlLbl">歌曲下载次数</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" style="color:var(--token);">💎 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计钻石</span></div>
             <div style="text-align:right;"><button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); width:auto; padding:10px 20px;" onclick="showToast('提现功能开发中...', true)">↓ 提现</button></div>
         </div>
 
-        <h2 style="margin-top:40px;">我的上传</h2>
+        <h2 data-i18n="vipSongTitle">我的歌曲</h2>
         <div class="vip-tabs">
-            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED">已发布 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING">正在审核 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED">驳回歌曲 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED">已下架 (0)</button>
+            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED" data-i18n="tabApp">已发布 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING" data-i18n="tabPen">正在审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED" data-i18n="tabUnsub">未提交审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED" data-i18n="tabRej">驳回歌曲 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED" data-i18n="tabRem">已下架 (0)</button>
         </div>
         
         <div class="vip-upload-bar">
-            <button class="vip-btn-upload" onclick="openVipUpload(false)">↑ 上传单曲</button>
-            <button class="vip-btn-upload" onclick="showToast('批量上传开发中...', true)">▤ 批量上传</button>
+            <button class="vip-btn-upload" onclick="openVipUpload(false)">↑ <span data-i18n="btnUpSingle">上传音乐</span></button>
+            <button class="vip-btn-upload" onclick="openVipUpload(true)">▤ <span data-i18n="btnUpBatch">批量上传</span></button>
         </div>
 
         <div id="vipSongList"></div>
@@ -355,14 +349,14 @@
             </div>
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</div>
             
-            <label class="input-label">歌曲文件 (MP3 / WAV / M4A) <span style="color:var(--danger)">*</span></label>
+            <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
             <div class="upload-tabs" id="vip-audio-tabs">
                 <button class="active" id="vip-btn-file" onclick="setVipUploadMode(false)">上传文件</button>
                 <button id="vip-btn-link" onclick="setVipUploadMode(true)">粘贴链接</button>
             </div>
             
             <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()">
-                点击选择音频文件
+                点击选择 MP3 / WAV
             </div>
             <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-bottom:10px;">
             <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
@@ -400,7 +394,7 @@
             <div class="error-msg" id="vipErrRow" style="text-align:center; margin-top:15px;"></div>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); color:var(--text-muted);" onclick="switchView('vip')">取消</button>
-                <button class="btn-submit" onclick="executeVipUpload()" style="color:var(--text-main);">提交审核</button>
+                <button class="btn-submit" onclick="executeVipUpload()" style="color:var(--text-main);" data-i18n="submitReview">提交审核</button>
             </div>
         </div>
     </div>
@@ -432,7 +426,6 @@
             <span id="gpDurTime">0:00</span>
         </div>
     </div>
-    
     <div class="gp-actions"></div>
 </div>
 
@@ -443,12 +436,12 @@
 <div class="modal-overlay" id="cropModal">
     <div class="modal-box" style="max-width:400px;">
         <div class="modal-content" style="text-align:center;">
-            <h3 style="margin: 0 0 15px 0;">调整头像</h3>
+            <h3 style="margin: 0 0 15px 0;" data-i18n="cropTitle">Adjust Profile Picture</h3>
             <canvas id="cropperCanvas" width="200" height="200"></canvas>
             <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" style="width:200px; margin-bottom:10px;">
-            <p style="font-size:12px; color:var(--text-muted); margin:0;">拖动图片以居中，使用滑块缩放</p>
+            <p style="font-size:12px; color:var(--text-muted); margin:0;" data-i18n="cropSub">Drag image to center, use slider to zoom.</p>
         </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executePfpCrop()" style="color:var(--accent-light);">保存</button></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()" data-i18n="cancel">Cancel</button><button class="modal-btn" onclick="executePfpCrop()" data-i18n="save" style="color:var(--accent-light);">Save Crop</button></div>
     </div>
 </div>
 
@@ -462,18 +455,33 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="createPlaylistModal">
+<div class="modal-overlay" id="createPlModal">
     <div class="modal-box" style="max-width:500px;">
         <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;">创建新歌单</h3>
-            <input type="text" id="newPlaylistName" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:15px;" placeholder="歌单名称 (Playlist Name)">
-            <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">选择已购买歌曲加入歌单:</div>
-            <div id="playlistSongSelector" style="max-height:250px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; padding:10px; background:rgba(0,0,0,0.3);">
-                </div>
+            <h3 style="margin: 0 0 15px 0; text-align:center;">创建歌单</h3>
+            <input type="text" id="newPlName" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:15px;" placeholder="歌单名称">
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">选择已购买的歌曲添加到歌单:</div>
+            <div id="plSongSelector" style="max-height:200px; overflow-y:auto; border:1px solid var(--border-color); border-radius:8px; padding:10px; background:rgba(0,0,0,0.2);"></div>
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeCreatePlaylist()" style="color:var(--accent-light);">创建</button></div>
     </div>
 </div>
+
+<div class="modal-overlay" id="editPlModal">
+    <div class="modal-box">
+        <div class="modal-content">
+            <h3 style="margin: 0 0 15px 0; text-align:center;">歌单设置</h3>
+            <input type="text" id="editPlName" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:15px;">
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" onclick="closeModals()">取消</button>
+            <button class="modal-btn" style="color:var(--danger); border-right:1px solid var(--border-color);" onclick="executeDeletePlaylist()">删除歌单</button>
+            <button class="modal-btn" onclick="executeRenamePlaylist()" style="color:var(--accent-light);">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
 
 <script>
     const API_URL = '/api';
@@ -481,6 +489,20 @@
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     if(!username) window.location.href = '/register.html';
+    
+    // --- LANGUAGE SYSTEM ---
+    const dict = {
+        en: { store: "Store", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
+        cn: { store: "首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
+    };
+    let currentLang = localStorage.getItem('djLang') || 'cn';
+
+    function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
+
+    function applyLang() {
+        document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
+        document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
+    }
 
     function showGlobalLoader(txt = "正在处理...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
     function hideGlobalLoader() { document.getElementById('globalLoader').style.display = 'none'; }
@@ -495,9 +517,13 @@
         try {
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
-                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; isUserVip = data.isVip || false; userFavorites = data.favorites || []; userPlaylists = data.playlists || [];
+                const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userTopups = data.topups || []; 
+                isUserVip = data.isVip || data.role === 'VIP' || data.role === 'PRODUCER'; 
+                userFavorites = data.favorites || []; userPlaylists = data.playlists || [];
                 
                 const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+                document.getElementById('profileBtn').innerHTML = `<img id="headerProfilePic" class="profile-pic" src="${pfpUrl}">`;
+                
                 document.getElementById('profileBannerPic').src = pfpUrl; 
                 document.getElementById('profileBannerName').innerText = username;
                 document.getElementById('profileBannerTokens').innerText = userTokens;
@@ -505,7 +531,9 @@
                 document.getElementById('newNameInput').value = username;
                 
                 if(isUserVip) {
-                    document.getElementById('profileBannerVipTag').style.display = 'inline-block'; document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
+                    document.getElementById('profileBannerVipTag').innerText = data.role === 'PRODUCER' ? 'PRODUCER' : 'VIP';
+                    document.getElementById('profileBannerVipTag').style.display = 'inline-block'; 
+                    document.getElementById('vipRegSection').style.display = 'none'; document.getElementById('vipConfigSection').style.display = 'block'; document.getElementById('btnVipCenterTop').style.display = 'block';
                     document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
                     if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
                 }
@@ -514,7 +542,7 @@
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
             
-            populateGenreDropdowns(); 
+            populateGenreDropdowns(); applyLang(); 
             
             const urlParams = new URLSearchParams(window.location.search);
             const viewParam = urlParams.get('view');
@@ -536,7 +564,7 @@
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory('ALL');
         if(view === 'library') renderLibrary(arg || 'BUY');
-        if(view === 'playlists') renderPlaylists();
+        if(view === 'playlist') renderPlaylistView(arg);
     }
 
     async function executeNameChange() {
@@ -577,15 +605,15 @@
     async function executePfpCrop() {
         document.getElementById('cropModal').style.display='none'; showGlobalLoader("正在上传..."); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
         const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
-        if(res.ok) { document.getElementById('profileBannerPic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
+        if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
     }
 
     // --- PERSONAL CENTER ACTIONS ---
     async function submitVipUpgrade() {
         const djName = document.getElementById('vipDjName').value.trim(); const wechat = document.getElementById('vipWechat').value.trim();
         document.getElementById('errDj').innerText = ''; document.getElementById('errWechat').innerText = ''; let pass = true;
-        if(!djName) { document.getElementById('errDj').innerText = "Required"; pass=false;}
-        if(!wechat) { document.getElementById('errWechat').innerText = "Required"; pass=false;}
+        if(!djName) { document.getElementById('errDj').innerText = dict[currentLang].reqFill; pass=false;}
+        if(!wechat) { document.getElementById('errWechat').innerText = dict[currentLang].reqFill; pass=false;}
         if(!pass) return;
 
         showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/vip`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ djName, wechat }) });
@@ -601,7 +629,7 @@
     async function submitPasswordChange() {
         const curr = document.getElementById('pwCurrent').value; const newP = document.getElementById('pwNew').value; const conf = document.getElementById('pwConfirm').value;
         document.getElementById('errPw').innerText = '';
-        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = "Required"; return; }
+        if(!curr || !newP || !conf) { document.getElementById('errPw').innerText = dict[currentLang].reqFill; return; }
         if(newP !== conf) { document.getElementById('errPw').innerText = "Mismatch"; return; }
 
         showGlobalLoader(); const res = await fetch(`${API_URL}/users/${username}/update-password`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ oldPassword: curr, newPassword: newP }) });
@@ -609,150 +637,180 @@
         else { hideGlobalLoader(); showToast(await res.text(), true); }
     }
 
-    // --- LIBRARY & CUSTOM PLAYLISTS ---
+    // --- LIBRARY ---
+    function renderLibrary(filter) {
+        document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active'); document.getElementById('libTabPL').classList.remove('active');
+        document.getElementById(`libTab${filter}`).classList.add('active');
+
+        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
+        document.getElementById('btnCreatePl').style.display = filter === 'PL' ? 'block' : 'none';
+        document.getElementById('btnSaveOrder').style.display = filter === 'BUY' ? 'block' : 'none';
+        
+        if(filter === 'PL') {
+            if(userPlaylists.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无歌单</div>`; return; }
+            let plHtml = `<div class="playlist-grid">`;
+            userPlaylists.forEach(pl => {
+                plHtml += `
+                    <div class="playlist-card" onclick="switchView('playlist', '${pl.id}')">
+                        <div class="pl-cover-placeholder">💿</div>
+                        <div class="pl-title truncate">${pl.name}</div>
+                        <div class="pl-count">${(pl.songs||[]).length} 首歌曲</div>
+                    </div>`;
+            });
+            listDiv.innerHTML = plHtml + `</div>`;
+            return;
+        }
+
+        let targetList = filter === 'BUY' ? userPurchases.map(p => ({...p, id: p.songId})) : allSongs.filter(s => userFavorites.includes(s.id));
+        if(targetList.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
+
+        targetList.forEach((s, index) => {
+            const songName = s.songName || s.filename;
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            
+            const dlBtn = filter === 'BUY' ? `<a href="/api/stream/${s.id}?download=true" class="icon-btn" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a><button class="icon-btn" onclick="event.stopPropagation(); showInfo('${s.purchaseId}', '${s.purchaseTime}', ${s.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>` : '';
+            const seqInput = filter === 'BUY' ? `<input type="text" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylist(${index}, this.value, '${filter}')">` : `<div>${index+1}</div>`;
+
+            listDiv.innerHTML += `
+                <div class="lib-row" onclick="playFromPlaylist(${index}, '${filter}')">
+                    ${seqInput}
+                    <img src="${cover}" class="lib-cover">
+                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
+                    <div style="display:flex; align-items:center; gap:5px; justify-content:flex-end;">${dlBtn}</div>
+                </div>`;
+        });
+    }
+
+    function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
+
+    // --- PLAYLIST CREATION & MANAGEMENT ---
+    function openCreatePlaylistModal() {
+        document.getElementById('newPlName').value = '';
+        const selDiv = document.getElementById('plSongSelector'); selDiv.innerHTML = '';
+        if(userPurchases.length === 0) selDiv.innerHTML = '<div style="color:var(--text-muted); font-size:12px;">您还没有购买任何歌曲</div>';
+        userPurchases.forEach(p => {
+            selDiv.innerHTML += `
+                <label style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;">
+                    <input type="checkbox" class="pl-create-check" value="${p.songId}" style="accent-color:var(--accent);">
+                    <div class="truncate" style="font-size:13px; color:white;">${p.songName}</div>
+                </label>`;
+        });
+        document.getElementById('createPlModal').style.display = 'flex';
+    }
+
+    async function executeCreatePlaylist() {
+        const name = document.getElementById('newPlName').value.trim();
+        const selected = Array.from(document.querySelectorAll('.pl-create-check:checked')).map(cb => cb.value);
+        if(!name) return showToast("请输入歌单名称", true);
+        
+        showGlobalLoader("创建歌单中...");
+        const res = await fetch(`${API_URL}/users/${username}/playlists`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, songs: selected }) });
+        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; closeModals(); setTimeout(() => { hideGlobalLoader(); showToast("创建成功!"); renderLibrary('PL'); }, 1000); }
+        else { hideGlobalLoader(); showToast("Error", true); }
+    }
+
+    let activePlaylistId = null;
+    function renderPlaylistView(plId) {
+        activePlaylistId = plId;
+        const pl = userPlaylists.find(p => p.id === plId);
+        if(!pl) return switchView('library', 'PL');
+
+        document.getElementById('plViewTitle').innerText = pl.name;
+        document.getElementById('editPlName').value = pl.name;
+        document.getElementById('plViewCount').innerText = (pl.songs||[]).length;
+        
+        const listDiv = document.getElementById('playlistSongList'); listDiv.innerHTML = '';
+        if(!pl.songs || pl.songs.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">歌单为空</div>`; return; }
+
+        pl.songs.forEach((songId, index) => {
+            const s = allSongs.find(x => x.id === songId); if(!s) return;
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            
+            listDiv.innerHTML += `
+                <div class="lib-row" onclick="playFromPlaylist(${index}, 'SPECIFIC_PL')">
+                    <input type="text" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylist(${index}, this.value, 'SPECIFIC_PL')">
+                    <img src="${cover}" class="lib-cover">
+                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
+                    <div><button class="icon-btn" onclick="event.stopPropagation(); removeSongFromPl('${s.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button></div>
+                </div>`;
+        });
+    }
+
+    async function executeRenamePlaylist() {
+        const newName = document.getElementById('editPlName').value.trim();
+        if(!newName) return showToast("Name required", true);
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/users/${username}/playlists/${activePlaylistId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: newName }) });
+        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; closeModals(); hideGlobalLoader(); renderPlaylistView(activePlaylistId); }
+    }
+
+    async function executeDeletePlaylist() {
+        if(!confirm("确定删除此歌单吗?")) return;
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/users/${username}/playlists/${activePlaylistId}`, { method: 'DELETE' });
+        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; closeModals(); hideGlobalLoader(); switchView('library', 'PL'); }
+    }
+
+    async function removeSongFromPl(songId) {
+        const pl = userPlaylists.find(p => p.id === activePlaylistId);
+        if(!pl) return;
+        const newSongs = pl.songs.filter(id => id !== songId);
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/users/${username}/playlists/${activePlaylistId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songs: newSongs }) });
+        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; hideGlobalLoader(); renderPlaylistView(activePlaylistId); }
+    }
+
+    function reorderPlaylist(oldIndex, newSeqStr, filter) {
+        let newIndex = parseInt(newSeqStr) - 1;
+        
+        let targetList = [];
+        if(filter === 'BUY') targetList = userPurchases;
+        else if (filter === 'SPECIFIC_PL') targetList = userPlaylists.find(p => p.id === activePlaylistId).songs;
+        else return;
+
+        if(isNaN(newIndex) || newIndex < 0) newIndex = 0;
+        if(newIndex >= targetList.length) newIndex = targetList.length - 1;
+        
+        const [moved] = targetList.splice(oldIndex, 1);
+        targetList.splice(newIndex, 0, moved);
+        
+        if(filter === 'BUY') { userPurchases = targetList; renderLibrary('BUY'); }
+        else { renderPlaylistView(activePlaylistId); }
+    }
+
+    async function savePlaylistOrder() {
+        showGlobalLoader("Saving Order...");
+        if(document.getElementById('view-library').classList.contains('active') && document.getElementById('libTabBUY').classList.contains('active')) {
+            await fetch(`${API_URL}/users/${username}/update-purchases-order`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ purchases: userPurchases }) });
+            hideGlobalLoader(); showToast("顺序已保存");
+        } else if (document.getElementById('view-playlist').classList.contains('active')) {
+            const pl = userPlaylists.find(p => p.id === activePlaylistId);
+            await fetch(`${API_URL}/users/${username}/playlists/${activePlaylistId}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songs: pl.songs }) });
+            hideGlobalLoader(); showToast("歌单顺序已保存");
+        } else { hideGlobalLoader(); }
+    }
+
+    // --- GLOBAL PLAYER LOGIC ---
     let currentPlaylist = [];
     let currentPlayIndex = 0;
     let isLooping = false;
     let isShuffle = false;
     const coreAudio = document.getElementById('coreAudio');
 
-    function renderLibrary(filter) {
-        document.getElementById('libTabBUY').classList.remove('active'); document.getElementById('libTabFAV').classList.remove('active');
-        document.getElementById(`libTab${filter}`).classList.add('active');
-
-        const listDiv = document.getElementById('libraryList'); listDiv.innerHTML = '';
-        currentPlaylist = filter === 'BUY' ? userPurchases.map(p => ({...p, id: p.songId})) : allSongs.filter(s => userFavorites.includes(s.id));
-        
-        if(currentPlaylist.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">列表是空的</div>`; return; }
-
-        currentPlaylist.forEach((s, index) => {
-            const songName = s.songName || s.filename;
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            
-            listDiv.innerHTML += `
-                <div class="lib-row" onclick="playFromPlaylist(${index}, '${filter}')">
-                    <input type="text" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylist(${index}, this.value, '${filter}')">
-                    <img src="${cover}" class="lib-cover">
-                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
-                    <div style="color: var(--success); font-weight: bold; font-size:12px; border:1px solid var(--success); padding:2px 6px; border-radius:12px; text-align:center;">已保存</div>
-                    <div style="color:var(--text-muted); font-size:12px; text-align:right;">前往播放</div>
-                </div>`;
-        });
-    }
-
-    function reorderPlaylist(oldIndex, newSeqStr, filter) {
-        let newIndex = parseInt(newSeqStr) - 1;
-        if(isNaN(newIndex) || newIndex < 0) newIndex = 0;
-        if(newIndex >= currentPlaylist.length) newIndex = currentPlaylist.length - 1;
-        
-        const [moved] = currentPlaylist.splice(oldIndex, 1);
-        currentPlaylist.splice(newIndex, 0, moved);
-        
-        if(filter === 'BUY') userPurchases = currentPlaylist;
-        renderLibrary(filter);
-    }
-
-    async function savePlaylistOrder() {
-        if(document.getElementById('libTabBUY').classList.contains('active')) {
-            showGlobalLoader();
-            await fetch(`${API_URL}/users/${username}/update-purchases-order`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ purchases: userPurchases }) });
-            hideGlobalLoader(); showToast("顺序已保存");
-        } else {
-            showToast("收藏歌曲顺序仅本地保存", true);
-        }
-    }
-
-    // CREATE PLAYLIST LOGIC
-    function renderPlaylists() {
-        const grid = document.getElementById('playlistGrid'); grid.innerHTML = '';
-        if(userPlaylists.length === 0) { grid.innerHTML = `<div style="color:var(--text-muted); font-size:14px; grid-column: 1 / -1; text-align:center; padding:30px;">您还没有创建歌单</div>`; }
-        
-        userPlaylists.forEach(pl => {
-            const firstSong = allSongs.find(s => s.id === pl.songs[0]);
-            const cover = firstSong ? firstSong.coverUrl : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            
-            grid.innerHTML += `
-                <div class="pl-card" onclick="openPlaylistDetail('${pl.id}')">
-                    <button class="pl-gear" onclick="event.stopPropagation(); deletePlaylist('${pl.id}')"><svg viewBox="0 0 24 24" style="width:14px;fill:white;"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
-                    <div class="cover"><img src="${cover}"></div>
-                    <div class="name truncate">${pl.name}</div>
-                    <div class="count">${pl.songs.length} 首歌曲</div>
-                </div>`;
-        });
-
-        // Populate Modal Selection
-        const selDiv = document.getElementById('playlistSongSelector'); selDiv.innerHTML = '';
-        userPurchases.forEach(p => {
-            selDiv.innerHTML += `
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; border-bottom:1px solid var(--border-color); padding-bottom:5px;">
-                    <input type="checkbox" class="pl-song-check" value="${p.songId}" style="width:16px;height:16px;accent-color:var(--accent);">
-                    <div class="truncate" style="font-size:13px;">${p.songName}</div>
-                </div>`;
-        });
-    }
-
-    async function executeCreatePlaylist() {
-        const name = document.getElementById('newPlaylistName').value;
-        if(!name) return showToast("请输入歌单名称", true);
-        const selected = Array.from(document.querySelectorAll('.pl-song-check:checked')).map(cb => cb.value);
-        if(!selected.length) return showToast("请至少选择一首歌曲", true);
-
-        showGlobalLoader();
-        const res = await fetch(`${API_URL}/users/${username}/playlists`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name, songs: selected }) });
-        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; closeModals(); renderPlaylists(); hideGlobalLoader(); showToast("歌单创建成功"); }
-    }
-
-    async function deletePlaylist(id) {
-        if(!confirm("确定要删除该歌单吗？")) return;
-        showGlobalLoader();
-        const res = await fetch(`${API_URL}/users/${username}/playlists/${id}`, { method: 'DELETE' });
-        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; renderPlaylists(); hideGlobalLoader(); showToast("已删除"); }
-    }
-
-    let activePlaylistId = null;
-    function openPlaylistDetail(id) {
-        const pl = userPlaylists.find(p => p.id === id); if(!pl) return;
-        activePlaylistId = id;
-        document.getElementById('plDetailName').innerText = pl.name;
-        currentPlaylist = pl.songs.map(sid => allSongs.find(s => s.id === sid)).filter(s => s); // Hydrate
-        
-        const listDiv = document.getElementById('plDetailList'); listDiv.innerHTML = '';
-        currentPlaylist.forEach((s, index) => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `
-                <div class="lib-row" onclick="playFromPlaylist(${index}, 'PL')">
-                    <input type="text" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylistInside(${index}, this.value)">
-                    <img src="${cover}" class="lib-cover">
-                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
-                    <div></div>
-                    <div style="color:var(--text-muted); font-size:12px; text-align:right;">前往播放</div>
-                </div>`;
-        });
-        switchView('playlist-detail');
-    }
-
-    function reorderPlaylistInside(oldIndex, newSeqStr) {
-        let newIndex = parseInt(newSeqStr) - 1;
-        if(isNaN(newIndex) || newIndex < 0) newIndex = 0;
-        if(newIndex >= currentPlaylist.length) newIndex = currentPlaylist.length - 1;
-        const [moved] = currentPlaylist.splice(oldIndex, 1);
-        currentPlaylist.splice(newIndex, 0, moved);
-        openPlaylistDetail(activePlaylistId);
-    }
-
-    async function savePlaylistOrderInside() {
-        showGlobalLoader();
-        const updatedSongs = currentPlaylist.map(s => s.id);
-        const res = await fetch(`${API_URL}/users/${username}/playlists/${activePlaylistId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ songs: updatedSongs }) });
-        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; hideGlobalLoader(); showToast("顺序已保存"); }
-    }
-
-    // --- GLOBAL PLAYER LOGIC ---
-    function playFromPlaylist(index, forceMode) {
+    function playFromPlaylist(index, context) {
         currentPlayIndex = index;
-        const s = currentPlaylist[index];
+        let s;
+        if(context === 'BUY') {
+            currentPlaylist = userPurchases.map(p => ({...p, id: p.songId})); s = currentPlaylist[index];
+        } else if (context === 'FAV') {
+            currentPlaylist = allSongs.filter(song => userFavorites.includes(song.id)); s = currentPlaylist[index];
+        } else if (context === 'SPECIFIC_PL') {
+            const pl = userPlaylists.find(p => p.id === activePlaylistId);
+            currentPlaylist = pl.songs.map(sid => allSongs.find(x => x.id === sid)).filter(x=>x); s = currentPlaylist[index];
+        } else return;
+        
         if(!s) return;
-        const songId = s.songId || s.id;
+        const songId = s.id;
         
         document.getElementById('globalPlayerUI').style.display = 'flex';
         document.getElementById('gpTitle').innerText = s.songName || s.filename;
@@ -782,14 +840,14 @@
         if(currentPlaylist.length === 0) return;
         if(isShuffle) { currentPlayIndex = Math.floor(Math.random() * currentPlaylist.length); } 
         else { currentPlayIndex++; if(currentPlayIndex >= currentPlaylist.length) currentPlayIndex = 0; }
-        playFromPlaylist(currentPlayIndex);
+        playFromPlaylist(currentPlayIndex, 'EXISTING');
     }
     
     function playPrev() {
         if(currentPlaylist.length === 0) return;
         if(isShuffle) { currentPlayIndex = Math.floor(Math.random() * currentPlaylist.length); } 
         else { currentPlayIndex--; if(currentPlayIndex < 0) currentPlayIndex = currentPlaylist.length - 1; }
-        playFromPlaylist(currentPlayIndex);
+        playFromPlaylist(currentPlayIndex, 'EXISTING');
     }
 
     function toggleLoop() { isLooping = !isLooping; document.getElementById('gpLoopBtn').classList.toggle('active', isLooping); coreAudio.loop = isLooping; }
@@ -804,45 +862,7 @@
     }
     function seekAudio(val) { coreAudio.currentTime = val; }
 
-    // --- HISTORY UI ---
-    function renderHistory(filter) {
-        document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
-        if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
-        if(filter==='BUY') document.getElementById('histTabBUY').classList.add('active');
-        if(filter==='TOPUP') document.getElementById('histTabTOPUP').classList.add('active');
-
-        const listDiv = document.getElementById('historyList'); listDiv.innerHTML = '';
-        let combined = [];
-        if(filter==='ALL' || filter==='TOPUP') userTopups.forEach(t => combined.push({ type: 'topup', date: t.date, amt: t.amount, price: t.price, curr: t.currency }));
-        if(filter==='ALL' || filter==='BUY') userPurchases.forEach(p => combined.push({ type: 'buy', date: p.purchaseTime, amt: p.tokensSpent, name: p.songName, uploader: p.uploader }));
-        
-        combined.sort((a,b) => new Date(b.date) - new Date(a.date));
-        if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无记录</div>`; return; }
-
-        combined.forEach(item => {
-            if(item.type === 'topup') {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
-                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
-                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
-                        <div><div style="font-weight:bold;">${item.curr||'RMB'} ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
-                    </div>`;
-            } else {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
-                        <div style="min-width:0;"><div class="truncate" style="font-weight:bold;">${item.name}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">上传者: ${item.uploader||'FULLKIK'}</div></div>
-                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
-                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
-                    </div>`;
-            }
-        });
-    }
-
-    // --- VIP CENTER ---
+    // --- VIP CENTER & UPLOAD ---
     let currentVipTab = 'APPROVED';
     function renderVipCenter() {
         if(!isUserVip) return;
@@ -853,7 +873,7 @@
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => s.status === status).length;
-            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `(${count})`;
+            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
         });
         filterVipSongs(currentVipTab);
     }
@@ -872,7 +892,7 @@
                 <div class="lib-row">
                     <img src="${cover}" class="lib-cover">
                     <div class="truncate" style="font-weight: 500;">${s.filename}</div>
-                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||0}</div>
                     <div>${status === 'APPROVED' ? `<div style="color:var(--success); font-size:12px;">已发布</div>` : '-'}</div>
                     <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
                 </div>`;
@@ -897,7 +917,7 @@
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = ''; document.getElementById('vipTransloadUrlInput').value = '';
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = "批量上传"; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = "上传音乐"; }
+        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle; }
         document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = handleVipAudioSelect;
         setVipUploadMode(false); switchView('vip-upload');
     }
