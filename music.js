@@ -1,6 +1,15 @@
 /**
- * FULLKIK - Backend API & Server Engine
- * Features: Authentication, Media Streaming, Anti-Theft, Transactions, Genres, Playlists
+ * ============================================================================
+ * FULLKIK - Enterprise Backend API & Server Engine
+ * ============================================================================
+ * Features Included:
+ * - Authentication & Session Management
+ * - Media Streaming (Anti-Theft)
+ * - Transaction & Wallet Engine (Topups, Purchases, Favorites)
+ * - Admin CRM (Roles, Tokens, Bans, Deletions)
+ * - Sensitive Words Filtering & Report Management
+ * - Playlist Engine
+ * ============================================================================
  */
 require('dotenv').config();
 const express = require('express');
@@ -23,8 +32,10 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
 let db, bucket;
+
+// Initialize Firebase Admin SDK
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    console.error("❌ FATAL ERROR: Missing FIREBASE_SERVICE_ACCOUNT_JSON!");
+    console.error("❌ FATAL ERROR: Missing FIREBASE_SERVICE_ACCOUNT_JSON! Database functions will fail.");
 } else {
     try {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
@@ -39,6 +50,7 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     }
 }
 
+// Initialize Cloudinary SDK
 if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ 
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -47,14 +59,14 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     });
 }
 
-// Multer Memory Storage for efficient Cloudinary pipelining
+// Memory storage for immediate processing to Cloudinary
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
         if(file.mimetype.includes('audio') || file.mimetype.includes('video') || file.mimetype.includes('image') || file.originalname.match(/\.(mp3|m4a|mp4|jpg|jpeg|png)$/i)) {
             cb(null, true); 
         } else {
-            cb(new Error('Invalid file type.'));
+            cb(new Error('Invalid file type. Only Audio and Images allowed.'));
         }
     }
 });
@@ -76,16 +88,7 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
-// ==========================================
-app.get('/health', (req, res) => res.status(200).send('OK'));
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
-
-// Utility to create admin logs
+// Admin Audit Logging Utility
 async function logEvent(type, message) { 
     try { 
         if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
@@ -94,12 +97,42 @@ async function logEvent(type, message) {
     } 
 }
 
+// ==========================================
+// 2. SENSITIVE WORDS INTERCEPTOR
+// ==========================================
+/**
+ * Checks a given string against the sensitive words dictionary.
+ * @param {string} text - The text to check (username, dj name, etc.)
+ * @returns {boolean} - True if sensitive word is found, False otherwise.
+ */
+async function hasSensitiveWord(text) {
+    if(!text || !db) return false;
+    try {
+        const snap = await db.collection('sensitiveWords').get();
+        const words = snap.docs.map(d => d.data().word.toLowerCase());
+        const lowerText = text.toLowerCase();
+        return words.some(w => lowerText.includes(w));
+    } catch(e) {
+        console.error("Sensitive check error", e);
+        return false; 
+    }
+}
+
+// ==========================================
+// 3. HTML ROUTES & ANTI-THEFT STREAMING
+// ==========================================
+app.get('/health', (req, res) => res.status(200).send('OK'));
+app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
+
 // Secure Audio Streaming API
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
         
-        // Anti-Theft Verification
+        // Anti-Theft Verification (Blocks direct URL access outside the app)
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
@@ -147,12 +180,18 @@ app.get('/api/stream/:songId', async (req, res) => {
 });
 
 // ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
+// 4. AUTHENTICATION & USER MANAGEMENT
 // ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
         const { contact, username, password } = req.body;
+
+        // Block Sensitive Words
+        if(await hasSensitiveWord(username)) {
+            return res.status(400).send('Username contains restricted words.');
+        }
+
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
@@ -206,7 +245,6 @@ app.get('/api/users/:username', async (req, res) => {
     try {
         const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
         if (doc.exists) {
-            if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
             let data = doc.data(); 
             delete data.password;
             if(!data.playlists) data.playlists = [];
@@ -234,6 +272,11 @@ app.get('/api/all-users', async (req, res) => {
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
+        
+        if(await hasSensitiveWord(req.body.newUsername)) {
+            return res.status(400).send('Username contains restricted words.');
+        }
+
         if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
         const oldRef = db.collection('users').doc(oldId); 
         const doc = await oldRef.get();
@@ -276,7 +319,7 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. PLAYLISTS SYSTEM
+// 5. PLAYLISTS SYSTEM
 // ==========================================
 app.post('/api/users/:username/playlists', async (req, res) => {
     try {
@@ -338,7 +381,7 @@ app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
 });
 
 // ==========================================
-// 5. FAVORITES, TOPUPS & PURCHASES
+// 6. FAVORITES, TOPUPS & PURCHASES
 // ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
@@ -421,7 +464,7 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 });
 
 // ==========================================
-// 6. ADMIN USER MANAGEMENT & LOGS
+// 7. ADMIN USER MANAGEMENT & LOGS
 // ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
@@ -470,9 +513,22 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.delete('/api/admin/users/:username', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).delete();
+        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`);
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
+        
+        if(await hasSensitiveWord(djName)) {
+            return res.status(400).send('DJ Name contains restricted words.');
+        }
+
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
@@ -522,7 +578,64 @@ app.delete('/api/transactions/all', async (req, res) => {
 });
 
 // ==========================================
-// 7. GENRES AND SONGS
+// 8. SENSITIVE WORDS API
+// ==========================================
+app.get('/api/sensitive', async (req, res) => {
+    try { res.json((await db.collection('sensitiveWords').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/sensitive', async (req, res) => {
+    try {
+        const word = req.body.word;
+        if(!word) return res.status(400).send("Word required");
+        const docRef = await db.collection('sensitiveWords').add({ word: word, addedAt: new Date().toISOString(), status: 'ACTIVE' });
+        res.json({ id: docRef.id, word });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/sensitive/:id', async (req, res) => {
+    try { await db.collection('sensitiveWords').doc(req.params.id).delete(); res.send('Deleted'); } catch(e) { res.status(500).send(e.message); }
+});
+
+// ==========================================
+// 9. REPORTS API
+// ==========================================
+app.get('/api/reports', async (req, res) => {
+    try { res.json((await db.collection('reports').orderBy('time', 'desc').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/reports', async (req, res) => {
+    try {
+        const payload = {
+            songId: req.body.songId,
+            songName: req.body.songName,
+            uploader: req.body.uploader,
+            reporter: req.body.reporter || 'Anonymous',
+            reason: req.body.reason || '版权问题',
+            description: req.body.description || '举报该歌曲存在违规内容',
+            status: 'PENDING',
+            time: new Date().toISOString()
+        };
+        const docRef = await db.collection('reports').add(payload);
+        res.json({ success: true, id: docRef.id });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/reports/:id/resolve', async (req, res) => {
+    try {
+        const { action, songId } = req.body;
+        if(action === 'TAKEDOWN') {
+            await db.collection('songs').doc(songId).update({ status: 'REMOVED' });
+            await db.collection('reports').doc(req.params.id).update({ status: 'RESOLVED_TAKEDOWN' });
+        } else {
+            await db.collection('reports').doc(req.params.id).update({ status: 'RESOLVED_DISMISS' });
+        }
+        res.send('Resolved');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+// ==========================================
+// 10. GENRES AND SONGS
 // ==========================================
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
