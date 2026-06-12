@@ -10,9 +10,6 @@ const { Readable } = require('stream');
 const app = express();
 const PORT = process.env.PORT || 80;
 
-// ==========================================
-// 1. MIDDLEWARE & CONFIGURATION
-// ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -57,9 +54,7 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
     return result.secure_url;
 }
 
-// ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
-// ==========================================
+// --- HTML ROUTES ---
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
@@ -94,9 +89,7 @@ app.get('/api/stream/:songId', async (req, res) => {
     } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
-// ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
-// ==========================================
+// --- AUTH & USERS ---
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
@@ -145,6 +138,7 @@ app.get('/api/users/:username', async (req, res) => {
     if (doc.exists) {
         if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
         let data = doc.data(); delete data.password;
+        if(!data.playlists) data.playlists = [];
         res.json(data);
     } else res.status(404).send('User not found');
 });
@@ -198,58 +192,8 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. PLAYLISTS, FAVORITES, TOPUPS & PURCHASES
+// 4. FAVORITES, PLAYLISTS, TOPUPS & PURCHASES
 // ==========================================
-app.post('/api/users/:username/playlists', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let playlists = userDoc.data().playlists || [];
-        const playlistId = 'PL' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        playlists.push({ id: playlistId, name: name, songs: songs, createdAt: new Date().toISOString() });
-        
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let playlists = userDoc.data().playlists || [];
-        const index = playlists.findIndex(p => p.id === req.params.playlistId);
-        if(index === -1) return res.status(404).send('Playlist not found');
-
-        if(name !== undefined) playlists[index].name = name;
-        if(songs !== undefined) playlists[index].songs = songs;
-        
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let playlists = userDoc.data().playlists || [];
-        playlists = playlists.filter(p => p.id !== req.params.playlistId);
-        
-        await userRef.update({ playlists: playlists });
-        res.json({ success: true, playlists: playlists });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -264,6 +208,51 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         await userRef.update({ favorites: favs });
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
+});
+
+// --- NEW PLAYLIST APIS ---
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        const newPlaylist = {
+            id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7),
+            name: req.body.name,
+            songs: req.body.songs || [],
+            createdAt: new Date().toISOString()
+        };
+        playlists.push(newPlaylist);
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        const index = playlists.findIndex(p => p.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+        
+        if(req.body.name) playlists[index].name = req.body.name;
+        if(req.body.songs) playlists[index].songs = req.body.songs;
+        
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        let playlists = doc.data().playlists || [];
+        playlists = playlists.filter(p => p.id !== req.params.playlistId);
+        await userRef.update({ playlists: playlists });
+        res.json({ success: true, playlists: playlists });
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/users/:username/topup', async (req, res) => {
