@@ -64,7 +64,7 @@ app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
 async function logEvent(type, message) { try { if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); } catch(e) {} }
 
@@ -72,22 +72,29 @@ app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
+        const isDownload = req.query.download === 'true';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
 
-        if (!isFromApp && !isAudioTag) {
+        // Anti-theft block (allow downloads if query param is explicitly set)
+        if (!isFromApp && !isAudioTag && !isDownload) {
             return res.status(403).send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title><style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style></head><body><h1>禁止盗取歌曲</h1></body></html>`);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
         if (!songDoc.exists) return res.status(404).send('Song not found');
         
-        const fetchHeaders = {}; if (req.headers.range) fetchHeaders.Range = req.headers.range;
+        const fetchHeaders = {}; if (req.headers.range && !isDownload) fetchHeaders.Range = req.headers.range;
         const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
         if (!response.ok) throw new Error('Cloudinary fetch failed');
 
         const contentType = response.headers.get('content-type'); const contentLength = response.headers.get('content-length'); const contentRange = response.headers.get('content-range'); const acceptRanges = response.headers.get('accept-ranges');
         if (contentType) res.setHeader('Content-Type', contentType); if (contentLength) res.setHeader('Content-Length', contentLength); if (contentRange) res.setHeader('Content-Range', contentRange); if (acceptRanges) res.setHeader('Accept-Ranges', acceptRanges);
+
+        // Force download behavior
+        if(isDownload) {
+            res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(songDoc.data().filename)}"`);
+        }
 
         res.status(response.status); 
         Readable.fromWeb(response.body).pipe(res);
@@ -119,8 +126,7 @@ app.post('/api/register', async (req, res) => {
         const isEmail = contact.includes('@');
         await userRef.set({ 
             username, contact, password, email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
-            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], 
-            playlists: [], 
+            tokens: startTokens, profilePic: '', purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
             role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
@@ -199,58 +205,8 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. PLAYLISTS, FAVORITES, TOPUPS & PURCHASES
+// 4. FAVORITES, TOPUPS & PURCHASES & PLAYLISTS
 // ==========================================
-app.post('/api/users/:username/playlists', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let pl = userDoc.data().playlists || [];
-        const newPlaylist = { id: 'PL' + Date.now(), name: name, songs: songs || [], createdAt: new Date().toISOString() };
-        pl.push(newPlaylist);
-        
-        await userRef.update({ playlists: pl });
-        res.json({ success: true, playlists: pl });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const { name, songs } = req.body;
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let pl = userDoc.data().playlists || [];
-        const index = pl.findIndex(p => p.id === req.params.playlistId);
-        if(index > -1) {
-            if(name !== undefined) pl[index].name = name;
-            if(songs !== undefined) pl[index].songs = songs;
-            await userRef.update({ playlists: pl });
-            res.json({ success: true, playlists: pl });
-        } else {
-            res.status(404).send("Playlist not found");
-        }
-    } catch (e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const userDoc = await userRef.get();
-        if (!userDoc.exists) return res.status(404).send('User not found');
-        
-        let pl = userDoc.data().playlists || [];
-        pl = pl.filter(p => p.id !== req.params.playlistId);
-        
-        await userRef.update({ playlists: pl });
-        res.json({ success: true, playlists: pl });
-    } catch (e) { res.status(500).send(e.message); }
-});
-
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -329,6 +285,56 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ purchases: newOrder });
         res.json({ success: true, purchases: newOrder });
     } catch(e) { res.status(500).send(e.message); }
+});
+
+// --- PLAYLISTS API ---
+app.post('/api/users/:username/playlists', async (req, res) => {
+    try {
+        const { name, songs } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        let playlists = userDoc.data().playlists || [];
+        const newPl = { id: 'pl_' + Date.now(), name: name || 'New Playlist', songs: songs || [], createdAt: new Date().toISOString() };
+        playlists.push(newPl);
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const { name, songs } = req.body;
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        let playlists = userDoc.data().playlists || [];
+        const index = playlists.findIndex(p => p.id === req.params.playlistId);
+        if(index === -1) return res.status(404).send('Playlist not found');
+
+        if(name !== undefined) playlists[index].name = name;
+        if(songs !== undefined) playlists[index].songs = songs;
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if(!userDoc.exists) return res.status(404).send('User not found');
+
+        let playlists = userDoc.data().playlists || [];
+        playlists = playlists.filter(p => p.id !== req.params.playlistId);
+        
+        await userRef.update({ playlists });
+        res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // ==========================================
