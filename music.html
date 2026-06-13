@@ -40,9 +40,11 @@
         .splash-circle-wrap { position:relative; width:88px; height:88px; display:flex; align-items:center; justify-content:center; margin-bottom:22px; animation: loaderBreath 2.1s ease-in-out infinite; }
         .splash-circle-wrap::after { content:''; position:absolute; inset:17px; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.24), rgba(128,0,0,0)); filter:blur(4px); animation: loaderGlow 2.1s ease-in-out infinite; }
         .splash-circle-wrap svg { position:relative; z-index:1; overflow:visible; filter:drop-shadow(0 0 14px rgba(165,42,42,0.45)); }
+        .splash-circle-wrap.loader-popout { animation: loaderPopout 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         #initLoadCircle { transform: rotate(-90deg); transform-origin:50% 50%; }
         @keyframes loaderBreath { 0%,100% { transform:scale(0.96); opacity:0.86; } 50% { transform:scale(1.05); opacity:1; } }
         @keyframes loaderGlow { 0%,100% { transform:scale(0.82); opacity:0.35; } 50% { transform:scale(1.15); opacity:0.72; } }
+        @keyframes loaderPopout { 0% { transform:scale(1); opacity:1; } 55% { transform:scale(1.22); opacity:1; } 100% { transform:scale(0.72); opacity:0; filter:blur(6px); } }
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
@@ -91,6 +93,11 @@
         .home-song-row-card .info .title { font-size: 14px; font-weight: bold; color: white;}
         .home-song-row-card .info .sub { font-size: 11px; color: var(--text-muted);}
         .home-song-row-card .price { font-size: 12px; font-weight: bold; color: var(--token); white-space:nowrap; margin-right:10px;}
+        .featured-genre-tabs { display:flex; gap:18px; overflow-x:auto; scrollbar-width:none; margin:-2px 0 18px; padding-bottom:6px; }
+        .featured-genre-tabs::-webkit-scrollbar { display:none; }
+        .featured-genre-tab { background:none; border:none; color:var(--text-muted); font-size:15px; font-weight:800; cursor:pointer; padding:0 0 8px; border-bottom:2px solid transparent; white-space:nowrap; }
+        .featured-genre-tab.active { color:var(--accent-light); border-bottom-color:var(--accent-light); }
+        .featured-empty { border:1px dashed var(--border-color); border-radius:12px; padding:28px; text-align:center; color:var(--text-muted); background:rgba(255,255,255,0.02); }
 
         /* RANKING LIST & MORE LIST */
         .ranking-list { display: flex; flex-direction: column; gap: 10px; }
@@ -125,13 +132,15 @@
         
         .player-container { display: flex; gap: 40px; background: rgba(255,255,255,0.02); border-radius: 24px; padding: 40px; border: 1px solid var(--border-color); position:relative;}
         .player-left { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0;}
-        .player-title { font-size: 32px; font-weight: 700; margin: 0 0 10px 0;}
-        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 30px;}
+        .player-title { font-size: 32px; font-weight: 700; margin: 0 0 6px 0;}
+        .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 16px;}
+        .uploader-link { color:var(--accent-light); font-weight:800; cursor:pointer; border-bottom:1px solid rgba(165,42,42,0.45); }
+        .uploader-link:hover { color:white; border-bottom-color:white; }
         
-        .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 20px;}
+        .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 12px;}
         .wave-bar { flex: 1; background: var(--border-color); border-radius: 2px; transition: 0.2s;}
         
-        .audio-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 16px;}
+        .audio-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 16px;}
         .play-circle { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
         .play-circle:hover { transform: scale(1.05); background: var(--accent-light); }
         .play-circle svg { width: 24px; height: 24px; fill: white; }
@@ -167,6 +176,16 @@
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
+        .report-modal-box { max-width:560px; text-align:left; border:1px solid var(--accent-light); background:rgba(30,24,42,0.96); border-radius:28px; overflow:visible; padding:42px 48px; box-sizing:border-box; position:relative; }
+        .report-close { position:absolute; top:24px; right:24px; width:34px; height:34px; border:none; background:transparent; color:var(--text-muted); font-size:32px; line-height:1; cursor:pointer; }
+        .report-close:hover { color:white; }
+        .report-title { margin:0 0 34px; font-size:30px; line-height:1.1; font-weight:900; }
+        .report-label { display:block; color:var(--text-muted); font-weight:800; margin:0 0 10px; }
+        .report-select, .report-textarea { width:100%; box-sizing:border-box; background:rgba(9,7,28,0.72); color:white; border:1px solid rgba(255,255,255,0.16); border-radius:14px; padding:14px 16px; font-size:15px; outline:none; margin-bottom:20px; }
+        .report-select:focus, .report-textarea:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.24); }
+        .report-textarea { min-height:120px; resize:vertical; }
+        .report-submit { width:100%; min-height:58px; border:none; border-radius:14px; background:linear-gradient(90deg, var(--accent), var(--accent-light)); color:white; font-size:18px; font-weight:900; cursor:pointer; margin-top:6px; }
+        .report-submit:hover { transform:translateY(-1px); box-shadow:0 14px 30px rgba(128,0,0,0.34); }
 
         .whatsapp-float { position: fixed; right: 24px; bottom: 24px; width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: white; display: none; align-items: center; justify-content: center; z-index: 900; box-shadow: 0 12px 28px rgba(128,0,0,0.45); border: 1px solid rgba(255,255,255,0.18); transition: 0.2s; }
         .whatsapp-float:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 16px 34px rgba(128,0,0,0.55); }
@@ -203,11 +222,14 @@
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .home-song-grid { grid-template-columns: 1fr; } 
+            .featured-genre-tabs { gap:16px; }
             .search-wrapper { max-width: 90%; }
             .banners-container img { width: 250px; flex-shrink: 0;}
             .dj-grid-large { grid-template-columns: 1fr 1fr; }
             .list-song-row { gap: 12px; padding: 12px; }
             .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
+            .report-modal-box { padding:34px 24px; border-radius:24px; }
+            .report-title { font-size:26px; }
         }
     </style>
 </head>
@@ -308,7 +330,7 @@
             </div>
             <div class="player-right">
                 <img class="player-cover" id="playerCover" src="">
-                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="showToast('已举报 (Report Submitted)')"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
+                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="openReportModal()"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
             </div>
         </div>
     </div>
@@ -318,6 +340,21 @@
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
 <div class="modal-overlay" id="successPurchaseModal"><div class="modal-box" style="padding: 40px 20px;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size: 20px; letter-spacing: 0.5px;" data-i18n="successBuy">购买成功!</h2></div></div>
+<div class="modal-overlay" id="reportModal">
+    <div class="modal-box report-modal-box">
+        <button class="report-close" onclick="closeReportModal()">×</button>
+        <h2 class="report-title">举报歌曲</h2>
+        <label class="report-label" for="reportReasonSelect">举报原因</label>
+        <select id="reportReasonSelect" class="report-select">
+            <option value="">请选择...</option>
+            <option value="版权">版权</option>
+            <option value="其他">其他</option>
+        </select>
+        <label class="report-label" for="reportDescriptionInput">补充说明</label>
+        <textarea id="reportDescriptionInput" class="report-textarea" placeholder="请描述具体问题..."></textarea>
+        <button class="report-submit" onclick="submitSongReport()">提交举报</button>
+    </div>
+</div>
 <a class="whatsapp-float" id="supportWhatsappBtn" href="#" target="_blank" rel="noopener" aria-label="WhatsApp 客服"><svg viewBox="0 0 32 32"><path d="M16.04 3C9.35 3 3.9 8.45 3.9 15.14c0 2.14.56 4.22 1.63 6.05L3.8 27.5l6.47-1.7a12.05 12.05 0 0 0 5.77 1.47c6.69 0 12.14-5.45 12.14-12.14S22.73 3 16.04 3zm0 22.2c-1.8 0-3.57-.48-5.12-1.39l-.37-.22-3.84 1.01 1.03-3.74-.24-.38a10 10 0 0 1-1.53-5.34c0-5.55 4.52-10.07 10.07-10.07S26.1 9.59 26.1 15.14 21.59 25.2 16.04 25.2zm5.52-7.54c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.96 1.18-.18.2-.35.23-.65.08-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.64-.93-2.25-.24-.58-.49-.5-.68-.51h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.03-1.05 2.51s1.08 2.91 1.23 3.11c.15.2 2.13 3.25 5.16 4.56.72.31 1.29.5 1.73.64.73.23 1.39.2 1.91.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.31.18-1.43-.08-.13-.28-.2-.58-.35z"/></svg></a>
 <div class="poster-overlay" id="homePosterOverlay"><div class="poster-box"><button class="poster-close" onclick="closeHomePoster()">×</button><img id="homePosterImage" src="" alt="海报"></div></div>
 
@@ -387,6 +424,11 @@
     document.addEventListener('click', (e) => { const sw = e.target.closest('.search-wrapper'); const dr = document.getElementById('searchResults'); if(!sw && dr) dr.style.display = 'none'; });
 
     let globalSettings = {};
+    let currentFeaturedGenreId = null;
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
 
     function buildWhatsappUrl(value) {
         const digits = String(value || '').replace(/[^\d]/g, '');
@@ -484,8 +526,11 @@
 
         setTimeout(() => {
             const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
-            const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.style.display = 'none';
-            const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
+            const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.classList.add('loader-popout');
+            setTimeout(() => {
+                if(scw) scw.style.display = 'none';
+                const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
+            }, 420);
             setTimeout(() => { 
                 const sp = document.getElementById('splashLoader'); 
                 if(sp) { sp.style.opacity = 0; setTimeout(() => { sp.style.display = 'none'; showHomePoster(); }, 800); }
@@ -522,6 +567,37 @@
     }
 
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+    function closeReportModal() { const modal = document.getElementById('reportModal'); if(modal) modal.style.display = 'none'; }
+    function openReportModal() {
+        if(!currentSong) return showToast('请先选择歌曲', true);
+        const reason = document.getElementById('reportReasonSelect');
+        const desc = document.getElementById('reportDescriptionInput');
+        if(reason) reason.value = '';
+        if(desc) desc.value = '';
+        document.getElementById('reportModal').style.display = 'flex';
+    }
+
+    async function submitSongReport() {
+        if(!currentSong) return;
+        const reason = document.getElementById('reportReasonSelect').value;
+        const description = document.getElementById('reportDescriptionInput').value.trim();
+        if(!reason) return showToast('请选择举报原因', true);
+        const payload = {
+            songId: currentSong.id,
+            songName: currentSong.filename,
+            uploader: currentSong.uploader || 'FULLKIK',
+            reporter: username || 'Guest',
+            reason,
+            description: description || '-'
+        };
+        const res = await fetch(`${API_URL}/reports`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(res.ok) {
+            closeReportModal();
+            showToast('举报已提交');
+        } else {
+            showToast('举报提交失败', true);
+        }
+    }
 
     async function toggleFav(songId, event) {
         event.stopPropagation();
@@ -530,8 +606,10 @@
         const isCurrentlyLiked = userFavorites.includes(songId);
         const btn1 = document.getElementById(`fav-btn-${songId}`);
         const btn2 = document.getElementById(`fav-btn-view-${songId}`);
+        const btn3 = document.getElementById(`fav-btn-featured-${songId}`);
         if(btn1) btn1.classList.toggle('liked', !isCurrentlyLiked);
         if(btn2) btn2.classList.toggle('liked', !isCurrentlyLiked);
+        if(btn3) btn3.classList.toggle('liked', !isCurrentlyLiked);
 
         const res = await fetch(`${API_URL}/users/${username}/favorites`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songId }) });
         if(res.ok) {
@@ -539,6 +617,7 @@
         } else {
             if(btn1) btn1.classList.toggle('liked', isCurrentlyLiked);
             if(btn2) btn2.classList.toggle('liked', isCurrentlyLiked);
+            if(btn3) btn3.classList.toggle('liked', isCurrentlyLiked);
         }
     }
 
@@ -587,6 +666,7 @@
 
         let latest = [...allSongs].filter(s => s.status === 'APPROVED').sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
         if(latest.length > 0) container.innerHTML += generateSongGridHtml('最新歌曲', latest, 'ALL');
+        container.innerHTML += generateFeaturedGenreHtml();
 
         allGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
@@ -617,6 +697,54 @@
         });
         html += `</div>`;
         return html;
+    }
+
+    function getFeaturedGenres() {
+        const ids = Array.isArray(globalSettings.featuredGenreIds) ? globalSettings.featuredGenreIds : [];
+        return ids.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean).slice(0, 10);
+    }
+
+    function openFeaturedMore(genreId) {
+        const genre = allGenres.find(g => g.id === genreId);
+        if(genre) openMoreSongs(genre.name, genre.id);
+    }
+
+    function selectFeaturedGenre(genreId) {
+        currentFeaturedGenreId = genreId;
+        const section = document.getElementById('featuredGenreSection');
+        if(section) section.outerHTML = generateFeaturedGenreHtml();
+    }
+
+    function generateFeaturedGenreHtml() {
+        const featuredGenres = getFeaturedGenres();
+        if(!featuredGenres.length) return '';
+        if(!currentFeaturedGenreId || !featuredGenres.some(g => g.id === currentFeaturedGenreId)) currentFeaturedGenreId = featuredGenres[0].id;
+        const activeGenre = featuredGenres.find(g => g.id === currentFeaturedGenreId) || featuredGenres[0];
+        const activeSongs = allSongs.filter(s => s.genreId === activeGenre.id && s.status === 'APPROVED').slice(0, 9);
+        const tabs = featuredGenres.map(g => `<button class="featured-genre-tab ${g.id === activeGenre.id ? 'active' : ''}" onclick="selectFeaturedGenre('${g.id}')">${escapeHtml(g.name)}</button>`).join('');
+        const cards = activeSongs.map(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const isFav = userFavorites.includes(s.id);
+            return `
+                <div class="home-song-row-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}">
+                    <div class="info">
+                        <div class="title truncate">${escapeHtml(s.filename)}</div>
+                        <div class="sub truncate">Uploader: ${escapeHtml(s.uploader || 'FULLKIK')}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="price">💎 ${s.price || 0}</div>
+                        <button class="heart-btn ${isFav ? 'liked' : ''}" id="fav-btn-featured-${s.id}" onclick="toggleFav('${s.id}', event)" style="padding:4px; border:none;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                    </div>
+                </div>`;
+        }).join('');
+
+        return `
+            <div id="featuredGenreSection">
+                <div class="section-header"><h3>专区</h3><span onclick="openFeaturedMore('${activeGenre.id}')">更多 ></span></div>
+                <div class="featured-genre-tabs">${tabs}</div>
+                ${cards ? `<div class="home-song-grid">${cards}</div>` : `<div class="featured-empty">${escapeHtml(activeGenre.name)} 暂无歌曲</div>`}
+            </div>`;
     }
 
     // --- DJ / PRODUCER LIST ---
@@ -755,7 +883,11 @@
         setMusicPageTitle('song', currentSong.filename);
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
-        document.getElementById('playerMeta').innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
+        const uploaderName = currentSong.uploader || 'FULLKIK';
+        const uploaderHtml = currentSong.uploader
+            ? `<span class="uploader-link" onclick="window.location.href='/vip.html?user=${encodeURIComponent(currentSong.uploader)}'">${escapeHtml(uploaderName)}</span>`
+            : escapeHtml(uploaderName);
+        document.getElementById('playerMeta').innerHTML = `${uploaderHtml} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
         document.getElementById('playerCover').src = currentSong.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         
         const price = currentSong.price || 0; const actionsDiv = document.getElementById('playerActions');
