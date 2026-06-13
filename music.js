@@ -105,7 +105,8 @@ const DEFAULT_SETTINGS = {
     banners: [],
     maxSongPrice: 200,
     supportWhatsapp: '',
-    homePosterUrl: ''
+    homePosterUrl: '',
+    featuredGenreIds: []
 };
 
 async function getGlobalSettings() {
@@ -722,12 +723,14 @@ app.get('/api/reports', async (req, res) => {
 
 app.post('/api/reports', async (req, res) => {
     try {
+        const allowedReasons = ['版权', '其他'];
+        const reportReason = allowedReasons.includes(req.body.reason) ? req.body.reason : '其他';
         const newReport = {
             songId: req.body.songId,
             songName: req.body.songName,
             uploader: req.body.uploader,
             reporter: req.body.reporter || 'Guest',
-            reason: req.body.reason || '版权问题',
+            reason: reportReason,
             description: req.body.description || '-',
             status: 'PENDING',
             timestamp: new Date().toISOString()
@@ -915,6 +918,11 @@ app.put('/api/settings', async (req, res) => {
             updates.maxSongPrice = Math.min(Math.max(maxSongPrice, 1), 9999);
         }
         if (req.body.supportWhatsapp !== undefined) updates.supportWhatsapp = String(req.body.supportWhatsapp || '').trim();
+        if (req.body.featuredGenreIds !== undefined) {
+            updates.featuredGenreIds = Array.isArray(req.body.featuredGenreIds)
+                ? req.body.featuredGenreIds.map(id => String(id)).filter(Boolean).slice(0, 10)
+                : [];
+        }
         
         if (req.body.banners !== undefined) {
             let processedBanners = [];
@@ -938,7 +946,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
