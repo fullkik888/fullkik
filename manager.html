@@ -87,7 +87,7 @@
 
         .glass-panel { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; overflow: hidden;}
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size:14px; font-weight:bold;}
-        .btn-primary { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px; transition: 0.2s; white-space:nowrap;}
+        .btn-primary { background: var(--accent); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 13px; transition: 0.2s;}
         .btn-primary:hover { background: var(--accent-light); }
         
         .filter-bar { display: flex; gap: 15px; padding: 20px; background: rgba(0,0,0,0.2); flex-wrap: wrap; align-items: flex-end;}
@@ -108,14 +108,13 @@
         .grid-users { grid-template-columns: 1.5fr 2fr 100px 100px 120px 100px 120px 100px; min-width:1000px;}
         .grid-dl { grid-template-columns: 60px 2fr 80px 120px 100px 150px 80px 80px; min-width:1000px;}
         .grid-logs { grid-template-columns: 40px 1fr 180px; min-width:800px;}
-        .grid-sens { grid-template-columns: 60px 1.5fr 100px 180px 100px; min-width:700px;}
         .grid-songs-complex { grid-template-columns: 40px 40px 3fr 100px 100px 60px 80px 80px 100px 100px 60px; gap: 10px; min-width:1300px;}
         .grid-pending { grid-template-columns: 40px 40px 3fr 120px 100px 120px 140px; gap: 10px; min-width:1000px;}
         .grid-user-topup { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; min-width:1100px;}
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
-        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 100px; min-width: 1200px;}
+        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 120px; min-width: 1200px;}
 
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -149,6 +148,10 @@
 
         .btn-manage { background: var(--accent-light); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; transition: 0.2s;}
         .btn-manage:hover { background: var(--accent); }
+        .manage-dropdown { position: absolute; right: 20px; top: 40px; background: #2a2a35; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; overflow: hidden; z-index: 100; min-width: 120px;}
+        .manage-dropdown.show { display: flex; }
+        .drop-btn { padding: 12px 15px; background: none; border: none; color: white; font-size: 13px; text-align: left; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;}
+        .drop-btn:hover { background: rgba(255,255,255,0.1); }
         
         /* GENRES GRID */
         .genre-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; padding: 20px;}
@@ -159,7 +162,7 @@
         .genre-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8;}
         .genre-card .overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);}
         .genre-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: var(--accent-light);}
-        .genre-settings-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px; border-radius: 50%; display: flex; transition: 0.2s; z-index: 10; cursor:pointer;}
+        .genre-settings-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px; border-radius: 50%; display: flex; transition: 0.2s; z-index: 10;}
         .genre-settings-icon:hover { background: var(--accent); }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
@@ -212,11 +215,6 @@
             .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
             .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
-            .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
-            .genre-card .overlay h4 { font-size: 12px; }
-            .genre-card .overlay div { font-size: 10px; }
-            .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
-            .genre-settings-icon svg { width: 14px; height: 14px; }
         }
     </style>
 </head>
@@ -337,20 +335,23 @@
     </div>
 
     <div id="view-sensitive" class="view-section">
-        <div class="dash-header"><h2>敏感词管理</h2><p>共 <span id="sensCount">0</span> 个敏感词 · 上传/编辑歌曲时自动检测标题/用户名</p></div>
-        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
-            <div style="font-weight:bold; margin-bottom:10px;">添加敏感词</div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="sensInput" class="input-text" style="flex:1;" placeholder="输入需要过滤的词...">
-                <button class="btn-primary" onclick="addSensitiveWord()">+ 添加</button>
+        <div class="dash-header"><h2>敏感词管理</h2><p>管理所有被屏蔽的关键词</p></div>
+        <div class="glass-panel" style="padding: 20px;">
+            <h3 style="font-size:16px; margin:0 0 10px 0;">添加敏感词</h3>
+            <p style="font-size:12px; color:var(--text-muted); margin:0 0 15px 0;">敏感词 *</p>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="text" id="newSensWord" class="input-text" style="flex:1;" placeholder="输入需要过滤的词...">
+                <button class="btn-primary" style="background:#a52a2a;" onclick="addSensitiveWord()">+ 添加</button>
             </div>
         </div>
         <div class="glass-panel">
             <div class="panel-header">已有敏感词</div>
             <div class="table-container">
                 <div class="table-inner">
-                    <div class="header-row grid-sens"><div>ID</div><div>敏感词</div><div>状态</div><div>添加时间</div><div style="text-align:right;">操作</div></div>
-                    <div id="sensList"></div>
+                    <div class="header-row" style="grid-template-columns: 80px 2fr 100px 150px 100px;">
+                        <div>ID</div><div>敏感词</div><div>状态</div><div>添加时间</div><div style="text-align:right;">操作</div>
+                    </div>
+                    <div id="sensWordList"></div>
                 </div>
             </div>
         </div>
@@ -572,7 +573,11 @@
                 <div class="admin-col">
                     <div style="font-size:14px; font-weight:bold;">角色管理</div>
                     <label style="font-size:12px; color:var(--text-muted);">角色</label>
-                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option><option value="PRODUCER">VIP - 制作人</option></select>
+                    <select class="select-box" id="det-sel-role">
+                        <option value="NORMAL">Normal - 普通用户</option>
+                        <option value="VIP">VIP - 创作者</option>
+                        <option value="PRODUCER">制作人 - PRODUCER</option>
+                    </select>
                     <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
                 </div>
                 
@@ -599,7 +604,7 @@
             </div>
         </div>
         
-        <button class="btn-danger-full" onclick="openDeleteModal(currentEditUser.username)">删除该用户 (Delete User)</button>
+        <button class="btn-danger-full" onclick="openDeleteModal()">删除该用户 (Delete User)</button>
 
         <div class="glass-panel" style="margin-top:20px;">
             <div class="panel-header">最近充值</div>
@@ -691,36 +696,12 @@
     </div>
 </div>
 
-<div class="modal-overlay" id="uploadSongModal">
-    <div class="modal-box">
-        <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;" id="uploadModalTitle">Upload Audio</h3>
-            <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 10px auto; cursor: pointer; border-radius: 8px; overflow:hidden;" onclick="document.getElementById('songCoverUpload').click()">
-                <img id="songCoverPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E" style="width: 100%; height: 100%; object-fit: cover;">
-                <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); text-align: center; font-size: 10px; padding: 4px 0;">COVER PNG</div>
-            </div>
-            <input type="file" id="songCoverUpload" accept="image/*" style="display:none;" onchange="handleImgPreview(event, 'songCoverPreview', 'upload')">
-            <label class="input-label">Category</label><select id="uploadGenreSelect" class="modal-input" style="background:#0b0b10;"></select>
-            <div id="uploadFileArea" style="margin-bottom:10px;"><label class="btn-primary" style="display:block; text-align:center; width:100%; box-sizing:border-box;">Select MP3 <input type="file" id="uploadFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleAudioSelect(event)"></label></div>
-            
-            <div style="margin-bottom:10px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
-                <label class="input-label">转运歌曲 (Transload .m4a URL)</label>
-                <input type="text" id="transloadUrlInput" class="modal-input" style="margin-bottom:0;" placeholder="https://.../song.m4a">
-            </div>
-
-            <label class="input-label">Title</label><input type="text" id="uploadTitleInput" class="modal-input" style="margin-bottom:0;">
-            <label class="input-label">Tokens</label><input type="number" id="uploadPriceInput" class="modal-input" value="10" min="0" style="margin-bottom:0;">
-        </div>
-        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">Cancel</button><button class="modal-btn" onclick="executeUpload()" style="color:var(--accent-light);">Upload</button></div>
-    </div>
-</div>
-
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], sensitiveWords = [], allReports = [];
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allReports = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
-    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
+    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = [];
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -779,7 +760,7 @@
         if(viewId === 'downloads') loadDlMonitor();
         if(viewId === 'adminlogs') loadAdminLogs();
         if(viewId === 'reports') loadReports();
-        if(viewId === 'sensitive') loadSensitiveWords();
+        if(viewId === 'sensitive') renderSensitiveWords();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -798,7 +779,10 @@
                 document.getElementById('heroTitleInput').value = globalSettings.heroTitle || "专属DJ节奏空间"; 
                 currentBanners = globalSettings.banners || ['', '', ''];
             }
-            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); 
+            allSongs = await (await fetch(`${API_URL}/songs`)).json(); 
+            allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
+            
             buildDashboardStats(); renderGenres(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
         } catch(e) {}
 
@@ -811,6 +795,42 @@
     }
     
     async function saveSettings() { showGlobalLoader(); await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({headerTitle: document.getElementById('headerInput').value, heroTitle: document.getElementById('heroTitleInput').value})}); hideGlobalLoader(); showToast("Texts Saved!"); }
+
+    // --- SENSITIVE WORDS ENGINE ---
+    function renderSensitiveWords() {
+        const words = globalSettings.sensitiveWords || [];
+        const listDiv = document.getElementById('sensWordList'); listDiv.innerHTML = '';
+        words.forEach((w, i) => {
+            listDiv.innerHTML += `
+                <div class="data-row" style="grid-template-columns: 80px 2fr 100px 150px 100px;">
+                    <div style="color:var(--text-muted)">#${String(i+1).padStart(3,'0')}</div>
+                    <div style="font-weight:bold">${w.word}</div>
+                    <div><span class="badge-status-pill status-approved">启用</span></div>
+                    <div style="font-size:11px; color:var(--text-muted)">${new Date(w.addedAt).toISOString().split('T')[0]}</div>
+                    <div style="text-align:right;">
+                        <button class="btn-text-action danger" onclick="removeSensitiveWord(${i})">删除</button>
+                    </div>
+                </div>`;
+        });
+        if(!words.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无敏感词记录</div>`;
+    }
+
+    async function addSensitiveWord() {
+        const w = document.getElementById('newSensWord').value.trim(); if(!w) return;
+        let words = globalSettings.sensitiveWords || [];
+        if(words.find(x => x.word.toLowerCase() === w.toLowerCase())) return showToast("敏感词已存在", true);
+        words.push({ word: w, addedAt: new Date().toISOString() });
+        showGlobalLoader();
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ sensitiveWords: words }) });
+        globalSettings.sensitiveWords = words; document.getElementById('newSensWord').value = ''; renderSensitiveWords(); hideGlobalLoader(); showToast("添加成功");
+    }
+
+    async function removeSensitiveWord(index) {
+        let words = globalSettings.sensitiveWords || []; words.splice(index, 1);
+        showGlobalLoader();
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ sensitiveWords: words }) });
+        globalSettings.sensitiveWords = words; renderSensitiveWords(); hideGlobalLoader(); showToast("删除成功");
+    }
 
     // --- HOMEPAGE BANNERS ---
     function renderBanners() {
@@ -868,65 +888,35 @@
     async function saveActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, count: 0, total: 0 }; act.reward = parseInt(document.getElementById('actRewardInput').value) || 0; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); closeModals(); hideGlobalLoader(); showToast("Saved"); }
     async function toggleActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideGlobalLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
 
-    // --- SENSITIVE WORDS (敏感词管理) ---
-    async function loadSensitiveWords() {
-        showContentLoader();
-        sensitiveWords = await (await fetch(`${API_URL}/sensitive-words`)).json();
-        document.getElementById('sensCount').innerText = sensitiveWords.length;
-        const listDiv = document.getElementById('sensList'); listDiv.innerHTML = '';
-        if(!sensitiveWords.length) { listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`; }
-        sensitiveWords.forEach((s, i) => {
-            listDiv.innerHTML += `
-                <div class="data-row grid-sens">
-                    <div style="color:var(--text-muted);">#00${i+1}</div>
-                    <div style="font-weight:bold; font-size:14px;">${s.word}</div>
-                    <div><span class="badge-status-pill status-approved">启用</span></div>
-                    <div style="font-size:12px; color:var(--text-muted);">${new Date(s.addedAt).toLocaleString()}</div>
-                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="deleteSensitiveWord('${s.id}')">删除</button></div>
-                </div>`;
-        });
-        hideContentLoader();
-    }
-    async function addSensitiveWord() {
-        const input = document.getElementById('sensInput'); const word = input.value.trim(); if(!word) return;
-        showGlobalLoader(); const res = await fetch(`${API_URL}/sensitive-words`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({word}) });
-        if(res.ok) { input.value = ''; await loadSensitiveWords(); hideGlobalLoader(); showToast("添加成功"); } else { hideGlobalLoader(); showToast("添加失败", true); }
-    }
-    async function deleteSensitiveWord(id) {
-        showGlobalLoader(); await fetch(`${API_URL}/sensitive-words/${id}`, { method: 'DELETE' }); await loadSensitiveWords(); hideGlobalLoader(); showToast("已删除");
-    }
-
     // --- REPORTS ---
     async function loadReports() {
         showContentLoader();
         allReports = await (await fetch(`${API_URL}/reports`)).json();
-        const pending = allReports.filter(r => r.status === 'PENDING').length;
-        document.getElementById('reportCount').innerText = pending; document.getElementById('reportTotal').innerText = allReports.length;
-        
+        document.getElementById('reportCount').innerText = allReports.length; document.getElementById('reportTotal').innerText = allReports.length;
         const listDiv = document.getElementById('reportList'); listDiv.innerHTML = '';
-        if(!allReports.length) { listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`; hideContentLoader(); return; }
-
+        
         allReports.forEach(r => {
-            let statusText = r.status === 'PENDING' ? '待处理' : r.status === 'DISMISSED' ? '已撤诉' : '已下架';
-            let actionHtml = r.status === 'PENDING' ? `<button class="btn-text-action" onclick="dismissReport('${r.id}')">撤诉</button><button class="btn-text-action danger" onclick="takedownReport('${r.id}')">下架</button>` : `<span style="color:var(--text-muted); font-size:11px;">-</span>`;
-            
             listDiv.innerHTML += `
                 <div class="data-row grid-reports">
-                    <div class="truncate" style="font-weight:bold;">${r.songName}</div>
+                    <div class="truncate">${r.songName}</div>
                     <div class="truncate">${r.uploader}</div>
-                    <div class="truncate">${r.reportedBy}</div>
+                    <div class="truncate">${r.reporter}</div>
                     <div style="color:var(--danger)">${r.reason}</div>
-                    <div class="truncate" style="font-size:11px; color:var(--text-muted);">${r.desc}</div>
-                    <div style="font-size:11px;">${new Date(r.time).toLocaleString()}</div>
-                    <div style="font-weight:bold;">${statusText}</div>
-                    <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">${actionHtml}</div>
+                    <div class="truncate">${r.description || '-'}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${new Date(r.time).toISOString().split('T')[0]}</div>
+                    <div>待处理</div>
+                    <div style="display:flex; gap:5px; justify-content:center;">
+                        <button class="btn-text-action" onclick="dismissReport('${r.id}')">撤诉</button>
+                        <button class="btn-text-action danger" onclick="takedownReport('${r.id}')">下架</button>
+                    </div>
                 </div>`;
         });
+        if(!allReports.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
         hideContentLoader();
     }
-
-    async function dismissReport(id) { showGlobalLoader(); await fetch(`${API_URL}/reports/${id}/dismiss`, { method: 'PUT' }); loadReports(); hideGlobalLoader(); showToast("已撤诉"); }
-    async function takedownReport(id) { showGlobalLoader(); await fetch(`${API_URL}/reports/${id}/takedown`, { method: 'PUT' }); loadReports(); hideGlobalLoader(); showToast("歌曲已下架"); }
+    
+    async function dismissReport(id) { showGlobalLoader(); await fetch(`${API_URL}/reports/${id}`, { method: 'DELETE' }); loadReports(); hideGlobalLoader(); showToast("已撤诉"); }
+    async function takedownReport(id) { showGlobalLoader(); await fetch(`${API_URL}/reports/${id}/takedown`, { method: 'POST' }); loadReports(); loadSongs(); hideGlobalLoader(); showToast("已下架"); }
 
     // --- ADMIN LOGS ---
     async function loadAdminLogs() { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/admin`)).json(); const listDiv = document.getElementById('adminLogsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); if(!data.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`; hideContentLoader(); }
@@ -981,14 +971,14 @@
     // --- DOWNLOAD MONITOR ---
     function loadDlMonitor() {
         showContentLoader();
-        let dlData = allUsers.map(u => ({ username: u.username, email: u.email, isVip: u.isVip, createdAt: u.createdAt, status: u.status, dlCount: u.purchases ? u.purchases.length : 0, lastDl: u.purchases && u.purchases.length ? Math.max(...u.purchases.map(p => new Date(p.purchaseTime).getTime())) : 0 })).filter(u => u.dlCount > 0);
+        let dlData = allUsers.map(u => ({ username: u.username, email: u.email, isVip: u.isVip, role: u.role, createdAt: u.createdAt, status: u.status, dlCount: u.purchases ? u.purchases.length : 0, lastDl: u.purchases && u.purchases.length ? Math.max(...u.purchases.map(p => new Date(p.purchaseTime).getTime())) : 0 })).filter(u => u.dlCount > 0);
         dlData.sort((a,b) => b.dlCount - a.dlCount);
         
         document.getElementById('dl-user-count').innerText = dlData.length;
         const listDiv = document.getElementById('dlMonitorList'); listDiv.innerHTML = '';
         
         dlData.forEach((u, i) => {
-            const roleBadge = u.isVip ? 'VIP' : 'NORMAL';
+            const roleBadge = u.role === 'PRODUCER' ? '制作人' : u.isVip ? 'VIP' : 'NORMAL';
             const statusNode = u.status === 'BANNED' ? `<span style="color:var(--danger)">已封禁</span>` : `正常`;
             const actionBtn = u.status === 'BANNED' ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')">解封</button>` : `<button class="btn-text-action danger" onclick="openBanModalFromDl('${u.username}')">拉黑</button>`;
             const lastDate = u.lastDl > 0 ? new Date(u.lastDl).toLocaleString() : '-';
@@ -1077,7 +1067,7 @@
                         <div class="song-cell-text"><div class="song-cell-title truncate">${song.filename}</div></div>
                     </div>
                     <div class="truncate" style="font-weight:bold; color:var(--text-main);"><span style="font-size:10px; border:1px solid var(--accent); color:var(--accent); padding:2px 4px; border-radius:4px; margin-right:5px;">上传 by</span>${song.uploader}</div>
-                    <div style="color: var(--token); font-weight: bold;">💎 ${song.price || 10}</div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${song.price || 0}</div>
                     <div style="color: var(--text-muted); font-size:12px;">${new Date(song.uploadTime).toLocaleString()}</div>
                     <div style="text-align:right; display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
                         <button class="btn-text-action" style="color:var(--success); border:1px solid var(--success); padding:4px 12px; border-radius:4px;" onclick="resolvePending('${song.id}', 'APPROVED')">通过</button>
@@ -1204,7 +1194,7 @@
 
         paged.forEach(song => {
             const genre = allGenres.find(g => g.id === song.genreId); const genreName = genre ? genre.name : '未分类';
-            const statusStr = song.status === 'REMOVED' ? 'REMOVED' : 'APPROVED'; const statusClass = song.status === 'REMOVED' ? 'status-removed' : 'status-approved';
+            const statusStr = song.status === 'REMOVED' ? '下架' : '已发布'; const statusClass = song.status === 'REMOVED' ? 'status-removed' : 'status-approved';
             const actionToggleText = song.status === 'REMOVED' ? '恢复' : '下架'; const actionToggleColor = song.status === 'REMOVED' ? 'color:var(--success)' : 'color:#ffcc00';
 
             listDiv.innerHTML += `
@@ -1217,14 +1207,14 @@
                     </div>
                     <div><div class="badge-vip">UPLOADER<br><span class="truncate" style="max-width:80px;">${song.uploader}</span></div></div>
                     <div class="clickable-cell" onclick="openQuickGenre('${song.id}', '${song.genreId}')"><div class="truncate" style="color:var(--text-muted); font-size:12px; line-height:1.4;">${genreName}<br>· 音乐</div></div>
-                    <div class="clickable-cell" onclick="openQuickPrice('${song.id}', ${song.price || 10})"><div style="color:var(--token); font-weight:bold; display:flex; align-items:center; gap:3px;"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${song.price || 10}</div></div>
+                    <div class="clickable-cell" onclick="openQuickPrice('${song.id}', ${song.price || 0})"><div style="color:var(--token); font-weight:bold; display:flex; align-items:center; gap:3px;"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${song.price || 0}</div></div>
                     <div style="font-weight:bold;">${(song.downloads || 0).toLocaleString()}</div>
                     <div style="font-weight:bold;">${(song.plays || 0).toLocaleString()}</div>
                     <div><span class="badge-status-pill ${statusClass}">${statusStr}</span></div>
                     <div style="color:var(--text-muted); font-size:11px; line-height:1.4;">${new Date(song.uploadTime).toISOString().split('T')[0]}</div>
                     <div class="song-action-col">
                         <button class="btn-text-action" onclick="openSettingsModal('${song.id}', '${song.filename.replace(/'/g, "\\'")}', ${song.price}, '${song.genreId}', '${song.coverUrl}')">编制</button>
-                        <button class="btn-text-action" style="${actionToggleColor}" onclick="toggleSongStatus('${song.id}', '${statusStr}')">${actionToggleText}</button>
+                        <button class="btn-text-action" style="${actionToggleColor}" onclick="toggleSongStatus('${song.id}', '${song.status}')">${actionToggleText}</button>
                         <button class="btn-text-action danger" onclick="deleteSong('${song.id}')">删除</button>
                     </div>
                 </div>
@@ -1240,8 +1230,7 @@
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
     function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; document.getElementById('songCoverPreview').style.display='block'; pendingUploadBase64 = null; document.getElementById('transloadUrlInput').classList.remove('shake'); }
-    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Upload Audio'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-    function openTransloadModal() { isTransloadMode = true; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Transload Audio'; document.getElementById('uploadFileArea').style.display = 'none'; document.getElementById('transloadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
+    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
 
     async function executeUpload() {
         const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value; const uploader = document.getElementById('uploadUploaderInput').value;
@@ -1250,11 +1239,11 @@
         if(isTransloadMode || url) {
             if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
             showGlobalProgress(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64, uploader: uploader }) });
-            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { showToast("Failed: " + await res.text(), true); } hideGlobalProgress();
+            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
         } else if(file) {
             showGlobalProgress(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); fd.append('uploader', uploader); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { showToast("Failed: " + await res.text(), true); } hideGlobalProgress();
+            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
         } else { showToast("Please provide file or URL", true); }
     }
 
@@ -1278,12 +1267,19 @@
     }
 
     // --- USERS ---
-    async function loadUsers() { showContentLoader(); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); handleUserSearch(); hideContentLoader(); }
+    async function loadUsers() {
+        const overlay = document.getElementById('user-loading-overlay'); const bar = document.getElementById('user-loading-bar');
+        hideGlobalLoader(); if(overlay) { overlay.style.display = 'flex'; bar.style.width = '0%'; }
+        let progress = 0; const interval = setInterval(() => { progress += Math.random()*15; if(progress > 90) progress = 90; if(bar) bar.style.width = `${progress}%`; }, 100);
+        allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+        clearInterval(interval); if(bar) bar.style.width = '100%';
+        setTimeout(() => { if(overlay) overlay.style.display = 'none'; handleUserSearch(); }, 300);
+    }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
     
     function handleUserSearch() {
         const query = document.getElementById('userSearchInput').value.toLowerCase(); const role = document.getElementById('roleFilter').value;
-        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const matchesRole = role === 'ALL' || u.role === role || (role === 'VIP' && u.isVip); return matchesQuery && matchesRole; });
+        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip) || (role === 'PRODUCER' && u.role === 'PRODUCER'); return matchesQuery && matchesRole; });
         document.getElementById('userCount').innerText = filtered.length; const listDiv = document.getElementById('userList'); listDiv.innerHTML = '';
         
         filtered.forEach(u => {
@@ -1319,7 +1315,7 @@
         document.getElementById('det-u-name').innerText = currentEditUser.username;
         document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
         document.getElementById('det-u-role').innerText = currentEditUser.role || (currentEditUser.isVip ? 'VIP' : 'NORMAL');
-        document.getElementById('det-u-status').innerText = currentEditUser.status === 'BANNED' ? 'BANNED' : 'ACTIVE';
+        document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
         document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';
         document.getElementById('det-u-tokens').innerText = currentEditUser.tokens || 0;
         document.getElementById('det-curr-token').innerText = currentEditUser.tokens || 0;
@@ -1339,28 +1335,23 @@
         }
 
         const topupDiv = document.getElementById('det-topup-list'); topupDiv.innerHTML = '';
-        (currentEditUser.topups || []).slice(-30).reverse().forEach(t => {
+        (currentEditUser.topups || []).slice().reverse().slice(0, 30).forEach(t => {
             topupDiv.innerHTML += `<div class="data-row grid-user-topup"><div>${new Date(t.date).toISOString().split('T')[0]}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token);font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.topups||[]).length) topupDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
 
         const buyDiv = document.getElementById('det-buy-list'); buyDiv.innerHTML = '';
-        (currentEditUser.purchases || []).slice().reverse().forEach(p => {
+        (currentEditUser.purchases || []).slice().reverse().slice(0, 30).forEach(p => {
             buyDiv.innerHTML += `<div class="data-row grid-user-buy"><div class="truncate">${p.songName}</div><div>${new Date(p.purchaseTime).toISOString().split('T')[0]}</div><div style="color:var(--danger);font-weight:bold;">-💎 ${p.tokensSpent}</div><div>1</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
     }
 
-    async function adminUpdateRole() { 
-        showGlobalLoader(); 
-        const role = document.getElementById('det-sel-role').value;
-        await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip: role==='VIP'||role==='PRODUCER', role: role}) }); 
-        hideGlobalLoader(); showToast("Role Updated"); loadUsers(); 
-    }
+    async function adminUpdateRole() { showGlobalLoader(); const role = document.getElementById('det-sel-role').value; const isVip = role === 'VIP' || role === 'PRODUCER'; await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip, role}) }); hideGlobalLoader(); showToast("Role Updated"); loadUsers(); }
 
     async function adminAdjustTokens() {
         const amt = document.getElementById('det-adj-amt').value; const reason = document.getElementById('det-adj-reason').value;
-        if(!amt || !reason) return showToast("Amount and Reason required", true);
+        if(!amt || !reason) return showToast("Amount and Reason required");
         showGlobalLoader(); await fetch(`${API_URL}/admin/users/${currentEditUser.username}/adjust-tokens`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({amount: amt, reason: reason}) });
         document.getElementById('det-adj-amt').value = ''; document.getElementById('det-adj-reason').value = '';
         allUsers = await (await fetch(`${API_URL}/all-users`)).json(); openUserDetail(currentEditUser.username); hideGlobalLoader(); showToast("Tokens Adjusted");
@@ -1380,24 +1371,10 @@
     }
     async function adminUnbanUser(username) { showGlobalLoader(); await fetch(`${API_URL}/admin/users/${username}/unban`, { method: 'PUT' }); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); if(currentEditUser && currentEditUser.username === username) openUserDetail(username); else handleUserSearch(); hideGlobalLoader(); showToast("User Unbanned"); }
     
-    function openDeleteModal(username) { document.getElementById('deleteModalTarget').innerText = `Warning: Permanently removing '${username}'`; document.getElementById('adminDeleteModal').style.display = 'flex'; }
-    async function confirmUserDelete() { 
-        showGlobalLoader("Deleting..."); 
-        try {
-            const res = await fetch(`${API_URL}/users/${currentEditUser.username}`, { method: 'DELETE' }); 
-            if(res.ok) {
-                closeModals(); hideGlobalLoader(); showToast("User deleted."); 
-                await loadUsers(); switchView('users'); 
-            } else { throw new Error(await res.text()); }
-        } catch(e) {
-            hideGlobalLoader(); showToast("Delete failed: " + e.message, true);
-        }
-    }
+    function openDeleteModal() { document.getElementById('deleteModalTarget').innerText = `Warning: Permanently removing '${currentEditUser.username}'`; document.getElementById('adminDeleteModal').style.display = 'flex'; }
+    async function confirmUserDelete() { showGlobalLoader("Deleting..."); await fetch(`${API_URL}/users/${currentEditUser.username}`, { method: 'DELETE' }); closeModals(); hideGlobalLoader(); showToast("User deleted."); switchView('users'); }
 
     // --- DATA / LOGS ---
-    async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
-    async function clearLogs(type, isAll) { showGlobalLoader(); await fetch(`${API_URL}/logs/${type}/all`, { method: 'DELETE' }); hideGlobalLoader(); loadLogs(type); showToast("Logs cleared."); }
-
     document.addEventListener("DOMContentLoaded", () => { loadInitial(); });
 </script>
 </body>
