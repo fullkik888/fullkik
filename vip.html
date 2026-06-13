@@ -25,8 +25,11 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
+        .vip-center-pill { display:flex; align-items:center; justify-content:center; min-height:38px; padding:0 16px; border-radius:20px; background:linear-gradient(135deg, rgba(128,0,0,0.9), rgba(165,42,42,0.9)); color:white; text-decoration:none; font-size:13px; font-weight:800; border:1px solid rgba(255,255,255,0.12); white-space:nowrap; box-shadow:0 8px 20px rgba(128,0,0,0.25); }
+        .vip-center-pill:hover { transform: translateY(-1px); box-shadow:0 10px 24px rgba(128,0,0,0.38); }
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
@@ -44,20 +47,23 @@
         .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: rgba(30, 30, 30, 0.9); backdrop-filter: blur(20px); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; color: white; border: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
         .toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* Fast 3-Dot Loader for VIP Page */
-        .vip-loader-overlay { position: fixed; inset: 0; background: rgba(11, 5, 5, 0.8); backdrop-filter:blur(10px); z-index: 99999; display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .vip-dot { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-light); animation: bounce 0.6s infinite alternate ease-in-out; }
-        .vip-dot:nth-child(1) { animation-delay: 0s; }
-        .vip-dot:nth-child(2) { animation-delay: 0.2s; }
-        .vip-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0% { transform: scale(0.8) translateY(0); } 100% { transform: scale(1.2) translateY(-15px); } }
+        /* Fast Circle Loader for VIP Page */
+        .vip-loader-overlay { position: fixed; inset: 0; background: rgba(11, 5, 5, 0.82); backdrop-filter:blur(14px); z-index: 99999; display: flex; justify-content: center; align-items: center; flex-direction:column; }
+        .vip-circle-wrap { position:relative; width:88px; height:88px; display:flex; align-items:center; justify-content:center; animation: loaderBreath 1.65s ease-in-out infinite; }
+        .vip-circle-wrap::after { content:''; position:absolute; inset:17px; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.24), rgba(128,0,0,0)); filter:blur(4px); animation: loaderGlow 1.65s ease-in-out infinite; }
+        .vip-circle-wrap svg { position:relative; z-index:1; overflow:visible; filter:drop-shadow(0 0 14px rgba(165,42,42,0.45)); }
+        .vip-circle-wrap.loader-popout { animation: loaderPopout 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        #vipLoadCircle { transform: rotate(-90deg); transform-origin:50% 50%; }
+        @keyframes loaderBreath { 0%,100% { transform:scale(0.96); opacity:0.86; } 50% { transform:scale(1.05); opacity:1; } }
+        @keyframes loaderGlow { 0%,100% { transform:scale(0.82); opacity:0.35; } 50% { transform:scale(1.15); opacity:0.72; } }
+        @keyframes loaderPopout { 0% { transform:scale(1); opacity:1; } 55% { transform:scale(1.22); opacity:1; } 100% { transform:scale(0.72); opacity:0; filter:blur(6px); } }
 
         @media (max-width: 768px) {
             .header-top { padding: 12px 14px; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
             .logo-container { font-size: 18px; }
             .nav-tabs { order: 3; width: 100%; gap: 14px; padding-bottom: 2px; }
             .header-right { margin-left:auto; gap: 8px; }
-            .token-pill { padding: 8px 12px; font-size: 12px; }
+            .vip-center-pill, .token-pill { min-height:36px; padding: 0 12px; font-size: 12px; }
             .profile-trigger { padding: 4px; }
             .profile-pic { width: 30px; height: 30px; }
             .container { padding: 132px 14px 32px; }
@@ -73,7 +79,12 @@
 <body>
 
 <div class="vip-loader-overlay" id="vipLoaderOverlay">
-    <div class="vip-dot"></div><div class="vip-dot"></div><div class="vip-dot"></div>
+    <div class="vip-circle-wrap">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#2a1515" stroke-width="6"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="vipLoadCircle" style="transition: stroke-dashoffset 0.1s;"></circle>
+        </svg>
+    </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -88,6 +99,7 @@
     </div>
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
+            <a href="/profile.html?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
             <a href="/profile.html?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
             </a>
@@ -129,10 +141,25 @@
     let myFollowingList = [];
 
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+    function setVipLoaderProgress(value) {
+        const circle = document.getElementById('vipLoadCircle');
+        if(circle) circle.style.strokeDashoffset = 283 - (283 * value / 100);
+    }
+    function finishVipLoader() {
+        setVipLoaderProgress(100);
+        const overlay = document.getElementById('vipLoaderOverlay');
+        const wrap = document.querySelector('.vip-circle-wrap');
+        setTimeout(() => {
+            if(wrap) wrap.classList.add('loader-popout');
+            setTimeout(() => { if(overlay) overlay.style.display = 'none'; }, 430);
+        }, 120);
+    }
 
     async function init() {
+        setVipLoaderProgress(18);
         if(!username) { 
             document.getElementById('tokenUI').style.display = 'none'; 
+            document.getElementById('vipCenterTopBtn').href = '/register.html';
             document.getElementById('profileBtn').outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'">登录</button>`;
         } else {
             const meRes = await fetch(`${API_URL}/users/${username}`);
@@ -143,6 +170,7 @@
                 myFollowingList = me.following || [];
             }
         }
+        setVipLoaderProgress(35);
 
         const urlParams = new URLSearchParams(window.location.search);
         targetUser = urlParams.get('user');
@@ -156,6 +184,7 @@
             const btn = document.createElement('a'); btn.className = 'nav-tab'; btn.innerText = g.name; btn.href = `/music.html`;
             nav.insertBefore(btn, homeNode.nextSibling);
         });
+        setVipLoaderProgress(52);
 
         // Load VIP Details
         const res = await fetch(`${API_URL}/users/${targetUser}`);
@@ -212,8 +241,7 @@
             if(vipSongs.length === 0) listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">暂无上传作品</div>`;
         }
         
-        // Hide fast loader when done
-        document.getElementById('vipLoaderOverlay').style.display = 'none';
+        finishVipLoader();
     }
 
     function updateFollowBtn() {
