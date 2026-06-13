@@ -1,7 +1,15 @@
 /**
- * FULLKIK - Enterprise Backend API & Server Engine
- * Features: Auth, Media Streaming, Anti-Theft, Transactions, Genres, Playlists, Admin Tools, Sensitive Words, Reports
+ * ============================================================================
+ * FULLKIK - ENTERPRISE BACKEND API ENGINE
+ * ============================================================================
+ * Version: 6.99.102
+ * Description: Core backend services for Authentication, Media Streaming, 
+ * Anti-Theft Protection, Financial Transactions, Genres, Playlists, 
+ * Sensitive Word Filtering, and Content Reporting.
+ * Architecture: Express.js, Firebase Firestore, Cloudinary Stream Pipelining.
+ * ============================================================================
  */
+
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
@@ -15,16 +23,16 @@ const app = express();
 const PORT = process.env.PORT || 80;
 
 // ==========================================
-// 1. MIDDLEWARE & CONFIGURATION
+// 1. MIDDLEWARE & FIREBASE INITIALIZATION
 // ==========================================
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(__dirname));
 
-let db, bucket;
+let db;
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-    console.error("❌ FATAL ERROR: Missing FIREBASE_SERVICE_ACCOUNT_JSON!");
+    console.error("❌ FATAL CRASH PREVENTION: Missing FIREBASE_SERVICE_ACCOUNT_JSON environment variable. Please configure it.");
 } else {
     try {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
@@ -32,13 +40,16 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
             credential: admin.credential.cert(serviceAccount), 
             storageBucket: process.env.FIREBASE_STORAGE_BUCKET 
         });
-        console.log('✅ Google Firebase Database Connected!');
+        console.log('✅ Google Firebase Database Connected Successfully!');
         db = admin.firestore(); 
     } catch (error) { 
-        console.error('❌ Firebase Error:', error.message); 
+        console.error('❌ Firebase Connection Error:', error.message); 
     }
 }
 
+// ==========================================
+// 2. CLOUDINARY CONFIGURATION & MULTER
+// ==========================================
 if (process.env.CLOUDINARY_CLOUD_NAME) {
     cloudinary.config({ 
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -47,18 +58,23 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     });
 }
 
-// Multer Memory Storage for efficient Cloudinary pipelining
+// Memory storage for immediate processing without saving to local disk
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
-        if(file.mimetype.includes('audio') || file.mimetype.includes('video') || file.mimetype.includes('image') || file.originalname.match(/\.(mp3|m4a|mp4|jpg|jpeg|png)$/i)) {
-            cb(null, true); 
-        } else {
-            cb(new Error('Invalid file type.'));
+        try {
+            if(file.mimetype.includes('audio') || file.mimetype.includes('video') || file.mimetype.includes('image') || file.originalname.match(/\.(mp3|m4a|mp4|jpg|jpeg|png)$/i)) {
+                cb(null, true); 
+            } else {
+                cb(new Error('Invalid file type detected. Request aborted.'));
+            }
+        } catch(e) {
+            cb(new Error('Multer processing error.'));
         }
     }
 });
 
+// Cloudinary Stream Upload Wrapper
 function uploadStreamToCloudinary(buffer, resourceType, folder) {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream({ folder: folder, resource_type: resourceType }, (error, result) => {
@@ -68,14 +84,44 @@ function uploadStreamToCloudinary(buffer, resourceType, folder) {
     });
 }
 
+// Base64 Cloudinary Upload Wrapper
 async function uploadToCloudinaryBase64(base64Str, folder) {
     if(!base64Str) return '';
-    const result = await cloudinary.uploader.upload(base64Str, { folder: folder, resource_type: "auto" });
-    return result.secure_url;
+    try {
+        const result = await cloudinary.uploader.upload(base64Str, { folder: folder, resource_type: "auto" });
+        return result.secure_url;
+    } catch(e) {
+        console.error("Cloudinary Base64 Error:", e);
+        return '';
+    }
 }
 
 // ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// 3. UTILITY FUNCTIONS & LOGGING
+// ==========================================
+async function logEvent(type, message) { 
+    try { 
+        if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
+    } catch(e) {
+        console.error("Auditing Error:", e);
+    } 
+}
+
+// Helper to check for sensitive words
+async function checkSensitiveWords(text) {
+    if(!db || !text) return false;
+    try {
+        const snap = await db.collection('sensitive_words').get();
+        const words = snap.docs.map(d => d.data().word.toLowerCase());
+        const lowerText = text.toLowerCase();
+        return words.some(w => lowerText.includes(w));
+    } catch(e) {
+        return false;
+    }
+}
+
+// ==========================================
+// 4. HTML ROUTES & ANTI-THEFT STREAMING
 // ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
@@ -83,31 +129,12 @@ app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'prof
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
-async function logEvent(type, message) { 
-    try { 
-        if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
-    } catch(e) {
-        console.error("Logging Error:", e);
-    } 
-}
-
-// SENSITIVE WORDS INTERCEPTOR ENGINE
-async function checkSensitive(text) {
-    if(!text || !db) return false;
-    try {
-        const doc = await db.collection('settings').doc('global').get();
-        const words = doc.exists ? (doc.data().sensitiveWords || []) : [];
-        for(let w of words) {
-            if(text.toLowerCase().includes(w.word.toLowerCase())) return true;
-        }
-        return false;
-    } catch(e) { return false; }
-}
-
+// Secure Audio Streaming API with strict Referer protection
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
         
+        // Anti-Theft Verification Engine
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
@@ -134,7 +161,7 @@ app.get('/api/stream/:songId', async (req, res) => {
         if (req.headers.range) fetchHeaders.Range = req.headers.range;
         
         const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
-        if (!response.ok) throw new Error('Cloudinary fetch failed');
+        if (!response.ok) throw new Error('Cloudinary fetch protocol failed');
 
         const contentType = response.headers.get('content-type'); 
         const contentLength = response.headers.get('content-length'); 
@@ -149,20 +176,20 @@ app.get('/api/stream/:songId', async (req, res) => {
         res.status(response.status); 
         Readable.fromWeb(response.body).pipe(res);
     } catch (e) { 
-        console.error('Stream Error:', e.message); 
         res.status(500).end(); 
     }
 });
 
 // ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
+// 5. AUTHENTICATION & USER MANAGEMENT
 // ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
         const { contact, username, password } = req.body;
-        
-        if(await checkSensitive(username)) return res.status(400).send('用户名包含违规敏感词 (Username contains restricted words)');
+
+        // Sensitve Word Check
+        if(await checkSensitiveWords(username)) return res.status(400).send('Username contains restricted words.');
 
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
@@ -245,7 +272,7 @@ app.get('/api/all-users', async (req, res) => {
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if(await checkSensitive(newId)) return res.status(400).send('用户名包含违规敏感词 (Username contains restricted words)');
+        if(await checkSensitiveWords(newId)) return res.status(400).send('Username contains restricted words.');
         
         if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
         const oldRef = db.collection('users').doc(oldId); 
@@ -253,7 +280,7 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); 
         await oldRef.delete();
-        await logEvent('admin', `User changed username from ${oldId} to ${newId}`);
+        await logEvent('admin', `Username changed from ${req.params.username} to ${req.body.newUsername}`);
         res.json({ success: true, username: req.body.newUsername });
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -290,7 +317,80 @@ app.post('/api/users/:username/follow', async (req, res) => {
 });
 
 // ==========================================
-// 4. PLAYLISTS SYSTEM
+// 6. SENSITIVE WORDS & REPORTS API (NEW)
+// ==========================================
+app.get('/api/sensitive-words', async (req, res) => {
+    try { 
+        const snap = await db.collection('sensitive_words').orderBy('timestamp', 'desc').get();
+        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})));
+    } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/sensitive-words', async (req, res) => {
+    try {
+        const word = req.body.word.trim();
+        if(!word) return res.status(400).send('Word required');
+        const docRef = await db.collection('sensitive_words').add({ word: word, status: 'ACTIVE', timestamp: new Date().toISOString() });
+        await logEvent('admin', `Added sensitive word: ${word}`);
+        res.json({ id: docRef.id, word });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/sensitive-words/:id', async (req, res) => {
+    try {
+        await db.collection('sensitive_words').doc(req.params.id).delete();
+        await logEvent('admin', `Deleted a sensitive word`);
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+// Reports Engine
+app.get('/api/reports', async (req, res) => {
+    try { 
+        const snap = await db.collection('reports').orderBy('timestamp', 'desc').get();
+        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})));
+    } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/reports', async (req, res) => {
+    try {
+        const { songId, songName, uploader, reason, description, reporter } = req.body;
+        const newReport = {
+            songId, songName, uploader, reason: reason || '版权问题', description: description || '',
+            reporter: reporter || 'Anonymous', status: 'PENDING', timestamp: new Date().toISOString()
+        };
+        const docRef = await db.collection('reports').add(newReport);
+        res.json({ id: docRef.id, ...newReport });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/reports/:id/dismiss', async (req, res) => {
+    try {
+        await db.collection('reports').doc(req.params.id).update({ status: 'DISMISSED' });
+        await logEvent('admin', `Dismissed report ID: ${req.params.id}`);
+        res.send('Dismissed');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/reports/:id/takedown', async (req, res) => {
+    try {
+        const reportRef = db.collection('reports').doc(req.params.id);
+        const report = await reportRef.get();
+        if(!report.exists) return res.status(404).send('Report not found');
+        
+        const songId = report.data().songId;
+        if(songId) {
+            await db.collection('songs').doc(songId).update({ status: 'REMOVED', rejectReason: 'Takedown due to report' });
+        }
+        await reportRef.update({ status: 'RESOLVED' });
+        await logEvent('admin', `Report Takedown executed for song ID: ${songId}`);
+        res.send('Takedown complete');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+
+// ==========================================
+// 7. PLAYLISTS SYSTEM
 // ==========================================
 app.post('/api/users/:username/playlists', async (req, res) => {
     try {
@@ -352,7 +452,7 @@ app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
 });
 
 // ==========================================
-// 5. FAVORITES, TOPUPS & PURCHASES
+// 8. FAVORITES, TOPUPS & PURCHASES
 // ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
@@ -435,67 +535,25 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 });
 
 // ==========================================
-// 6. ADMIN USER MANAGEMENT & LOGS
+// 9. ADMIN USER MANAGEMENT (Extended)
 // ==========================================
+
+// Add user deletion functionality for the admin dashboard
 app.delete('/api/users/:username', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).delete();
         await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`);
         res.send('Deleted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/role', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
-            isVip: req.body.role === 'VIP' || req.body.role === 'PRODUCER', 
-            role: req.body.role || 'NORMAL' 
-        });
-        await logEvent('admin', `Updated role for <span style="color:var(--accent-light)">${req.params.username}</span> to ${req.body.role}`);
-        res.send('Updated');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
-    try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        const amt = parseInt(req.body.amount) || 0;
-        const newTokens = (doc.data().tokens || 0) + amt;
-        await userRef.update({ tokens: newTokens });
-        await logEvent('admin', `Adjusted tokens for <span style="color:var(--token)">${req.params.username}</span> by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
-        res.send('Adjusted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/force-password', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
-        await logEvent('admin', `Forced password reset for ${req.params.username}`);
-        res.send('Reset');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/ban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
-        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
-        res.send('Banned');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.put('/api/admin/users/:username/unban', async (req, res) => {
-    try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
-        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
-        res.send('Unbanned');
-    } catch(e) { res.status(500).send(e.message); }
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
 });
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
-        if(await checkSensitive(djName)) return res.status(400).send('包含违规敏感词');
+        // Verify against sensitive words again to be safe
+        if(await checkSensitiveWords(djName)) return res.status(400).send('Name contains restricted words.');
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
@@ -529,44 +587,6 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- REPORTS API ---
-app.get('/api/reports', async (req, res) => {
-    try { res.json((await db.collection('reports').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
-});
-
-app.post('/api/reports', async (req, res) => {
-    try {
-        const newReport = {
-            songId: req.body.songId,
-            songName: req.body.songName,
-            uploader: req.body.uploader,
-            reporter: req.body.reporter,
-            reason: req.body.reason || '版权问题',
-            description: req.body.description || '',
-            time: new Date().toISOString(),
-            status: 'PENDING'
-        };
-        await db.collection('reports').add(newReport);
-        res.send('Report Submitted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-app.delete('/api/reports/:id', async (req, res) => {
-    try { await db.collection('reports').doc(req.params.id).delete(); res.send('Deleted'); } catch(e) { res.status(500).send(e.message); }
-});
-
-app.post('/api/reports/:id/takedown', async (req, res) => {
-    try {
-        const rep = await db.collection('reports').doc(req.params.id).get();
-        if(rep.exists && rep.data().songId) {
-            await db.collection('songs').doc(rep.data().songId).update({ status: 'REMOVED' });
-        }
-        await db.collection('reports').doc(req.params.id).delete();
-        res.send('Takedown and Deleted');
-    } catch(e) { res.status(500).send(e.message); }
-});
-
-
 // --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
@@ -583,7 +603,7 @@ app.delete('/api/transactions/all', async (req, res) => {
 });
 
 // ==========================================
-// 7. GENRES AND SONGS
+// 10. GENRES AND SONGS
 // ==========================================
 app.get('/api/genres', async (req, res) => {
     try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
@@ -619,8 +639,6 @@ app.get('/api/songs', async (req, res) => {
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
-    if(await checkSensitive(reqBody.title || originalName)) throw new Error('歌曲标题包含违规敏感词');
-
     let url = '';
     if(fileBuffer) {
         const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
@@ -656,7 +674,6 @@ app.post('/api/transload', async (req, res) => {
 
 app.put('/api/songs/:id/settings', async (req, res) => {
     try {
-        if(await checkSensitive(req.body.newName)) return res.status(400).send('标题包含敏感词');
         let updates = {};
         if (req.body.newName) updates.filename = req.body.newName;
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
@@ -673,10 +690,10 @@ app.put('/api/songs/reorder', async (req, res) => {
 });
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
-// --- SETTINGS & LOGS & SENSITIVE WORDS ---
+// --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
-    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [], sensitiveWords: [] });
-    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [], sensitiveWords: [] });
+    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
+    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
 });
 
 app.put('/api/settings', async (req, res) => { 
@@ -685,7 +702,6 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
-        if (req.body.sensitiveWords !== undefined) updates.sensitiveWords = req.body.sensitiveWords;
         
         if (req.body.banners !== undefined) {
             let processedBanners = [];
