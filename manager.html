@@ -262,16 +262,46 @@
             .sidebar-header { display: none; }
             .nav-section { display: flex; margin: 0; }
             .nav-title { display: none; }
-            .nav-item { white-space: nowrap; padding: 0 20px; }
+            .nav-item { white-space: nowrap; padding: 0 16px; min-width:max-content; }
+            .sub-nav { position:fixed; left:0; right:0; top:60px; z-index:120; margin:0; border-left:none; border-bottom:1px solid var(--border-color); flex-direction:row; overflow-x:auto; padding:8px 10px; }
+            .sub-nav-item { white-space:nowrap; padding:8px 14px; }
+            .main-content { width:100%; min-height:0; }
+            .top-bar { height:auto; min-height:54px; padding:10px 14px; gap:10px; align-items:flex-start; }
+            .breadcrumb { line-height:1.4; }
+            .top-actions { gap:6px; flex-wrap:wrap; justify-content:flex-end; }
+            .view-section { padding:18px 14px 88px; }
+            .dash-header { flex-direction:column; align-items:flex-start; gap:8px; }
+            .dash-header h2 { font-size:22px; line-height:1.2; }
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card { padding:18px; }
+            .stat-val { font-size:28px; }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
             .admin-action-grid { grid-template-columns: 1fr; }
+            .user-detail-grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); padding:12px; }
+            .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+            .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
+            .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
+            .settings-card, .sensitive-card, .glass-panel { border-radius:10px; }
+            .settings-card { padding:24px 18px; }
+            .sensitive-hero { padding:28px 0 18px; }
+            .sensitive-hero h1 { font-size:30px; }
+            .sensitive-card { padding:22px 18px; }
+            .sensitive-table { padding:0; }
+            .poster-preview-box { min-height:140px; }
+            .modal-box { max-width:calc(100vw - 28px); }
             .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
             .genre-card .overlay h4 { font-size: 12px; }
             .genre-card .overlay div { font-size: 10px; }
             .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
             .genre-settings-icon svg { width: 14px; height: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            .stat-grid, .genre-grid { grid-template-columns: 1fr; }
+            .ops-grid { grid-template-columns: repeat(2, 1fr); min-width:520px; }
+            .user-detail-grid { grid-template-columns: 1fr; }
+            .top-actions .btn-top { padding:5px 9px; }
         }
     </style>
 </head>
