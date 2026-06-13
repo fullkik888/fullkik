@@ -7,14 +7,16 @@
     <style>
         /* CSS Reset & Variables */
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
+        html { overflow-x:hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark; overflow-x:hidden;}
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* HEADER */
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
         .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-        .nav-tabs { display: flex; gap: 30px; align-items: center; }
+        .nav-tabs { display: flex; gap: 30px; align-items: center; overflow-x:auto; white-space:nowrap; scrollbar-width:none; }
+        .nav-tabs::-webkit-scrollbar { display:none; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration:none;}
         .nav-tab:hover { color: white; }
         .lang-toggle { font-size: 13px; font-weight: bold; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-muted); transition: 0.2s;}
@@ -23,6 +25,8 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
+        .top-token-pill { display:flex; align-items:center; gap:7px; min-height:32px; padding:0 13px; border-radius:20px; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:var(--token); font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; }
+        .top-token-pill:hover { border-color:var(--accent-light); color:white; }
 
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
@@ -111,14 +115,21 @@
         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
-        .lib-row { display: grid; grid-template-columns: 80px 3fr 100px 60px 140px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
+        .lib-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 100px; gap: 14px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
+        .vip-own-song-row { grid-template-columns: 54px minmax(0,1fr) 100px 90px 110px; }
+        .lib-main { display:flex; align-items:center; gap:12px; min-width:0; }
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
         
         /* Playlist Cards */
-        .playlist-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; margin-bottom:10px;}
+        .playlist-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; margin-bottom:10px; position:relative;}
         .playlist-card:hover { border-color: var(--accent-light); transform: translateY(-2px); }
         .playlist-info h4 { margin: 0 0 5px 0; font-size: 18px; color: white;}
         .playlist-info p { margin: 0; font-size: 13px; color: var(--text-muted);}
+        .manage-dropdown { position:absolute; right:16px; top:58px; min-width:132px; display:none; flex-direction:column; overflow:hidden; border:1px solid var(--border-color); border-radius:10px; background:rgba(20,10,10,0.98); box-shadow:0 16px 35px rgba(0,0,0,0.5); z-index:20; }
+        .manage-dropdown.show { display:flex; }
+        .drop-btn { background:transparent; border:none; color:var(--text-main); padding:12px 14px; text-align:left; font-size:13px; cursor:pointer; border-bottom:1px solid var(--border-color); }
+        .drop-btn:last-child { border-bottom:none; }
+        .drop-btn:hover { background:rgba(255,255,255,0.06); }
         
         /* Persistent Global Audio Player */
         .global-player { position:fixed; bottom:0; left:0; width:100%; background:rgba(20, 10, 10, 0.95); backdrop-filter:blur(20px); border-top:1px solid var(--border-color); z-index:1000; padding:15px 40px; box-sizing:border-box; display:flex; align-items:center; justify-content:space-between; display:none; animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
@@ -173,11 +184,31 @@
         .upload-tabs button.active { color:white; border-bottom-color:var(--accent-light); font-weight:bold;}
         .upload-dropzone { border:2px dashed var(--border-color); border-radius:12px; padding:40px 20px; text-align:center; color:var(--text-muted); cursor:pointer; background:rgba(0,0,0,0.2); transition:0.2s;}
         .upload-dropzone:hover { border-color:var(--accent-light); background:rgba(165,42,42,0.05); }
+        .batch-upload-shell { display:none; margin-top:18px; }
+        .batch-upload-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; color:var(--text-muted); }
+        .batch-upload-head strong { color:white; font-size:24px; }
+        .batch-file-list { display:flex; flex-direction:column; gap:12px; }
+        .batch-file-card { display:grid; grid-template-columns:92px minmax(0,1fr) 170px 170px 42px; gap:18px; align-items:center; padding:16px; border:1px solid var(--border-color); border-radius:16px; background:linear-gradient(135deg, rgba(34,22,34,0.92), rgba(34,16,16,0.92)); box-shadow:0 12px 32px rgba(0,0,0,0.22); }
+        .batch-cover { width:72px; height:72px; border-radius:12px; border:1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px; text-align:center; background:rgba(255,255,255,0.03); }
+        .batch-file-meta { min-width:0; }
+        .batch-file-name { color:var(--text-muted); font-size:12px; font-weight:700; letter-spacing:0.3px; margin-bottom:8px; }
+        .batch-title-input, .batch-price-input, .batch-genre-select { width:100%; box-sizing:border-box; background:#0b0505; border:1px solid rgba(255,69,58,0.5); color:white; border-radius:10px; padding:12px 14px; outline:none; font-size:14px; }
+        .batch-title-input:focus, .batch-price-input:focus, .batch-genre-select:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.18); }
+        .batch-preview-note { margin-top:8px; color:var(--accent-light); font-size:12px; }
+        .batch-remove-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.04); color:var(--text-muted); cursor:pointer; font-size:18px; }
+        .batch-remove-btn:hover { color:white; border-color:var(--danger); }
 
         @media (max-width: 768px) {
-            .header-top { padding: 15px 20px; }
-            .lib-row { grid-template-columns: 50px 50px 1fr 60px 40px; padding:10px;}
-            .lib-row > div:nth-child(5) { display: none; } 
+            .header-top { padding: 12px 14px; gap:10px; flex-wrap:wrap; align-items:flex-start; }
+            .header-right { margin-left:auto; gap:8px; }
+            .top-token-pill, .btn-upgrade-top { min-height:32px; padding:0 11px; font-size:12px; }
+            .profile-dropdown { top:92px; right:14px; }
+            .container { padding:132px 14px 112px; }
+            .lib-row { grid-template-columns: 42px minmax(0,1fr); padding:12px; gap:10px;}
+            .vip-own-song-row { grid-template-columns: 46px minmax(0,1fr); }
+            .lib-row > div:nth-child(n+3) { grid-column:2; justify-content:flex-start !important; text-align:left !important; }
+            .lib-main { gap:10px; }
+            .lib-cover { width:46px; height:46px; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .input-row { flex-direction: column; gap: 10px; }
@@ -190,6 +221,13 @@
             .gp-info { width: 100%; justify-content:space-between;}
             .gp-controls { width: 100%; }
             .gp-actions { display:none; } 
+            .batch-upload-head { align-items:flex-start; flex-direction:column; }
+            .batch-file-card { grid-template-columns:76px minmax(0,1fr); gap:12px; padding:12px; }
+            .batch-cover { width:62px; height:62px; }
+            .batch-price-input, .batch-genre-select, .batch-remove-btn { grid-column:2; }
+            .batch-remove-btn { justify-self:flex-end; }
+            .vip-upload-bar { flex-direction:column; }
+            .topup-footer { align-items:flex-start; gap:8px; flex-direction:column; }
         }
     </style>
 </head>
@@ -217,11 +255,12 @@
 <div class="header-top">
     <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
-        <a href="/music.html" class="nav-tab" data-i18n="store">返回首页</a>
+        <a href="/music.html" class="nav-tab" data-i18n="backHome">回到首页</a>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
         <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
+        <button class="top-token-pill" onclick="switchView('topup')">💎 <span id="headerTokenDisplay">0</span></button>
         
         <div style="position:relative;">
             <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
@@ -317,7 +356,7 @@
                 <button class="btn-text-action" onclick="switchView('library', 'PLAYLIST')">← 返回歌单列表</button>
                 <h2 style="margin:10px 0 0 0;" id="playlistDetailName">Playlist Name</h2>
             </div>
-            <button class="btn-text-action" onclick="document.getElementById('addSongToPlaylistModal').style.display='flex'">+ 添加歌曲</button>
+            <button class="btn-text-action" onclick="openAddSongsPlaylistModal()">+ 添加歌曲</button>
         </div>
         
         <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
@@ -381,10 +420,10 @@
 
         <h2 data-i18n="vipSongTitle">我的歌曲</h2>
         <div class="vip-tabs">
-            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED" data-i18n="tabApp">已发布 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING" data-i18n="tabPen">正在审核 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED" data-i18n="tabUnsub">未提交审核 (0)</button>
-            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED" data-i18n="tabRej">驳回歌曲 (0)</button>
+            <button class="vip-tab active" onclick="filterVipSongs('APPROVED')" id="vipTab-APPROVED" data-i18n="tabApp">发布 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('PENDING')" id="vipTab-PENDING" data-i18n="tabPen">审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('UNSUBMITTED')" id="vipTab-UNSUBMITTED" data-i18n="tabUnsub">未审核 (0)</button>
+            <button class="vip-tab" onclick="filterVipSongs('REJECTED')" id="vipTab-REJECTED" data-i18n="tabRej">驳回 (0)</button>
             <button class="vip-tab" onclick="filterVipSongs('REMOVED')" id="vipTab-REMOVED" data-i18n="tabRem">已下架 (0)</button>
         </div>
         
@@ -416,6 +455,13 @@
             <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-bottom:10px;">
             <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:10px;"></div>
+            <div class="batch-upload-shell" id="vipBatchShell">
+                <div class="batch-upload-head">
+                    <div><strong><span id="vipBatchCount">0</span> / 20 首</strong> <span id="vipBatchReady">0 首已就绪</span></div>
+                    <button class="btn-text-action" onclick="document.getElementById('vipFileInput').click()">+ 继续添加</button>
+                </div>
+                <div class="batch-file-list" id="vipBatchList"></div>
+            </div>
 
             <div style="display:flex; gap:20px; margin-top:20px; flex-wrap:wrap;">
                 <div style="flex:1; min-width:200px;">
@@ -554,10 +600,12 @@
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     if(!username) window.location.href = '/register.html';
+    const profileUrlParams = new URLSearchParams(window.location.search);
+    const skipProfileLoader = profileUrlParams.get('skipLoader') === '1';
 
     const dict = {
-        en: { store: "Store", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Pending", tabUnsub: "Unsubmitted", tabRej: "Declined", tabRem: "Removed", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
-        cn: { store: "首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "已发布", tabPen: "正在审核", tabUnsub: "未提交审核", tabRej: "驳回歌曲", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
+        en: { store: "Store", backHome: "Back Home", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Downloads", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Review", tabUnsub: "Draft", tabRej: "Declined", tabRem: "Unlisted", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
+        cn: { store: "首页", backHome: "回到首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有30秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "歌曲下载次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "发布", tabPen: "审核", tabUnsub: "未审核", tabRej: "驳回", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -566,6 +614,18 @@
     function applyLang() {
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
+    }
+    function setProfilePageTitle(view) {
+        const titles = {
+            profile: 'FULLKIK 个人主页',
+            topup: 'FULLKIK 充值中心',
+            library: 'FULLKIK 我的音乐',
+            vip: 'FULLKIK VIP 中心',
+            history: 'FULLKIK 个人消费',
+            'vip-upload': 'FULLKIK 上传音乐',
+            'playlist-detail': 'FULLKIK 我的音乐'
+        };
+        document.title = titles[view] || 'FULLKIK 个人主页';
     }
 
     function showGlobalLoader(txt = "正在处理...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
@@ -576,7 +636,7 @@
     // --- INITIALIZATION ---
     async function init() {
         const bar = document.getElementById('profileLoaderBar');
-        document.getElementById('profileLoader').style.display = 'flex';
+        if(!skipProfileLoader) document.getElementById('profileLoader').style.display = 'flex';
         let p = 0; const pInt = setInterval(() => { p+=Math.random()*20; if(p>95) p=95; bar.style.width=`${p}%`; }, 50);
 
         try {
@@ -596,6 +656,7 @@
                 document.getElementById('profileBannerPic').src = pfpUrl; 
                 document.getElementById('profileBannerName').innerText = username;
                 document.getElementById('profileBannerTokens').innerText = userTokens;
+                document.getElementById('headerTokenDisplay').innerText = userTokens;
                 document.getElementById('vipUploaderInput').value = username;
                 document.getElementById('newNameInput').value = username;
                 
@@ -611,23 +672,28 @@
             
             setCurrency('RMB'); populateGenreDropdowns(); applyLang(); 
             
-            const urlParams = new URLSearchParams(window.location.search);
+            const urlParams = profileUrlParams;
             const viewParam = urlParams.get('view');
             if(viewParam) { switchView(viewParam); } else { switchView('profile'); }
         } catch(e) { console.error("Init Error:", e); } 
 
         clearInterval(pInt); bar.style.width = '100%';
-        setTimeout(() => { document.getElementById('profileLoader').style.display = 'none'; }, 300);
+        if(!skipProfileLoader) setTimeout(() => { document.getElementById('profileLoader').style.display = 'none'; }, 300);
     }
 
     function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
-    function closeDropdowns(e) { const d = document.getElementById('profileDropdown'); if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show'); }
+    function closeDropdowns(e) {
+        const d = document.getElementById('profileDropdown');
+        if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show');
+        if(!e.target.closest('.playlist-card')) document.querySelectorAll('.manage-dropdown').forEach(menu => menu.classList.remove('show'));
+    }
     function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); window.location.href = '/register.html'; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
 
     function switchView(view, arg) {
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
+        setProfilePageTitle(view);
         if(view === 'vip') renderVipCenter();
         if(view === 'history') renderHistory('ALL');
         if(view === 'library') renderLibrary(arg || 'BUY');
@@ -671,7 +737,13 @@
     async function executePfpCrop() {
         document.getElementById('cropModal').style.display='none'; showGlobalLoader("正在上传..."); const base64 = cropCanvas.toDataURL('image/jpeg', 0.9);
         const res = await fetch(`${API_URL}/users/${username}/profile-pic`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ imageBase64: base64 }) });
-        if(res.ok) { document.getElementById('profileBannerPic').src = base64; document.getElementById('headerProfilePic').src = base64; showToast("Profile Updated"); } hideGlobalLoader();
+        if(res.ok) {
+            document.getElementById('profileBannerPic').src = base64;
+            const headerPic = document.querySelector('#profileBtn .profile-pic');
+            if(headerPic) headerPic.src = base64;
+            showToast("Profile Updated");
+        }
+        hideGlobalLoader();
     }
 
     // --- PERSONAL CENTER ACTIONS ---
@@ -726,7 +798,7 @@
     async function executeRealTopup() {
         showGlobalLoader("正在处理订单...");
         const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
     }
 
     // --- PLAYLIST LIBRARY (WITH QUEUE ENGINE) ---
@@ -756,9 +828,9 @@
                             <h4>${pl.name}</h4>
                             <p>${pl.songs.length} 首歌曲</p>
                         </div>
-                        <button class="icon-btn" onclick="openPlaylistOptions('${pl.id}', event)"><svg viewBox="0 0 24 24"><path d="M19.14... (gear icon path omitted for space)...15.6z"/><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg></button>
-                        <div class="manage-dropdown" id="pl-drop-${pl.id}" style="right:40px; top:auto;">
-                            <button class="drop-btn" onclick="openRenamePlaylist('${pl.id}', '${pl.name}')">重名 (Rename)</button>
+                        <button class="icon-btn" onclick="openPlaylistOptions('${pl.id}', event)" aria-label="歌单设置"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98L14.5 2.42A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42L9.13 5.07c-.61.24-1.18.57-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.02.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.39.31.61.22l2.49-1c.51.4 1.08.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.61-.24 1.18-.57 1.69-.98l2.49 1c.23.08.49 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg></button>
+                        <div class="manage-dropdown" id="pl-drop-${pl.id}">
+                            <button class="drop-btn" onclick="openRenamePlaylist('${pl.id}', ${JSON.stringify(pl.name)})">重命名 (Rename)</button>
                             <button class="drop-btn" style="color:var(--danger);" onclick="deletePlaylist('${pl.id}')">删除 (Delete)</button>
                         </div>
                     </div>`;
@@ -784,8 +856,7 @@
             listDiv.innerHTML += `
                 <div class="lib-row" onclick="playFromPlaylist(${index}, '${filter}')">
                     ${reorderInput}
-                    <img src="${cover}" class="lib-cover">
-                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
+                    <div class="lib-main"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${songName}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div></div>
                     <div style="display:flex; gap:5px; align-items:center;">${downloadAndInfoHTML}</div>
                     <div style="color:var(--text-muted); font-size:12px; text-align:right;">前往播放</div>
                 </div>`;
@@ -866,6 +937,7 @@
         
         document.getElementById('playlistDetailName').innerText = pl.name;
         switchView('playlist-detail');
+        document.title = `${pl.name} - 我的音乐`;
         renderPlaylistSongs();
     }
 
@@ -881,8 +953,7 @@
             listDiv.innerHTML += `
                 <div class="lib-row" onclick="playFromPlaylist(${index}, 'DETAIL')">
                     <input type="number" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylistDetail(${index}, this.value)">
-                    <img src="${cover}" class="lib-cover">
-                    <div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div>
+                    <div class="lib-main"><img src="${cover}" class="lib-cover"><div style="min-width:0;"><div class="truncate" style="font-weight: 500;">${s.filename}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">Uploader: ${s.uploader||'FULLKIK'}</div></div></div>
                     <div style="display:flex; gap:5px; align-items:center;">
                         <button class="icon-btn" onclick="event.stopPropagation(); removeSongFromPlaylist('${s.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
                     </div>
@@ -1036,6 +1107,13 @@
 
     // --- VIP CENTER ---
     let currentVipTab = 'APPROVED';
+    const VIP_STATUS_LABELS = { APPROVED: '发布', PENDING: '审核', UNSUBMITTED: '未审核', REJECTED: '驳回', REMOVED: '已下架', UNLISTED: '已下架' };
+    function getVipStatusLabel(status) { return VIP_STATUS_LABELS[status] || status; }
+    function getProfileSongStatus(song) {
+        if(song.status === 'UNLISTED') return 'REMOVED';
+        return song.status || 'UNSUBMITTED';
+    }
+
     function renderVipCenter() {
         if(!isUserVip) return;
         const mySongs = allSongs.filter(s => s.uploader === username);
@@ -1044,8 +1122,8 @@
         
         document.getElementById('vipStatUp').innerText = mySongs.length; document.getElementById('vipStatDl').innerText = downloads; document.getElementById('vipStatRev').innerText = rev;
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
-            const count = mySongs.filter(s => s.status === status).length;
-            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${dict[currentLang]['tab' + status.substring(0,3)] || status} (${count})`;
+            const count = mySongs.filter(s => getProfileSongStatus(s) === status).length;
+            if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${getVipStatusLabel(status)} (${count})`;
         });
         filterVipSongs(currentVipTab);
     }
@@ -1055,17 +1133,17 @@
         if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).classList.add('active');
         
         const listDiv = document.getElementById('vipSongList'); listDiv.innerHTML = '';
-        const filtered = allSongs.filter(s => s.uploader === username && s.status === status);
+        const filtered = allSongs.filter(s => s.uploader === username && getProfileSongStatus(s) === status);
         if(filtered.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">暂无此类歌曲</div>`; return; }
         
         filtered.forEach(s => {
             const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             listDiv.innerHTML += `
-                <div class="lib-row">
+                <div class="lib-row vip-own-song-row">
                     <img src="${cover}" class="lib-cover">
                     <div class="truncate" style="font-weight: 500;">${s.filename}</div>
                     <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
-                    <div>${status === 'APPROVED' ? `<div style="color:var(--success); font-size:12px;">已发布</div>` : '-'}</div>
+                    <div><div style="color:${status === 'APPROVED' ? 'var(--success)' : 'var(--text-muted)'}; font-size:12px;">${getVipStatusLabel(status)}</div></div>
                     <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
                 </div>`;
         });
@@ -1075,29 +1153,101 @@
         const uploadSel = document.getElementById('vipGenreSelect'); if(uploadSel) { uploadSel.innerHTML = ''; allGenres.forEach(g => { if(g.status !== 'DISABLED') uploadSel.innerHTML += `<option value="${g.id}">${g.name}</option>`; }); }
     }
 
-    let pendingVipCover = null; let isVipTransload = false;
+    let pendingVipCover = null; let isVipTransload = false; let currentVipUploadIsBatch = false; let selectedVipFiles = [];
     function setVipUploadMode(isTransload) {
         isVipTransload = isTransload;
         document.getElementById('vip-btn-file').classList.toggle('active', !isTransload); document.getElementById('vip-btn-link').classList.toggle('active', isTransload);
         document.getElementById('vip-audio-dropzone').style.display = isTransload ? 'none' : 'block'; document.getElementById('vipFileCount').style.display = isTransload ? 'none' : 'block'; document.getElementById('vipTransloadUrlInput').style.display = isTransload ? 'block' : 'none';
+        renderVipBatchList();
     }
 
-    function handleVipAudioSelect(e) { const file = e.target.files[0]; if(file) { document.getElementById('vipFileCount').innerText = file.name; document.getElementById('vipTitleInput').value = file.name.replace(/\.[^/.]+$/, ""); } }
+    function getFileTitle(file) { return file.name.replace(/\.[^/.]+$/, ""); }
+    function getGenreOptions(selectedId) {
+        return allGenres.filter(g => g.status !== 'DISABLED').map(g => `<option value="${g.id}" ${g.id === selectedId ? 'selected' : ''}>${g.name}</option>`).join('');
+    }
+    function updateVipBatchItem(index, field, value) {
+        if(!selectedVipFiles[index]) return;
+        selectedVipFiles[index][field] = value;
+        document.getElementById('vipBatchReady').innerText = `${selectedVipFiles.filter(item => item.title && item.genreId).length} 首已就绪`;
+    }
+    function removeVipBatchFile(index) {
+        selectedVipFiles.splice(index, 1);
+        renderVipBatchList();
+    }
+    function renderVipBatchList() {
+        const shell = document.getElementById('vipBatchShell');
+        const list = document.getElementById('vipBatchList');
+        if(!shell || !list) return;
+        const showBatch = currentVipUploadIsBatch && !isVipTransload && selectedVipFiles.length > 0;
+        shell.style.display = showBatch ? 'block' : 'none';
+        if(!showBatch) { list.innerHTML = ''; return; }
+        document.getElementById('vipBatchCount').innerText = selectedVipFiles.length;
+        document.getElementById('vipBatchReady').innerText = `${selectedVipFiles.filter(item => item.title && item.genreId).length} 首已就绪`;
+        list.innerHTML = selectedVipFiles.map((item, index) => `
+            <div class="batch-file-card">
+                <div class="batch-cover">封面</div>
+                <div class="batch-file-meta">
+                    <div class="batch-file-name">♫ ${item.file.name} · ${(item.file.size / (1024 * 1024)).toFixed(1)} MB</div>
+                    <input class="batch-title-input" value="${item.title.replace(/"/g, '&quot;')}" oninput="updateVipBatchItem(${index}, 'title', this.value)" placeholder="歌曲标题 *">
+                    <div class="batch-preview-note">试听: 00:00 - 00:30</div>
+                </div>
+                <input class="batch-price-input" type="number" min="0" value="${item.price}" oninput="updateVipBatchItem(${index}, 'price', this.value)" placeholder="💎 价格 *">
+                <select class="batch-genre-select" onchange="updateVipBatchItem(${index}, 'genreId', this.value)">${getGenreOptions(item.genreId)}</select>
+                <button class="batch-remove-btn" onclick="removeVipBatchFile(${index})">×</button>
+            </div>
+        `).join('');
+    }
+    function handleVipAudioSelect(e) {
+        const pickedFiles = Array.from(e.target.files || []);
+        if(!pickedFiles.length) return;
+        const defaultPrice = document.getElementById('vipPriceInput').value || 0;
+        const defaultGenre = document.getElementById('vipGenreSelect').value;
+        if(currentVipUploadIsBatch) {
+            const room = 20 - selectedVipFiles.length;
+            if(room <= 0) { showToast("批量上传最多 20 首", true); e.target.value = ''; return; }
+            const accepted = pickedFiles.slice(0, room);
+            if(pickedFiles.length > room) showToast("最多只能选择 20 首，已自动保留前 20 首", true);
+            selectedVipFiles = selectedVipFiles.concat(accepted.map(file => ({ file, title: getFileTitle(file), price: defaultPrice, genreId: defaultGenre })));
+            document.getElementById('vipFileCount').innerText = `${selectedVipFiles.length} / 20 首已选择`;
+            renderVipBatchList();
+        } else {
+            const file = pickedFiles[0];
+            selectedVipFiles = [{ file, title: getFileTitle(file), price: defaultPrice, genreId: defaultGenre }];
+            document.getElementById('vipFileCount').innerText = file.name;
+            document.getElementById('vipTitleInput').value = getFileTitle(file);
+        }
+        e.target.value = '';
+    }
     function handleImgPreview(e, targetId, mode) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { if(mode === 'vip') pendingVipCover = ev.target.result; document.getElementById(targetId).src = ev.target.result; }; reader.readAsDataURL(file); }
 
     function openVipUpload(isBatch) {
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = ''; document.getElementById('vipTransloadUrlInput').value = '';
         const fileInput = document.getElementById('vipFileInput');
-        if(isBatch) { fileInput.multiple = true; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch; } else { fileInput.multiple = false; document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle; }
+        currentVipUploadIsBatch = isBatch;
+        selectedVipFiles = [];
+        if(isBatch) {
+            fileInput.multiple = true;
+            document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch;
+            document.getElementById('vip-audio-dropzone').innerHTML = `<div style="font-weight:800; color:white; margin-bottom:6px;">拖入或点击选择多个 MP3 / WAV 文件</div><div style="font-size:12px;">最多 20 首 · 固定试听 00:00 - 00:30</div>`;
+        } else {
+            fileInput.multiple = false;
+            document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpSingle;
+            document.getElementById('vip-audio-dropzone').innerText = '点击选择 MP3 / WAV';
+        }
         document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = handleVipAudioSelect;
+        renderVipBatchList();
         setVipUploadMode(false); switchView('vip-upload');
     }
 
     async function executeVipUpload() {
         const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value; const genreId = document.getElementById('vipGenreSelect').value;
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        if(!titleBase) return errRow.innerText = "请输入歌曲标题 (Title is required)";
+        if(!isVipTransload && currentVipUploadIsBatch) {
+            if(!selectedVipFiles.length) return errRow.innerText = "请选择 1 - 20 首歌曲";
+            if(selectedVipFiles.length > 20) return errRow.innerText = "批量上传最多 20 首";
+            if(selectedVipFiles.some(item => !item.title || !item.genreId)) return errRow.innerText = "每首歌都需要标题和分类";
+        } else if(!titleBase) return errRow.innerText = "请输入歌曲标题 (Title is required)";
 
         document.getElementById('vipUploadProgOverlay').style.display = 'flex';
         let p = 0; const bF = document.getElementById('vipUploadBarFill'); bF.style.width = '0%';
@@ -1109,10 +1259,11 @@
             const payload = { url, title: titleBase, price, genreId, uploader: username, status: 'PENDING', coverBase64: pendingVipCover };
             await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         } else {
-            const files = document.getElementById('vipFileInput').files;
-            if(!files.length) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
-            for(let i=0; i<files.length; i++) {
-                const fd = new FormData(); fd.append('mp3file', files[i]); fd.append('title', files.length > 1 ? `${titleBase} - ${i+1}` : titleBase); fd.append('price', price); fd.append('genreId', genreId); fd.append('uploader', username); fd.append('status', 'PENDING');  
+            const uploadItems = currentVipUploadIsBatch ? selectedVipFiles : selectedVipFiles.slice(0, 1);
+            if(!uploadItems.length || !uploadItems[0].file) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
+            for(let i=0; i<uploadItems.length; i++) {
+                const item = uploadItems[i];
+                const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING');  
                 if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
                 await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
             }
