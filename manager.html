@@ -247,6 +247,23 @@
         .featured-genre-choice { display:flex; align-items:center; gap:10px; min-height:44px; border:1px solid var(--border-color); border-radius:10px; padding:0 12px; background:rgba(0,0,0,0.2); cursor:pointer; color:var(--text-muted); font-size:13px; }
         .featured-genre-choice input { accent-color:var(--accent-light); }
         .featured-genre-choice.active { border-color:var(--accent-light); color:white; background:rgba(165,42,42,0.12); }
+        .home-title-panel { padding:20px; display:grid; grid-template-columns:1fr 1fr auto; gap:14px; align-items:end; }
+        .home-title-panel .input-text { width:100%; box-sizing:border-box; }
+        .hot-producer-layout { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+        .hot-producer-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; min-height:520px; }
+        .hot-producer-card-head { padding:20px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; gap:12px; align-items:center; }
+        .hot-producer-list { display:flex; flex-direction:column; }
+        .hot-producer-row { display:grid; grid-template-columns:34px 52px minmax(0,1fr) auto; gap:12px; align-items:center; padding:14px 18px; border-bottom:1px solid var(--border-color); }
+        .hot-producer-order { width:34px; height:30px; display:flex; align-items:center; justify-content:center; border:1px solid var(--accent-light); border-radius:7px; color:var(--accent-light); background:rgba(128,0,0,0.25); font-weight:900; }
+        .hot-producer-avatar { width:46px; height:46px; border-radius:50%; object-fit:cover; background:#0b0505; }
+        .hot-producer-name { color:white; font-weight:900; }
+        .hot-producer-meta { color:var(--text-muted); font-size:12px; margin-top:4px; }
+        .hot-producer-actions { display:flex; align-items:center; gap:6px; }
+        .hot-mini-btn { width:30px; height:30px; border-radius:8px; border:1px solid var(--border-color); background:rgba(255,255,255,0.04); color:var(--text-muted); cursor:pointer; font-weight:900; }
+        .hot-mini-btn:hover { border-color:var(--accent-light); color:white; }
+        .hot-mini-btn.remove { color:var(--danger); }
+        .hot-candidate-row { display:grid; grid-template-columns:52px minmax(0,1fr) 34px; gap:12px; align-items:center; padding:14px 18px; border-bottom:1px solid var(--border-color); }
+        .hot-empty { padding:36px 20px; text-align:center; color:var(--text-muted); }
 
         .user-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; background:var(--bg-dark); border:1px solid var(--border-color); padding:20px; border-radius:8px; margin-bottom:20px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
         .u-stat-box { display:flex; flex-direction:column; gap:5px; min-width:80px;}
@@ -300,6 +317,8 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
+            .home-title-panel { grid-template-columns:1fr; align-items:stretch; }
+            .hot-producer-layout { grid-template-columns:1fr; }
             .settings-card, .sensitive-card, .glass-panel { border-radius:10px; }
             .settings-card { padding:24px 18px; }
             .sensitive-hero { padding:28px 0 18px; }
@@ -318,6 +337,9 @@
             .genre-card .overlay div { font-size: 10px; }
             .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
             .genre-settings-icon svg { width: 14px; height: 14px; }
+            .sub-nav.show { display:flex !important; }
+            .sub-nav { top:60px; z-index:500; background:var(--bg-dark); box-shadow:0 10px 24px rgba(0,0,0,0.45); }
+            body.admin-subnav-open .top-bar { margin-top:50px; }
         }
 
         @media (max-width: 480px) {
@@ -361,7 +383,7 @@
     <div class="nav-section">
         <div class="nav-title">内容</div>
         <div class="nav-item-group">
-            <button class="nav-item" onclick="switchView('songs', '歌曲管理 / 全部歌曲'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 全部歌曲 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
+            <button class="nav-item" onclick="toggleSongSubNav()" id="nav-songs">♪ 全部歌曲 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
             <div class="sub-nav" id="sub-songs">
                 <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 管理歌曲')">管理歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
@@ -370,6 +392,7 @@
             </div>
         </div>
         <button class="nav-item" onclick="switchView('homepage', '首页内容')" id="nav-homepage">⌂ 首页内容</button>
+        <button class="nav-item" onclick="switchView('hot-producers', '首页 / 热门制作人排序')" id="nav-hot-producers">★ 热门制作人排序</button>
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
         <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理 <span class="nav-count-badge" id="nav-reports-pending-count">0</span></button>
@@ -438,6 +461,17 @@
 
     <div id="view-homepage" class="view-section">
         <div class="dash-header"><h2>首页内容</h2><p>管理首页轮播图/横幅 (最多3张)</p></div>
+        <div class="glass-panel home-title-panel">
+            <div>
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">首页主标题</label>
+                <input type="text" id="homeMainTitleInput" class="input-text" placeholder="FULLKIK音乐空间">
+            </div>
+            <div>
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">首页副标题</label>
+                <input type="text" id="homeSubtitleInput" class="input-text" placeholder="专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品">
+            </div>
+            <button class="btn-primary" style="height:38px;" onclick="saveHomeHeroText()">发布</button>
+        </div>
         <div class="glass-panel" style="padding: 20px;">
             <div style="display:flex; gap: 20px; flex-wrap: wrap;" id="banner-slots"></div>
             <button class="btn-primary" style="margin-top:20px; width:100%;" onclick="saveBanners()">发布 (Publish)</button>
@@ -451,6 +485,36 @@
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
                 <button class="btn-text-action danger" onclick="removeHomePoster()">移除海报</button>
                 <button class="btn-primary" onclick="saveHomePoster()">发布 (Publish)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-hot-producers" class="view-section">
+        <div class="dash-header" style="align-items:flex-end;">
+            <div><h2>热门制作人排序</h2><p>调整首页「热门制作人」显示顺序。第一位会显示在最左边。</p></div>
+            <button class="btn-primary" onclick="saveHotProducerOrder()">保存排序</button>
+        </div>
+        <div class="hot-producer-layout">
+            <div class="hot-producer-card">
+                <div class="hot-producer-card-head">
+                    <div>
+                        <div style="font-size:17px; font-weight:900;">已置顶制作人 (<span id="hotSelectedCount">0</span>)</div>
+                        <div style="color:var(--text-muted); font-size:12px; margin-top:5px;">使用上下按钮调整顺序，或点击 x 移除。</div>
+                    </div>
+                </div>
+                <div class="hot-producer-list" id="hotProducerSelectedList"></div>
+            </div>
+            <div class="hot-producer-card">
+                <div class="hot-producer-card-head">
+                    <div>
+                        <div style="font-size:17px; font-weight:900;">候选制作人</div>
+                        <div style="color:var(--text-muted); font-size:12px; margin-top:5px;">VIP / Producer 都可以添加。</div>
+                    </div>
+                </div>
+                <div style="padding:18px; border-bottom:1px solid var(--border-color);">
+                    <input type="text" id="hotProducerSearchInput" class="input-text" style="width:100%; box-sizing:border-box;" placeholder="搜索用户名..." oninput="renderHotProducerManager()">
+                </div>
+                <div class="hot-producer-list" id="hotProducerCandidateList"></div>
             </div>
         </div>
     </div>
@@ -721,7 +785,7 @@
         <div class="glass-panel">
             <div class="filter-bar">
                 <div class="filter-group"><label>搜索</label><input type="text" id="userSearchInput" class="input-text" placeholder="用户名 / 邮箱..." oninput="handleUserSearch()"></div>
-                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option><option value="PRODUCER">制作人</option></select></div>
+                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option><option value="PRODUCER">Producer 制作人</option></select></div>
                 <div style="margin-left: auto;"><button class="btn-filter" style="background:transparent; color:var(--text-muted); font-weight:normal;" onclick="clearUserFilters()">清除</button><button class="btn-filter" onclick="handleUserSearch()">筛选</button></div>
             </div>
             <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight:bold;">共 <span id="userCount">0</span> 个账号</div>
@@ -788,7 +852,7 @@
                 <div class="admin-col">
                     <div style="font-size:14px; font-weight:bold;">角色管理</div>
                     <label style="font-size:12px; color:var(--text-muted);">角色</label>
-                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option><option value="PRODUCER">制作人</option></select>
+                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option><option value="PRODUCER">Producer 制作人</option></select>
                     <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
                 </div>
                 
@@ -915,6 +979,7 @@
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
     let badgeRefreshTimer = null;
     let selectedManagerBulkFiles = [];
+    let hotProducerDraftIds = null;
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -951,6 +1016,14 @@
 
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className='toast'; if(isError) t.classList.add('shake'); t.innerText = msg; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.classList.remove('shake');}, 4000); }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+    function toggleSongSubNav() {
+        const sub = document.getElementById('sub-songs');
+        const shouldShow = !sub.classList.contains('show');
+        sub.classList.toggle('show', shouldShow);
+        document.body.classList.toggle('admin-subnav-open', shouldShow);
+        switchView('songs', '歌曲管理 / 全部歌曲');
+    }
 
     function switchView(viewId, titleStr = '') {
         if(viewId !== 'user-detail') {
@@ -960,6 +1033,11 @@
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.sub-nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        if(!['songs', 'pending', 'upload', 'bulk-upload'].includes(viewId)) {
+            const songSub = document.getElementById('sub-songs');
+            if(songSub) songSub.classList.remove('show');
+            document.body.classList.remove('admin-subnav-open');
+        }
         
         if(document.getElementById(`nav-${viewId}`)) document.getElementById(`nav-${viewId}`).classList.add('active');
         if(document.getElementById(`view-${viewId}`)) document.getElementById(`view-${viewId}`).classList.add('active');
@@ -967,6 +1045,7 @@
             if(viewId === 'user-detail') document.getElementById('breadcrumb-current').innerHTML = `<span style="cursor:pointer; color:var(--text-muted);" onclick="switchView('users', '用户管理')">用户管理</span> / ${titleStr}`;
             else document.getElementById('breadcrumb-current').innerText = titleStr;
         }
+        document.title = viewId === 'users' ? '用户管理' : (titleStr ? `${titleStr} - FULLKIK ADMIN` : 'FULLKIK ADMIN - 后台管理');
 
         if(viewId === 'users') loadUsers(); 
         if(viewId === 'songs') loadSongs();
@@ -981,6 +1060,7 @@
         if(viewId === 'system-settings') renderSystemSettings();
         if(viewId === 'categories') renderFeaturedGenreSettings();
         if(viewId === 'bulk-upload') renderManagerBulkList();
+        if(viewId === 'hot-producers') renderHotProducerManager();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -997,7 +1077,10 @@
                 globalSettings = await res.json(); 
                 document.getElementById('headerInput').value = globalSettings.headerTitle || "FULLKIK"; 
                 document.getElementById('heroTitleInput').value = globalSettings.heroTitle || "专属DJ节奏空间"; 
+                document.getElementById('homeMainTitleInput').value = globalSettings.homeMainTitle || "FULLKIK音乐空间";
+                document.getElementById('homeSubtitleInput').value = globalSettings.homeSubtitle || "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品";
                 currentBanners = globalSettings.banners || ['', '', ''];
+                hotProducerDraftIds = null;
                 renderSystemSettings();
                 renderHomePoster();
             }
@@ -1019,6 +1102,23 @@
     }
     
     async function saveSettings() { showGlobalLoader(); await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({headerTitle: document.getElementById('headerInput').value, heroTitle: document.getElementById('heroTitleInput').value})}); hideGlobalLoader(); showToast("Texts Saved!"); }
+
+    async function saveHomeHeroText() {
+        const homeMainTitle = document.getElementById('homeMainTitleInput').value.trim() || 'FULLKIK音乐空间';
+        const homeSubtitle = document.getElementById('homeSubtitleInput').value.trim() || '专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品';
+        showGlobalLoader("发布首页文字...");
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ homeMainTitle, homeSubtitle }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            document.getElementById('homeMainTitleInput').value = globalSettings.homeMainTitle || homeMainTitle;
+            document.getElementById('homeSubtitleInput').value = globalSettings.homeSubtitle || homeSubtitle;
+            hideGlobalLoader();
+            showToast("首页标题已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
 
     function getFeaturedGenreIds() {
         return Array.isArray(globalSettings.featuredGenreIds) ? globalSettings.featuredGenreIds : [];
@@ -1062,6 +1162,110 @@
             renderFeaturedGenreSettings();
             hideGlobalLoader();
             showToast("专区展示已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    function getCreatorUsers() {
+        return allUsers.filter(u => u.role === 'PRODUCER' || u.role === 'VIP' || u.isVip);
+    }
+
+    function getCreatorStats(user) {
+        const songs = allSongs.filter(s => s.uploader === user.username && s.status === 'APPROVED');
+        const downloads = songs.reduce((sum, s) => sum + (parseInt(s.downloads) || 0), 0);
+        return { songs: songs.length, downloads };
+    }
+
+    function getUserAvatar(user) {
+        return user.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E♪%3C/text%3E%3C/svg%3E";
+    }
+
+    function ensureHotProducerDraft() {
+        if(hotProducerDraftIds !== null) return;
+        hotProducerDraftIds = Array.isArray(globalSettings.hotProducerIds) ? [...globalSettings.hotProducerIds] : [];
+    }
+
+    function renderHotProducerManager() {
+        ensureHotProducerDraft();
+        const selectedList = document.getElementById('hotProducerSelectedList');
+        const candidateList = document.getElementById('hotProducerCandidateList');
+        const countEl = document.getElementById('hotSelectedCount');
+        if(!selectedList || !candidateList) return;
+        const creators = getCreatorUsers();
+        const selectedUsers = hotProducerDraftIds.map(id => creators.find(u => u.username === id)).filter(Boolean);
+        if(countEl) countEl.innerText = selectedUsers.length;
+        selectedList.innerHTML = selectedUsers.map((u, index) => {
+            const stats = getCreatorStats(u);
+            const roleLabel = u.role === 'PRODUCER' ? 'Producer 制作人' : 'VIP';
+            return `
+                <div class="hot-producer-row">
+                    <div class="hot-producer-order">${index + 1}</div>
+                    <img class="hot-producer-avatar" src="${getUserAvatar(u)}">
+                    <div style="min-width:0;">
+                        <div class="hot-producer-name truncate">${escapeHtml(u.djName || u.username)}</div>
+                        <div class="hot-producer-meta">${stats.songs} 首 · ${roleLabel} · ${stats.downloads} 下载</div>
+                    </div>
+                    <div class="hot-producer-actions">
+                        <button class="hot-mini-btn" onclick="moveHotProducer(${index}, -1)">↑</button>
+                        <button class="hot-mini-btn" onclick="moveHotProducer(${index}, 1)">↓</button>
+                        <button class="hot-mini-btn remove" onclick="removeHotProducer('${u.username}')">×</button>
+                    </div>
+                </div>`;
+        }).join('');
+        if(!selectedUsers.length) selectedList.innerHTML = `<div class="hot-empty">还没有置顶制作人</div>`;
+
+        const query = (document.getElementById('hotProducerSearchInput')?.value || '').toLowerCase();
+        const candidates = creators
+            .filter(u => !hotProducerDraftIds.includes(u.username))
+            .filter(u => (u.djName || u.username || '').toLowerCase().includes(query) || (u.username || '').toLowerCase().includes(query))
+            .sort((a,b) => getCreatorStats(b).songs - getCreatorStats(a).songs);
+        candidateList.innerHTML = candidates.map(u => {
+            const stats = getCreatorStats(u);
+            const roleLabel = u.role === 'PRODUCER' ? 'Producer 制作人' : 'VIP';
+            return `
+                <div class="hot-candidate-row">
+                    <img class="hot-producer-avatar" src="${getUserAvatar(u)}">
+                    <div style="min-width:0;">
+                        <div class="hot-producer-name truncate">${escapeHtml(u.djName || u.username)}</div>
+                        <div class="hot-producer-meta">${stats.songs} 首 · ${roleLabel}</div>
+                    </div>
+                    <button class="hot-mini-btn" onclick="addHotProducer('${u.username}')">+</button>
+                </div>`;
+        }).join('');
+        if(!candidates.length) candidateList.innerHTML = `<div class="hot-empty">没有可添加的 VIP / Producer</div>`;
+    }
+
+    function addHotProducer(username) {
+        ensureHotProducerDraft();
+        if(!hotProducerDraftIds.includes(username)) hotProducerDraftIds.push(username);
+        renderHotProducerManager();
+    }
+
+    function removeHotProducer(username) {
+        ensureHotProducerDraft();
+        hotProducerDraftIds = hotProducerDraftIds.filter(id => id !== username);
+        renderHotProducerManager();
+    }
+
+    function moveHotProducer(index, dir) {
+        ensureHotProducerDraft();
+        const target = index + dir;
+        if(target < 0 || target >= hotProducerDraftIds.length) return;
+        [hotProducerDraftIds[index], hotProducerDraftIds[target]] = [hotProducerDraftIds[target], hotProducerDraftIds[index]];
+        renderHotProducerManager();
+    }
+
+    async function saveHotProducerOrder() {
+        ensureHotProducerDraft();
+        showGlobalLoader("保存排序...");
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ hotProducerIds: hotProducerDraftIds }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            hotProducerDraftIds = Array.isArray(globalSettings.hotProducerIds) ? [...globalSettings.hotProducerIds] : [];
+            hideGlobalLoader();
+            showToast("热门制作人排序已保存");
         } else {
             hideGlobalLoader();
             showToast(await res.text(), true);
@@ -1502,7 +1706,7 @@
         const listDiv = document.getElementById('dlMonitorList'); listDiv.innerHTML = '';
         
         dlData.forEach((u, i) => {
-            const roleBadge = u.role === 'PRODUCER' ? '制作人' : u.role;
+            const roleBadge = u.role === 'PRODUCER' ? 'Producer 制作人' : u.role;
             const statusNode = u.status === 'BANNED' ? `<span style="color:var(--danger)">BANNED</span>` : `ACTIVE`;
             const actionBtn = u.status === 'BANNED' ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')">解封</button>` : `<button class="btn-text-action danger" onclick="openBanModalFromDl('${u.username}')">拉黑</button>`;
             const lastDate = u.lastDl > 0 ? new Date(u.lastDl).toLocaleString() : '-';
@@ -1918,7 +2122,7 @@
     function getUserRole(user) { return user.role || (user.isVip ? 'VIP' : 'NORMAL'); }
     function getRoleBadge(user) {
         const role = getUserRole(user);
-        if(role === 'PRODUCER') return '<span class="badge-role producer">制作人</span>';
+        if(role === 'PRODUCER') return '<span class="badge-role producer">Producer 制作人</span>';
         if(role === 'VIP') return '<span class="badge-role vip">VIP</span>';
         return '<span class="badge-role normal">NORMAL</span>';
     }
@@ -1965,7 +2169,7 @@
         
         document.getElementById('det-u-name').innerText = currentEditUser.username;
         document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
-        document.getElementById('det-u-role').innerText = getUserRole(currentEditUser) === 'PRODUCER' ? '制作人' : getUserRole(currentEditUser);
+        document.getElementById('det-u-role').innerText = getUserRole(currentEditUser) === 'PRODUCER' ? 'Producer 制作人' : getUserRole(currentEditUser);
         document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
         document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';
         document.getElementById('det-u-tokens').innerText = currentEditUser.tokens || 0;
