@@ -229,6 +229,24 @@
         .upload-tabs button.active { color:white; border-bottom-color:var(--accent-light); font-weight:bold;}
         .upload-dropzone { border:2px dashed var(--border-color); border-radius:12px; padding:40px 20px; text-align:center; color:var(--text-muted); cursor:pointer; background:rgba(0,0,0,0.2); transition:0.2s;}
         .upload-dropzone:hover { border-color:var(--accent-light); background:rgba(165,42,42,0.05); }
+        .batch-upload-shell { display:none; margin-top:18px; }
+        .batch-upload-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; color:var(--text-muted); }
+        .batch-upload-head strong { color:white; font-size:24px; }
+        .batch-file-list { display:flex; flex-direction:column; gap:12px; }
+        .batch-file-card { display:grid; grid-template-columns:92px minmax(0,1fr) 170px 170px 42px; gap:18px; align-items:center; padding:16px; border:1px solid var(--border-color); border-radius:16px; background:linear-gradient(135deg, rgba(34,22,34,0.92), rgba(34,16,16,0.92)); box-shadow:0 12px 32px rgba(0,0,0,0.22); }
+        .batch-cover { width:72px; height:72px; border-radius:12px; border:1px dashed rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; color:var(--text-muted); font-size:12px; text-align:center; background:rgba(255,255,255,0.03); }
+        .batch-file-meta { min-width:0; }
+        .batch-file-name { color:var(--text-muted); font-size:12px; font-weight:700; letter-spacing:0.3px; margin-bottom:8px; }
+        .batch-title-input, .batch-price-input, .batch-genre-select { width:100%; box-sizing:border-box; background:#0b0505; border:1px solid rgba(255,69,58,0.5); color:white; border-radius:10px; padding:12px 14px; outline:none; font-size:14px; }
+        .batch-title-input:focus, .batch-price-input:focus, .batch-genre-select:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.18); }
+        .batch-preview-note { margin-top:8px; color:var(--accent-light); font-size:12px; }
+        .batch-remove-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.04); color:var(--text-muted); cursor:pointer; font-size:18px; }
+        .batch-remove-btn:hover { color:white; border-color:var(--danger); }
+        .featured-genre-panel { padding:18px 20px; display:flex; flex-direction:column; gap:14px; }
+        .featured-genre-picker { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+        .featured-genre-choice { display:flex; align-items:center; gap:10px; min-height:44px; border:1px solid var(--border-color); border-radius:10px; padding:0 12px; background:rgba(0,0,0,0.2); cursor:pointer; color:var(--text-muted); font-size:13px; }
+        .featured-genre-choice input { accent-color:var(--accent-light); }
+        .featured-genre-choice.active { border-color:var(--accent-light); color:white; background:rgba(165,42,42,0.12); }
 
         .user-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; background:var(--bg-dark); border:1px solid var(--border-color); padding:20px; border-radius:8px; margin-bottom:20px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
         .u-stat-box { display:flex; flex-direction:column; gap:5px; min-width:80px;}
@@ -288,6 +306,11 @@
             .sensitive-hero h1 { font-size:30px; }
             .sensitive-card { padding:22px 18px; }
             .sensitive-table { padding:0; }
+            .batch-upload-head { align-items:flex-start; flex-direction:column; }
+            .batch-file-card { grid-template-columns:76px minmax(0,1fr); gap:12px; padding:12px; }
+            .batch-cover { width:62px; height:62px; }
+            .batch-price-input, .batch-genre-select, .batch-remove-btn { grid-column:2; }
+            .batch-remove-btn { justify-self:flex-end; }
             .poster-preview-box { min-height:140px; }
             .modal-box { max-width:calc(100vw - 28px); }
             .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
@@ -298,7 +321,7 @@
         }
 
         @media (max-width: 480px) {
-            .stat-grid, .genre-grid { grid-template-columns: 1fr; }
+            .genre-grid { grid-template-columns: 1fr; }
             .ops-grid { grid-template-columns: repeat(2, 1fr); min-width:520px; }
             .user-detail-grid { grid-template-columns: 1fr; }
             .top-actions .btn-top { padding:5px 9px; }
@@ -338,12 +361,12 @@
     <div class="nav-section">
         <div class="nav-title">内容</div>
         <div class="nav-item-group">
-            <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
+            <button class="nav-item" onclick="switchView('songs', '歌曲管理 / 全部歌曲'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 全部歌曲 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
             <div class="sub-nav" id="sub-songs">
-                <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 全部歌曲')">全部歌曲</button>
+                <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 管理歌曲')">管理歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
                 <button class="sub-nav-item" onclick="switchView('upload', '歌曲管理 / 上传歌曲')">上传歌曲</button>
-                <button class="sub-nav-item" onclick="switchView('wip', '歌曲管理 / 批量上传')">批量上传</button>
+                <button class="sub-nav-item" onclick="switchView('bulk-upload', '歌曲管理 / 批量上传')">批量上传</button>
             </div>
         </div>
         <button class="nav-item" onclick="switchView('homepage', '首页内容')" id="nav-homepage">⌂ 首页内容</button>
@@ -384,7 +407,6 @@
     <div class="top-bar">
         <div class="breadcrumb">后台 / <span id="breadcrumb-current">总览</span></div>
         <div class="top-actions">
-            <button class="btn-top" onclick="publishChanges()">Publish</button>
             <button class="btn-top highlight">● 开发环境</button>
         </div>
     </div>
@@ -584,6 +606,35 @@
         </div>
     </div>
 
+    <div id="view-bulk-upload" class="view-section">
+        <div class="dash-header" style="justify-content:space-between; align-items:center;">
+            <div><h2>批量上传</h2><p>选择 1 - 20 首 MP3 / WAV，每首固定试听 00:00 - 00:30，提交后进入待审队列。</p></div>
+            <button class="btn-text-action" onclick="switchView('songs', '歌曲管理 / 全部歌曲')">返回</button>
+        </div>
+
+        <div class="glass-panel" style="padding: 30px;">
+            <input type="file" id="managerBulkFileInput" accept="audio/*,video/mp4,.m4a,.mp3" multiple style="display:none;" onchange="handleManagerBulkSelect(event)">
+            <div class="upload-dropzone" onclick="document.getElementById('managerBulkFileInput').click()">
+                <div style="font-weight:800; color:white; margin-bottom:6px;">拖入或点击选择多个 MP3 / WAV 文件</div>
+                <div style="font-size:12px;">最多 20 首 · 固定试听 00:00 - 00:30</div>
+            </div>
+            <div id="managerBulkFileCount" style="font-size:12px; color:var(--accent-light); margin-top:10px; text-align:center;"></div>
+
+            <div class="batch-upload-shell" id="managerBatchShell">
+                <div class="batch-upload-head">
+                    <div><strong><span id="managerBatchCount">0</span> / 20 首</strong> <span id="managerBatchReady">0 首已就绪</span></div>
+                    <div style="font-size:12px;">每首歌都需要标题、价格与分类</div>
+                </div>
+                <div class="batch-file-list" id="managerBatchList"></div>
+            </div>
+
+            <div style="display:flex; gap:14px; justify-content:flex-end; margin-top:24px; flex-wrap:wrap;">
+                <button class="btn-text-action" onclick="clearManagerBulkFiles()">清空</button>
+                <button class="btn-primary" onclick="executeManagerBulkUpload()">全部提交审核</button>
+            </div>
+        </div>
+    </div>
+
     <div id="view-activity" class="view-section">
         <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
         <div class="glass-panel" style="padding:20px;">
@@ -610,6 +661,17 @@
             <div style="flex:1;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">WEBSITE NAME</label><input type="text" id="headerInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
             <div style="flex:2;"><label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:5px;">HERO TITLE (Ex: 专属DJ节奏空间)</label><input type="text" id="heroTitleInput" class="input-text" style="width:100%; box-sizing:border-box;"></div>
             <button class="btn-primary" style="height:38px;" onclick="saveSettings()">Save Configuration</button>
+        </div>
+        <div class="glass-panel featured-genre-panel">
+            <div class="panel-header" style="padding:0; border:none;">
+                <div>
+                    <div style="font-size:16px; font-weight:900;">专区展示</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选已有分类，最多 10 个。发布后 music.html 首页专区会立即更新。</div>
+                </div>
+                <button class="btn-primary" onclick="saveFeaturedGenres()">发布</button>
+            </div>
+            <div class="featured-genre-picker" id="featuredGenrePicker"></div>
+            <div style="font-size:12px; color:var(--text-muted);">已选 <span id="featuredGenreCount">0</span> / 10</div>
         </div>
         <div style="display:none; text-align:right; margin-bottom:10px;" id="genre-bulk-actions">
             <button class="btn-text-action" onclick="toggleGenreBulkDelete()">取消</button>
@@ -852,6 +914,7 @@
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null; 
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
     let badgeRefreshTimer = null;
+    let selectedManagerBulkFiles = [];
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -916,6 +979,8 @@
         if(viewId === 'reports') loadReports();
         if(viewId === 'sensitive') loadSensitiveWords();
         if(viewId === 'system-settings') renderSystemSettings();
+        if(viewId === 'categories') renderFeaturedGenreSettings();
+        if(viewId === 'bulk-upload') renderManagerBulkList();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -937,7 +1002,7 @@
                 renderHomePoster();
             }
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); allReports = await (await fetch(`${API_URL}/reports`)).json();
-            buildDashboardStats(); renderGenres(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
+            buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
             updateReportBadge();
             if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 30000);
             const savedView = localStorage.getItem('fkAdminLastView');
@@ -954,6 +1019,54 @@
     }
     
     async function saveSettings() { showGlobalLoader(); await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({headerTitle: document.getElementById('headerInput').value, heroTitle: document.getElementById('heroTitleInput').value})}); hideGlobalLoader(); showToast("Texts Saved!"); }
+
+    function getFeaturedGenreIds() {
+        return Array.isArray(globalSettings.featuredGenreIds) ? globalSettings.featuredGenreIds : [];
+    }
+
+    function renderFeaturedGenreSettings() {
+        const picker = document.getElementById('featuredGenrePicker');
+        const count = document.getElementById('featuredGenreCount');
+        if(!picker || !count) return;
+        const selected = getFeaturedGenreIds();
+        count.innerText = selected.length;
+        picker.innerHTML = '';
+        allGenres.filter(g => g.status !== 'DISABLED').forEach(g => {
+            const checked = selected.includes(g.id);
+            picker.innerHTML += `
+                <label class="featured-genre-choice ${checked ? 'active' : ''}">
+                    <input type="checkbox" value="${g.id}" ${checked ? 'checked' : ''} onchange="toggleFeaturedGenre(this)">
+                    <span class="truncate">${g.name}</span>
+                </label>`;
+        });
+        if(!picker.innerHTML) picker.innerHTML = `<div style="color:var(--text-muted); font-size:13px;">暂无可展示分类</div>`;
+    }
+
+    function toggleFeaturedGenre(input) {
+        let selected = Array.from(document.querySelectorAll('#featuredGenrePicker input:checked')).map(cb => cb.value);
+        if(selected.length > 10) {
+            input.checked = false;
+            showToast("专区展示最多 10 个分类", true);
+            selected = selected.filter(id => id !== input.value);
+        }
+        globalSettings.featuredGenreIds = selected;
+        renderFeaturedGenreSettings();
+    }
+
+    async function saveFeaturedGenres() {
+        const featuredGenreIds = Array.from(document.querySelectorAll('#featuredGenrePicker input:checked')).map(cb => cb.value).slice(0, 10);
+        showGlobalLoader("发布专区...");
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ featuredGenreIds }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderFeaturedGenreSettings();
+            hideGlobalLoader();
+            showToast("专区展示已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
 
     // --- HOMEPAGE BANNERS ---
     function renderBanners() {
@@ -1685,6 +1798,92 @@
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
             if (res.ok) { showToast("Audio Uploaded!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
         } else { showToast("Please provide file or URL", true); }
+    }
+
+    function getManagerFileTitle(file) { return file.name.replace(/\.[^/.]+$/, ""); }
+    function getManagerGenreOptions(selectedId) {
+        return allGenres.filter(g => g.status !== 'DISABLED').map(g => `<option value="${g.id}" ${g.id === selectedId ? 'selected' : ''}>${g.name}</option>`).join('');
+    }
+    function updateManagerBulkItem(index, field, value) {
+        if(!selectedManagerBulkFiles[index]) return;
+        selectedManagerBulkFiles[index][field] = value;
+        const ready = selectedManagerBulkFiles.filter(item => item.title && item.genreId && item.price !== '').length;
+        document.getElementById('managerBatchReady').innerText = `${ready} 首已就绪`;
+    }
+    function removeManagerBulkFile(index) {
+        selectedManagerBulkFiles.splice(index, 1);
+        renderManagerBulkList();
+    }
+    function clearManagerBulkFiles() {
+        selectedManagerBulkFiles = [];
+        const input = document.getElementById('managerBulkFileInput');
+        if(input) input.value = '';
+        renderManagerBulkList();
+    }
+    function renderManagerBulkList() {
+        const shell = document.getElementById('managerBatchShell');
+        const list = document.getElementById('managerBatchList');
+        const fileCount = document.getElementById('managerBulkFileCount');
+        if(!shell || !list) return;
+        const showBatch = selectedManagerBulkFiles.length > 0;
+        shell.style.display = showBatch ? 'block' : 'none';
+        if(fileCount) fileCount.innerText = showBatch ? `${selectedManagerBulkFiles.length} / 20 首已选择` : '';
+        if(!showBatch) { list.innerHTML = ''; return; }
+        document.getElementById('managerBatchCount').innerText = selectedManagerBulkFiles.length;
+        document.getElementById('managerBatchReady').innerText = `${selectedManagerBulkFiles.filter(item => item.title && item.genreId && item.price !== '').length} 首已就绪`;
+        list.innerHTML = selectedManagerBulkFiles.map((item, index) => `
+            <div class="batch-file-card">
+                <div class="batch-cover">封面</div>
+                <div class="batch-file-meta">
+                    <div class="batch-file-name">♫ ${item.file.name} · ${(item.file.size / (1024 * 1024)).toFixed(1)} MB</div>
+                    <input class="batch-title-input" value="${item.title.replace(/"/g, '&quot;')}" oninput="updateManagerBulkItem(${index}, 'title', this.value)" placeholder="歌曲标题 *">
+                    <div class="batch-preview-note">试听: 00:00 - 00:30</div>
+                </div>
+                <input class="batch-price-input" type="number" min="0" value="${item.price}" oninput="updateManagerBulkItem(${index}, 'price', this.value)" placeholder="💎 价格 *">
+                <select class="batch-genre-select" onchange="updateManagerBulkItem(${index}, 'genreId', this.value)">${getManagerGenreOptions(item.genreId)}</select>
+                <button class="batch-remove-btn" onclick="removeManagerBulkFile(${index})">×</button>
+            </div>
+        `).join('');
+    }
+    function handleManagerBulkSelect(e) {
+        const pickedFiles = Array.from(e.target.files || []);
+        if(!pickedFiles.length) return;
+        const room = 20 - selectedManagerBulkFiles.length;
+        if(room <= 0) { showToast("批量上传最多 20 首", true); e.target.value = ''; return; }
+        const accepted = pickedFiles.slice(0, room);
+        if(pickedFiles.length > room) showToast("最多只能选择 20 首，已自动保留前 20 首", true);
+        const defaultGenre = (allGenres.find(g => g.status !== 'DISABLED') || {}).id || '';
+        selectedManagerBulkFiles = selectedManagerBulkFiles.concat(accepted.map(file => ({ file, title: getManagerFileTitle(file), price: 0, genreId: defaultGenre })));
+        e.target.value = '';
+        renderManagerBulkList();
+    }
+    async function executeManagerBulkUpload() {
+        if(!selectedManagerBulkFiles.length) return showToast("请选择 1 - 20 首歌曲", true);
+        if(selectedManagerBulkFiles.length > 20) return showToast("批量上传最多 20 首", true);
+        if(selectedManagerBulkFiles.some(item => !item.title || !item.genreId || item.price === '')) return showToast("每首歌都需要标题、价格与分类", true);
+        showGlobalProgress("批量上传中...");
+        try {
+            for(const item of selectedManagerBulkFiles) {
+                const fd = new FormData();
+                fd.append('mp3file', item.file);
+                fd.append('title', item.title);
+                fd.append('price', item.price);
+                fd.append('genreId', item.genreId);
+                fd.append('uploader', 'FULLKIK');
+                fd.append('status', 'PENDING');
+                const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+                if(!res.ok) throw new Error(await res.text());
+            }
+            selectedManagerBulkFiles = [];
+            allSongs = await (await fetch(`${API_URL}/songs`)).json();
+            updatePendingBadge();
+            hideGlobalProgress();
+            showToast("批量上传已提交待审");
+            switchView('pending', '歌曲管理 / 待审队列');
+        } catch(e) {
+            hideGlobalProgress();
+            showToast(`上传失败: ${e.message}`, true);
+        }
     }
 
     function openQuickPrice(id, currentPrice) { currentQuickEditId = id; document.getElementById('quickPriceInput').value = currentPrice; document.getElementById('quickPriceModal').style.display = 'flex'; }
