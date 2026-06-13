@@ -124,6 +124,13 @@
         .dj-card-large .songs { font-size: 12px; color: var(--text-muted); margin-bottom: 15px;}
         .dj-card-large .mini-covers { display: flex; gap: 5px; }
         .dj-card-large .mini-covers img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover;}
+        .dj-tools { display:flex; flex-direction:column; gap:22px; margin:26px 0 28px; }
+        .dj-search-bar { width:min(520px, 100%); height:52px; box-sizing:border-box; border:1px solid var(--border-color); border-radius:16px; background:rgba(255,255,255,0.06); color:white; padding:0 18px; font-size:15px; outline:none; }
+        .dj-search-bar:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.18); }
+        .dj-sort-row { display:flex; gap:12px; flex-wrap:wrap; }
+        .dj-sort-chip { border:1px solid var(--border-color); background:rgba(255,255,255,0.04); color:var(--text-muted); border-radius:22px; min-height:42px; padding:0 20px; font-size:14px; font-weight:800; cursor:pointer; }
+        .dj-sort-chip.active { color:white; border-color:var(--accent-light); background:rgba(128,0,0,0.28); }
+        .dj-tab-count { display:inline-flex; min-width:24px; height:24px; padding:0 8px; border-radius:12px; background:rgba(128,0,0,0.45); align-items:center; justify-content:center; font-size:12px; margin-left:6px; }
 
         /* PLAYER */
         .player-header { display: flex; align-items: center; margin-bottom: 30px;}
@@ -159,6 +166,18 @@
         
         .player-right { width: 350px; flex-shrink: 0; position:relative;}
         .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
+        .recommend-section { margin-top:34px; padding-top:28px; border-top:1px solid var(--border-color); }
+        .recommend-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+        .recommend-header h3 { margin:0; font-size:24px; font-weight:900; }
+        .recommend-refresh { border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; border-radius:10px; padding:10px 16px; font-size:14px; font-weight:800; cursor:pointer; }
+        .recommend-refresh:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.25); }
+        .recommend-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px 28px; }
+        .recommend-card { display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:14px; align-items:center; cursor:pointer; border-radius:14px; padding:10px; transition:0.2s; }
+        .recommend-card:hover { background:rgba(128,0,0,0.16); transform:translateY(-2px); }
+        .recommend-card img { width:64px; height:64px; border-radius:12px; object-fit:cover; box-shadow:0 12px 28px rgba(128,0,0,0.28); }
+        .recommend-title { font-weight:900; font-size:14px; color:white; }
+        .recommend-sub { color:var(--text-muted); font-size:12px; margin-top:7px; }
+        .recommend-price { color:var(--token); font-weight:900; white-space:nowrap; }
 
         .heart-btn { background:none; border:1px solid var(--border-color); border-radius:12px; padding:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;}
         .heart-btn svg { width:24px; height:24px; stroke:white; stroke-width:2; fill:none; transition:0.2s;}
@@ -176,12 +195,12 @@
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
-        .report-modal-box { max-width:560px; text-align:left; border:1px solid var(--accent-light); background:rgba(30,24,42,0.96); border-radius:28px; overflow:visible; padding:42px 48px; box-sizing:border-box; position:relative; }
+        .report-modal-box { max-width:560px; text-align:left; border:1px solid var(--accent-light); background:linear-gradient(145deg, rgba(36,10,10,0.98), rgba(18,5,5,0.98)); border-radius:28px; overflow:visible; padding:42px 48px; box-sizing:border-box; position:relative; box-shadow:0 24px 80px rgba(80,0,0,0.55); }
         .report-close { position:absolute; top:24px; right:24px; width:34px; height:34px; border:none; background:transparent; color:var(--text-muted); font-size:32px; line-height:1; cursor:pointer; }
         .report-close:hover { color:white; }
         .report-title { margin:0 0 34px; font-size:30px; line-height:1.1; font-weight:900; }
         .report-label { display:block; color:var(--text-muted); font-weight:800; margin:0 0 10px; }
-        .report-select, .report-textarea { width:100%; box-sizing:border-box; background:rgba(9,7,28,0.72); color:white; border:1px solid rgba(255,255,255,0.16); border-radius:14px; padding:14px 16px; font-size:15px; outline:none; margin-bottom:20px; }
+        .report-select, .report-textarea { width:100%; box-sizing:border-box; background:rgba(10,0,0,0.72); color:white; border:1px solid rgba(165,42,42,0.45); border-radius:14px; padding:14px 16px; font-size:15px; outline:none; margin-bottom:20px; }
         .report-select:focus, .report-textarea:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.24); }
         .report-textarea { min-height:120px; resize:vertical; }
         .report-submit { width:100%; min-height:58px; border:none; border-radius:14px; background:linear-gradient(90deg, var(--accent), var(--accent-light)); color:white; font-size:18px; font-weight:900; cursor:pointer; margin-top:6px; }
@@ -223,6 +242,9 @@
             .logo-container { font-size: 18px; }
             .home-song-grid { grid-template-columns: 1fr; } 
             .featured-genre-tabs { gap:16px; }
+            .recommend-grid { grid-template-columns:1fr; gap:12px; }
+            .recommend-card { grid-template-columns:56px minmax(0,1fr) auto; padding:8px; }
+            .recommend-card img { width:56px; height:56px; }
             .search-wrapper { max-width: 90%; }
             .banners-container img { width: 250px; flex-shrink: 0;}
             .dj-grid-large { grid-template-columns: 1fr 1fr; }
@@ -269,8 +291,8 @@
 <div class="container">
     <div id="view-home" class="view-section active">
         <div class="hero">
-            <h1 id="heroTitle">专属DJ节奏空间</h1>
-            <p data-i18n="heroSub">专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品</p>
+            <h1 id="heroTitle">FULLKIK音乐空间</h1>
+            <p id="heroSubtitle" data-i18n="heroSub">专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品</p>
             
             <div id="homeBanners" class="banners-container"></div>
 
@@ -285,11 +307,20 @@
 
     <div id="view-dj-list" class="view-section">
         <div class="dash-header" style="margin-bottom:20px;">
-            <h2 style="font-size:32px; font-weight:800; margin:0;">制作人 <span style="font-size:14px; color:var(--text-muted); font-weight:normal;" id="dj-list-count">(0)</span></h2>
+            <h2 style="font-size:32px; font-weight:800; margin:0;"><span id="djListTitle">制作人</span> <span style="font-size:14px; color:var(--text-muted); font-weight:normal;" id="dj-list-count">(0)</span></h2>
         </div>
         <div class="vip-tabs">
-            <button class="vip-tab active" id="tab-producers" onclick="renderDjList('PRODUCER')">制作人</button>
-            <button class="vip-tab" id="tab-djs" onclick="renderDjList('VIP')">DJ</button>
+            <button class="vip-tab active" id="tab-producers" onclick="renderDjList('PRODUCER')">制作人 <span class="dj-tab-count" id="producerCountBadge">0</span></button>
+            <button class="vip-tab" id="tab-djs" onclick="renderDjList('VIP')">DJ <span class="dj-tab-count" id="djCountBadge">0</span></button>
+        </div>
+        <div class="dj-tools">
+            <input type="text" id="djSearchInput" class="dj-search-bar" placeholder="搜索制作人名称..." oninput="renderDjList(currentDjRoleFilter)">
+            <div class="dj-sort-row">
+                <button class="dj-sort-chip active" id="djSort-hot" onclick="setDjSort('hot')">最热门</button>
+                <button class="dj-sort-chip" id="djSort-songs" onclick="setDjSort('songs')">最多歌曲</button>
+                <button class="dj-sort-chip" id="djSort-newest" onclick="setDjSort('newest')">最新加入</button>
+                <button class="dj-sort-chip" id="djSort-downloads" onclick="setDjSort('downloads')">最多下载</button>
+            </div>
         </div>
         <div class="dj-grid-large" id="djListGrid"></div>
     </div>
@@ -332,6 +363,10 @@
                 <img class="player-cover" id="playerCover" src="">
                 <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="openReportModal()"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
             </div>
+        </div>
+        <div class="recommend-section">
+            <div class="recommend-header"><h3>热门推荐</h3><button class="recommend-refresh" onclick="renderSongRecommendations(true)">刷新</button></div>
+            <div class="recommend-grid" id="songRecommendGrid"></div>
         </div>
     </div>
 </div>
@@ -376,6 +411,8 @@
         cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有30秒", buyBtn: "购买", report: "举报" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
+    let currentDjRoleFilter = 'PRODUCER';
+    let currentDjSort = 'hot';
 
     function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
 
@@ -384,6 +421,7 @@
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
         if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
+        applyHomeHeroText();
         if(currentSong) openSong(currentSong.id);
         
         try {
@@ -394,6 +432,12 @@
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
+    function applyHomeHeroText() {
+        const title = document.getElementById('heroTitle');
+        const subtitle = document.getElementById('heroSubtitle');
+        if(title) title.innerText = globalSettings.homeMainTitle || globalSettings.heroTitle || 'FULLKIK音乐空间';
+        if(subtitle) subtitle.innerText = globalSettings.homeSubtitle || dict[currentLang].heroSub;
+    }
     function setMusicPageTitle(view, detail = '') {
         const titles = {
             home: 'FULLKIK 首页',
@@ -479,7 +523,7 @@
             if(res.ok) { 
                 globalSettings = await res.json(); 
                 if(globalSettings.headerTitle) { const lt = document.getElementById('logoText'); if(lt) lt.innerText = globalSettings.headerTitle; } 
-                if(globalSettings.heroTitle) { const ht = document.getElementById('heroTitle'); if(ht) ht.innerText = globalSettings.heroTitle; } 
+                applyHomeHeroText();
                 renderSupportWhatsapp();
             }
             setProg(30);
@@ -637,15 +681,10 @@
         container.innerHTML = '';
 
         if(users && users.length) {
-            const vips = users.filter(u => u.isVip || u.role === 'VIP' || u.role === 'PRODUCER');
-            vips.sort((a,b) => {
-                const cA = allSongs.filter(s => s.uploader === a.username).length;
-                const cB = allSongs.filter(s => s.uploader === b.username).length;
-                return cB - cA;
-            });
+            const vips = getHomepageHotProducers(users);
 
             if(vips.length > 0) {
-                let djHtml = `<div class="section-header"><h3>热门 DJ</h3><span onclick="switchView('dj-list')">更多 ></span></div><div class="dj-scroll-container">`;
+                let djHtml = `<div class="section-header"><h3>热门制作人</h3><span onclick="switchView('dj-list')">更多 ></span></div><div class="dj-scroll-container">`;
                 vips.slice(0, 10).forEach((v, i) => {
                     const count = allSongs.filter(s => s.uploader === v.username).length;
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
@@ -673,6 +712,15 @@
             const gSongs = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED');
             if(gSongs.length > 0) container.innerHTML += generateSongGridHtml(g.name, gSongs, g.id);
         });
+    }
+
+    function getHomepageHotProducers(users) {
+        const creatorUsers = users.filter(u => u.isVip || u.role === 'VIP' || u.role === 'PRODUCER');
+        if(Array.isArray(globalSettings.hotProducerIds)) {
+            return globalSettings.hotProducerIds.map(id => creatorUsers.find(u => u.username === id)).filter(Boolean);
+        }
+        creatorUsers.sort((a,b) => getCreatorStats(b).songCount - getCreatorStats(a).songCount);
+        return creatorUsers;
     }
 
     function generateSongGridHtml(title, songs, filterId) {
@@ -748,16 +796,54 @@
     }
 
     // --- DJ / PRODUCER LIST ---
+    function getCreatorStats(user) {
+        const songs = allSongs.filter(s => s.uploader === user.username && s.status === 'APPROVED');
+        const downloads = songs.reduce((sum, s) => sum + (parseInt(s.downloads) || 0), 0);
+        const purchaseCount = allUsers.reduce((sum, u) => sum + ((u.purchases || []).filter(p => p.songId && songs.some(s => s.id === p.songId)).length), 0);
+        return { songCount: songs.length, downloads, purchaseCount, hotScore: downloads + purchaseCount + songs.length, newest: new Date(user.createdAt || 0).getTime() || 0 };
+    }
+
+    function setDjSort(sortKey) {
+        currentDjSort = sortKey;
+        document.querySelectorAll('.dj-sort-chip').forEach(btn => btn.classList.remove('active'));
+        const btn = document.getElementById(`djSort-${sortKey}`);
+        if(btn) btn.classList.add('active');
+        renderDjList(currentDjRoleFilter);
+    }
+
     function renderDjList(roleFilter) {
+        currentDjRoleFilter = roleFilter;
         document.getElementById('tab-producers').classList.remove('active'); document.getElementById('tab-djs').classList.remove('active');
         if(roleFilter === 'PRODUCER') document.getElementById('tab-producers').classList.add('active');
         else document.getElementById('tab-djs').classList.add('active');
+        const producerTotal = allUsers.filter(u => u.role === 'PRODUCER').length;
+        const djTotal = allUsers.filter(u => u.role === 'VIP' || (u.isVip && u.role !== 'PRODUCER')).length;
+        if(document.getElementById('producerCountBadge')) document.getElementById('producerCountBadge').innerText = producerTotal;
+        if(document.getElementById('djCountBadge')) document.getElementById('djCountBadge').innerText = djTotal;
+        const title = roleFilter === 'PRODUCER' ? '制作人' : 'DJ';
+        if(document.getElementById('djListTitle')) document.getElementById('djListTitle').innerText = title;
+        const searchInput = document.getElementById('djSearchInput');
+        if(searchInput) searchInput.placeholder = roleFilter === 'PRODUCER' ? '搜索制作人名称...' : '搜索 DJ 名称...';
 
         const grid = document.getElementById('djListGrid');
         if(!grid) return;
         grid.innerHTML = '';
         
+        const query = (searchInput ? searchInput.value : '').toLowerCase();
         let filteredUsers = allUsers.filter(u => u.role === roleFilter || (roleFilter==='VIP' && u.isVip && u.role!=='PRODUCER'));
+        filteredUsers = filteredUsers.filter(u => (u.djName || u.username || '').toLowerCase().includes(query) || (u.username || '').toLowerCase().includes(query));
+        filteredUsers.sort((a,b) => {
+            const aStats = getCreatorStats(a), bStats = getCreatorStats(b);
+            if(currentDjSort === 'songs') return bStats.songCount - aStats.songCount;
+            if(currentDjSort === 'newest') return bStats.newest - aStats.newest;
+            if(currentDjSort === 'downloads') return bStats.downloads - aStats.downloads;
+            if(Array.isArray(globalSettings.hotProducerIds) && roleFilter === 'PRODUCER') {
+                const aIndex = globalSettings.hotProducerIds.indexOf(a.username);
+                const bIndex = globalSettings.hotProducerIds.indexOf(b.username);
+                if(aIndex !== -1 || bIndex !== -1) return (aIndex === -1 ? 9999 : aIndex) - (bIndex === -1 ? 9999 : bIndex);
+            }
+            return bStats.hotScore - aStats.hotScore;
+        });
         document.getElementById('dj-list-count').innerText = `(${filteredUsers.length})`;
 
         filteredUsers.forEach(u => {
@@ -779,6 +865,7 @@
                 </div>
             `;
         });
+        if(!filteredUsers.length) grid.innerHTML = `<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--text-muted);">暂无结果</div>`;
     }
 
     // --- RANKING LIST (排行榜) ---
@@ -876,6 +963,41 @@
         pagDiv.innerHTML = pagHtml;
     }
 
+    function getSongPopularityScore(song) {
+        const purchases = allUsers.reduce((sum, u) => sum + ((u.purchases || []).filter(p => p.songId === song.id).length), 0);
+        return (parseInt(song.downloads) || 0) + purchases + (parseInt(song.plays) || 0) * 0.1;
+    }
+
+    function shuffleArray(items) {
+        const copy = [...items];
+        for(let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    function renderSongRecommendations(randomize = false) {
+        const grid = document.getElementById('songRecommendGrid');
+        if(!grid) return;
+        let pool = allSongs.filter(s => s.status === 'APPROVED' && (!currentSong || s.id !== currentSong.id));
+        pool = randomize ? shuffleArray(pool) : pool.sort((a,b) => getSongPopularityScore(b) - getSongPopularityScore(a));
+        const picks = pool.slice(0, 9);
+        grid.innerHTML = picks.map(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            return `
+                <div class="recommend-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}">
+                    <div style="min-width:0;">
+                        <div class="recommend-title truncate">${escapeHtml(s.filename)}</div>
+                        <div class="recommend-sub truncate">${escapeHtml(s.uploader || 'FULLKIK')}</div>
+                    </div>
+                    <div class="recommend-price">💎 ${s.price || 0}</div>
+                </div>`;
+        }).join('');
+        if(!picks.length) grid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); text-align:center; padding:24px;">暂无推荐歌曲</div>`;
+    }
+
     // --- INDIVIDUAL SONG PLAYER ---
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
@@ -911,6 +1033,7 @@
         }
 
         audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        renderSongRecommendations(false);
         switchView('song');
     }
 
