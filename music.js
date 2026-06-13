@@ -97,6 +97,41 @@ async function logEvent(type, message) {
     } catch(e) { console.error("Logging Error:", e); } 
 }
 
+const DEFAULT_SETTINGS = {
+    headerTitle: 'FULLKIK',
+    heroTitle: '专属DJ节奏空间',
+    bannerUrl: '',
+    activity: {enabled: false, reward: 10, count: 0, total: 0},
+    banners: [],
+    maxSongPrice: 200,
+    supportWhatsapp: '',
+    homePosterUrl: ''
+};
+
+async function getGlobalSettings() {
+    if(!db) return { ...DEFAULT_SETTINGS };
+    const doc = await db.collection('settings').doc('global').get();
+    return doc.exists ? { ...DEFAULT_SETTINGS, ...doc.data() } : { ...DEFAULT_SETTINGS };
+}
+
+async function logAdminAction(message, meta = {}) {
+    try {
+        if(db) await db.collection('logs').add({
+            type: 'admin',
+            message,
+            module: meta.module || '-',
+            action: meta.action || '-',
+            targetId: meta.targetId || '-',
+            details: meta.details || message,
+            adminName: meta.adminName || 'ADMIN',
+            adminEmail: meta.adminEmail || 'admin@fullkik.local',
+            timestamp: new Date().toISOString()
+        });
+    } catch(e) {
+        console.error("Logging Error:", e);
+    }
+}
+
 /**
  * Sensitive Word Checker Helper
  * Checks a given string against the active database of sensitive words.
@@ -470,7 +505,12 @@ app.put('/api/admin/users/:username/role', async (req, res) => {
             isVip: requestedRole === 'VIP' || requestedRole === 'PRODUCER', 
             role: requestedRole 
         });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${requestedRole}`);
+        await logAdminAction(`Updated role for ${req.params.username} to ${requestedRole}`, {
+            module: '用户',
+            action: '设置角色',
+            targetId: req.params.username,
+            details: `设置 user ${req.params.username} to ${requestedRole}`
+        });
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -482,7 +522,12 @@ app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
         const amt = parseInt(req.body.amount) || 0;
         const newTokens = (doc.data().tokens || 0) + amt;
         await userRef.update({ tokens: newTokens });
-        await logEvent('admin', `Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`);
+        await logAdminAction(`Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`, {
+            module: '用户',
+            action: '调整钻石',
+            targetId: req.params.username,
+            details: `Adjust usercredit ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason || '-'}`
+        });
         res.send('Adjusted');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -490,7 +535,12 @@ app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
 app.put('/api/admin/users/:username/force-password', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
-        await logEvent('admin', `Forced password reset for ${req.params.username}`);
+        await logAdminAction(`Forced password reset for ${req.params.username}`, {
+            module: '用户',
+            action: '重置密码',
+            targetId: req.params.username,
+            details: 'Forced password reset'
+        });
         res.send('Reset');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -498,7 +548,12 @@ app.put('/api/admin/users/:username/force-password', async (req, res) => {
 app.put('/api/admin/users/:username/ban', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
-        await logEvent('admin', `Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`);
+        await logAdminAction(`Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`, {
+            module: '用户',
+            action: '封禁用户',
+            targetId: req.params.username,
+            details: `Banned user. Reason: ${req.body.reason || '-'}`
+        });
         res.send('Banned');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -506,7 +561,12 @@ app.put('/api/admin/users/:username/ban', async (req, res) => {
 app.put('/api/admin/users/:username/unban', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
-        await logEvent('admin', `Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`);
+        await logAdminAction(`Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`, {
+            module: '用户',
+            action: '解封用户',
+            targetId: req.params.username,
+            details: 'Unban user'
+        });
         res.send('Unbanned');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -518,13 +578,68 @@ async function deleteUserAccount(req, res) {
         if (!userDoc.exists) return res.status(404).send('User not found');
 
         await userRef.delete(); 
-        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${userDoc.data().username || req.params.username}</span>`); 
+        await logAdminAction(`Deleted user account: <span style="color:var(--danger);">${userDoc.data().username || req.params.username}</span>`, {
+            module: '用户',
+            action: '删除用户',
+            targetId: userDoc.data().username || req.params.username,
+            details: 'Delete User'
+        }); 
         res.send('Deleted'); 
     } catch(e) { res.status(500).send(e.message); }
 }
 
 app.delete('/api/admin/users/:username', deleteUserAccount);
 app.delete('/api/users/:username', deleteUserAccount);
+
+app.put('/api/admin/users/:username/profile', async (req, res) => {
+    try {
+        const oldId = req.params.username.toLowerCase();
+        const userRef = db.collection('users').doc(oldId);
+        const snap = await userRef.get();
+        if(!snap.exists) return res.status(404).send('User not found');
+
+        const current = snap.data();
+        const nextUsername = String(req.body.username || current.username || req.params.username).trim();
+        if(!nextUsername) return res.status(400).send('Username required');
+        if(await containsSensitiveWord(nextUsername)) return res.status(400).send('包含敏感词 (Contains sensitive word)');
+
+        const newId = nextUsername.toLowerCase();
+        if(newId !== oldId && (await db.collection('users').doc(newId).get()).exists) {
+            return res.status(400).send('Username taken.');
+        }
+
+        const updates = {
+            username: nextUsername,
+            email: req.body.email !== undefined ? String(req.body.email || '').trim() : (current.email || '-'),
+            phone: req.body.phone !== undefined ? String(req.body.phone || '').trim() : (current.phone || '-'),
+            wechat: req.body.wechat !== undefined ? String(req.body.wechat || '').trim() : (current.wechat || '')
+        };
+
+        const changes = [];
+        if((current.username || '') !== updates.username) changes.push(`username: ${current.username || '-'} -> ${updates.username}`);
+        if((current.email || '') !== updates.email) changes.push(`gmail: ${current.email || '-'} -> ${updates.email || '-'}`);
+        if((current.phone || '') !== updates.phone) changes.push(`phone: ${current.phone || '-'} -> ${updates.phone || '-'}`);
+        if((current.wechat || '') !== updates.wechat) changes.push(`wechat: ${current.wechat || '-'} -> ${updates.wechat || '-'}`);
+
+        if(newId !== oldId) {
+            await db.collection('users').doc(newId).set({ ...current, ...updates });
+            await userRef.delete();
+        } else {
+            await userRef.update(updates);
+        }
+
+        if(changes.length) {
+            await logAdminAction(`Adjusted user profile for ${updates.username}`, {
+                module: '用户',
+                action: '调整资料',
+                targetId: updates.username,
+                details: changes.join(' | ')
+            });
+        }
+
+        res.json({ success: true, username: updates.username });
+    } catch(e) { res.status(500).send(e.message); }
+});
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -639,7 +754,12 @@ app.put('/api/reports/:id/unlist', async (req, res) => {
                 await db.collection('songs').doc(songId).update({ status: 'UNLISTED' });
             }
             await reportRef.delete();
-            await logEvent('admin', `Unlisted reported song: <span style="color:var(--danger)">${reportDoc.data().songName || songId}</span>`);
+            await logAdminAction(`Unlisted reported song: <span style="color:var(--danger)">${reportDoc.data().songName || songId}</span>`, {
+                module: '歌曲',
+                action: '举报下架',
+                targetId: songId,
+                details: `Report unlisted: ${reportDoc.data().songName || songId}`
+            });
         }
         res.send('Unlisted and report deleted');
     } catch(e) { res.status(500).send(e.message); }
@@ -697,6 +817,16 @@ app.get('/api/songs', async (req, res) => {
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
+    const settings = await getGlobalSettings();
+    const price = parseInt(reqBody.price) || 0;
+    const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
+    const uploader = reqBody.uploader || 'FULLKIK';
+    const isVipUpload = reqBody.status === 'PENDING' || (uploader && !String(uploader).toUpperCase().startsWith('FULLKIK'));
+
+    if(isVipUpload && price > maxSongPrice) {
+        throw new Error(`歌曲钻石价格不能超过 ${maxSongPrice}`);
+    }
+
     let url = '';
     if(fileBuffer) {
         const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
@@ -713,8 +843,8 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const snapshot = await db.collection('songs').get();
     const newSong = {
         filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
-        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price: parseInt(reqBody.price) || 0,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader: reqBody.uploader || 'FULLKIK', rejectReason: ''
+        size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
 }
@@ -732,6 +862,9 @@ app.post('/api/transload', async (req, res) => {
 
 app.put('/api/songs/:id/settings', async (req, res) => {
     try {
+        const songRef = db.collection('songs').doc(req.params.id);
+        const oldDoc = await songRef.get();
+        const oldSong = oldDoc.exists ? oldDoc.data() : {};
         let updates = {};
         if (req.body.newName) updates.filename = req.body.newName;
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
@@ -739,7 +872,24 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         if (req.body.genreId) updates.genreId = req.body.genreId;
         if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
         if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
-        await db.collection('songs').doc(req.params.id).update(updates); res.send('Updated');
+        await songRef.update(updates);
+
+        if(req.body.status && req.body.status !== oldSong.status) {
+            const actionMap = {
+                APPROVED: '歌曲审核通过',
+                REJECTED: '歌曲审核驳回',
+                UNLISTED: '歌曲下架',
+                REMOVED: '歌曲下架'
+            };
+            await logAdminAction(`${actionMap[req.body.status] || '歌曲状态更新'}: ${oldSong.filename || req.params.id}`, {
+                module: '歌曲',
+                action: actionMap[req.body.status] || '歌曲状态更新',
+                targetId: req.params.id,
+                details: `${oldSong.filename || req.params.id} | ${oldSong.status || '-'} -> ${req.body.status}${req.body.rejectReason ? ` | Reason: ${req.body.rejectReason}` : ''}`
+            });
+        }
+
+        res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -750,8 +900,7 @@ app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
-    if(!db) return res.json({ headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
-    const doc = await db.collection('settings').doc('global').get(); res.json(doc.exists ? doc.data() : { headerTitle: 'FULLKIK', heroTitle: '专属DJ节奏空间', bannerUrl: '', activity: {enabled: false, reward: 10, count: 0, total: 0}, banners: [] });
+    res.json(await getGlobalSettings());
 });
 
 app.put('/api/settings', async (req, res) => { 
@@ -760,6 +909,12 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
+        if (req.body.maxSongPrice !== undefined) {
+            let maxSongPrice = parseInt(req.body.maxSongPrice);
+            if(Number.isNaN(maxSongPrice)) maxSongPrice = 200;
+            updates.maxSongPrice = Math.min(Math.max(maxSongPrice, 1), 9999);
+        }
+        if (req.body.supportWhatsapp !== undefined) updates.supportWhatsapp = String(req.body.supportWhatsapp || '').trim();
         
         if (req.body.banners !== undefined) {
             let processedBanners = [];
@@ -772,7 +927,25 @@ app.put('/api/settings', async (req, res) => {
             updates.banners = processedBanners;
         }
 
+        if (req.body.homePosterBase64 !== undefined) {
+            if(req.body.homePosterBase64 && req.body.homePosterBase64.startsWith('data:image')) {
+                updates.homePosterUrl = await uploadToCloudinaryBase64(req.body.homePosterBase64, 'dj_posters');
+            } else if(req.body.homePosterBase64) {
+                updates.homePosterUrl = req.body.homePosterBase64;
+            } else {
+                updates.homePosterUrl = '';
+            }
+        }
+
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl'].includes(k))) {
+            await logAdminAction('Updated system settings', {
+                module: '系统',
+                action: '系统设置',
+                targetId: 'global',
+                details: JSON.stringify(updates)
+            });
+        }
         res.send('Updated'); 
     } catch(e) { res.status(500).send(e.message); }
 });
