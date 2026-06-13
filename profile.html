@@ -45,6 +45,14 @@
         /* --- GLOBAL LOADERS --- */
         #profileLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; align-items:center; justify-content:center; flex-direction:column;}
         #globalLoader { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(2px); z-index:999999; align-items:center; justify-content:center; flex-direction:column;}
+        .profile-circle-wrap { position:relative; width:88px; height:88px; display:flex; align-items:center; justify-content:center; animation: loaderBreath 1.8s ease-in-out infinite; }
+        .profile-circle-wrap::after { content:''; position:absolute; inset:17px; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.24), rgba(128,0,0,0)); filter:blur(4px); animation: loaderGlow 1.8s ease-in-out infinite; }
+        .profile-circle-wrap svg { position:relative; z-index:1; overflow:visible; filter:drop-shadow(0 0 14px rgba(165,42,42,0.45)); }
+        .profile-circle-wrap.loader-popout { animation: loaderPopout 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        #profileLoadCircle { transform: rotate(-90deg); transform-origin:50% 50%; }
+        @keyframes loaderBreath { 0%,100% { transform:scale(0.96); opacity:0.86; } 50% { transform:scale(1.05); opacity:1; } }
+        @keyframes loaderGlow { 0%,100% { transform:scale(0.82); opacity:0.35; } 50% { transform:scale(1.15); opacity:0.72; } }
+        @keyframes loaderPopout { 0% { transform:scale(1); opacity:1; } 55% { transform:scale(1.22); opacity:1; } 100% { transform:scale(0.72); opacity:0; filter:blur(6px); } }
 
         .content-loader-bar-wrap { width:200px; height:4px; background:rgba(255,255,255,0.05); border-radius:4px; overflow:hidden; border:1px solid var(--border-color); margin: 0 auto;}
         .loader-bar-fill { width:0%; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-light)); transition:width 0.1s linear; }
@@ -174,6 +182,20 @@
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
+        .playlist-create-box { max-width:520px; border-radius:28px; background:rgba(28,16,16,0.98); }
+        .playlist-apple-head { text-align:left; margin-bottom:18px; }
+        .playlist-apple-head h3 { margin:0 0 6px; font-size:24px; font-weight:900; }
+        .playlist-apple-head p { margin:0; color:var(--text-muted); font-size:13px; }
+        .playlist-name-field { width:100%; box-sizing:border-box; border-radius:16px; background:rgba(255,255,255,0.08); border:1px solid var(--border-color); color:white; padding:15px 16px; outline:none; font-size:16px; margin-bottom:18px; }
+        .playlist-name-field:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.18); }
+        .playlist-song-picker { max-height:280px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:6px; border-radius:18px; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); }
+        .playlist-pick-row { display:grid; grid-template-columns:22px 44px minmax(0,1fr); gap:12px; align-items:center; padding:10px; border-radius:14px; cursor:pointer; color:white; transition:0.2s; }
+        .playlist-pick-row:hover { background:rgba(255,255,255,0.06); }
+        .playlist-pick-row input { accent-color:var(--accent-light); }
+        .playlist-pick-row img { width:44px; height:44px; border-radius:10px; object-fit:cover; background:#1a0f0f; }
+        .playlist-pick-title { font-weight:800; font-size:14px; }
+        .playlist-pick-sub { color:var(--text-muted); font-size:12px; margin-top:4px; }
+        .delete-playlist-copy { color:var(--text-muted); font-size:13px; line-height:1.6; margin:0; text-align:center; }
 
         /* Cropper CSS */
         #cropperCanvas { background: #000; display: block; margin: 0 auto 20px auto; border-radius: 50%; border: 2px dashed var(--accent); }
@@ -234,7 +256,12 @@
 <body onclick="closeDropdowns(event)">
 
 <div id="profileLoader">
-    <div class="content-loader-bar-wrap" style="width: 250px;"><div id="profileLoaderBar" class="loader-bar-fill" style="width:0%;"></div></div>
+    <div class="profile-circle-wrap">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#2a1515" stroke-width="6"></circle>
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-light)" stroke-width="6" stroke-dasharray="283" stroke-dashoffset="283" id="profileLoadCircle" style="transition: stroke-dashoffset 0.1s;"></circle>
+        </svg>
+    </div>
 </div>
 
 <div id="vipUploadProgOverlay" class="modal-overlay" style="z-index:10005; flex-direction:column; background: rgba(0,0,0,0.8);">
@@ -558,12 +585,14 @@
 </div>
 
 <div class="modal-overlay" id="createPlaylistModal">
-    <div class="modal-box" style="max-width:400px;">
+    <div class="modal-box playlist-create-box">
         <div class="modal-content">
-            <h3 style="margin: 0 0 15px 0; text-align:center;">创建歌单</h3>
-            <input type="text" id="createPlaylistName" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:15px;" placeholder="输入歌单名称 (Playlist Name)">
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">选择已购买的歌曲添加到歌单：</p>
-            <div id="createPlaylistSongSelection" style="max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:8px; padding:10px;">
+            <div class="playlist-apple-head">
+                <h3>创建歌单</h3>
+                <p>输入歌单名，然后选择要加入的已购歌曲。</p>
+            </div>
+            <input type="text" id="createPlaylistName" class="playlist-name-field" placeholder="歌单名称">
+            <div id="createPlaylistSongSelection" class="playlist-song-picker">
                 </div>
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeCreatePlaylist()" style="color:var(--accent-light);">创建 (Create)</button></div>
@@ -577,6 +606,16 @@
             <input type="text" id="renamePlaylistName" class="input-field" style="width:100%; box-sizing:border-box;">
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeRenamePlaylist()" style="color:var(--accent-light);">保存</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="deletePlaylistModal">
+    <div class="modal-box">
+        <div class="modal-content">
+            <h3 style="margin: 0 0 15px 0; color:var(--danger); text-align:center;">删除歌单</h3>
+            <p class="delete-playlist-copy" id="deletePlaylistCopy">确定要删除此歌单吗？</p>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeDeletePlaylist()" style="color:var(--danger);">删除</button></div>
     </div>
 </div>
 
@@ -635,9 +674,12 @@
 
     // --- INITIALIZATION ---
     async function init() {
-        const bar = document.getElementById('profileLoaderBar');
-        if(!skipProfileLoader) document.getElementById('profileLoader').style.display = 'flex';
-        let p = 0; const pInt = setInterval(() => { p+=Math.random()*20; if(p>95) p=95; bar.style.width=`${p}%`; }, 50);
+        const circle = document.getElementById('profileLoadCircle');
+        const loader = document.getElementById('profileLoader');
+        const loaderWrap = document.querySelector('.profile-circle-wrap');
+        const setProfileProgress = (value) => { if(circle) circle.style.strokeDashoffset = 283 - (283 * value / 100); };
+        if(!skipProfileLoader) loader.style.display = 'flex';
+        let p = 0; const pInt = setInterval(() => { p += Math.random() * 20; if(p > 95) p = 95; setProfileProgress(p); }, 50);
 
         try {
             const uRes = await fetch(`${API_URL}/users/${username}`);
@@ -677,8 +719,17 @@
             if(viewParam) { switchView(viewParam); } else { switchView('profile'); }
         } catch(e) { console.error("Init Error:", e); } 
 
-        clearInterval(pInt); bar.style.width = '100%';
-        if(!skipProfileLoader) setTimeout(() => { document.getElementById('profileLoader').style.display = 'none'; }, 300);
+        clearInterval(pInt); setProfileProgress(100);
+        if(!skipProfileLoader) {
+            setTimeout(() => {
+                if(loaderWrap) loaderWrap.classList.add('loader-popout');
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    if(loaderWrap) loaderWrap.classList.remove('loader-popout');
+                    setProfileProgress(0);
+                }, 450);
+            }, 180);
+        }
     }
 
     function toggleDropdown(e) { if(username) { e.stopPropagation(); const pd = document.getElementById('profileDropdown'); if(pd) pd.classList.toggle('show'); } }
@@ -807,6 +858,7 @@
     let isLooping = false;
     let isShuffle = false;
     let viewingPlaylistId = null;
+    let pendingDeletePlaylistId = null;
     const coreAudio = document.getElementById('coreAudio');
 
     function renderLibrary(filter) {
@@ -831,7 +883,7 @@
                         <button class="icon-btn" onclick="openPlaylistOptions('${pl.id}', event)" aria-label="歌单设置"><svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.28 7.28 0 0 0-1.69-.98L14.5 2.42A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.5.42L9.13 5.07c-.61.24-1.18.57-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.5.5 0 0 0 .12.64l2.11 1.65c-.04.32-.07.65-.07.98s.02.66.07.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.39.31.61.22l2.49-1c.51.4 1.08.73 1.69.98l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.61-.24 1.18-.57 1.69-.98l2.49 1c.23.08.49 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/></svg></button>
                         <div class="manage-dropdown" id="pl-drop-${pl.id}">
                             <button class="drop-btn" onclick="openRenamePlaylist('${pl.id}', ${JSON.stringify(pl.name)})">重命名 (Rename)</button>
-                            <button class="drop-btn" style="color:var(--danger);" onclick="deletePlaylist('${pl.id}')">删除 (Delete)</button>
+                            <button class="drop-btn" style="color:var(--danger);" onclick="openDeletePlaylist('${pl.id}')">删除 (Delete)</button>
                         </div>
                     </div>`;
             });
@@ -886,7 +938,17 @@
         document.getElementById('createPlaylistName').value = '';
         const list = document.getElementById('createPlaylistSongSelection'); list.innerHTML = '';
         userPurchases.forEach(p => {
-            list.innerHTML += `<label style="display:flex; align-items:center; gap:10px; margin-bottom:8px; cursor:pointer; color:white; font-size:14px;"><input type="checkbox" class="pl-create-check" value="${p.songId}"> <span class="truncate">${p.songName}</span></label>`;
+            const song = allSongs.find(s => s.id === p.songId) || {};
+            const cover = song.coverUrl || p.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            list.innerHTML += `
+                <label class="playlist-pick-row">
+                    <input type="checkbox" class="pl-create-check" value="${p.songId}">
+                    <img src="${cover}">
+                    <span style="min-width:0;">
+                        <span class="playlist-pick-title truncate" style="display:block;">${p.songName || song.filename || 'Untitled'}</span>
+                        <span class="playlist-pick-sub truncate" style="display:block;">${song.uploader || p.uploader || 'FULLKIK'}</span>
+                    </span>
+                </label>`;
         });
         if(!userPurchases.length) list.innerHTML = `<div style="color:var(--text-muted); font-size:12px;">需购买歌曲后才能创建歌单</div>`;
         document.getElementById('createPlaylistModal').style.display = 'flex';
@@ -924,11 +986,29 @@
         if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; renderLibrary('PLAYLIST'); closeModals(); hideGlobalLoader(); showToast("已重命名"); }
     }
 
-    async function deletePlaylist(plId) {
-        if(!confirm("确定要删除此歌单吗？(Delete Playlist?)")) return;
+    function openDeletePlaylist(plId) {
+        pendingDeletePlaylistId = plId;
+        const pl = userPlaylists.find(p => p.id === plId);
+        document.getElementById('deletePlaylistCopy').innerText = `确定要删除「${pl ? pl.name : '此歌单'}」吗？删除后不能恢复。`;
+        document.getElementById('deletePlaylistModal').style.display = 'flex';
+    }
+
+    async function executeDeletePlaylist() {
+        if(!pendingDeletePlaylistId) return;
         showGlobalLoader();
-        const res = await fetch(`${API_URL}/users/${username}/playlists/${plId}`, { method: 'DELETE' });
-        if(res.ok) { const data = await res.json(); userPlaylists = data.playlists; renderLibrary('PLAYLIST'); hideGlobalLoader(); showToast("歌单已删除"); }
+        const res = await fetch(`${API_URL}/users/${username}/playlists/${pendingDeletePlaylistId}`, { method: 'DELETE' });
+        if(res.ok) {
+            const data = await res.json();
+            userPlaylists = data.playlists;
+            pendingDeletePlaylistId = null;
+            renderLibrary('PLAYLIST');
+            closeModals();
+            hideGlobalLoader();
+            showToast("歌单已删除");
+        } else {
+            hideGlobalLoader();
+            showToast("删除失败", true);
+        }
     }
 
     function openPlaylistDetail(plId) {
