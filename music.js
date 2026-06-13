@@ -1,6 +1,6 @@
 /**
  * FULLKIK - Backend API & Server Engine
- * Features: Authentication, Media Streaming, Anti-Theft, Transactions, Genres, Playlists
+ * Features: Authentication, Media Streaming, Anti-Theft, Transactions, Genres, Playlists, Moderation
  */
 require('dotenv').config();
 const express = require('express');
@@ -47,7 +47,6 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     });
 }
 
-// Memory storage for immediate processing
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -59,7 +58,6 @@ const upload = multer({
     }
 });
 
-// Cloudinary Stream Upload Wrapper
 function uploadStreamToCloudinary(buffer, resourceType, folder) {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream({ folder: folder, resource_type: resourceType }, (error, result) => {
@@ -69,11 +67,27 @@ function uploadStreamToCloudinary(buffer, resourceType, folder) {
     });
 }
 
-// Base64 Cloudinary Upload Wrapper
 async function uploadToCloudinaryBase64(base64Str, folder) {
     if(!base64Str) return '';
     const result = await cloudinary.uploader.upload(base64Str, { folder: folder, resource_type: "auto" });
     return result.secure_url;
+}
+
+// ==========================================
+// 1.5 SENSITIVE WORDS ENGINE
+// ==========================================
+async function hasSensitiveWords(text) {
+    if(!text) return false;
+    try {
+        if(!db) return false;
+        const snap = await db.collection('sensitive_words').get();
+        if(snap.empty) return false;
+        const badWords = snap.docs.map(d => d.data().word.toLowerCase());
+        const target = text.toLowerCase();
+        return badWords.some(w => target.includes(w));
+    } catch(e) {
+        return false;
+    }
 }
 
 // ==========================================
@@ -85,7 +99,6 @@ app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'prof
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
-// Utility to create admin logs
 async function logEvent(type, message) { 
     try { 
         if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
@@ -94,12 +107,9 @@ async function logEvent(type, message) {
     } 
 }
 
-// Secure Audio Streaming API
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
-        
-        // Anti-Theft Verification
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
@@ -153,6 +163,9 @@ app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
         const { contact, username, password } = req.body;
+        
+        if(await hasSensitiveWords(username)) return res.status(400).send('用户名包含敏感词 (Contains sensitive words)');
+
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
@@ -234,7 +247,9 @@ app.get('/api/all-users', async (req, res) => {
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
+        if(await hasSensitiveWords(req.body.newUsername)) return res.status(400).send('包含敏感词 (Contains sensitive words)');
         if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
+        
         const oldRef = db.collection('users').doc(oldId); 
         const doc = await oldRef.get();
         const data = doc.data(); data.username = req.body.newUsername; 
@@ -470,9 +485,22 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+// CRITICAL FIX: Admin Delete User Route
+app.delete('/api/users/:username', async (req, res) => {
+    try {
+        await db.collection('users').doc(req.params.username.toLowerCase()).delete();
+        await logEvent('admin', `Permanently deleted user: <span style="color:var(--danger)">${req.params.username}</span>`);
+        res.send('Deleted');
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
+});
+
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
+        if(await hasSensitiveWords(djName)) return res.status(400).send('名字包含敏感词');
+
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
@@ -522,6 +550,55 @@ app.delete('/api/transactions/all', async (req, res) => {
 });
 
 // ==========================================
+// 6.5 REPORTS (举报管理) & SENSITIVE WORDS
+// ==========================================
+app.get('/api/sensitive-words', async (req, res) => {
+    try {
+        let snap = await db.collection('sensitive_words').get();
+        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.addedAt) - new Date(a.addedAt)));
+    } catch(e) { res.json([]); }
+});
+
+app.post('/api/sensitive-words', async (req, res) => {
+    try {
+        const word = req.body.word.trim();
+        if(!word) return res.status(400).send("Word required");
+        const docRef = await db.collection('sensitive_words').add({ word: word, addedAt: new Date().toISOString(), status: 'ACTIVE' });
+        res.json({ id: docRef.id, word });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/sensitive-words/:id', async (req, res) => {
+    try { await db.collection('sensitive_words').doc(req.params.id).delete(); res.send("Deleted"); } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/reports', async (req, res) => {
+    try {
+        let snap = await db.collection('reports').get();
+        // Self-Seeding logic for demonstration
+        if (snap.empty) {
+            const dummyReport = {
+                songId: 'dummy_song_id_123',
+                songName: '【TQ】独特版@妥协_蓝心羽_DJLeo...',
+                uploader: 'VIPERMIX',
+                reporter: 'DJ UnKnown (sim.jacky1999@gmail.com)',
+                reason: '版权问题',
+                description: '侵权歌曲内容',
+                timestamp: new Date().toISOString(),
+                status: 'PENDING'
+            };
+            await db.collection('reports').add(dummyReport);
+            snap = await db.collection('reports').get();
+        }
+        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    } catch(e) { res.json([]); }
+});
+
+app.delete('/api/reports/:id', async (req, res) => {
+    try { await db.collection('reports').doc(req.params.id).delete(); res.send("Deleted"); } catch(e) { res.status(500).send(e.message); }
+});
+
+// ==========================================
 // 7. GENRES AND SONGS
 // ==========================================
 app.get('/api/genres', async (req, res) => {
@@ -558,6 +635,8 @@ app.get('/api/songs', async (req, res) => {
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
+    if(await hasSensitiveWords(reqBody.title || originalName)) throw new Error("Contains sensitive words");
+
     let url = '';
     if(fileBuffer) {
         const audioResult = await uploadStreamToCloudinary(fileBuffer, "video", "dj_music");
@@ -593,6 +672,8 @@ app.post('/api/transload', async (req, res) => {
 
 app.put('/api/songs/:id/settings', async (req, res) => {
     try {
+        if(req.body.newName && await hasSensitiveWords(req.body.newName)) return res.status(400).send("Contains sensitive words");
+        
         let updates = {};
         if (req.body.newName) updates.filename = req.body.newName;
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
