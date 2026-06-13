@@ -99,14 +99,17 @@ async function logEvent(type, message) {
 
 const DEFAULT_SETTINGS = {
     headerTitle: 'FULLKIK',
-    heroTitle: '专属DJ节奏空间',
+    heroTitle: 'FULLKIK音乐空间',
+    homeMainTitle: 'FULLKIK音乐空间',
+    homeSubtitle: '专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品',
     bannerUrl: '',
     activity: {enabled: false, reward: 10, count: 0, total: 0},
     banners: [],
     maxSongPrice: 200,
     supportWhatsapp: '',
     homePosterUrl: '',
-    featuredGenreIds: []
+    featuredGenreIds: [],
+    hotProducerIds: null
 };
 
 async function getGlobalSettings() {
@@ -911,6 +914,8 @@ app.put('/api/settings', async (req, res) => {
         let updates = {};
         if (req.body.headerTitle !== undefined) updates.headerTitle = req.body.headerTitle;
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
+        if (req.body.homeMainTitle !== undefined) updates.homeMainTitle = String(req.body.homeMainTitle || '').trim() || DEFAULT_SETTINGS.homeMainTitle;
+        if (req.body.homeSubtitle !== undefined) updates.homeSubtitle = String(req.body.homeSubtitle || '').trim() || DEFAULT_SETTINGS.homeSubtitle;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         if (req.body.maxSongPrice !== undefined) {
             let maxSongPrice = parseInt(req.body.maxSongPrice);
@@ -921,6 +926,11 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.featuredGenreIds !== undefined) {
             updates.featuredGenreIds = Array.isArray(req.body.featuredGenreIds)
                 ? req.body.featuredGenreIds.map(id => String(id)).filter(Boolean).slice(0, 10)
+                : [];
+        }
+        if (req.body.hotProducerIds !== undefined) {
+            updates.hotProducerIds = Array.isArray(req.body.hotProducerIds)
+                ? req.body.hotProducerIds.map(id => String(id)).filter(Boolean).slice(0, 30)
                 : [];
         }
         
@@ -946,7 +956,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
