@@ -30,6 +30,7 @@
         .sub-nav-item:hover { color: white; }
         .sub-nav-item.active { color: var(--accent-light); font-weight: bold; }
         .badge-pending { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: none;}
+        .nav-count-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--danger); color: white; font-size: 10px; font-weight: 900; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 5px rgba(255,69,58,0.12); }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); position: relative;}
         .top-bar { height: 60px; min-height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid var(--border-color); background: var(--bg-dark);}
@@ -107,7 +108,7 @@
         
         .grid-users { grid-template-columns: 1.5fr 2fr 100px 100px 120px 100px 120px 100px; min-width:1000px;}
         .grid-dl { grid-template-columns: 60px 2fr 80px 120px 100px 150px 80px 80px; min-width:1000px;}
-        .grid-logs { grid-template-columns: 40px 1fr 180px; min-width:800px;}
+        .grid-logs { grid-template-columns: 1.25fr 1.4fr 1fr 1fr 1fr 3fr; min-width:1200px;}
         .grid-songs-complex { grid-template-columns: 40px 40px 3fr 100px 100px 60px 80px 80px 100px 100px 60px; gap: 10px; min-width:1300px;}
         .grid-pending { grid-template-columns: 40px 40px 3fr 120px 100px 120px 140px; gap: 10px; min-width:1000px;}
         .grid-user-topup { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
@@ -141,6 +142,26 @@
         .sensitive-stop { color: var(--text-muted); font-weight: 800; }
         .sensitive-delete { color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.45); background: rgba(255,107,107,0.08); border-radius: 7px; padding: 8px 14px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .sensitive-delete:hover { color: white; border-color: var(--danger); background: rgba(255,69,58,0.18); }
+
+        .settings-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 34px 36px; margin-bottom: 28px; }
+        .settings-card h3 { margin: 0 0 12px 0; font-size: 22px; font-weight: 900; }
+        .settings-card p { margin: 0 0 28px 0; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+        .settings-label { display:block; color:var(--text-muted); font-size:13px; font-weight:800; margin-bottom:10px; }
+        .settings-input { width: min(900px, 100%); height: 54px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main); color: white; padding: 0 18px; font-size: 15px; outline: none; }
+        .settings-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 2px rgba(165,42,42,0.18); }
+        .settings-dash { border-top: 1px dashed var(--border-color); margin: 40px 0 8px; }
+        .settings-actions { display:flex; justify-content:flex-end; align-items:center; gap:14px; }
+        .poster-preview-box { min-height: 180px; border: 1px dashed var(--border-color); border-radius: 10px; background: var(--bg-main); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; }
+        .poster-preview-box img { width: 100%; max-height: 300px; object-fit: contain; display:block; }
+        .poster-empty { color: var(--text-muted); text-align:center; font-size:13px; }
+        .log-toolbar { display:flex; flex-wrap:wrap; gap:14px; padding:20px; border-bottom:1px solid var(--border-color); background:rgba(0,0,0,0.2); }
+        .log-toolbar .input-text, .log-toolbar .select-box { min-width: 160px; flex: 1; }
+        .log-quick-row { display:flex; align-items:center; gap:10px; width:100%; color:var(--text-muted); font-size:13px; }
+        .log-chip { border:1px solid var(--border-color); background:var(--bg-main); color:var(--text-main); border-radius:18px; padding:8px 16px; cursor:pointer; font-weight:700; }
+        .log-chip:hover { border-color:var(--accent-light); color:white; }
+        .log-action-pill { display:inline-block; border:1px solid var(--border-color); border-radius:5px; padding:6px 10px; background:var(--bg-main); font-weight:800; color:var(--text-main); }
+        .log-admin-name { color:white; font-weight:900; }
+        .log-admin-mail { color:var(--text-muted); font-size:12px; margin-top:4px; }
 
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -287,7 +308,7 @@
     <div class="nav-section">
         <div class="nav-title">内容</div>
         <div class="nav-item-group">
-            <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理</button>
+            <button class="nav-item" onclick="switchView('songs', '歌曲管理'); document.getElementById('sub-songs').classList.toggle('show');" id="nav-songs">♪ 歌曲管理 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
             <div class="sub-nav" id="sub-songs">
                 <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 全部歌曲')">全部歌曲</button>
                 <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
@@ -298,7 +319,7 @@
         <button class="nav-item" onclick="switchView('homepage', '首页内容')" id="nav-homepage">⌂ 首页内容</button>
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
-        <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理</button>
+        <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理 <span class="nav-count-badge" id="nav-reports-pending-count">0</span></button>
         <button class="nav-item" onclick="switchView('sensitive', '内容 / 敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
         <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
     </div>
@@ -323,6 +344,7 @@
 
     <div class="nav-section">
         <div class="nav-title">系统</div>
+        <button class="nav-item" onclick="switchView('system-settings', '系统设置')" id="nav-system-settings">⚙ 系统设置</button>
         <button class="nav-item" onclick="switchView('adminlogs', '操作日志')" id="nav-adminlogs">■ 操作日志</button>
         <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
     </div>
@@ -368,6 +390,38 @@
             <div style="display:flex; gap: 20px; flex-wrap: wrap;" id="banner-slots"></div>
             <button class="btn-primary" style="margin-top:20px; width:100%;" onclick="saveBanners()">发布 (Publish)</button>
         </div>
+        <div class="glass-panel" style="padding: 20px;">
+            <div class="panel-header" style="padding:0 0 16px 0; border:none;">首页海报</div>
+            <div class="poster-preview-box" id="posterPreviewBox" onclick="document.getElementById('posterUploadInput').click()">
+                <div class="poster-empty">点击上传 1 张 PNG 海报</div>
+            </div>
+            <input type="file" id="posterUploadInput" accept="image/png,image/*" style="display:none;" onchange="handlePosterUpload(event)">
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button class="btn-text-action danger" onclick="removeHomePoster()">移除海报</button>
+                <button class="btn-primary" onclick="saveHomePoster()">发布 (Publish)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-system-settings" class="view-section">
+        <div class="dash-header"><h2>系统设置</h2><p>全站上传限制与客服入口配置</p></div>
+        <div class="settings-card">
+            <h3>歌曲钻石上限</h3>
+            <p>VIP 上传 / 编辑 / 批量上传歌曲时单首歌可设的最高钻石价。默认 200。改动后立即生效。</p>
+            <label class="settings-label">最高钻石数 (1 ~ 9999)</label>
+            <input type="number" id="settingMaxSongPrice" class="settings-input" min="1" max="9999" value="200">
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-primary" onclick="saveSystemSettings()">保存</button></div>
+        </div>
+
+        <div class="settings-card">
+            <h3>客服联系方式</h3>
+            <p>填入 WhatsApp 号码。首页右下角会显示圆形客服按钮，点击后跳转到该 WhatsApp 账号。留空则不显示。</p>
+            <label class="settings-label">WhatsApp 号码</label>
+            <input type="text" id="settingSupportWhatsapp" class="settings-input" placeholder="例如: 601117975043">
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-text-action" onclick="testSupportWhatsapp()">打开测试</button><button class="btn-primary" onclick="saveSystemSettings()">保存</button></div>
+        </div>
     </div>
 
     <div id="view-reports" class="view-section">
@@ -409,10 +463,34 @@
     </div>
 
     <div id="view-adminlogs" class="view-section">
-        <div class="dash-header"><h2>操作日志</h2><p>记录所有管理员对用户余额、角色、封禁等修改操作</p></div>
+        <div class="dash-header"><h2>操作日志</h2><p>按模块、操作、管理员、对象 ID、详情与日期筛选</p></div>
         <div class="glass-panel">
-            <div class="panel-header"><span style="font-weight: 600;">管理员操作记录</span><button class="btn-primary" style="background:var(--danger)" onclick="confirmClearAdminLogs()">清空日志</button></div>
-            <div class="table-container"><div class="table-inner"><div class="header-row grid-logs"><div></div><div>Action</div><div>Date</div></div><div id="adminLogsList"></div></div></div>
+            <div class="log-toolbar">
+                <select class="select-box" id="logModuleFilter" onchange="renderAdminLogs()"><option value="ALL">全部模块</option><option value="用户">用户</option><option value="歌曲">歌曲</option><option value="系统">系统</option></select>
+                <select class="select-box" id="logActionFilter" onchange="renderAdminLogs()"><option value="ALL">全部操作</option><option value="设置角色">设置角色</option><option value="删除用户">删除用户</option><option value="调整钻石">调整钻石</option><option value="调整资料">调整资料</option><option value="封禁用户">封禁用户</option><option value="解封用户">解封用户</option><option value="歌曲审核通过">歌曲审核通过</option><option value="歌曲审核驳回">歌曲审核驳回</option><option value="系统设置">系统设置</option></select>
+                <input class="input-text" id="logAdminFilter" placeholder="全部管理员" oninput="renderAdminLogs()">
+                <input class="input-text" id="logTargetFilter" placeholder="对象 ID" oninput="renderAdminLogs()">
+                <input class="input-text" id="logSearchFilter" placeholder="搜索 详情 / 邮箱" oninput="renderAdminLogs()">
+                <input class="input-text" id="logStartDate" type="date" onchange="renderAdminLogs()">
+                <span style="align-self:center; color:var(--text-muted);">—</span>
+                <input class="input-text" id="logEndDate" type="date" onchange="renderAdminLogs()">
+                <button class="btn-primary" onclick="renderAdminLogs()">搜索</button>
+                <button class="btn-primary" style="background:var(--danger)" onclick="confirmClearAdminLogs()">清空日志</button>
+                <div class="log-quick-row">
+                    <span>快捷:</span>
+                    <button class="log-chip" onclick="setLogQuickRange('today')">今天</button>
+                    <button class="log-chip" onclick="setLogQuickRange('yesterday')">昨天</button>
+                    <button class="log-chip" onclick="setLogQuickRange('7')">最近 7 天</button>
+                    <button class="log-chip" onclick="setLogQuickRange('30')">最近 30 天</button>
+                    <button class="log-chip" onclick="setLogQuickRange('month')">本月</button>
+                </div>
+            </div>
+            <div class="table-container">
+                <div class="table-inner">
+                    <div class="header-row grid-logs"><div>时间</div><div>管理员</div><div>操作</div><div>模块</div><div>对象 ID</div><div>详情</div></div>
+                    <div id="adminLogsList"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -599,10 +677,17 @@
         </div>
 
         <div class="glass-panel" style="padding:20px;">
-            <div class="panel-header" style="border:none; padding:0 0 15px 0;">用户名 / DJ 名</div>
+            <div class="panel-header" style="border:none; padding:0 0 15px 0;">用户资料</div>
+            <label style="font-size:12px; color:var(--text-muted);">用户名 / DJ 名</label>
             <input type="text" id="det-u-editname" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
-            <div style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">全局唯一。修改后旧的链接将失效；已上传的歌曲文件名不会自动重命名。留空将清除用户名，该账号之后只能用邮箱登录。</div>
-            <button class="btn-primary" style="width:100%; background:var(--accent-light);" onclick="showToast('用户名修改功能开发中')">保存用户名</button>
+            <label style="font-size:12px; color:var(--text-muted);">Gmail / 邮箱</label>
+            <input type="text" id="det-u-editemail" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <label style="font-size:12px; color:var(--text-muted);">电话</label>
+            <input type="text" id="det-u-editphone" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <label style="font-size:12px; color:var(--text-muted);">微信号</label>
+            <input type="text" id="det-u-editwechat" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+            <div style="font-size:11px; color:var(--text-muted); margin-bottom:15px;">用户名全局唯一。修改后旧的链接将失效；已上传的歌曲文件名不会自动重命名。</div>
+            <button class="btn-primary" style="width:100%; background:var(--accent-light);" onclick="adminSaveUserProfile()">保存资料</button>
         </div>
 
         <div class="glass-panel">
@@ -732,10 +817,11 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [];
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '';
-    let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
+    let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null; 
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
+    let badgeRefreshTimer = null;
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -799,6 +885,7 @@
         if(viewId === 'adminlogs') loadAdminLogs();
         if(viewId === 'reports') loadReports();
         if(viewId === 'sensitive') loadSensitiveWords();
+        if(viewId === 'system-settings') renderSystemSettings();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -816,9 +903,13 @@
                 document.getElementById('headerInput').value = globalSettings.headerTitle || "FULLKIK"; 
                 document.getElementById('heroTitleInput').value = globalSettings.heroTitle || "专属DJ节奏空间"; 
                 currentBanners = globalSettings.banners || ['', '', ''];
+                renderSystemSettings();
+                renderHomePoster();
             }
-            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); allReports = await (await fetch(`${API_URL}/reports`)).json();
             buildDashboardStats(); renderGenres(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
+            updateReportBadge();
+            if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 30000);
             const savedView = localStorage.getItem('fkAdminLastView');
             const savedTitle = localStorage.getItem('fkAdminLastTitle');
             if(savedView && savedView !== 'dashboard' && document.getElementById(`view-${savedView}`)) switchView(savedView, savedTitle || '');
@@ -850,6 +941,77 @@
     function handleBannerUpload(e, index) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (ev) => { currentBanners[index] = ev.target.result; renderBanners(); }; reader.readAsDataURL(file); }
     function removeBanner(index) { currentBanners[index] = ''; renderBanners(); }
     async function saveBanners() { showGlobalLoader("正在上传..."); const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ banners: currentBanners }) }); if(res.ok) { hideGlobalLoader(); showToast("Banners Saved!"); } }
+
+    function renderHomePoster() {
+        const box = document.getElementById('posterPreviewBox');
+        if(!box) return;
+        const src = pendingHomePosterBase64 || globalSettings.homePosterUrl || '';
+        box.innerHTML = src ? `<img src="${src}" alt="首页海报">` : `<div class="poster-empty">点击上传 1 张 PNG 海报</div>`;
+    }
+
+    function handlePosterUpload(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => { pendingHomePosterBase64 = ev.target.result; renderHomePoster(); };
+        reader.readAsDataURL(file);
+    }
+
+    function removeHomePoster() {
+        pendingHomePosterBase64 = '';
+        globalSettings.homePosterUrl = '';
+        renderHomePoster();
+    }
+
+    async function saveHomePoster() {
+        showGlobalLoader("正在上传海报...");
+        const payload = { homePosterBase64: pendingHomePosterBase64 !== null ? pendingHomePosterBase64 : (globalSettings.homePosterUrl || '') };
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            pendingHomePosterBase64 = null;
+            renderHomePoster();
+            hideGlobalLoader();
+            showToast("海报已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    function renderSystemSettings() {
+        const maxInput = document.getElementById('settingMaxSongPrice');
+        const supportInput = document.getElementById('settingSupportWhatsapp');
+        if(maxInput) maxInput.value = globalSettings.maxSongPrice || 200;
+        if(supportInput) supportInput.value = globalSettings.supportWhatsapp || '';
+    }
+
+    async function saveSystemSettings() {
+        const maxSongPrice = document.getElementById('settingMaxSongPrice').value;
+        const supportWhatsapp = document.getElementById('settingSupportWhatsapp').value.trim();
+        showGlobalLoader("保存设置...");
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ maxSongPrice, supportWhatsapp }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderSystemSettings();
+            hideGlobalLoader();
+            showToast("系统设置已保存");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    function buildWhatsappUrl(value) {
+        const digits = String(value || '').replace(/[^\d]/g, '');
+        return digits ? `https://wa.me/${digits}` : '';
+    }
+
+    function testSupportWhatsapp() {
+        const url = buildWhatsappUrl(document.getElementById('settingSupportWhatsapp').value);
+        if(!url) return showToast("请输入 WhatsApp 号码", true);
+        window.open(url, '_blank');
+    }
 
     function populateGenreDropdowns() {
         const filters = document.getElementById('songGenreFilter'); filters.innerHTML = '<option value="ALL">全部分类</option>';
@@ -899,6 +1061,8 @@
     async function loadReports() {
         showContentLoader();
         const reports = await (await fetch(`${API_URL}/reports`)).json();
+        allReports = reports;
+        updateReportBadge();
         document.getElementById('reportCount').innerText = reports.filter(r => (r.status || 'PENDING') === 'PENDING').length;
         document.getElementById('reportTotal').innerText = reports.length;
 
@@ -944,6 +1108,36 @@
             hideGlobalLoader();
             showToast("操作失败", true);
         }
+    }
+
+    function setNavBadge(id, count) {
+        const badge = document.getElementById(id);
+        if(!badge) return;
+        if(count > 0) {
+            badge.innerText = count > 99 ? '99+' : count;
+            badge.style.display = 'inline-flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function updateReportBadge() {
+        const pending = (allReports || []).filter(r => (r.status || 'PENDING') === 'PENDING').length;
+        setNavBadge('nav-reports-pending-count', pending);
+    }
+
+    async function refreshPendingIndicators() {
+        try {
+            const [songsRes, reportsRes] = await Promise.all([fetch(`${API_URL}/songs`), fetch(`${API_URL}/reports`)]);
+            if(songsRes.ok) {
+                allSongs = await songsRes.json();
+                updatePendingBadge();
+            }
+            if(reportsRes.ok) {
+                allReports = await reportsRes.json();
+                updateReportBadge();
+            }
+        } catch(e) {}
     }
 
     // --- SENSITIVE WORDS ---
@@ -1005,7 +1199,108 @@
     }
 
     // --- ADMIN LOGS ---
-    async function loadAdminLogs() { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/admin`)).json(); const listDiv = document.getElementById('adminLogsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); if(!data.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`; hideContentLoader(); }
+    function inferLogAction(log) {
+        const msg = (log.message || '').toLowerCase();
+        if(msg.includes('role')) return '设置角色';
+        if(msg.includes('deleted user')) return '删除用户';
+        if(msg.includes('adjusted tokens')) return '调整钻石';
+        if(msg.includes('adjusted user profile')) return '调整资料';
+        if(msg.includes('banned user')) return '封禁用户';
+        if(msg.includes('unbanned user')) return '解封用户';
+        if(msg.includes('approved')) return '歌曲审核通过';
+        if(msg.includes('rejected')) return '歌曲审核驳回';
+        if(msg.includes('system settings')) return '系统设置';
+        return log.action || '操作';
+    }
+
+    function inferLogModule(log) {
+        const action = log.action || inferLogAction(log);
+        if(action.includes('歌曲')) return '歌曲';
+        if(action.includes('系统')) return '系统';
+        return log.module || '用户';
+    }
+
+    function formatLogTime(value) {
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return '-';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+
+    async function loadAdminLogs() {
+        showContentLoader();
+        allAdminLogs = await (await fetch(`${API_URL}/logs/admin`)).json();
+        renderAdminLogs();
+        hideContentLoader();
+    }
+
+    function renderAdminLogs() {
+        const moduleFilter = document.getElementById('logModuleFilter').value;
+        const actionFilter = document.getElementById('logActionFilter').value;
+        const adminFilter = document.getElementById('logAdminFilter').value.toLowerCase();
+        const targetFilter = document.getElementById('logTargetFilter').value.toLowerCase();
+        const searchFilter = document.getElementById('logSearchFilter').value.toLowerCase();
+        const startDate = document.getElementById('logStartDate').value;
+        const endDate = document.getElementById('logEndDate').value;
+
+        const filtered = (allAdminLogs || []).filter(log => {
+            const moduleName = log.module || inferLogModule(log);
+            const actionName = log.action || inferLogAction(log);
+            const adminName = log.adminName || 'ADMIN';
+            const adminEmail = log.adminEmail || 'admin@fullkik.local';
+            const targetId = log.targetId || '-';
+            const details = log.details || log.message || '-';
+            const time = new Date(log.timestamp);
+            const matchesModule = moduleFilter === 'ALL' || moduleName === moduleFilter;
+            const matchesAction = actionFilter === 'ALL' || actionName === actionFilter;
+            const matchesAdmin = !adminFilter || adminName.toLowerCase().includes(adminFilter) || adminEmail.toLowerCase().includes(adminFilter);
+            const matchesTarget = !targetFilter || String(targetId).toLowerCase().includes(targetFilter);
+            const matchesSearch = !searchFilter || String(details).toLowerCase().includes(searchFilter) || String(log.message || '').toLowerCase().includes(searchFilter);
+            const matchesStart = !startDate || time >= new Date(`${startDate}T00:00:00`);
+            const matchesEnd = !endDate || time <= new Date(`${endDate}T23:59:59`);
+            return matchesModule && matchesAction && matchesAdmin && matchesTarget && matchesSearch && matchesStart && matchesEnd;
+        });
+
+        const listDiv = document.getElementById('adminLogsList');
+        listDiv.innerHTML = '';
+        filtered.forEach(log => {
+            const moduleName = log.module || inferLogModule(log);
+            const actionName = log.action || inferLogAction(log);
+            const adminName = log.adminName || 'ADMIN';
+            const adminEmail = log.adminEmail || 'admin@fullkik.local';
+            const targetId = log.targetId || '-';
+            const details = log.details || log.message || '-';
+            listDiv.innerHTML += `
+                <div class="data-row grid-logs">
+                    <div style="color:var(--text-muted); font-size:13px;">${formatLogTime(log.timestamp)}</div>
+                    <div><div class="log-admin-name">${adminName}</div><div class="log-admin-mail">${adminEmail}</div></div>
+                    <div><span class="log-action-pill">${actionName}</span></div>
+                    <div style="color:var(--text-muted);">${moduleName}</div>
+                    <div style="font-weight:bold;">${targetId}</div>
+                    <div class="truncate" title="${String(details).replace(/"/g, '&quot;')}">${details}</div>
+                </div>`;
+        });
+        if(!filtered.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
+    }
+
+    function setLogQuickRange(range) {
+        const now = new Date();
+        const start = new Date(now);
+        const end = new Date(now);
+        if(range === 'today') {}
+        else if(range === 'yesterday') { start.setDate(now.getDate() - 1); end.setDate(now.getDate() - 1); }
+        else if(range === '7') { start.setDate(now.getDate() - 6); }
+        else if(range === '30') { start.setDate(now.getDate() - 29); }
+        else if(range === 'month') { start.setDate(1); }
+        const toInput = (d) => d.toISOString().split('T')[0];
+        document.getElementById('logStartDate').value = toInput(start);
+        document.getElementById('logEndDate').value = toInput(end);
+        renderAdminLogs();
+    }
     function confirmClearAdminLogs() { document.getElementById('clearAdminLogsModal').style.display = 'flex'; }
     async function executeClearAdminLogs() { closeModals(); showGlobalLoader(); await fetch(`${API_URL}/logs/admin/all`, { method: 'DELETE' }); hideGlobalLoader(); loadAdminLogs(); showToast("Logs cleared."); }
 
@@ -1129,7 +1424,15 @@
     }
 
     // --- PENDING QUEUE ---
-    function updatePendingBadge() { const pends = allSongs.filter(s => s.status === 'PENDING').length; const b = document.getElementById('sidebar-pending-count'); if(pends > 0) { b.innerText = pends; b.style.display = 'inline-block'; } else { b.style.display = 'none'; } }
+    function updatePendingBadge() {
+        const pends = allSongs.filter(s => s.status === 'PENDING').length;
+        const b = document.getElementById('sidebar-pending-count');
+        if(b) {
+            if(pends > 0) { b.innerText = pends > 99 ? '99+' : pends; b.style.display = 'inline-block'; }
+            else { b.style.display = 'none'; }
+        }
+        setNavBadge('nav-songs-pending-count', pends);
+    }
     function loadPending() { showContentLoader(); pendFiltered = allSongs.filter(s => s.status === 'PENDING'); pendPage = 1; renderPendingUI(); hideContentLoader(); }
     
     function toggleAllPending() { const st = document.getElementById('selectAllPending').checked; document.querySelectorAll('.pend-check').forEach(cb => cb.checked = st); updatePendSelCount(); }
@@ -1442,6 +1745,9 @@
         document.getElementById('det-u-date').innerText = currentEditUser.createdAt ? new Date(currentEditUser.createdAt).toISOString().split('T')[0] : 'N/A';
         document.getElementById('det-u-wechat').innerText = currentEditUser.wechat || '-';
         document.getElementById('det-u-editname').value = currentEditUser.username;
+        document.getElementById('det-u-editemail').value = currentEditUser.email || '';
+        document.getElementById('det-u-editphone').value = currentEditUser.phone || '';
+        document.getElementById('det-u-editwechat').value = currentEditUser.wechat || '';
         document.getElementById('det-sel-role').value = getUserRole(currentEditUser);
 
         const banBtn = document.getElementById('det-ban-btn');
@@ -1464,6 +1770,30 @@
             buyDiv.innerHTML += `<div class="data-row grid-user-buy"><div class="truncate">${p.songName}</div><div>${new Date(p.purchaseTime).toISOString().split('T')[0]}</div><div style="color:var(--danger);font-weight:bold;">-💎 ${p.tokensSpent}</div><div>1</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
+    }
+
+    async function adminSaveUserProfile() {
+        const username = document.getElementById('det-u-editname').value.trim();
+        const email = document.getElementById('det-u-editemail').value.trim();
+        const phone = document.getElementById('det-u-editphone').value.trim();
+        const wechat = document.getElementById('det-u-editwechat').value.trim();
+        if(!username) return showToast("Username required", true);
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/admin/users/${encodeURIComponent(currentEditUser.username)}/profile`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ username, email, phone, wechat })
+        });
+        if(res.ok) {
+            const data = await res.json();
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+            hideGlobalLoader();
+            showToast("User profile saved");
+            openUserDetail(data.username || username);
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
     }
 
     async function adminUpdateRole() {
