@@ -1,6 +1,6 @@
 /**
- * FULLKIK - Backend API & Server Engine
- * Features: Authentication, Media Streaming, Anti-Theft, Transactions, Genres, Playlists, Moderation
+ * FULLKIK - Enterprise Backend API & Server Engine
+ * Features: Authentication, Media Streaming, Transactions, Playlists, Admin Tools, Security
  */
 require('dotenv').config();
 const express = require('express');
@@ -47,6 +47,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     });
 }
 
+// Multer Memory Storage for efficient Cloudinary pipelining
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
@@ -74,24 +75,35 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 }
 
 // ==========================================
-// 1.5 SENSITIVE WORDS ENGINE
+// 2. SECURITY & SENSITIVE WORDS ENGINE
 // ==========================================
-async function hasSensitiveWords(text) {
-    if(!text) return false;
+async function logEvent(type, message) { 
+    try { 
+        if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
+    } catch(e) { console.error("Logging Error:", e); } 
+}
+
+// Check inputs against the Sensitive Words database
+async function validateSensitive(texts) {
+    if(!db) return true; // Fail open if no DB
     try {
-        if(!db) return false;
         const snap = await db.collection('sensitive_words').get();
-        if(snap.empty) return false;
         const badWords = snap.docs.map(d => d.data().word.toLowerCase());
-        const target = text.toLowerCase();
-        return badWords.some(w => target.includes(w));
-    } catch(e) {
-        return false;
+        
+        for (let text of texts) {
+            if (!text) continue;
+            let lowerText = text.toLowerCase();
+            if (badWords.some(bw => lowerText.includes(bw))) return false; // Contains bad word
+        }
+        return true;
+    } catch(e) { 
+        console.error("Sensitive Check Error:", e);
+        return true; 
     }
 }
 
 // ==========================================
-// 2. HTML ROUTES & ANTI-THEFT STREAMING
+// 3. HTML ROUTES & ANTI-THEFT STREAMING
 // ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
@@ -99,17 +111,11 @@ app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'prof
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
 
-async function logEvent(type, message) { 
-    try { 
-        if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
-    } catch(e) {
-        console.error("Logging Error:", e);
-    } 
-}
-
+// Secure Audio Streaming API
 app.get('/api/stream/:songId', async (req, res) => {
     try {
         if(!db) return res.status(500).send('Database not connected');
+        
         const isAudioTag = req.headers['sec-fetch-dest'] === 'audio' || req.headers['sec-fetch-dest'] === 'video';
         const referer = req.headers.referer || '';
         const isFromApp = referer.includes(req.get('host'));
@@ -117,31 +123,20 @@ app.get('/api/stream/:songId', async (req, res) => {
         if (!isFromApp && !isAudioTag) {
             return res.status(403).send(`
                 <!DOCTYPE html><html lang="en">
-                <head>
-                    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title>
-                    <style>
-                        body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } 
-                        h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-                    </style>
-                </head>
-                <body><h1>禁止盗取歌曲</h1></body>
-                </html>
+                <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>403 - Forbidden</title>
+                <style>body { background-color: #2b0a0a; color: #ff453a; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } h1 { font-size: 36px; font-weight: 800; letter-spacing: 2px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }</style>
+                </head><body><h1>禁止盗取歌曲</h1></body></html>
             `);
         }
 
         const songDoc = await db.collection('songs').doc(req.params.songId).get();
         if (!songDoc.exists) return res.status(404).send('Song not found');
         
-        const fetchHeaders = {}; 
-        if (req.headers.range) fetchHeaders.Range = req.headers.range;
-        
+        const fetchHeaders = {}; if (req.headers.range) fetchHeaders.Range = req.headers.range;
         const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
         if (!response.ok) throw new Error('Cloudinary fetch failed');
 
-        const contentType = response.headers.get('content-type'); 
-        const contentLength = response.headers.get('content-length'); 
-        const contentRange = response.headers.get('content-range'); 
-        const acceptRanges = response.headers.get('accept-ranges');
+        const contentType = response.headers.get('content-type'); const contentLength = response.headers.get('content-length'); const contentRange = response.headers.get('content-range'); const acceptRanges = response.headers.get('accept-ranges');
         
         if (contentType) res.setHeader('Content-Type', contentType); 
         if (contentLength) res.setHeader('Content-Length', contentLength); 
@@ -150,21 +145,20 @@ app.get('/api/stream/:songId', async (req, res) => {
 
         res.status(response.status); 
         Readable.fromWeb(response.body).pipe(res);
-    } catch (e) { 
-        console.error('Stream Error:', e.message); 
-        res.status(500).end(); 
-    }
+    } catch (e) { console.error('Stream Error:', e.message); res.status(500).end(); }
 });
 
 // ==========================================
-// 3. AUTHENTICATION & USER MANAGEMENT
+// 4. AUTHENTICATION & USER MANAGEMENT
 // ==========================================
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
         const { contact, username, password } = req.body;
-        
-        if(await hasSensitiveWords(username)) return res.status(400).send('用户名包含敏感词 (Contains sensitive words)');
+
+        // Security check
+        const isSafe = await validateSensitive([username]);
+        if(!isSafe) return res.status(400).send('Username contains restricted words / 包含违规词汇');
 
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
@@ -192,9 +186,7 @@ app.post('/api/register', async (req, res) => {
         });
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
-    } catch (e) { 
-        res.status(500).send(e.message); 
-    }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -210,9 +202,7 @@ app.post('/api/login', async (req, res) => {
         if (uDoc.data().status === 'BANNED') return res.status(403).send(`Account Banned: ${uDoc.data().banReason || 'Violation of terms'}`);
         if (uDoc.data().password === password) res.json({ success: true, username: uDoc.data().username }); 
         else res.status(400).send('Invalid credentials.');
-    } catch (e) { 
-        res.status(500).send(e.message); 
-    }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/users/:username', async (req, res) => {
@@ -220,82 +210,68 @@ app.get('/api/users/:username', async (req, res) => {
         const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
         if (doc.exists) {
             if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
-            let data = doc.data(); 
-            delete data.password;
+            let data = doc.data(); delete data.password;
             if(!data.playlists) data.playlists = [];
             res.json(data);
         } else res.status(404).send('User not found');
-    } catch (e) {
-        res.status(500).send(e.message);
-    }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
         const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data(); 
-            delete data.password; 
+            let data = d.data(); delete data.password; 
             if(!data.playlists) data.playlists = [];
             return data;
         });
         res.json(users); 
-    } catch (e) { 
-        res.status(500).json([]); 
-    }
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.put('/api/users/:username/change-username', async (req, res) => {
     try {
         const oldId = req.params.username.toLowerCase(), newId = req.body.newUsername.toLowerCase();
-        if(await hasSensitiveWords(req.body.newUsername)) return res.status(400).send('包含敏感词 (Contains sensitive words)');
-        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
         
-        const oldRef = db.collection('users').doc(oldId); 
-        const doc = await oldRef.get();
+        const isSafe = await validateSensitive([newId]);
+        if(!isSafe) return res.status(400).send('Username contains restricted words');
+
+        if ((await db.collection('users').doc(newId).get()).exists) return res.status(400).send('Username taken.');
+        const oldRef = db.collection('users').doc(oldId); const doc = await oldRef.get();
         const data = doc.data(); data.username = req.body.newUsername; 
-        await db.collection('users').doc(newId).set(data); 
-        await oldRef.delete();
+        await db.collection('users').doc(newId).set(data); await oldRef.delete();
         res.json({ success: true, username: req.body.newUsername });
-    } catch (e) { 
-        res.status(500).send(e.message); 
-    }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.post('/api/users/:username/follow', async (req, res) => {
     try {
         const { targetUser } = req.body;
         if(!targetUser || targetUser.toLowerCase() === req.params.username.toLowerCase()) return res.status(400).send('Invalid target');
-        
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const targetRef = db.collection('users').doc(targetUser.toLowerCase());
-        
         const userDoc = await userRef.get(); const targetDoc = await targetRef.get();
         if(!userDoc.exists || !targetDoc.exists) return res.status(404).send('User not found');
 
-        let following = userDoc.data().following || [];
-        let followers = targetDoc.data().followers || [];
-
+        let following = userDoc.data().following || []; let followers = targetDoc.data().followers || [];
         if(following.includes(targetUser)) {
-            following = following.filter(u => u !== targetUser);
-            followers = followers.filter(u => u !== userDoc.data().username);
+            following = following.filter(u => u !== targetUser); followers = followers.filter(u => u !== userDoc.data().username);
         } else {
-            following.push(targetUser);
-            followers.push(userDoc.data().username);
+            following.push(targetUser); followers.push(userDoc.data().username);
         }
-
         await userRef.update({ following }); await targetRef.update({ followers });
         res.json({ success: true, following });
-    } catch (e) { 
-        res.status(500).send(e.message); 
-    }
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // ==========================================
-// 4. PLAYLISTS SYSTEM
+// 5. PLAYLISTS, FAVORITES, TOPUPS & PURCHASES
 // ==========================================
 app.post('/api/users/:username/playlists', async (req, res) => {
     try {
         const { name, songIds } = req.body;
+        const isSafe = await validateSensitive([name]);
+        if(!isSafe) return res.status(400).send('Playlist name contains restricted words');
+
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
         if(!doc.exists) return res.status(404).send("User not found");
@@ -303,17 +279,11 @@ app.post('/api/users/:username/playlists', async (req, res) => {
         let playlists = doc.data().playlists || [];
         const newPlaylist = {
             id: 'PL' + Date.now() + Math.random().toString(36).substring(2,7),
-            name: name || 'New Playlist',
-            songs: songIds || [],
-            createdAt: new Date().toISOString()
+            name: name || 'New Playlist', songs: songIds || [], createdAt: new Date().toISOString()
         };
-        
         playlists.push(newPlaylist);
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) {
-        res.status(500).send(e.message);
-    }
+        await userRef.update({ playlists }); res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
@@ -326,14 +296,15 @@ app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
         const index = playlists.findIndex(p => p.id === req.params.playlistId);
         if(index === -1) return res.status(404).send("Playlist not found");
 
-        if(req.body.name !== undefined) playlists[index].name = req.body.name;
+        if(req.body.name !== undefined) {
+            const isSafe = await validateSensitive([req.body.name]);
+            if(!isSafe) return res.status(400).send('Playlist name contains restricted words');
+            playlists[index].name = req.body.name;
+        }
         if(req.body.songs !== undefined) playlists[index].songs = req.body.songs;
 
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) {
-        res.status(500).send(e.message);
-    }
+        await userRef.update({ playlists }); res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
@@ -341,20 +312,12 @@ app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
         if(!doc.exists) return res.status(404).send("User not found");
-
         let playlists = doc.data().playlists || [];
         playlists = playlists.filter(p => p.id !== req.params.playlistId);
-
-        await userRef.update({ playlists });
-        res.json({ success: true, playlists });
-    } catch (e) {
-        res.status(500).send(e.message);
-    }
+        await userRef.update({ playlists }); res.json({ success: true, playlists });
+    } catch (e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 5. FAVORITES, TOPUPS & PURCHASES
-// ==========================================
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
         const { songId } = req.body;
@@ -366,8 +329,7 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         if(favs.includes(songId)) favs = favs.filter(id => id !== songId);
         else favs.push(songId);
         
-        await userRef.update({ favorites: favs });
-        res.json({ success: true, favorites: favs });
+        await userRef.update({ favorites: favs }); res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -408,8 +370,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             
             user.purchases.push({ 
                 songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
-                uploader: song.uploader || 'FULLKIK', 
-                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+                uploader: song.uploader || 'FULLKIK', tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
             });
             
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
@@ -485,21 +446,19 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// CRITICAL FIX: Admin Delete User Route
-app.delete('/api/users/:username', async (req, res) => {
+app.delete('/api/users/:username', async (req, res) => { 
     try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).delete();
-        await logEvent('admin', `Permanently deleted user: <span style="color:var(--danger)">${req.params.username}</span>`);
-        res.send('Deleted');
-    } catch(e) {
-        res.status(500).send(e.message);
-    }
+        await db.collection('users').doc(req.params.username.toLowerCase()).delete(); 
+        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`); 
+        res.send('Deleted'); 
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
         const { djName, wechat } = req.body;
-        if(await hasSensitiveWords(djName)) return res.status(400).send('名字包含敏感词');
+        const isSafe = await validateSensitive([djName]);
+        if(!isSafe) return res.status(400).send('DJ Name contains restricted words');
 
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
         res.send('VIP Activated');
@@ -534,7 +493,7 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// --- ADMIN TRANSACTIONS & ORDERS ---
+// --- ADMIN TRANSACTIONS, ORDERS & REPORTS ---
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
@@ -549,54 +508,63 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
-// ==========================================
-// 6.5 REPORTS (举报管理) & SENSITIVE WORDS
-// ==========================================
-app.get('/api/sensitive-words', async (req, res) => {
+// REPORTS API
+app.get('/api/reports', async (req, res) => {
     try {
-        let snap = await db.collection('sensitive_words').get();
-        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.addedAt) - new Date(a.addedAt)));
+        const snap = await db.collection('reports').get();
+        if (snap.empty) {
+            // Seed a dummy report if empty for testing
+            const dummy = { songId: 'mock123', songName: '【Mock】测试被举报歌曲', uploader: 'MockDJ', reportedBy: 'SystemTester', reason: '版权问题', desc: '测试使用', status: 'PENDING', time: new Date().toISOString() };
+            const docRef = await db.collection('reports').add(dummy);
+            return res.json([{ id: docRef.id, ...dummy }]);
+        }
+        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.time) - new Date(a.time)));
     } catch(e) { res.json([]); }
 });
 
-app.post('/api/sensitive-words', async (req, res) => {
+app.post('/api/reports', async (req, res) => {
     try {
-        const word = req.body.word.trim();
-        if(!word) return res.status(400).send("Word required");
-        const docRef = await db.collection('sensitive_words').add({ word: word, addedAt: new Date().toISOString(), status: 'ACTIVE' });
-        res.json({ id: docRef.id, word });
+        await db.collection('reports').add({
+            songId: req.body.songId, songName: req.body.songName, uploader: req.body.uploader, reportedBy: req.body.reportedBy || 'Guest',
+            reason: req.body.reason || '版权问题', desc: req.body.desc || '', status: 'PENDING', time: new Date().toISOString()
+        });
+        res.send('Reported');
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.delete('/api/sensitive-words/:id', async (req, res) => {
-    try { await db.collection('sensitive_words').doc(req.params.id).delete(); res.send("Deleted"); } catch(e) { res.status(500).send(e.message); }
-});
-
-app.get('/api/reports', async (req, res) => {
+app.put('/api/reports/:id/dismiss', async (req, res) => {
     try {
-        let snap = await db.collection('reports').get();
-        // Self-Seeding logic for demonstration
-        if (snap.empty) {
-            const dummyReport = {
-                songId: 'dummy_song_id_123',
-                songName: '【TQ】独特版@妥协_蓝心羽_DJLeo...',
-                uploader: 'VIPERMIX',
-                reporter: 'DJ UnKnown (sim.jacky1999@gmail.com)',
-                reason: '版权问题',
-                description: '侵权歌曲内容',
-                timestamp: new Date().toISOString(),
-                status: 'PENDING'
-            };
-            await db.collection('reports').add(dummyReport);
-            snap = await db.collection('reports').get();
-        }
-        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
-    } catch(e) { res.json([]); }
+        await db.collection('reports').doc(req.params.id).update({status: 'DISMISSED'});
+        res.send('Dismissed');
+    } catch(e) { res.status(500).send(e.message); }
 });
 
-app.delete('/api/reports/:id', async (req, res) => {
-    try { await db.collection('reports').doc(req.params.id).delete(); res.send("Deleted"); } catch(e) { res.status(500).send(e.message); }
+app.put('/api/reports/:id/takedown', async (req, res) => {
+    try {
+        const rDoc = await db.collection('reports').doc(req.params.id).get();
+        if(rDoc.exists && rDoc.data().songId) {
+            try { await db.collection('songs').doc(rDoc.data().songId).update({status: 'REMOVED'}); } catch(err){}
+            await rDoc.ref.update({status: 'RESOLVED_TAKEDOWN'});
+        }
+        res.send('Taken down');
+    } catch(e) { res.status(500).send(e.message); }
 });
+
+// SENSITIVE WORDS API
+app.get('/api/sensitive-words', async (req, res) => {
+    try { res.json((await db.collection('sensitive_words').orderBy('addedAt', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+});
+app.post('/api/sensitive-words', async (req, res) => {
+    try {
+        if(!req.body.word) return res.status(400).send("Word required");
+        const docRef = await db.collection('sensitive_words').add({ word: req.body.word, addedAt: new Date().toISOString(), status: 'ACTIVE' });
+        res.json({ id: docRef.id, word: req.body.word, addedAt: new Date().toISOString(), status: 'ACTIVE' });
+    } catch(e) { res.status(500).send(e.message); }
+});
+app.delete('/api/sensitive-words/:id', async (req, res) => {
+    try { await db.collection('sensitive_words').doc(req.params.id).delete(); res.send('Deleted'); } catch(e) { res.status(500).send(e.message); }
+});
+
 
 // ==========================================
 // 7. GENRES AND SONGS
@@ -635,7 +603,8 @@ app.get('/api/songs', async (req, res) => {
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
 async function saveSongData(fileBuffer, originalName, reqBody) {
-    if(await hasSensitiveWords(reqBody.title || originalName)) throw new Error("Contains sensitive words");
+    const isSafe = await validateSensitive([reqBody.title, reqBody.uploader]);
+    if(!isSafe) throw new Error("Title or Uploader contains restricted words.");
 
     let url = '';
     if(fileBuffer) {
@@ -665,17 +634,18 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
 });
 
 app.post('/api/transload', async (req, res) => {
-    try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
-    } catch (e) { res.status(400).send(e.message); }
+    try { res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body)); } 
+    catch (e) { res.status(400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
     try {
-        if(req.body.newName && await hasSensitiveWords(req.body.newName)) return res.status(400).send("Contains sensitive words");
-        
         let updates = {};
-        if (req.body.newName) updates.filename = req.body.newName;
+        if (req.body.newName) {
+            const isSafe = await validateSensitive([req.body.newName]);
+            if(!isSafe) return res.status(400).send('Contains restricted words');
+            updates.filename = req.body.newName;
+        }
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
         if (req.body.status) updates.status = req.body.status; 
         if (req.body.genreId) updates.genreId = req.body.genreId;
@@ -686,9 +656,13 @@ app.put('/api/songs/:id/settings', async (req, res) => {
 });
 
 app.put('/api/songs/reorder', async (req, res) => {
-    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+    try {
+        const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+    } catch(e) { res.status(500).send(e.message); }
 });
-app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
+app.delete('/api/songs/:id', async (req, res) => { 
+    try { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); } catch(e) { res.status(500).send(e.message); } 
+});
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
@@ -722,7 +696,11 @@ app.put('/api/settings', async (req, res) => {
 app.get('/api/logs/:type', async (req, res) => {
     try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); }
 });
-app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
-app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
+app.post('/api/logs/delete', async (req, res) => { 
+    try { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } 
+});
+app.delete('/api/logs/:type/all', async (req, res) => { 
+    try { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); } 
+});
 
 app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server bound to 0.0.0.0 on Port ${PORT}`));
