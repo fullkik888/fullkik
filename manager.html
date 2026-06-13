@@ -114,7 +114,8 @@
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; min-width:1100px;}
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
-        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 80px; min-width: 1200px;}
+        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 150px; min-width: 1280px;}
+        .grid-sensitive { grid-template-columns: 1fr 180px 120px; min-width:700px;}
 
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -134,6 +135,7 @@
         .badge-role { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px;}
         .badge-role.normal { border: 1px solid #444; background: #222; color: #ccc;}
         .badge-role.vip { border: 1px solid #ffcc00; background: rgba(255, 204, 0, 0.1); color: #ffcc00;}
+        .badge-role.producer { border: 1px solid var(--token); background: rgba(0, 229, 255, 0.1); color: var(--token);}
         .badge-status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid var(--success); color: var(--success); background: rgba(52, 199, 89, 0.1);}
         .badge-status.banned { border-color: var(--danger); color: var(--danger); background: rgba(255, 69, 58, 0.1); }
         
@@ -143,6 +145,7 @@
         .badge-status-pill { padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; letter-spacing: 0.5px; border: 1px solid transparent; display: inline-block; text-align: center;}
         .status-approved { border-color: var(--success); color: var(--success); background: rgba(52, 199, 89, 0.1); }
         .status-removed { border-color: #666; color: #aaa; background: rgba(255, 255, 255, 0.05); }
+        .status-unlisted { border-color: #666; color: #aaa; background: rgba(255, 255, 255, 0.05); }
         .status-pending { border-color: #ffcc00; color: #ffcc00; background: rgba(255, 204, 0, 0.1); }
         .status-rejected { border-color: var(--danger); color: var(--danger); background: rgba(255, 69, 58, 0.1); }
 
@@ -271,7 +274,7 @@
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
         <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理</button>
-        <button class="nav-item" onclick="switchView('wip', '敏感词')" id="nav-wip-sens">∅ 敏感词</button>
+        <button class="nav-item" onclick="switchView('sensitive', '敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
         <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
     </div>
 
@@ -350,6 +353,25 @@
                 <div class="table-inner">
                     <div class="header-row grid-reports"><div>举报歌曲</div><div>上传者</div><div>举报人</div><div>原因</div><div>描述</div><div>时间</div><div>状态</div><div style="text-align:center;">操作</div></div>
                     <div id="reportList"><div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-sensitive" class="view-section">
+        <div class="dash-header"><h2>敏感词管理</h2><p>添加后将限制注册用户名、修改用户名和 VIP/DJ 名称</p></div>
+        <div class="glass-panel">
+            <div class="filter-bar" style="align-items:flex-end;">
+                <div class="filter-group" style="max-width:420px;">
+                    <label>敏感词</label>
+                    <input type="text" id="sensitiveWordInput" class="input-text" placeholder="例如: djsoda" onkeydown="if(event.key==='Enter') addSensitiveWord()">
+                </div>
+                <button class="btn-primary" onclick="addSensitiveWord()">+ 添加</button>
+            </div>
+            <div class="table-container">
+                <div class="table-inner">
+                    <div class="header-row grid-sensitive"><div>敏感词</div><div>添加时间</div><div style="text-align:right;">操作</div></div>
+                    <div id="sensitiveWordList"><div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div></div>
                 </div>
             </div>
         </div>
@@ -479,7 +501,7 @@
         <div class="glass-panel">
             <div class="filter-bar">
                 <div class="filter-group"><input type="text" id="songSearchInput" class="input-text" placeholder="搜索歌曲标题 / 上传者..." oninput="handleSongSearch()"></div>
-                <div class="filter-group"><select class="select-box" id="songStatusFilter" onchange="handleSongSearch()"><option value="ALL">全部状态</option><option value="APPROVED">上架 (Approved)</option><option value="REMOVED">下架 (Removed)</option></select></div>
+                <div class="filter-group"><select class="select-box" id="songStatusFilter" onchange="handleSongSearch()"><option value="ALL">全部状态</option><option value="APPROVED">上架</option><option value="UNLISTED">下架</option></select></div>
                 <div class="filter-group"><select class="select-box" id="songGenreFilter" onchange="handleSongSearch()"><option value="ALL">全部分类</option></select></div>
                 <div style="margin-left: auto;"><button class="btn-filter" style="background:transparent; color:var(--text-muted); font-weight:normal;" onclick="clearSongFilters()">清除</button></div>
             </div>
@@ -498,7 +520,7 @@
         <div class="glass-panel">
             <div class="filter-bar">
                 <div class="filter-group"><label>搜索</label><input type="text" id="userSearchInput" class="input-text" placeholder="用户名 / 邮箱..." oninput="handleUserSearch()"></div>
-                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option></select></div>
+                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option><option value="PRODUCER">制作人</option></select></div>
                 <div style="margin-left: auto;"><button class="btn-filter" style="background:transparent; color:var(--text-muted); font-weight:normal;" onclick="clearUserFilters()">清除</button><button class="btn-filter" onclick="handleUserSearch()">筛选</button></div>
             </div>
             <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight:bold;">共 <span id="userCount">0</span> 个账号</div>
@@ -558,7 +580,7 @@
                 <div class="admin-col">
                     <div style="font-size:14px; font-weight:bold;">角色管理</div>
                     <label style="font-size:12px; color:var(--text-muted);">角色</label>
-                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option></select>
+                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option><option value="PRODUCER">制作人</option></select>
                     <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
                 </div>
                 
@@ -679,8 +701,8 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [];
-    let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null;
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [];
+    let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '';
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null; 
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
 
@@ -721,6 +743,10 @@
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
 
     function switchView(viewId, titleStr = '') {
+        if(viewId !== 'user-detail') {
+            localStorage.setItem('fkAdminLastView', viewId);
+            if(titleStr) localStorage.setItem('fkAdminLastTitle', titleStr);
+        }
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.sub-nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
@@ -741,6 +767,7 @@
         if(viewId === 'downloads') loadDlMonitor();
         if(viewId === 'adminlogs') loadAdminLogs();
         if(viewId === 'reports') loadReports();
+        if(viewId === 'sensitive') loadSensitiveWords();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -761,6 +788,9 @@
             }
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); 
             buildDashboardStats(); renderGenres(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
+            const savedView = localStorage.getItem('fkAdminLastView');
+            const savedTitle = localStorage.getItem('fkAdminLastTitle');
+            if(savedView && savedView !== 'dashboard' && document.getElementById(`view-${savedView}`)) switchView(savedView, savedTitle || '');
         } catch(e) {}
 
         clearInterval(sInt); circle.style.strokeDashoffset = 0;
@@ -830,13 +860,102 @@
     async function toggleActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideGlobalLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
 
     // --- REPORTS ---
-    function loadReports() {
-        document.getElementById('reportCount').innerText = 1; document.getElementById('reportTotal').innerText = 1;
-        document.getElementById('reportList').innerHTML = `
-            <div class="data-row grid-reports">
-                <div class="truncate">【Example】DJ 串烧歌曲</div><div class="truncate">DJ Unknown</div><div class="truncate">User123</div>
-                <div style="color:var(--danger)">版权问题</div><div class="truncate">侵权歌曲</div><div>2026-06-06</div><div>待处理</div><div>-</div>
-            </div>`;
+    function formatDateSafe(value) {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString();
+    }
+
+    async function loadReports() {
+        showContentLoader();
+        const reports = await (await fetch(`${API_URL}/reports`)).json();
+        document.getElementById('reportCount').innerText = reports.filter(r => (r.status || 'PENDING') === 'PENDING').length;
+        document.getElementById('reportTotal').innerText = reports.length;
+
+        const listDiv = document.getElementById('reportList');
+        listDiv.innerHTML = '';
+        reports.forEach(r => {
+            listDiv.innerHTML += `
+                <div class="data-row grid-reports">
+                    <div class="truncate" title="${r.songName || '-'}">${r.songName || '-'}</div>
+                    <div class="truncate">${r.uploader || '-'}</div>
+                    <div class="truncate">${r.reporter || 'Guest'}</div>
+                    <div style="color:var(--danger)">${r.reason || '-'}</div>
+                    <div class="truncate" title="${r.description || '-'}">${r.description || '-'}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${formatDateSafe(r.timestamp)}</div>
+                    <div><span class="badge-status-pill status-pending">${r.status || 'PENDING'}</span></div>
+                    <div style="text-align:center; display:flex; justify-content:center; gap:8px;">
+                        <button class="btn-text-action" onclick="dismissReport('${r.id}')">撤诉</button>
+                        <button class="btn-text-action danger" onclick="unlistReportedSong('${r.id}')">下架</button>
+                    </div>
+                </div>`;
+        });
+        if(!reports.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
+        hideContentLoader();
+    }
+
+    async function dismissReport(id) {
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/reports/${encodeURIComponent(id)}/dismiss`, { method: 'PUT' });
+        hideGlobalLoader();
+        if(res.ok) { showToast("举报已撤诉"); loadReports(); } else showToast("操作失败", true);
+    }
+
+    async function unlistReportedSong(id) {
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/reports/${encodeURIComponent(id)}/unlist`, { method: 'PUT' });
+        if(res.ok) {
+            allSongs = await (await fetch(`${API_URL}/songs`)).json();
+            updatePendingBadge();
+            hideGlobalLoader();
+            showToast("歌曲已下架");
+            loadReports();
+        } else {
+            hideGlobalLoader();
+            showToast("操作失败", true);
+        }
+    }
+
+    // --- SENSITIVE WORDS ---
+    async function loadSensitiveWords() {
+        showContentLoader();
+        allSensitiveWords = await (await fetch(`${API_URL}/sensitive-words`)).json();
+        const listDiv = document.getElementById('sensitiveWordList');
+        listDiv.innerHTML = '';
+        allSensitiveWords.forEach(item => {
+            listDiv.innerHTML += `
+                <div class="data-row grid-sensitive">
+                    <div style="font-weight:bold;">${item.word}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${formatDateSafe(item.timestamp)}</div>
+                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="deleteSensitiveWord('${item.id}')">删除</button></div>
+                </div>`;
+        });
+        if(!allSensitiveWords.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
+        hideContentLoader();
+    }
+
+    async function addSensitiveWord() {
+        const input = document.getElementById('sensitiveWordInput');
+        const word = input.value.trim();
+        if(!word) return showToast("请输入敏感词", true);
+
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/sensitive-words`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ word }) });
+        hideGlobalLoader();
+        if(res.ok) {
+            input.value = '';
+            showToast("敏感词已添加");
+            loadSensitiveWords();
+        } else {
+            showToast(await res.text(), true);
+        }
+    }
+
+    async function deleteSensitiveWord(id) {
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/sensitive-words/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        hideGlobalLoader();
+        if(res.ok) { showToast("敏感词已删除"); loadSensitiveWords(); }
+        else showToast("删除失败", true);
     }
 
     // --- ADMIN LOGS ---
@@ -892,15 +1011,15 @@
     // --- DOWNLOAD MONITOR ---
     function loadDlMonitor() {
         showContentLoader();
-        let dlData = allUsers.map(u => ({ username: u.username, email: u.email, isVip: u.isVip, createdAt: u.createdAt, status: u.status, dlCount: u.purchases ? u.purchases.length : 0, lastDl: u.purchases && u.purchases.length ? Math.max(...u.purchases.map(p => new Date(p.purchaseTime).getTime())) : 0 })).filter(u => u.dlCount > 0);
+        let dlData = allUsers.map(u => ({ username: u.username, email: u.email, role: getUserRole(u), createdAt: u.createdAt, status: u.status, dlCount: u.purchases ? u.purchases.length : 0, lastDl: u.purchases && u.purchases.length ? Math.max(...u.purchases.map(p => new Date(p.purchaseTime).getTime())) : 0 })).filter(u => u.dlCount > 0);
         dlData.sort((a,b) => b.dlCount - a.dlCount);
         
         document.getElementById('dl-user-count').innerText = dlData.length;
         const listDiv = document.getElementById('dlMonitorList'); listDiv.innerHTML = '';
         
         dlData.forEach((u, i) => {
-            const roleBadge = u.isVip ? 'VIP' : 'NORMAL';
-            const statusNode = u.status === 'BANNED' ? `<span style="color:var(--danger)">已封禁</span>` : `正常`;
+            const roleBadge = u.role === 'PRODUCER' ? '制作人' : u.role;
+            const statusNode = u.status === 'BANNED' ? `<span style="color:var(--danger)">BANNED</span>` : `ACTIVE`;
             const actionBtn = u.status === 'BANNED' ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')">解封</button>` : `<button class="btn-text-action danger" onclick="openBanModalFromDl('${u.username}')">拉黑</button>`;
             const lastDate = u.lastDl > 0 ? new Date(u.lastDl).toLocaleString() : '-';
 
@@ -1098,17 +1217,28 @@
     // --- SONGS ---
     async function loadSongs() { showContentLoader(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); songPage = 1; handleSongSearch(); hideContentLoader(); }
     function clearSongFilters() { document.getElementById('songSearchInput').value=''; document.getElementById('songStatusFilter').value='ALL'; document.getElementById('songGenreFilter').value='ALL'; handleSongSearch(); }
+    function isSongUnlisted(song) { return song.status === 'UNLISTED' || song.status === 'REMOVED'; }
+    function getSongStatusMeta(song) {
+        if(isSongUnlisted(song)) return { label: '下架', status: 'UNLISTED', className: 'status-unlisted' };
+        if(song.status === 'REJECTED') return { label: '驳回', status: 'REJECTED', className: 'status-rejected' };
+        return { label: '上架', status: 'APPROVED', className: 'status-approved' };
+    }
     
     function handleSongSearch() {
         const query = document.getElementById('songSearchInput').value.toLowerCase(); const status = document.getElementById('songStatusFilter').value; const genreId = document.getElementById('songGenreFilter').value;
-        songFiltered = allSongs.filter(s => { const mQ = s.filename.toLowerCase().includes(query) || (s.uploader && s.uploader.toLowerCase().includes(query)); const mS = status === 'ALL' || s.status === status; const mG = genreId === 'ALL' || s.genreId === genreId; return mQ && mS && mG && s.status !== 'PENDING'; });
+        songFiltered = allSongs.filter(s => {
+            const mQ = s.filename.toLowerCase().includes(query) || (s.uploader && s.uploader.toLowerCase().includes(query));
+            const mS = status === 'ALL' || (status === 'UNLISTED' ? isSongUnlisted(s) : s.status === status);
+            const mG = genreId === 'ALL' || s.genreId === genreId;
+            return mQ && mS && mG && s.status !== 'PENDING';
+        });
         songPage = 1; renderSongUI();
     }
 
     function renderSongUI() {
         const listDiv = document.getElementById('complexSongList'); listDiv.innerHTML = '';
         let appCount = 0; let remCount = 0;
-        songFiltered.forEach(song => { if(song.status === 'REMOVED') remCount++; else appCount++; });
+        songFiltered.forEach(song => { if(isSongUnlisted(song)) remCount++; else if(song.status === 'APPROVED' || !song.status) appCount++; });
         document.getElementById('count-all').innerText = songFiltered.length; document.getElementById('count-approved').innerText = appCount; document.getElementById('count-removed').innerText = remCount;
 
         const totalPages = Math.ceil(songFiltered.length / songLimit) || 1;
@@ -1117,8 +1247,8 @@
 
         paged.forEach(song => {
             const genre = allGenres.find(g => g.id === song.genreId); const genreName = genre ? genre.name : '未分类';
-            const statusStr = song.status === 'REMOVED' ? 'REMOVED' : 'APPROVED'; const statusClass = song.status === 'REMOVED' ? 'status-removed' : 'status-approved';
-            const actionToggleText = song.status === 'REMOVED' ? '恢复' : '下架'; const actionToggleColor = song.status === 'REMOVED' ? 'color:var(--success)' : 'color:#ffcc00';
+            const statusMeta = getSongStatusMeta(song);
+            const actionToggleText = statusMeta.status === 'APPROVED' ? '下架' : '恢复'; const actionToggleColor = statusMeta.status === 'APPROVED' ? 'color:#ffcc00' : 'color:var(--success)';
 
             listDiv.innerHTML += `
                 <div class="data-row grid-songs-complex">
@@ -1133,11 +1263,11 @@
                     <div class="clickable-cell" onclick="openQuickPrice('${song.id}', ${song.price || 10})"><div style="color:var(--token); font-weight:bold; display:flex; align-items:center; gap:3px;"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${song.price || 10}</div></div>
                     <div style="font-weight:bold;">${(song.downloads || 0).toLocaleString()}</div>
                     <div style="font-weight:bold;">${(song.plays || 0).toLocaleString()}</div>
-                    <div><span class="badge-status-pill ${statusClass}">${statusStr}</span></div>
+                    <div><span class="badge-status-pill ${statusMeta.className}">${statusMeta.label}</span></div>
                     <div style="color:var(--text-muted); font-size:11px; line-height:1.4;">${new Date(song.uploadTime).toISOString().split('T')[0]}</div>
                     <div class="song-action-col">
                         <button class="btn-text-action" onclick="openSettingsModal('${song.id}', '${song.filename.replace(/'/g, "\\'")}', ${song.price}, '${song.genreId}', '${song.coverUrl}')">编制</button>
-                        <button class="btn-text-action" style="${actionToggleColor}" onclick="toggleSongStatus('${song.id}', '${statusStr}')">${actionToggleText}</button>
+                        <button class="btn-text-action" style="${actionToggleColor}" onclick="toggleSongStatus('${song.id}', '${statusMeta.status}')">${actionToggleText}</button>
                         <button class="btn-text-action danger" onclick="deleteSong('${song.id}')">删除</button>
                     </div>
                 </div>
@@ -1149,7 +1279,7 @@
     const audioPlayer = document.getElementById('adminAudioPlayer');
     function playAudioPreview(url) { if(audioPlayer.src.includes(url) && !audioPlayer.paused) { audioPlayer.pause(); return; } audioPlayer.src = url; audioPlayer.play(); showToast("Playing preview..."); }
 
-    async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'REMOVED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
+    async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'UNLISTED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
     function setUploadMode(isTransload) {
@@ -1207,14 +1337,26 @@
         setTimeout(() => { if(overlay) overlay.style.display = 'none'; handleUserSearch(); }, 300);
     }
     function clearUserFilters() { document.getElementById('userSearchInput').value = ''; document.getElementById('roleFilter').value = 'ALL'; handleUserSearch(); }
+    function getUserRole(user) { return user.role || (user.isVip ? 'VIP' : 'NORMAL'); }
+    function getRoleBadge(user) {
+        const role = getUserRole(user);
+        if(role === 'PRODUCER') return '<span class="badge-role producer">制作人</span>';
+        if(role === 'VIP') return '<span class="badge-role vip">VIP</span>';
+        return '<span class="badge-role normal">NORMAL</span>';
+    }
     
     function handleUserSearch() {
         const query = document.getElementById('userSearchInput').value.toLowerCase(); const role = document.getElementById('roleFilter').value;
-        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip); return matchesQuery && matchesRole; });
+        const filtered = allUsers.filter(u => {
+            const userRole = getUserRole(u);
+            const matchesQuery = (u.username || '').toLowerCase().includes(query) || (u.email || '').toLowerCase().includes(query) || (u.phone && u.phone.includes(query));
+            const matchesRole = role === 'ALL' || userRole === role;
+            return matchesQuery && matchesRole;
+        });
         document.getElementById('userCount').innerText = filtered.length; const listDiv = document.getElementById('userList'); listDiv.innerHTML = '';
         
         filtered.forEach(u => {
-            const roleBadge = u.isVip ? '<span class="badge-role vip">VIP</span>' : '<span class="badge-role normal">NORMAL</span>';
+            const roleBadge = getRoleBadge(u);
             const isBanned = u.status === 'BANNED';
             const statusBadge = isBanned ? '<span class="badge-status banned">BANNED</span>' : '<span class="badge-status active">ACTIVE</span>';
             const unbanBtn = isBanned ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')" style="margin-right:5px;">解封</button>` : '';
@@ -1245,7 +1387,7 @@
         
         document.getElementById('det-u-name').innerText = currentEditUser.username;
         document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
-        document.getElementById('det-u-role').innerText = currentEditUser.isVip ? 'VIP' : 'NORMAL';
+        document.getElementById('det-u-role').innerText = getUserRole(currentEditUser) === 'PRODUCER' ? '制作人' : getUserRole(currentEditUser);
         document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
         document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';
         document.getElementById('det-u-tokens').innerText = currentEditUser.tokens || 0;
@@ -1254,7 +1396,7 @@
         document.getElementById('det-u-date').innerText = currentEditUser.createdAt ? new Date(currentEditUser.createdAt).toISOString().split('T')[0] : 'N/A';
         document.getElementById('det-u-wechat').innerText = currentEditUser.wechat || '-';
         document.getElementById('det-u-editname').value = currentEditUser.username;
-        document.getElementById('det-sel-role').value = currentEditUser.isVip ? 'VIP' : 'NORMAL';
+        document.getElementById('det-sel-role').value = getUserRole(currentEditUser);
 
         const banBtn = document.getElementById('det-ban-btn');
         if(currentEditUser.status === 'BANNED') {
@@ -1266,7 +1408,7 @@
         }
 
         const topupDiv = document.getElementById('det-topup-list'); topupDiv.innerHTML = '';
-        (currentEditUser.topups || []).slice().reverse().forEach(t => {
+        (currentEditUser.topups || []).slice().reverse().slice(0, 30).forEach(t => {
             topupDiv.innerHTML += `<div class="data-row grid-user-topup"><div>${new Date(t.date).toISOString().split('T')[0]}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token);font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.topups||[]).length) topupDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
@@ -1278,7 +1420,20 @@
         if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
     }
 
-    async function adminUpdateRole() { showGlobalLoader(); const isVip = document.getElementById('det-sel-role').value === 'VIP'; await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip}) }); hideGlobalLoader(); showToast("Role Updated"); loadUsers(); }
+    async function adminUpdateRole() {
+        const role = document.getElementById('det-sel-role').value;
+        showGlobalLoader();
+        const res = await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ role }) });
+        if(res.ok) {
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+            openUserDetail(currentEditUser.username);
+            hideGlobalLoader();
+            showToast("Role Updated");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
 
     async function adminAdjustTokens() {
         const amt = document.getElementById('det-adj-amt').value; const reason = document.getElementById('det-adj-reason').value;
@@ -1301,8 +1456,24 @@
         }
     }
     async function adminUnbanUser(username) { showGlobalLoader(); await fetch(`${API_URL}/admin/users/${username}/unban`, { method: 'PUT' }); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); if(currentEditUser && currentEditUser.username === username) openUserDetail(username); else handleUserSearch(); hideGlobalLoader(); showToast("User Unbanned"); }
-    function openDeleteModal(username) { document.getElementById('deleteModalTarget').innerText = `Warning: Permanently removing '${username}'`; document.getElementById('adminDeleteModal').style.display = 'flex'; }
-    async function confirmUserDelete() { showGlobalLoader("Deleting..."); await fetch(`${API_URL}/users/${currentEditUser.username}`, { method: 'DELETE' }); closeModals(); hideGlobalLoader(); showToast("User deleted."); switchView('users'); }
+    function openDeleteModal(username) { pendingDeleteUsername = username; document.getElementById('deleteModalTarget').innerText = `Warning: Permanently removing '${username}'`; document.getElementById('adminDeleteModal').style.display = 'flex'; }
+    async function confirmUserDelete() {
+        if(!pendingDeleteUsername) return showToast("No user selected", true);
+        showGlobalLoader("Deleting...");
+        const res = await fetch(`${API_URL}/admin/users/${encodeURIComponent(pendingDeleteUsername)}`, { method: 'DELETE' });
+        closeModals();
+        if(res.ok) {
+            allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+            currentEditUser = null;
+            pendingDeleteUsername = '';
+            hideGlobalLoader();
+            showToast("User deleted.");
+            switchView('users', '用户管理');
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
 
     // --- DATA / LOGS ---
     async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
