@@ -6,7 +6,8 @@
     <title>FULLKIK - DJ Profile</title>
     <style>
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
+        html { overflow-x:hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark; overflow-x:hidden;}
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -52,9 +53,20 @@
         @keyframes bounce { 0% { transform: scale(0.8) translateY(0); } 100% { transform: scale(1.2) translateY(-15px); } }
 
         @media (max-width: 768px) {
-            .header-top { padding: 15px 20px; }
-            .nav-tabs { gap: 15px; }
-            .profile-banner { flex-direction:column; align-items:center; text-align:center; gap:20px;}
+            .header-top { padding: 12px 14px; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+            .logo-container { font-size: 18px; }
+            .nav-tabs { order: 3; width: 100%; gap: 14px; padding-bottom: 2px; }
+            .header-right { margin-left:auto; gap: 8px; }
+            .token-pill { padding: 8px 12px; font-size: 12px; }
+            .profile-trigger { padding: 4px; }
+            .profile-pic { width: 30px; height: 30px; }
+            .container { padding: 132px 14px 32px; }
+            .profile-banner { flex-direction:column; align-items:center; text-align:center; gap:20px; padding: 26px 18px; border-radius: 18px; }
+            .profile-banner > div:first-child { gap:18px !important; }
+            #vipName { font-size: 26px !important; line-height:1.2; }
+            .list-song-row { padding: 12px; gap: 12px; align-items: center; }
+            .list-song-row > div:first-child { width: auto !important; flex: 1; min-width: 0; }
+            .follow-btn { min-height: 38px; }
         }
     </style>
 </head>
@@ -76,7 +88,7 @@
     </div>
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
-            <a href="/profile.html" class="token-pill" id="tokenUI">
+            <a href="/profile.html?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
             </a>
             <a href="/profile.html" class="profile-trigger" id="profileBtn"></a>
@@ -149,7 +161,9 @@
         const res = await fetch(`${API_URL}/users/${targetUser}`);
         if(res.ok) {
             const vData = await res.json();
-            document.getElementById('vipName').innerText = vData.djName || vData.username;
+            const displayName = vData.djName || vData.username;
+            document.getElementById('vipName').innerText = displayName;
+            document.title = `${displayName} - 主面`;
             document.getElementById('vipPfp').src = vData.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             
             // Handle Role Tags
@@ -183,7 +197,7 @@
             vipSongs.forEach(s => {
                 const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                 listDiv.innerHTML += `
-                    <div class="list-song-row" onclick="window.location.href='/music.html?song=${s.id}'">
+                    <div class="list-song-row" onclick="window.location.href='/music.html?song=${s.id}&skipLoader=1'">
                         <div style="display:flex; align-items:center; gap:15px; width:70%;">
                             <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
                             <div style="min-width:0;">
