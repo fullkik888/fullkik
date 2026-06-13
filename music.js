@@ -462,11 +462,15 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
 // ==========================================
 app.put('/api/admin/users/:username/role', async (req, res) => {
     try {
+        const requestedRole = req.body.role || (req.body.isVip ? 'VIP' : 'NORMAL');
+        const allowedRoles = ['NORMAL', 'VIP', 'PRODUCER'];
+        if (!allowedRoles.includes(requestedRole)) return res.status(400).send('Invalid role');
+
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
-            isVip: req.body.role === 'VIP' || req.body.role === 'PRODUCER', 
-            role: req.body.role || 'NORMAL' 
+            isVip: requestedRole === 'VIP' || requestedRole === 'PRODUCER', 
+            role: requestedRole 
         });
-        await logEvent('admin', `Updated role for ${req.params.username} to ${req.body.role}`);
+        await logEvent('admin', `Updated role for ${req.params.username} to ${requestedRole}`);
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -507,13 +511,20 @@ app.put('/api/admin/users/:username/unban', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-app.delete('/api/users/:username', async (req, res) => { 
+async function deleteUserAccount(req, res) {
     try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).delete(); 
-        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${req.params.username}</span>`); 
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('User not found');
+
+        await userRef.delete(); 
+        await logEvent('admin', `Deleted user account: <span style="color:var(--danger);">${userDoc.data().username || req.params.username}</span>`); 
         res.send('Deleted'); 
     } catch(e) { res.status(500).send(e.message); }
-});
+}
+
+app.delete('/api/admin/users/:username', deleteUserAccount);
+app.delete('/api/users/:username', deleteUserAccount);
 
 app.put('/api/users/:username/vip', async (req, res) => {
     try {
@@ -569,8 +580,11 @@ app.get('/api/sensitive-words', async (req, res) => {
 
 app.post('/api/sensitive-words', async (req, res) => {
     try {
-        const word = req.body.word.trim().toLowerCase();
+        const word = (req.body.word || '').trim().toLowerCase();
         if(!word) return res.status(400).send('Word required');
+        const existing = await db.collection('sensitive_words').where('word', '==', word).limit(1).get();
+        if(!existing.empty) return res.status(400).send('Word already exists');
+
         const newWord = { word, status: 'ACTIVE', timestamp: new Date().toISOString() };
         const docRef = await db.collection('sensitive_words').add(newWord);
         res.json({ id: docRef.id, ...newWord });
@@ -622,9 +636,10 @@ app.put('/api/reports/:id/unlist', async (req, res) => {
         if(reportDoc.exists) {
             const songId = reportDoc.data().songId;
             if(songId) {
-                await db.collection('songs').doc(songId).update({ status: 'REMOVED' });
+                await db.collection('songs').doc(songId).update({ status: 'UNLISTED' });
             }
             await reportRef.delete();
+            await logEvent('admin', `Unlisted reported song: <span style="color:var(--danger)">${reportDoc.data().songName || songId}</span>`);
         }
         res.send('Unlisted and report deleted');
     } catch(e) { res.status(500).send(e.message); }
