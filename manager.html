@@ -47,8 +47,8 @@
         #splashLoader { display:flex; position:fixed; inset:0; background:var(--bg-main); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
         .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
         .splash-text { font-size:14px; font-weight:bold; color:var(--text-muted); letter-spacing:2px; animation: pulseFade 1.5s infinite; }
-        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
-        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
+        .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); }
+        .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.4s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
         
         #contentLoader { display:none; position:absolute; inset:0; background:var(--bg-main); z-index:50; flex-direction:column; align-items:center; justify-content:center; }
@@ -114,8 +114,7 @@
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; min-width:1100px;}
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
-        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 100px; min-width: 1200px;}
-        .grid-sensitive { grid-template-columns: 80px 2fr 100px 150px 100px; min-width: 800px;}
+        .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 80px; min-width: 1200px;}
 
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -163,7 +162,7 @@
         .genre-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8;}
         .genre-card .overlay { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);}
         .genre-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.8); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; color: var(--accent-light);}
-        .genre-settings-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px; border-radius: 50%; display: flex; transition: 0.2s; z-index: 10; cursor:pointer;}
+        .genre-settings-icon { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); padding: 6px; border-radius: 50%; display: flex; transition: 0.2s; z-index: 10;}
         .genre-settings-icon:hover { background: var(--accent); }
         .add-genre-card { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1px dashed var(--border-color); color: var(--text-muted); cursor: pointer;}
 
@@ -174,6 +173,13 @@
         .page-btn:disabled { opacity:0.5; cursor:not-allowed; border-color:var(--border-color); color:var(--text-muted);}
         .page-info { background:var(--bg-dark); border:1px solid var(--accent); color:var(--text-main); padding:6px 15px; border-radius:4px; font-weight:bold; }
         .page-size-sel { background:var(--bg-dark); color:white; border:1px solid var(--border-color); padding:4px; border-radius:4px; outline:none; }
+
+        /* UPLOAD PAGE CSS */
+        .upload-tabs { display:flex; margin-bottom:15px; border-bottom:1px solid var(--border-color);}
+        .upload-tabs button { flex:1; background:none; border:none; color:var(--text-muted); padding:10px; cursor:pointer; border-bottom:2px solid transparent; transition:0.2s;}
+        .upload-tabs button.active { color:white; border-bottom-color:var(--accent-light); font-weight:bold;}
+        .upload-dropzone { border:2px dashed var(--border-color); border-radius:12px; padding:40px 20px; text-align:center; color:var(--text-muted); cursor:pointer; background:rgba(0,0,0,0.2); transition:0.2s;}
+        .upload-dropzone:hover { border-color:var(--accent-light); background:rgba(165,42,42,0.05); }
 
         .user-detail-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; background:var(--bg-dark); border:1px solid var(--border-color); padding:20px; border-radius:8px; margin-bottom:20px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
         .u-stat-box { display:flex; flex-direction:column; gap:5px; min-width:80px;}
@@ -211,11 +217,7 @@
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
             .chart-grid { grid-template-columns: 1fr; }
-            .grid-users, .grid-dl { grid-template-columns: 120px 150px 100px 100px; } 
-            .grid-songs-complex { grid-template-columns: 30px 30px 2fr 80px; }
-            .grid-pending { grid-template-columns: 30px 30px 2fr 80px 100px; }
             .admin-action-grid { grid-template-columns: 1fr; }
-            .user-detail-grid { grid-template-columns: repeat(3, 1fr); }
             .genre-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; }
             .genre-card .overlay h4 { font-size: 12px; }
             .genre-card .overlay div { font-size: 10px; }
@@ -269,7 +271,7 @@
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
         <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理</button>
-        <button class="nav-item" onclick="switchView('sensitive', '敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
+        <button class="nav-item" onclick="switchView('wip', '敏感词')" id="nav-wip-sens">∅ 敏感词</button>
         <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
     </div>
 
@@ -337,28 +339,6 @@
         <div class="glass-panel" style="padding: 20px;">
             <div style="display:flex; gap: 20px; flex-wrap: wrap;" id="banner-slots"></div>
             <button class="btn-primary" style="margin-top:20px; width:100%;" onclick="saveBanners()">发布 (Publish)</button>
-        </div>
-    </div>
-
-    <div id="view-sensitive" class="view-section">
-        <div class="dash-header"><h2>敏感词管理</h2><p>上传 / 编辑歌曲时自动检测标题并过滤。禁止注册为DJ名。</p></div>
-        
-        <div class="glass-panel" style="padding: 20px;">
-            <div class="panel-header" style="padding: 0 0 15px 0; border:none;">添加敏感词</div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="newSensitiveWordInput" class="input-text" style="flex:1;" placeholder="输入需要过滤的词...">
-                <button class="btn-primary" onclick="addSensitiveWord()">+ 添加</button>
-            </div>
-        </div>
-
-        <div class="glass-panel">
-            <div class="panel-header">已有敏感词</div>
-            <div class="table-container">
-                <div class="table-inner">
-                    <div class="header-row grid-sensitive"><div>ID</div><div>敏感词</div><div>状态</div><div>添加时间</div><div style="text-align:right;">操作</div></div>
-                    <div id="sensitiveWordsList"></div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -518,7 +498,7 @@
         <div class="glass-panel">
             <div class="filter-bar">
                 <div class="filter-group"><label>搜索</label><input type="text" id="userSearchInput" class="input-text" placeholder="用户名 / 邮箱..." oninput="handleUserSearch()"></div>
-                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option><option value="PRODUCER">制作人</option></select></div>
+                <div class="filter-group"><label>角色</label><select class="select-box" id="roleFilter" onchange="handleUserSearch()"><option value="ALL">全部</option><option value="NORMAL">Normal</option><option value="VIP">VIP</option></select></div>
                 <div style="margin-left: auto;"><button class="btn-filter" style="background:transparent; color:var(--text-muted); font-weight:normal;" onclick="clearUserFilters()">清除</button><button class="btn-filter" onclick="handleUserSearch()">筛选</button></div>
             </div>
             <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; font-weight:bold;">共 <span id="userCount">0</span> 个账号</div>
@@ -578,11 +558,7 @@
                 <div class="admin-col">
                     <div style="font-size:14px; font-weight:bold;">角色管理</div>
                     <label style="font-size:12px; color:var(--text-muted);">角色</label>
-                    <select class="select-box" id="det-sel-role">
-                        <option value="NORMAL">Normal - 普通用户</option>
-                        <option value="VIP">VIP - 创作者</option>
-                        <option value="PRODUCER">制作人</option>
-                    </select>
+                    <select class="select-box" id="det-sel-role"><option value="NORMAL">Normal - 普通用户</option><option value="VIP">VIP - 创作者</option></select>
                     <button class="btn-primary" style="margin-top:10px;" onclick="adminUpdateRole()">更新角色</button>
                 </div>
                 
@@ -765,7 +741,6 @@
         if(viewId === 'downloads') loadDlMonitor();
         if(viewId === 'adminlogs') loadAdminLogs();
         if(viewId === 'reports') loadReports();
-        if(viewId === 'sensitive') loadSensitiveWords();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -855,67 +830,14 @@
     async function toggleActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideGlobalLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
 
     // --- REPORTS ---
-    async function loadReports() {
-        showContentLoader();
-        const data = await (await fetch(`${API_URL}/reports`)).json();
-        document.getElementById('reportCount').innerText = data.length; document.getElementById('reportTotal').innerText = data.length;
-        const listDiv = document.getElementById('reportList'); listDiv.innerHTML = '';
-        
-        data.forEach(r => {
-            listDiv.innerHTML += `
-                <div class="data-row grid-reports">
-                    <div class="truncate">${r.songName}</div>
-                    <div class="truncate">${r.uploader}</div>
-                    <div class="truncate">${r.reporter}</div>
-                    <div style="color:var(--danger)">${r.reason}</div>
-                    <div class="truncate" title="${r.description}">${r.description}</div>
-                    <div style="font-size:11px;">${new Date(r.timestamp).toISOString().split('T')[0]}</div>
-                    <div style="color:var(--text-muted)">${r.status === 'PENDING' ? '待处理' : '已处理'}</div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-text-action" onclick="dismissReport('${r.id}')">撤诉</button>
-                        <button class="btn-text-action danger" onclick="takedownReportSong('${r.songId}', '${r.id}')">下架</button>
-                    </div>
-                </div>`;
-        });
-        if(!data.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无举报记录</div>`;
-        hideContentLoader();
+    function loadReports() {
+        document.getElementById('reportCount').innerText = 1; document.getElementById('reportTotal').innerText = 1;
+        document.getElementById('reportList').innerHTML = `
+            <div class="data-row grid-reports">
+                <div class="truncate">【Example】DJ 串烧歌曲</div><div class="truncate">DJ Unknown</div><div class="truncate">User123</div>
+                <div style="color:var(--danger)">版权问题</div><div class="truncate">侵权歌曲</div><div>2026-06-06</div><div>待处理</div><div>-</div>
+            </div>`;
     }
-    
-    async function dismissReport(id) {
-        showGlobalLoader(); await fetch(`${API_URL}/reports/${id}`, { method: 'DELETE' }); hideGlobalLoader(); showToast("已撤诉"); loadReports();
-    }
-    async function takedownReportSong(songId, reportId) {
-        if(!confirm("确定要下架该歌曲吗？(Unlist Song?)")) return;
-        showGlobalLoader("正在下架...");
-        await fetch(`${API_URL}/songs/${songId}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REMOVED' }) });
-        await fetch(`${API_URL}/reports/${reportId}`, { method: 'DELETE' });
-        hideGlobalLoader(); showToast("歌曲已下架"); loadReports(); loadSongs();
-    }
-
-    // --- SENSITIVE WORDS ---
-    async function loadSensitiveWords() {
-        showContentLoader();
-        const data = await (await fetch(`${API_URL}/sensitive-words`)).json();
-        const listDiv = document.getElementById('sensitiveWordsList'); listDiv.innerHTML = '';
-        data.forEach((w, index) => {
-            listDiv.innerHTML += `
-                <div class="data-row grid-sensitive">
-                    <div style="color:var(--text-muted);">#00${index+1}</div>
-                    <div style="font-weight:bold;">${w.word}</div>
-                    <div><span class="badge-status-pill status-approved">启用</span></div>
-                    <div style="font-size:12px; color:var(--text-muted);">${new Date(w.addedAt).toLocaleString()}</div>
-                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="deleteSensitiveWord('${w.id}')">删除</button></div>
-                </div>`;
-        });
-        if(!data.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无敏感词</div>`;
-        hideContentLoader();
-    }
-    async function addSensitiveWord() {
-        const word = document.getElementById('newSensitiveWordInput').value.trim(); if(!word) return showToast("请输入敏感词");
-        showGlobalLoader(); await fetch(`${API_URL}/sensitive-words`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ word }) });
-        document.getElementById('newSensitiveWordInput').value = ''; hideGlobalLoader(); showToast("添加成功"); loadSensitiveWords();
-    }
-    async function deleteSensitiveWord(id) { showGlobalLoader(); await fetch(`${API_URL}/sensitive-words/${id}`, { method: 'DELETE' }); hideGlobalLoader(); showToast("删除成功"); loadSensitiveWords(); }
 
     // --- ADMIN LOGS ---
     async function loadAdminLogs() { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/admin`)).json(); const listDiv = document.getElementById('adminLogsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); if(!data.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`; hideContentLoader(); }
@@ -1147,6 +1069,7 @@
             toggleHTML = `<button class="btn-primary" style="width:100%; background:transparent; border:1px solid var(--accent-light); color:var(--accent-light);" onclick="toggleGenreStatus('${id}', '${toggleNewStatus}')">${toggleText}</button>`;
         }
         document.getElementById('genreToggleArea').innerHTML = toggleHTML;
+        document.getElementById('genreDeleteArea').innerHTML = id ? `<button class="btn-danger-full" onclick="deleteGenre('${id}')">删除分类 (Delete)</button>` : '';
         document.getElementById('genreModal').dataset.editId = id || ''; document.getElementById('genreModal').style.display = 'flex';
     }
 
@@ -1158,6 +1081,7 @@
         else await fetch(`${API_URL}/genres`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         closeModals(); await loadInitial(); hideGlobalLoader();
     }
+    async function deleteGenre(id) { if(!confirm("Delete genre?")) return; showGlobalLoader(); await fetch(`${API_URL}/genres/${id}`, { method: 'DELETE' }); closeModals(); await loadInitial(); hideGlobalLoader();}
 
     // --- PAGINATION HELPER ---
     function renderPaginationControls(total, limit, current, containerId, onPageChange, onLimitChange) {
@@ -1202,11 +1126,11 @@
                     <div><button class="icon-btn" onclick="playAudioPreview('${song.filepath}')"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button></div>
                     <div class="song-cell-info">
                         <img src="${song.coverUrl || 'data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'100\\\' height=\\\'100\\\'%3E%3Crect width=\\\'100\\\' height=\\\'100\\\' fill=\\\'%23333\\\'/%3E%3C/svg%3E'}" class="song-cell-cover">
-                        <div class="song-cell-text"><div class="song-cell-title truncate" title="${song.filename}">${song.filename}</div><div class="song-cell-sub truncate">FULLKIK - ${song.filename}</div></div>
+                        <div class="song-cell-text"><div class="song-cell-title truncate" title="${song.filename}">${song.filename}</div><div class="song-cell-sub">FULLKIK - ${song.filename}</div></div>
                     </div>
                     <div><div class="badge-vip">UPLOADER<br><span class="truncate" style="max-width:80px;">${song.uploader}</span></div></div>
                     <div class="clickable-cell" onclick="openQuickGenre('${song.id}', '${song.genreId}')"><div class="truncate" style="color:var(--text-muted); font-size:12px; line-height:1.4;">${genreName}<br>· 音乐</div></div>
-                    <div class="clickable-cell" onclick="openQuickPrice('${song.id}', ${song.price || 0})"><div style="color:var(--token); font-weight:bold; display:flex; align-items:center; gap:3px;"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${song.price || 0}</div></div>
+                    <div class="clickable-cell" onclick="openQuickPrice('${song.id}', ${song.price || 10})"><div style="color:var(--token); font-weight:bold; display:flex; align-items:center; gap:3px;"><svg style="width:12px;fill:var(--token);" viewBox="0 0 24 24"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg> ${song.price || 10}</div></div>
                     <div style="font-weight:bold;">${(song.downloads || 0).toLocaleString()}</div>
                     <div style="font-weight:bold;">${(song.plays || 0).toLocaleString()}</div>
                     <div><span class="badge-status-pill ${statusClass}">${statusStr}</span></div>
@@ -1228,9 +1152,16 @@
     async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'REMOVED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
-    function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; document.getElementById('songCoverPreview').style.display='block'; pendingUploadBase64 = null; document.getElementById('transloadUrlInput').classList.remove('shake'); }
-    function openUploadModal() { isTransloadMode = false; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Upload Audio'; document.getElementById('uploadFileArea').style.display = 'block'; document.getElementById('transloadFileArea').style.display = 'none'; document.getElementById('uploadSongModal').style.display = 'flex'; }
-    function openTransloadModal() { isTransloadMode = true; resetUploadModal(); document.getElementById('uploadModalTitle').innerText = 'Transload Audio'; document.getElementById('uploadFileArea').style.display = 'none'; document.getElementById('transloadFileArea').style.display = 'block'; document.getElementById('uploadSongModal').style.display = 'flex'; }
+    function setUploadMode(isTransload) {
+        isTransloadMode = isTransload;
+        document.getElementById('btn-mode-file').classList.toggle('active', !isTransload); document.getElementById('btn-mode-link').classList.toggle('active', isTransload);
+        document.getElementById('audio-dropzone').style.display = isTransload ? 'none' : 'block'; document.getElementById('audio-filename').style.display = isTransload ? 'none' : 'block'; document.getElementById('transloadUrlInput').style.display = isTransload ? 'block' : 'none';
+    }
+
+    function handleAudioSelect(e) { const file = e.target.files[0]; if(file) { document.getElementById('audio-filename').innerText = file.name; document.getElementById('uploadTitleInput').value = file.name.replace(/\.[^/.]+$/, ""); } }
+
+    function resetUploadModal() { document.getElementById('uploadTitleInput').value = ''; document.getElementById('uploadPriceInput').value = '10'; document.getElementById('songCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3C/svg%3E"; pendingUploadBase64 = null; document.getElementById('transloadUrlInput').classList.remove('shake'); }
+    function openUploadModal() { resetUploadModal(); switchView('upload'); }
 
     async function executeUpload() {
         const title = document.getElementById('uploadTitleInput').value; const price = document.getElementById('uploadPriceInput').value; const genreId = document.getElementById('uploadGenreSelect').value; const uploader = document.getElementById('uploadUploaderInput').value;
@@ -1239,11 +1170,11 @@
         if(isTransloadMode || url) {
             if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
             showGlobalProgress(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId: genreId, coverBase64: pendingUploadBase64, uploader: uploader }) });
-            if (res.ok) { closeModals(); showToast("Transload successful!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
+            if (res.ok) { showToast("Transload successful!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
         } else if(file) {
             showGlobalProgress(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); fd.append('uploader', uploader); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { closeModals(); showToast("Audio Uploaded!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
+            if (res.ok) { showToast("Audio Uploaded!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); showToast("Failed: " + await res.text(), true); }
         } else { showToast("Please provide file or URL", true); }
     }
 
@@ -1279,14 +1210,11 @@
     
     function handleUserSearch() {
         const query = document.getElementById('userSearchInput').value.toLowerCase(); const role = document.getElementById('roleFilter').value;
-        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip) || (role === 'PRODUCER' && u.role === 'PRODUCER'); return matchesQuery && matchesRole; });
+        const filtered = allUsers.filter(u => { const matchesQuery = u.username.toLowerCase().includes(query) || u.email.toLowerCase().includes(query) || (u.phone && u.phone.includes(query)); const isUserVip = u.isVip || false; const matchesRole = role === 'ALL' || (role === 'VIP' && isUserVip) || (role === 'NORMAL' && !isUserVip); return matchesQuery && matchesRole; });
         document.getElementById('userCount').innerText = filtered.length; const listDiv = document.getElementById('userList'); listDiv.innerHTML = '';
         
         filtered.forEach(u => {
-            let roleBadge = '<span class="badge-role normal">NORMAL</span>';
-            if(u.role === 'PRODUCER') roleBadge = '<span class="badge-role vip" style="border-color:#ff9500; color:#ff9500; background:rgba(255,149,0,0.1);">PRODUCER</span>';
-            else if(u.isVip) roleBadge = '<span class="badge-role vip">VIP</span>';
-            
+            const roleBadge = u.isVip ? '<span class="badge-role vip">VIP</span>' : '<span class="badge-role normal">NORMAL</span>';
             const isBanned = u.status === 'BANNED';
             const statusBadge = isBanned ? '<span class="badge-status banned">BANNED</span>' : '<span class="badge-status active">ACTIVE</span>';
             const unbanBtn = isBanned ? `<button class="btn-text-action success" onclick="adminUnbanUser('${u.username}')" style="margin-right:5px;">解封</button>` : '';
@@ -1317,21 +1245,19 @@
         
         document.getElementById('det-u-name').innerText = currentEditUser.username;
         document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
-        document.getElementById('det-u-role').innerText = currentEditUser.role || (currentEditUser.isVip ? 'VIP' : 'NORMAL');
-        
-        const isBanned = currentEditUser.status === 'BANNED';
-        document.getElementById('det-u-status').innerHTML = isBanned ? `<span class="badge-status banned">BANNED</span>` : `<span class="badge-status active">ACTIVE</span>`;
-        
+        document.getElementById('det-u-role').innerText = currentEditUser.isVip ? 'VIP' : 'NORMAL';
+        document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
+        document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';
         document.getElementById('det-u-tokens').innerText = currentEditUser.tokens || 0;
         document.getElementById('det-curr-token').innerText = currentEditUser.tokens || 0;
         document.getElementById('det-u-counts').innerText = `${(currentEditUser.topups||[]).length} / ${(currentEditUser.purchases||[]).length}`;
         document.getElementById('det-u-date').innerText = currentEditUser.createdAt ? new Date(currentEditUser.createdAt).toISOString().split('T')[0] : 'N/A';
         document.getElementById('det-u-wechat').innerText = currentEditUser.wechat || '-';
         document.getElementById('det-u-editname').value = currentEditUser.username;
-        document.getElementById('det-sel-role').value = currentEditUser.role || (currentEditUser.isVip ? 'VIP' : 'NORMAL');
+        document.getElementById('det-sel-role').value = currentEditUser.isVip ? 'VIP' : 'NORMAL';
 
         const banBtn = document.getElementById('det-ban-btn');
-        if(isBanned) {
+        if(currentEditUser.status === 'BANNED') {
             banBtn.innerText = '解封账号'; banBtn.style.color = 'var(--success)'; banBtn.style.borderColor = 'var(--success)';
             document.getElementById('det-ban-reason').value = currentEditUser.banReason || '';
         } else {
@@ -1340,19 +1266,19 @@
         }
 
         const topupDiv = document.getElementById('det-topup-list'); topupDiv.innerHTML = '';
-        (currentEditUser.topups || []).slice().reverse().slice(0, 30).forEach(t => {
+        (currentEditUser.topups || []).slice().reverse().forEach(t => {
             topupDiv.innerHTML += `<div class="data-row grid-user-topup"><div>${new Date(t.date).toISOString().split('T')[0]}</div><div>${t.currency||'RMB'}</div><div>${t.price||0}</div><div style="color:var(--token);font-weight:bold;">💎 ${t.amount}</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.topups||[]).length) topupDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
 
         const buyDiv = document.getElementById('det-buy-list'); buyDiv.innerHTML = '';
-        (currentEditUser.purchases || []).slice().reverse().slice(0, 30).forEach(p => {
+        (currentEditUser.purchases || []).slice().reverse().forEach(p => {
             buyDiv.innerHTML += `<div class="data-row grid-user-buy"><div class="truncate">${p.songName}</div><div>${new Date(p.purchaseTime).toISOString().split('T')[0]}</div><div style="color:var(--danger);font-weight:bold;">-💎 ${p.tokensSpent}</div><div>1</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
     }
 
-    async function adminUpdateRole() { showGlobalLoader(); const role = document.getElementById('det-sel-role').value; const isVip = role === 'VIP' || role === 'PRODUCER'; await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip, role}) }); hideGlobalLoader(); showToast("Role Updated"); loadUsers(); }
+    async function adminUpdateRole() { showGlobalLoader(); const isVip = document.getElementById('det-sel-role').value === 'VIP'; await fetch(`${API_URL}/admin/users/${currentEditUser.username}/role`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({isVip}) }); hideGlobalLoader(); showToast("Role Updated"); loadUsers(); }
 
     async function adminAdjustTokens() {
         const amt = document.getElementById('det-adj-amt').value; const reason = document.getElementById('det-adj-reason').value;
@@ -1375,9 +1301,8 @@
         }
     }
     async function adminUnbanUser(username) { showGlobalLoader(); await fetch(`${API_URL}/admin/users/${username}/unban`, { method: 'PUT' }); allUsers = await (await fetch(`${API_URL}/all-users`)).json(); if(currentEditUser && currentEditUser.username === username) openUserDetail(username); else handleUserSearch(); hideGlobalLoader(); showToast("User Unbanned"); }
-    
     function openDeleteModal(username) { document.getElementById('deleteModalTarget').innerText = `Warning: Permanently removing '${username}'`; document.getElementById('adminDeleteModal').style.display = 'flex'; }
-    async function confirmUserDelete() { showGlobalLoader("Deleting..."); await fetch(`${API_URL}/users/${currentEditUser.username}`, { method: 'DELETE' }); closeModals(); hideGlobalLoader(); showToast("User deleted."); switchView('users', '用户管理'); }
+    async function confirmUserDelete() { showGlobalLoader("Deleting..."); await fetch(`${API_URL}/users/${currentEditUser.username}`, { method: 'DELETE' }); closeModals(); hideGlobalLoader(); showToast("User deleted."); switchView('users'); }
 
     // --- DATA / LOGS ---
     async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
