@@ -6,7 +6,8 @@
     <title>FULLKIK</title>
     <style>
         :root { --bg-color: #0b0b0b; --text-main: #ffffff; --text-muted: #a0a0a0; --card-bg: rgba(30, 15, 15, 0.8); --border-color: rgba(255, 255, 255, 0.1); --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --token: #ffffff;}
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark;}
+        html { overflow-x: hidden; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-color); background-image: radial-gradient(circle at 50% 0%, #251010 0%, #0b0b0b 70%); color: var(--text-main); margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; color-scheme: dark; overflow-x: hidden;}
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -23,6 +24,8 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
+        .vip-center-pill { display:flex; align-items:center; justify-content:center; min-height:38px; padding:0 16px; border-radius:20px; background:linear-gradient(135deg, rgba(128,0,0,0.9), rgba(165,42,42,0.9)); color:white; text-decoration:none; font-size:13px; font-weight:800; border:1px solid rgba(255,255,255,0.12); white-space:nowrap; box-shadow:0 8px 20px rgba(128,0,0,0.25); }
+        .vip-center-pill:hover { transform: translateY(-1px); box-shadow:0 10px 24px rgba(128,0,0,0.38); }
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
 
@@ -32,9 +35,14 @@
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- SPLASH LOADER (NO BOUNCE, JUST STROKE & WELCOME) --- */
-        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.8); backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
-        .splash-circle-wrap { position:relative; width:80px; height:80px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+        /* --- SPLASH LOADER --- */
+        #splashLoader { display:flex; position:fixed; inset:0; background:rgba(11, 11, 11, 0.86); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); z-index:9999999; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s ease; }
+        .splash-circle-wrap { position:relative; width:88px; height:88px; display:flex; align-items:center; justify-content:center; margin-bottom:22px; animation: loaderBreath 2.1s ease-in-out infinite; }
+        .splash-circle-wrap::after { content:''; position:absolute; inset:17px; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.24), rgba(128,0,0,0)); filter:blur(4px); animation: loaderGlow 2.1s ease-in-out infinite; }
+        .splash-circle-wrap svg { position:relative; z-index:1; overflow:visible; filter:drop-shadow(0 0 14px rgba(165,42,42,0.45)); }
+        #initLoadCircle { transform: rotate(-90deg); transform-origin:50% 50%; }
+        @keyframes loaderBreath { 0%,100% { transform:scale(0.96); opacity:0.86; } 50% { transform:scale(1.05); opacity:1; } }
+        @keyframes loaderGlow { 0%,100% { transform:scale(0.82); opacity:0.35; } 50% { transform:scale(1.15); opacity:0.72; } }
         .welcome-text { display:none; font-size:28px; font-weight:900; letter-spacing:8px; color:var(--text-main); margin-top:20px;}
         .welcome-text span { display:inline-block; opacity:0; transform:translateY(20px); animation: popUp 0.1s forwards linear; }
         .welcome-text span:nth-child(1) { animation-delay: 0.1s; } .welcome-text span:nth-child(2) { animation-delay: 0.2s; } .welcome-text span:nth-child(3) { animation-delay: 0.3s; } .welcome-text span:nth-child(4) { animation-delay: 0.4s; }
@@ -176,15 +184,30 @@
         .vip-tab.active { color: var(--accent-light); font-weight: bold; }
 
         @media (max-width: 768px) {
-            .header-top { padding: 15px 20px; }
-            .player-container { flex-direction: column-reverse; padding: 20px;}
+            .header-top { padding: 12px 14px; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+            .header-right { width: 100%; justify-content: flex-end; gap: 8px; }
+            .header-right > div { gap: 8px !important; max-width: 100%; }
+            .vip-center-pill, .token-pill { min-height: 36px; padding: 0 12px; font-size: 12px; }
+            .profile-trigger { padding: 4px; }
+            .profile-pic { width: 30px; height: 30px; }
+            .container { padding: 132px 14px 34px; }
+            .hero h1 { font-size: 28px; line-height: 1.18; }
+            .hero p { line-height: 1.5; }
+            .player-container { flex-direction: column-reverse; padding: 18px; border-radius: 18px; gap: 20px;}
             .player-right { width: 100%; }
+            .player-title { font-size: 24px; white-space: normal; line-height: 1.22; }
+            .audio-controls { flex-wrap: wrap; gap: 10px; padding: 12px; }
+            .slider-container { flex-basis: calc(100% - 96px); }
+            .action-row { flex-wrap: wrap; }
+            .btn-buy-big { width: 100%; justify-content: center; box-sizing: border-box; padding: 14px 18px; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
             .home-song-grid { grid-template-columns: 1fr; } 
             .search-wrapper { max-width: 90%; }
             .banners-container img { width: 250px; flex-shrink: 0;}
             .dj-grid-large { grid-template-columns: 1fr 1fr; }
+            .list-song-row { gap: 12px; padding: 12px; }
+            .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
         }
     </style>
 </head>
@@ -212,7 +235,8 @@
     </div>
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
-            <a href="/profile.html" class="token-pill" id="tokenUI">
+            <a href="/profile.html?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
+            <a href="/profile.html?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
             </a>
             <a href="/profile.html" class="profile-trigger" id="profileBtn"></a>
@@ -303,6 +327,12 @@
     let currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
+    const initialUrlParams = new URLSearchParams(window.location.search);
+    const skipInitialLoader = initialUrlParams.get('skipLoader') === '1';
+    if(skipInitialLoader) {
+        const sp = document.getElementById('splashLoader');
+        if(sp) sp.style.display = 'none';
+    }
     
     const dict = {
         en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", report: "Report" },
@@ -327,6 +357,16 @@
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
+    function setMusicPageTitle(view, detail = '') {
+        const titles = {
+            home: 'FULLKIK 首页',
+            ranking: 'FULLKIK 排行榜',
+            'dj-list': 'FULLKIK VIP',
+            'more-songs': detail ? `${detail} - 音乐` : 'FULLKIK 音乐',
+            song: detail ? `${detail} - 音乐` : 'FULLKIK 音乐'
+        };
+        document.title = titles[view] || 'FULLKIK 首页';
+    }
 
     // --- SEARCH UI LOGIC ---
     function handleGlobalSearch(e) {
@@ -383,11 +423,13 @@
         const circle = document.getElementById('initLoadCircle');
         let loadProgress = 0; function setProg(p) { if(circle) circle.style.strokeDashoffset = 283 - (283 * p / 100); }
         setProg(10);
+        let openedInitialSong = false;
         
         if(!username) { 
             const pb = document.getElementById('profileBtn');
             if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
             if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
+            const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/register.html';
         }
 
         try {
@@ -424,8 +466,21 @@
             const requestedSongId = urlParams.get('song');
             if(requestedSongId) {
                 openSong(requestedSongId);
+                openedInitialSong = !!currentSong;
             }
         } catch(e) { console.error("Init Error:", e); } 
+
+        const finishInitialNavigation = () => {
+            if(openedInitialSong) return;
+            const savedView = localStorage.getItem('djLastView');
+            if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView);
+            else switchView('home');
+        };
+
+        if(skipInitialLoader) {
+            finishInitialNavigation();
+            return;
+        }
 
         setTimeout(() => {
             const ilt = document.getElementById('initLoadText'); if(ilt) ilt.style.display = 'none'; 
@@ -434,7 +489,7 @@
             setTimeout(() => { 
                 const sp = document.getElementById('splashLoader'); 
                 if(sp) { sp.style.opacity = 0; setTimeout(() => { sp.style.display = 'none'; showHomePoster(); }, 800); }
-                const savedView = localStorage.getItem('djLastView'); if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView); else switchView('home');
+                finishInitialNavigation();
             }, 1500);
         }, 400);
     }
@@ -456,6 +511,8 @@
     function switchView(view) {
         if(audioEl) audioEl.pause(); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         const targetView = document.getElementById(`view-${view}`); if(targetView) targetView.classList.add('active');
+        if(view === 'song' && currentSong) setMusicPageTitle('song', currentSong.filename);
+        else setMusicPageTitle(view);
         
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         if(view === 'home' || view === 'song' || view === 'dj-list') { const ns = document.getElementById('nav-home'); if(ns) ns.classList.add('active'); }
@@ -651,7 +708,7 @@
         document.getElementById('moreSongsTitle').innerText = title;
         if(filterId === 'ALL') currentMoreSongs = [...allSongs].filter(s => s.status === 'APPROVED').sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
         else currentMoreSongs = allSongs.filter(s => s.genreId === filterId && s.status === 'APPROVED');
-        currentMorePage = 1; renderMoreSongsPage(); switchView('more-songs');
+        currentMorePage = 1; renderMoreSongsPage(); switchView('more-songs'); setMusicPageTitle('more-songs', title);
     }
 
     function setMorePage(num) { currentMorePage = num; renderMoreSongsPage(); }
@@ -695,6 +752,7 @@
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
+        setMusicPageTitle('song', currentSong.filename);
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
         document.getElementById('playerMeta').innerText = `${currentSong.uploader || 'FULLKIK'} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
