@@ -115,7 +115,32 @@
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; min-width:1100px;}
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
         .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 150px; min-width: 1280px;}
-        .grid-sensitive { grid-template-columns: 1fr 180px 120px; min-width:700px;}
+        .grid-sensitive { grid-template-columns: 90px 1fr 140px 200px 160px; min-width:900px;}
+
+        .sensitive-page { padding: 35px 34px 60px; }
+        .sensitive-hero { padding-bottom: 34px; border-bottom: 1px solid var(--border-color); margin-bottom: 44px; }
+        .sensitive-hero h1 { margin: 0 0 18px 0; font-size: 34px; line-height: 1; font-weight: 900; letter-spacing: 0; color: var(--text-main); }
+        .sensitive-hero p { margin: 0; color: var(--text-muted); font-size: 15px; font-weight: 600; }
+        .sensitive-card { background: #14141c; border: 1px solid #252536; border-radius: 12px; overflow: hidden; margin-bottom: 32px; }
+        .sensitive-add-card { padding: 34px 36px; }
+        .sensitive-add-card h3 { margin: 0 0 14px 0; font-size: 22px; color: var(--text-main); }
+        .sensitive-label { display: block; margin-bottom: 10px; color: var(--text-muted); font-size: 13px; font-weight: 700; }
+        .sensitive-input { width: min(760px, 100%); box-sizing: border-box; height: 54px; padding: 0 18px; border: 1px solid #262638; border-radius: 8px; background: #07070c; color: white; font-size: 15px; outline: none; }
+        .sensitive-input:focus { border-color: #9d4edd; box-shadow: 0 0 0 2px rgba(157, 78, 221, 0.12); }
+        .sensitive-dash { border-top: 1px dashed #28283a; margin: 40px 0 8px; }
+        .sensitive-add-actions { display: flex; justify-content: flex-end; }
+        .btn-sensitive-add { background: #9b5cf6; color: white; border: none; border-radius: 8px; min-width: 112px; height: 52px; padding: 0 24px; font-size: 16px; font-weight: 800; cursor: pointer; }
+        .btn-sensitive-add:hover { background: #a96cff; }
+        .sensitive-table-title { padding: 28px 36px; font-size: 22px; font-weight: 900; border-bottom: 1px solid #252536; }
+        .sensitive-table .header-row { background: #07070c; color: var(--text-muted); padding: 18px 26px; }
+        .sensitive-table .data-row { padding: 22px 26px; min-height: 42px; }
+        .sensitive-id { color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px; }
+        .sensitive-word { color: var(--text-main); font-weight: 800; font-size: 15px; }
+        .sensitive-status { display: inline-block; padding: 7px 14px; border-radius: 6px; border: 1px solid rgba(52,199,89,0.6); color: #42f37b; background: rgba(52,199,89,0.08); font-weight: 800; }
+        .sensitive-action-area { display: flex; justify-content: flex-end; align-items: center; gap: 18px; }
+        .sensitive-stop { color: var(--text-muted); font-weight: 800; }
+        .sensitive-delete { color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.45); background: rgba(255,107,107,0.08); border-radius: 7px; padding: 8px 14px; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .sensitive-delete:hover { color: white; border-color: var(--danger); background: rgba(255,69,58,0.18); }
 
         .song-cell-info { display: flex; gap: 15px; align-items: center; overflow: hidden; min-width: 0;}
         .song-cell-cover { width: 45px; height: 45px; border-radius: 6px; object-fit: cover; flex-shrink: 0;}
@@ -274,7 +299,7 @@
         <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
         <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
         <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理</button>
-        <button class="nav-item" onclick="switchView('sensitive', '敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
+        <button class="nav-item" onclick="switchView('sensitive', '内容 / 敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
         <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
     </div>
 
@@ -358,19 +383,25 @@
         </div>
     </div>
 
-    <div id="view-sensitive" class="view-section">
-        <div class="dash-header"><h2>敏感词管理</h2><p>添加后将限制注册用户名、修改用户名和 VIP/DJ 名称</p></div>
-        <div class="glass-panel">
-            <div class="filter-bar" style="align-items:flex-end;">
-                <div class="filter-group" style="max-width:420px;">
-                    <label>敏感词</label>
-                    <input type="text" id="sensitiveWordInput" class="input-text" placeholder="例如: djsoda" onkeydown="if(event.key==='Enter') addSensitiveWord()">
-                </div>
-                <button class="btn-primary" onclick="addSensitiveWord()">+ 添加</button>
-            </div>
+    <div id="view-sensitive" class="view-section sensitive-page">
+        <div class="sensitive-hero">
+            <h1>敏感词管理</h1>
+            <p>PRD §5.4 · 共 <span id="sensitiveWordCount">0</span> 个敏感词 · 上传 / 编辑歌曲时自动检测标题</p>
+        </div>
+
+        <div class="sensitive-card sensitive-add-card">
+            <h3>添加敏感词</h3>
+            <label class="sensitive-label">敏感词 *</label>
+            <input type="text" id="sensitiveWordInput" class="sensitive-input" placeholder="输入需要过滤的词..." onkeydown="if(event.key==='Enter') addSensitiveWord()">
+            <div class="sensitive-dash"></div>
+            <div class="sensitive-add-actions"><button class="btn-sensitive-add" onclick="addSensitiveWord()">+ 添加</button></div>
+        </div>
+
+        <div class="sensitive-card sensitive-table">
+            <div class="sensitive-table-title">已有敏感词</div>
             <div class="table-container">
                 <div class="table-inner">
-                    <div class="header-row grid-sensitive"><div>敏感词</div><div>添加时间</div><div style="text-align:right;">操作</div></div>
+                    <div class="header-row grid-sensitive"><div>ID</div><div>敏感词</div><div>状态</div><div>添加时间</div><div style="text-align:right;">操作</div></div>
                     <div id="sensitiveWordList"><div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div></div>
                 </div>
             </div>
@@ -916,17 +947,32 @@
     }
 
     // --- SENSITIVE WORDS ---
+    function formatSensitiveDate(value) {
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return '-';
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+    }
+
     async function loadSensitiveWords() {
         showContentLoader();
         allSensitiveWords = await (await fetch(`${API_URL}/sensitive-words`)).json();
+        document.getElementById('sensitiveWordCount').innerText = allSensitiveWords.length;
         const listDiv = document.getElementById('sensitiveWordList');
         listDiv.innerHTML = '';
-        allSensitiveWords.forEach(item => {
+        allSensitiveWords.forEach((item, index) => {
+            const rowId = `#${String(allSensitiveWords.length - index).padStart(3, '0')}`;
             listDiv.innerHTML += `
                 <div class="data-row grid-sensitive">
-                    <div style="font-weight:bold;">${item.word}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${formatDateSafe(item.timestamp)}</div>
-                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="deleteSensitiveWord('${item.id}')">删除</button></div>
+                    <div class="sensitive-id">${rowId}</div>
+                    <div class="sensitive-word">${item.word}</div>
+                    <div><span class="sensitive-status">启用</span></div>
+                    <div style="color:var(--text-muted); font-size:15px;">${formatSensitiveDate(item.timestamp)}</div>
+                    <div class="sensitive-action-area"><span class="sensitive-stop">停用</span><button class="sensitive-delete" onclick="deleteSensitiveWord('${item.id}')">删除</button></div>
                 </div>`;
         });
         if(!allSensitiveWords.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
