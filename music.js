@@ -110,7 +110,10 @@ const DEFAULT_SETTINGS = {
     maxSongPrice: 200,
     supportWhatsapp: '',
     homePosterUrl: '',
+    homeAnnouncement: '',
+    defaultCoverUrl: '',
     featuredGenreIds: [],
+    categoryDisplayGenreIds: [],
     topNavGenreIds: [],
     hotProducerIds: null,
     referralConfig: { enabled: false, referrerReward: 10, newUserReward: 0 },
@@ -169,6 +172,48 @@ async function addUserNotification(username, notification) {
 
 function normalizeReferralCode(value) {
     return String(value || '').trim().replace(/^@/, '').toLowerCase();
+}
+
+function normalizeSongName(value) {
+    return String(value || '')
+        .replace(/\.[^/.]+$/, '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+}
+
+function parseGenreIds(body = {}) {
+    let ids = [];
+    if(Array.isArray(body.genreIds)) ids = body.genreIds;
+    else if(typeof body.genreIds === 'string') {
+        try {
+            const parsed = JSON.parse(body.genreIds);
+            ids = Array.isArray(parsed) ? parsed : body.genreIds.split(',');
+        } catch(e) {
+            ids = body.genreIds.split(',');
+        }
+    }
+    if(body.genreId) ids.unshift(body.genreId);
+    return [...new Set(ids.map(id => String(id || '').trim()).filter(Boolean))];
+}
+
+async function notifyFollowersOfSong(songId, song) {
+    try {
+        if(!db || !song || !song.uploader || String(song.uploader).toUpperCase() === 'FULLKIK') return;
+        const uploaderDoc = await db.collection('users').doc(String(song.uploader).toLowerCase()).get();
+        if(!uploaderDoc.exists) return;
+        const uploader = uploaderDoc.data();
+        const followers = Array.isArray(uploader.followers) ? uploader.followers : [];
+        const uploaderName = uploader.djName || uploader.username || song.uploader;
+        await Promise.all(followers.map(follower => addUserNotification(follower, createNotification(
+            'follow-song',
+            `您关注的 ${uploaderName} 发布了新歌曲《${song.filename}》`,
+            '',
+            { songId, uploader: uploaderName }
+        ))));
+    } catch(e) {
+        console.error('Follower Notify Error:', e.message);
+    }
 }
 
 async function calculateUserEarnings(username) {
@@ -1085,9 +1130,31 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
     const uploader = reqBody.uploader || 'FULLKIK';
     const isVipUpload = reqBody.status === 'PENDING' || (uploader && !String(uploader).toUpperCase().startsWith('FULLKIK'));
+    const title = reqBody.title || originalName;
+    const genreIds = parseGenreIds(reqBody);
 
     if(isVipUpload && price > maxSongPrice) {
         throw new Error(`歌曲钻石价格不能超过 ${maxSongPrice}`);
+    }
+
+    const snapshot = await db.collection('songs').get();
+    const normalizedTitle = normalizeSongName(title);
+    const normalizedOriginal = normalizeSongName(originalName);
+    const incomingSize = fileBuffer ? fileBuffer.length : 0;
+    const incomingUrl = String(reqBody.url || '').trim();
+    const duplicateDoc = snapshot.docs.find(doc => {
+        const song = doc.data();
+        const existingTitle = normalizeSongName(song.filename);
+        const existingOriginal = normalizeSongName(song.originalName || song.filename);
+        const sameTitle = normalizedTitle && existingTitle === normalizedTitle;
+        const sameFile = incomingSize && parseInt(song.size) === incomingSize && existingOriginal === normalizedOriginal;
+        const sameUrl = incomingUrl && song.filepath === incomingUrl;
+        return sameTitle || sameFile || sameUrl;
+    });
+    if(duplicateDoc) {
+        const err = new Error('此歌曲已存在');
+        err.status = 409;
+        throw err;
     }
 
     let url = '';
@@ -1098,14 +1165,13 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         url = reqBody.url;
     }
 
-    let coverUrl = DEFAULT_COVER; 
+    let coverUrl = settings.defaultCoverUrl || DEFAULT_COVER; 
     if(reqBody.coverBase64 && !reqBody.coverBase64.includes('<svg')) {
         coverUrl = await uploadToCloudinaryBase64(reqBody.coverBase64, 'dj_covers');
     }
 
-    const snapshot = await db.collection('songs').get();
     const newSong = {
-        filename: reqBody.title || originalName, filepath: url, coverUrl: coverUrl, genreId: reqBody.genreId || 'none',
+        filename: title, originalName, filepath: url, coverUrl: coverUrl, genreId: genreIds[0] || 'none', genreIds,
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
@@ -1118,18 +1184,21 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
             { songId: docRef.id, status: newSong.status }
         ));
     }
+    if(newSong.status === 'APPROVED') {
+        await notifyFollowersOfSong(docRef.id, newSong);
+    }
     return { id: docRef.id, ...newSong };
 }
 
 app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
     try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
-    catch (e) { res.status(500).send(e.message); }
+    catch (e) { res.status(e.status || 500).send(e.message); }
 });
 
 app.post('/api/transload', async (req, res) => {
     try {
         res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
-    } catch (e) { res.status(400).send(e.message); }
+    } catch (e) { res.status(e.status || 400).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
@@ -1142,6 +1211,11 @@ app.put('/api/songs/:id/settings', async (req, res) => {
         if (req.body.newPrice !== undefined) updates.price = parseInt(req.body.newPrice) || 0;
         if (req.body.status) updates.status = req.body.status; 
         if (req.body.genreId) updates.genreId = req.body.genreId;
+        if (req.body.genreIds !== undefined) {
+            const genreIds = parseGenreIds(req.body);
+            updates.genreIds = genreIds;
+            updates.genreId = genreIds[0] || updates.genreId || oldSong.genreId || 'none';
+        }
         if (req.body.rejectReason !== undefined) updates.rejectReason = req.body.rejectReason;
         if (req.body.coverBase64 && !req.body.coverBase64.includes('<svg')) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_covers');
         await songRef.update(updates);
@@ -1177,6 +1251,9 @@ app.put('/api/songs/:id/settings', async (req, res) => {
                     ));
                 }
             }
+            if(req.body.status === 'APPROVED') {
+                await notifyFollowersOfSong(req.params.id, { ...oldSong, ...updates });
+            }
         }
 
         res.send('Updated');
@@ -1200,6 +1277,7 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.heroTitle !== undefined) updates.heroTitle = req.body.heroTitle;
         if (req.body.homeMainTitle !== undefined) updates.homeMainTitle = String(req.body.homeMainTitle || '').trim() || DEFAULT_SETTINGS.homeMainTitle;
         if (req.body.homeSubtitle !== undefined) updates.homeSubtitle = String(req.body.homeSubtitle || '').trim() || DEFAULT_SETTINGS.homeSubtitle;
+        if (req.body.homeAnnouncement !== undefined) updates.homeAnnouncement = String(req.body.homeAnnouncement || '').trim();
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         if (req.body.maxSongPrice !== undefined) {
             let maxSongPrice = parseInt(req.body.maxSongPrice);
@@ -1209,12 +1287,17 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.supportWhatsapp !== undefined) updates.supportWhatsapp = String(req.body.supportWhatsapp || '').trim();
         if (req.body.featuredGenreIds !== undefined) {
             updates.featuredGenreIds = Array.isArray(req.body.featuredGenreIds)
-                ? req.body.featuredGenreIds.map(id => String(id)).filter(Boolean).slice(0, 10)
+                ? req.body.featuredGenreIds.map(id => String(id)).filter(Boolean).slice(0, 6)
+                : [];
+        }
+        if (req.body.categoryDisplayGenreIds !== undefined) {
+            updates.categoryDisplayGenreIds = Array.isArray(req.body.categoryDisplayGenreIds)
+                ? req.body.categoryDisplayGenreIds.map(id => String(id)).filter(Boolean).slice(0, 3)
                 : [];
         }
         if (req.body.topNavGenreIds !== undefined) {
             updates.topNavGenreIds = Array.isArray(req.body.topNavGenreIds)
-                ? req.body.topNavGenreIds.map(id => String(id)).filter(Boolean).slice(0, 4)
+                ? req.body.topNavGenreIds.map(id => String(id)).filter(Boolean).slice(0, 3)
                 : [];
         }
         if (req.body.hotProducerIds !== undefined) {
@@ -1252,8 +1335,18 @@ app.put('/api/settings', async (req, res) => {
             }
         }
 
+        if (req.body.defaultCoverBase64 !== undefined) {
+            if(req.body.defaultCoverBase64 && req.body.defaultCoverBase64.startsWith('data:image')) {
+                updates.defaultCoverUrl = await uploadToCloudinaryBase64(req.body.defaultCoverBase64, 'dj_default_covers');
+            } else if(req.body.defaultCoverBase64) {
+                updates.defaultCoverUrl = req.body.defaultCoverBase64;
+            } else {
+                updates.defaultCoverUrl = '';
+            }
+        }
+
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
