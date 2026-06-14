@@ -139,7 +139,7 @@
         const contact = document.getElementById('loginContact').value, password = document.getElementById('loginPass').value;
         if(!contact || !password) return showToast(dict[currentLang].errFill, true);
         const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, password }) });
-        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); window.location.href = '/music.html'; } 
+        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/music.html'; } 
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
@@ -149,6 +149,7 @@
         const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, username, password: pass, ref: referralCode }) });
         if(res.ok) { 
             localStorage.setItem('djUsername', (await res.json()).username); 
+            sessionStorage.setItem('fullkikShowWelcome', '1');
             document.getElementById('successModal').style.display = 'flex';
             setTimeout(() => window.location.href = '/music.html', 2000); 
         } else { showToast(await res.text(), true); }
