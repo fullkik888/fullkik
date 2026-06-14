@@ -117,6 +117,16 @@
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
         .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 150px; min-width: 1280px;}
         .grid-sensitive { grid-template-columns: 90px 1fr 140px 200px 160px; min-width:900px;}
+        .grid-referrals { grid-template-columns: 80px 1.3fr 1.6fr 1.3fr 90px 170px; min-width:900px; }
+        .grid-withdraw-pending { grid-template-columns: 1.3fr 100px 80px 160px 160px; min-width:820px; }
+        .grid-withdraw-done { grid-template-columns: 1.3fr 100px 80px 120px 160px; min-width:820px; }
+        .flow-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:12px; padding:22px 24px; margin-bottom:24px; }
+        .flow-steps { display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; color:var(--text-muted); }
+        .flow-step { border:1px solid var(--border-color); border-radius:10px; padding:14px; min-height:78px; background:rgba(255,255,255,0.02); }
+        .flow-step strong { display:inline-block; border:1px solid var(--accent-light); color:var(--accent-light); border-radius:6px; padding:4px 8px; margin-bottom:8px; }
+        .settings-inline-grid { display:grid; grid-template-columns:1fr 1fr 220px; gap:16px; align-items:end; }
+        .toggle-line { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-weight:800; }
+        .toggle-line input { width:18px; height:18px; accent-color:var(--accent-light); }
 
         .sensitive-page { padding: 35px 34px 60px; }
         .sensitive-hero { padding-bottom: 34px; border-bottom: 1px solid var(--border-color); margin-bottom: 44px; }
@@ -318,6 +328,7 @@
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
             .home-title-panel { grid-template-columns:1fr; align-items:stretch; }
+            .settings-inline-grid, .flow-steps { grid-template-columns:1fr; }
             .hot-producer-layout { grid-template-columns:1fr; }
             .settings-card, .sensitive-card, .glass-panel { border-radius:10px; }
             .settings-card { padding:24px 18px; }
@@ -403,7 +414,7 @@
     <div class="nav-section">
         <div class="nav-title">用户</div>
         <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
-        <button class="nav-item" onclick="switchView('wip', '推荐配置')" id="nav-wip5">◇ 推荐配置</button>
+        <button class="nav-item" onclick="switchView('referrals', '用户 / 推荐配置')" id="nav-referrals">◇ 推荐配置</button>
         <button class="nav-item" onclick="switchView('activity', '活动管理')" id="nav-activity">⚡ 活动管理</button>
         <button class="nav-item" onclick="switchView('downloads', '下载监控')" id="nav-downloads">⎋ 下载监控</button>
     </div>
@@ -415,7 +426,7 @@
         <button class="nav-item" onclick="switchView('wip', '充值套餐')" id="nav-wip-topup">▤ 充值套餐</button>
         <button class="nav-item" onclick="switchView('wip', '支付方式')" id="nav-wip-pay">▤ 支付方式</button>
         <button class="nav-item" onclick="switchView('wip', '优惠码')" id="nav-wip-promo">★ 优惠码</button>
-        <button class="nav-item" onclick="switchView('wip', '提现审批')" id="nav-wip-wd">↗ 提现审批</button>
+        <button class="nav-item" onclick="switchView('withdrawals', '财务 / 提现审批')" id="nav-withdrawals">↗ 提现审批</button>
     </div>
 
     <div class="nav-section">
@@ -440,7 +451,7 @@
             <div class="stat-card"><div class="stat-title">总用户数</div><div class="stat-val" id="stat-total-users">0</div><div class="stat-sub" id="stat-vip-users">0 VIP · 0 普通</div></div>
             <div class="stat-card highlight"><div class="stat-title">已上架歌曲</div><div class="stat-val" style="color: var(--accent-light);" id="stat-total-songs">0</div><div class="stat-sub" id="stat-pend-sub">0 首待审</div></div>
             <div class="stat-card"><div class="stat-title">平台总收入 (💎 消耗)</div><div class="stat-val" id="stat-total-rev">0 <span style="font-size:16px; color:var(--token);">💎</span></div><div class="stat-sub" style="color: var(--token);">VIP 已分成 0 💎</div></div>
-            <div class="stat-card"><div class="stat-title">待审提现</div><div class="stat-val" style="color: #ffcc00;">0</div><div class="stat-sub">等待审核</div></div>
+            <div class="stat-card"><div class="stat-title">待审提现</div><div class="stat-val" style="color: #ffcc00;" id="stat-withdraw-pending">0</div><div class="stat-sub" id="stat-withdraw-sub">等待审核</div></div>
         </div>
         <div class="ops-panel">
             <div class="ops-header">今日运营 <span style="color:#666; font-weight:normal; margin-left:10px;">/ 对比昨日</span></div>
@@ -471,6 +482,17 @@
                 <input type="text" id="homeSubtitleInput" class="input-text" placeholder="专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品">
             </div>
             <button class="btn-primary" style="height:38px;" onclick="saveHomeHeroText()">发布</button>
+        </div>
+        <div class="glass-panel featured-genre-panel">
+            <div class="panel-header" style="padding:0; border:none;">
+                <div>
+                    <div style="font-size:16px; font-weight:900;">顶部导航栏</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选要显示在 music.html 顶部导航栏的分类，最多 4 个。</div>
+                </div>
+                <button class="btn-primary" onclick="saveTopNavGenres()">发布</button>
+            </div>
+            <div class="featured-genre-picker" id="topNavGenrePicker"></div>
+            <div style="font-size:12px; color:var(--text-muted);">已选 <span id="topNavGenreCount">0</span> / 4</div>
         </div>
         <div class="glass-panel" style="padding: 20px;">
             <div style="display:flex; gap: 20px; flex-wrap: wrap;" id="banner-slots"></div>
@@ -814,6 +836,62 @@
         </div>
     </div>
 
+    <div id="view-referrals" class="view-section">
+        <div class="dash-header"><h2>推荐奖励配置</h2><p>用户分享歌曲 / DJ / VIP / Producer 链接，新用户通过链接注册后给推荐人奖励。</p></div>
+        <div class="settings-card">
+            <h3>奖励设置</h3>
+            <p>启用后，注册页会读取分享链接里的 ref 参数。成功注册后推荐人获得钻石奖励并记录到下方统计。</p>
+            <div class="settings-inline-grid">
+                <div>
+                    <label class="settings-label">推荐人奖励 (💎)</label>
+                    <input type="number" id="referrerRewardInput" class="settings-input" min="0" value="10" style="width:100%;">
+                </div>
+                <div>
+                    <label class="settings-label">新用户奖励 (💎)</label>
+                    <input type="number" id="newUserRewardInput" class="settings-input" min="0" value="0" style="width:100%;">
+                </div>
+                <label class="toggle-line"><input type="checkbox" id="referralEnabledInput"> 启用推荐计划</label>
+            </div>
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-primary" onclick="saveReferralConfig()">保存配置</button></div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">推荐统计 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">共 <span id="referralRecordCount">0</span> 次成功推荐</span></div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-referrals"><div>排名</div><div>用户</div><div>邮箱</div><div>注册用户</div><div>奖励</div><div>时间</div></div>
+                <div id="referralRecordList"></div>
+            </div></div>
+        </div>
+    </div>
+
+    <div id="view-withdrawals" class="view-section">
+        <div class="dash-header"><h2>提现审批</h2><p>共 <span id="withdrawPendingCount">0</span> 条待审 · <span id="withdrawProcessingCount">0</span> 条处理中</p></div>
+        <div class="flow-card">
+            <div class="flow-steps">
+                <div class="flow-step"><strong>待审</strong><div>VIP 提交后默认进入待审队列。</div></div>
+                <div class="flow-step"><strong>已批准</strong><div>钻石已从可提现额度锁定，等待人工转账。</div></div>
+                <div class="flow-step"><strong>处理中</strong><div>线下 / 银行转账中。</div></div>
+                <div class="flow-step"><strong>已完成</strong><div>最终状态，计入完结记录。</div></div>
+                <div class="flow-step"><strong style="border-color:var(--danger); color:var(--danger);">已拒绝</strong><div>钻石退回可提现余额，并通知用户。</div></div>
+            </div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">待审队列 <button class="btn-text-action" onclick="loadWithdrawals()">刷新</button></div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-withdraw-pending"><div>VIP</div><div>金额</div><div>币种</div><div>申请时间</div><div style="text-align:right;">操作</div></div>
+                <div id="withdrawPendingList"></div>
+            </div></div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">已完结记录 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">共 <span id="withdrawDoneCount">0</span> 条</span></div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-withdraw-done"><div>VIP</div><div>金额</div><div>币种</div><div>状态</div><div>完成时间</div></div>
+                <div id="withdrawDoneList"></div>
+            </div></div>
+            <div class="pagination-bar" id="withdrawPagination"><span class="page-info">1 / 1</span></div>
+        </div>
+    </div>
+
     <div id="view-user-detail" class="view-section">
         <div class="dash-header" style="justify-content:space-between; align-items:flex-start;">
             <div><h2 id="det-u-name" style="margin:0; font-size:28px;">Username</h2><p id="det-u-email" style="margin-top:5px;"></p></div>
@@ -973,7 +1051,7 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [];
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [], allWithdrawals = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '';
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null; 
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
@@ -1061,6 +1139,8 @@
         if(viewId === 'categories') renderFeaturedGenreSettings();
         if(viewId === 'bulk-upload') renderManagerBulkList();
         if(viewId === 'hot-producers') renderHotProducerManager();
+        if(viewId === 'referrals') renderReferralConfig();
+        if(viewId === 'withdrawals') loadWithdrawals();
     }
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
@@ -1085,7 +1165,8 @@
                 renderHomePoster();
             }
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); allReports = await (await fetch(`${API_URL}/reports`)).json();
-            buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
+            try { allWithdrawals = await (await fetch(`${API_URL}/withdrawals`)).json(); } catch(e) { allWithdrawals = []; }
+            buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); renderTopNavGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
             updateReportBadge();
             if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 30000);
             const savedView = localStorage.getItem('fkAdminLastView');
@@ -1162,6 +1243,177 @@
             renderFeaturedGenreSettings();
             hideGlobalLoader();
             showToast("专区展示已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    function getTopNavGenreIds() {
+        return Array.isArray(globalSettings.topNavGenreIds) ? globalSettings.topNavGenreIds : [];
+    }
+
+    function renderTopNavGenreSettings() {
+        const picker = document.getElementById('topNavGenrePicker');
+        const count = document.getElementById('topNavGenreCount');
+        if(!picker || !count) return;
+        const selected = getTopNavGenreIds();
+        count.innerText = selected.length;
+        picker.innerHTML = '';
+        allGenres.filter(g => g.status !== 'DISABLED').forEach(g => {
+            const checked = selected.includes(g.id);
+            picker.innerHTML += `
+                <label class="featured-genre-choice ${checked ? 'active' : ''}">
+                    <input type="checkbox" value="${g.id}" ${checked ? 'checked' : ''} onchange="toggleTopNavGenre(this)">
+                    <span class="truncate">${escapeHtml(g.name)}</span>
+                </label>`;
+        });
+        if(!picker.innerHTML) picker.innerHTML = `<div style="color:var(--text-muted); font-size:13px;">暂无可展示分类</div>`;
+    }
+
+    function toggleTopNavGenre(input) {
+        let selected = Array.from(document.querySelectorAll('#topNavGenrePicker input:checked')).map(cb => cb.value);
+        if(selected.length > 4) {
+            input.checked = false;
+            showToast("顶部导航栏最多 4 个分类", true);
+            selected = selected.filter(id => id !== input.value);
+        }
+        globalSettings.topNavGenreIds = selected;
+        renderTopNavGenreSettings();
+    }
+
+    async function saveTopNavGenres() {
+        const topNavGenreIds = Array.from(document.querySelectorAll('#topNavGenrePicker input:checked')).map(cb => cb.value).slice(0, 4);
+        showGlobalLoader("发布顶部导航栏...");
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ topNavGenreIds }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderTopNavGenreSettings();
+            hideGlobalLoader();
+            showToast("顶部导航栏已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    function renderReferralConfig() {
+        const cfg = globalSettings.referralConfig || { enabled: false, referrerReward: 10, newUserReward: 0 };
+        const enabled = document.getElementById('referralEnabledInput');
+        const refReward = document.getElementById('referrerRewardInput');
+        const newReward = document.getElementById('newUserRewardInput');
+        if(enabled) enabled.checked = !!cfg.enabled;
+        if(refReward) refReward.value = cfg.referrerReward ?? 10;
+        if(newReward) newReward.value = cfg.newUserReward ?? 0;
+        renderReferralRecords();
+    }
+
+    function renderReferralRecords() {
+        const list = document.getElementById('referralRecordList');
+        const count = document.getElementById('referralRecordCount');
+        if(!list) return;
+        const records = Array.isArray(globalSettings.referralRecords) ? globalSettings.referralRecords : [];
+        if(count) count.innerText = records.length;
+        if(!records.length) {
+            list.innerHTML = `<div style="padding:34px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
+            return;
+        }
+        list.innerHTML = records.map((r, index) => `
+            <div class="data-row grid-referrals">
+                <div>${index + 1}</div>
+                <div class="truncate">${escapeHtml(r.sharer || '-')}</div>
+                <div class="truncate">${escapeHtml(r.sharerEmail || '-')}</div>
+                <div class="truncate">${escapeHtml(r.newUser || '-')}</div>
+                <div style="color:var(--token); font-weight:900;">💎 ${r.reward || 0}</div>
+                <div>${r.timestamp ? new Date(r.timestamp).toLocaleString() : '-'}</div>
+            </div>
+        `).join('');
+    }
+
+    async function saveReferralConfig() {
+        const referralConfig = {
+            enabled: document.getElementById('referralEnabledInput').checked,
+            referrerReward: parseInt(document.getElementById('referrerRewardInput').value) || 10,
+            newUserReward: parseInt(document.getElementById('newUserRewardInput').value) || 0
+        };
+        showGlobalLoader("保存推荐配置...");
+        const res = await fetch(`${API_URL}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ referralConfig }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderReferralConfig();
+            hideGlobalLoader();
+            showToast("推荐配置已保存");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+
+    async function loadWithdrawals() {
+        showContentLoader();
+        try {
+            allWithdrawals = await (await fetch(`${API_URL}/withdrawals`)).json();
+        } catch(e) { allWithdrawals = []; }
+        renderWithdrawals();
+        hideContentLoader();
+    }
+
+    function getWithdrawalStatusLabel(status) {
+        const map = { PENDING: '待审', APPROVED: '已批准', PROCESSING: '处理中', COMPLETED: '已完成', REJECTED: '已拒绝' };
+        return map[status] || status || '待审';
+    }
+
+    function renderWithdrawals() {
+        const pendingList = document.getElementById('withdrawPendingList');
+        const doneList = document.getElementById('withdrawDoneList');
+        if(!pendingList || !doneList) return;
+        const pending = allWithdrawals.filter(w => ['PENDING', 'APPROVED', 'PROCESSING'].includes(w.status || 'PENDING'));
+        const done = allWithdrawals.filter(w => ['COMPLETED', 'REJECTED'].includes(w.status));
+        document.getElementById('withdrawPendingCount').innerText = pending.filter(w => (w.status || 'PENDING') === 'PENDING').length;
+        document.getElementById('withdrawProcessingCount').innerText = pending.filter(w => ['APPROVED', 'PROCESSING'].includes(w.status)).length;
+        document.getElementById('withdrawDoneCount').innerText = done.length;
+        pendingList.innerHTML = pending.map(w => `
+            <div class="data-row grid-withdraw-pending">
+                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div></div>
+                <div style="color:var(--token); font-weight:900;">💎 ${w.amount || 0}</div>
+                <div>${w.currency || 'RM'}</div>
+                <div>${w.createdAt ? new Date(w.createdAt).toLocaleString() : '-'}</div>
+                <div style="display:flex; gap:8px; justify-content:flex-end;">
+                    ${(w.status || 'PENDING') === 'PENDING' ? `<button class="btn-text-action success" onclick="updateWithdrawalStatus('${w.username}', '${w.id}', 'APPROVED')">批准</button>` : ''}
+                    ${w.status === 'APPROVED' ? `<button class="btn-text-action success" onclick="updateWithdrawalStatus('${w.username}', '${w.id}', 'PROCESSING')">开始处理</button>` : ''}
+                    ${w.status === 'PROCESSING' ? `<button class="btn-text-action success" onclick="updateWithdrawalStatus('${w.username}', '${w.id}', 'COMPLETED')">确认完成</button>` : ''}
+                    <button class="btn-text-action danger" onclick="updateWithdrawalStatus('${w.username}', '${w.id}', 'REJECTED')">拒绝</button>
+                </div>
+            </div>
+        `).join('');
+        if(!pending.length) pendingList.innerHTML = `<div style="padding:34px; text-align:center; color:var(--text-muted);">暂无待审提现</div>`;
+        doneList.innerHTML = done.slice(0, 20).map(w => `
+            <div class="data-row grid-withdraw-done">
+                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div></div>
+                <div style="color:var(--token); font-weight:900;">💎 ${w.amount || 0}</div>
+                <div>${w.currency || 'RM'}</div>
+                <div><span class="badge-status-pill ${w.status === 'REJECTED' ? 'status-rejected' : 'status-approved'}">${getWithdrawalStatusLabel(w.status)}</span></div>
+                <div>${(w.completedAt || w.updatedAt) ? new Date(w.completedAt || w.updatedAt).toLocaleString() : '-'}</div>
+            </div>
+        `).join('');
+        if(!done.length) doneList.innerHTML = `<div style="padding:34px; text-align:center; color:var(--text-muted);">暂无完结记录</div>`;
+        const pages = Math.max(1, Math.ceil(done.length / 20));
+        document.getElementById('withdrawPagination').innerHTML = `<button class="page-btn" disabled>← 上一页</button><span class="page-info">1 / ${pages}</span><button class="page-btn" ${pages <= 1 ? 'disabled' : ''}>下一页 →</button><span>每页</span><select class="page-size-sel"><option>20</option></select><span>条</span>`;
+    }
+
+    async function updateWithdrawalStatus(username, id, status) {
+        const adminNote = status === 'REJECTED' ? prompt('拒绝原因（会通知用户）', '未符合提现条件') : '';
+        if(status === 'REJECTED' && adminNote === null) return;
+        showGlobalLoader("更新提现状态...");
+        const res = await fetch(`${API_URL}/withdrawals/${encodeURIComponent(username)}/${encodeURIComponent(id)}/status`, {
+            method:'PUT',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ status, adminNote })
+        });
+        if(res.ok) {
+            await loadWithdrawals();
+            hideGlobalLoader();
+            showToast("提现状态已更新");
         } else {
             hideGlobalLoader();
             showToast(await res.text(), true);
@@ -1475,7 +1727,7 @@
 
     async function refreshPendingIndicators() {
         try {
-            const [songsRes, reportsRes] = await Promise.all([fetch(`${API_URL}/songs`), fetch(`${API_URL}/reports`)]);
+            const [songsRes, reportsRes, withdrawRes] = await Promise.all([fetch(`${API_URL}/songs`), fetch(`${API_URL}/reports`), fetch(`${API_URL}/withdrawals`)]);
             if(songsRes.ok) {
                 allSongs = await songsRes.json();
                 updatePendingBadge();
@@ -1483,6 +1735,10 @@
             if(reportsRes.ok) {
                 allReports = await reportsRes.json();
                 updateReportBadge();
+            }
+            if(withdrawRes.ok) {
+                allWithdrawals = await withdrawRes.json();
+                buildDashboardStats();
             }
         } catch(e) {}
     }
@@ -1746,11 +2002,14 @@
         const usersToday = allUsers.filter(u => u.createdAt && u.createdAt.startsWith(todayStr)).length;
         const songsToday = allSongs.filter(s => s.uploadTime && s.uploadTime.startsWith(todayStr)).length;
         const pends = allSongs.filter(s => s.status === 'PENDING').length;
+        const pendingWithdrawals = (allWithdrawals || []).filter(w => (w.status || 'PENDING') === 'PENDING').length;
 
         document.getElementById('stat-total-users').innerText = totalUsers; document.getElementById('stat-vip-users').innerText = `${vipUsers} VIP · ${totalUsers - vipUsers} 普通`;
         document.getElementById('stat-total-songs').innerText = allSongs.length; document.getElementById('totalSongsText').innerText = allSongs.length;
         document.getElementById('stat-pend-sub').innerText = `${pends} 首待审`;
         document.getElementById('stat-total-rev').innerHTML = `${totalRev} <span style="font-size:16px; color:var(--token);">💎</span>`;
+        document.getElementById('stat-withdraw-pending').innerText = pendingWithdrawals;
+        document.getElementById('stat-withdraw-sub').innerText = pendingWithdrawals ? `${pendingWithdrawals} 条等待审核` : '等待审核';
         
         document.getElementById('ops-orders').innerText = ordersCount; document.getElementById('ops-success').innerText = ordersCount;
         document.getElementById('ops-rev-rm').innerText = totalRev; document.getElementById('ops-users-today').innerText = usersToday;
