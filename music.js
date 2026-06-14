@@ -90,6 +90,8 @@ app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); }
 app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
+app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
 async function logEvent(type, message) { 
     try { 
@@ -109,7 +111,10 @@ const DEFAULT_SETTINGS = {
     supportWhatsapp: '',
     homePosterUrl: '',
     featuredGenreIds: [],
-    hotProducerIds: null
+    topNavGenreIds: [],
+    hotProducerIds: null,
+    referralConfig: { enabled: false, referrerReward: 10, newUserReward: 0 },
+    referralRecords: []
 };
 
 async function getGlobalSettings() {
@@ -134,6 +139,80 @@ async function logAdminAction(message, meta = {}) {
     } catch(e) {
         console.error("Logging Error:", e);
     }
+}
+
+function createNotification(type, title, message, meta = {}) {
+    return {
+        id: 'NT' + Date.now() + Math.random().toString(36).substring(2, 7).toUpperCase(),
+        type,
+        title,
+        message,
+        meta,
+        read: false,
+        timestamp: new Date().toISOString()
+    };
+}
+
+async function addUserNotification(username, notification) {
+    try {
+        if(!db || !username) return;
+        const ref = db.collection('users').doc(String(username).toLowerCase());
+        const doc = await ref.get();
+        if(!doc.exists) return;
+        const notifications = doc.data().notifications || [];
+        notifications.unshift(notification);
+        await ref.update({ notifications: notifications.slice(0, 100) });
+    } catch(e) {
+        console.error('Notification Error:', e.message);
+    }
+}
+
+function normalizeReferralCode(value) {
+    return String(value || '').trim().replace(/^@/, '').toLowerCase();
+}
+
+async function calculateUserEarnings(username) {
+    const target = String(username || '').toLowerCase();
+    const usersSnap = await db.collection('users').get();
+    let total = 0;
+    let favoriteCount = 0;
+    usersSnap.docs.forEach(doc => {
+        const user = doc.data();
+        (user.purchases || []).forEach(p => {
+            if(String(p.uploader || '').toLowerCase() === target) {
+                total += parseInt(p.tokensSpent) || 0;
+            }
+        });
+        (user.favorites || []).forEach(songId => {
+            if(songId) favoriteCount += 0;
+        });
+    });
+
+    const userDoc = await db.collection('users').doc(target).get();
+    const withdrawals = userDoc.exists ? (userDoc.data().withdrawals || []) : [];
+    const locked = withdrawals
+        .filter(w => w.status !== 'REJECTED')
+        .reduce((sum, w) => sum + (parseInt(w.amount) || 0), 0);
+
+    return { total, locked, balance: Math.max(total - locked, 0), withdrawals };
+}
+
+async function collectWithdrawals() {
+    const usersSnap = await db.collection('users').get();
+    const rows = [];
+    usersSnap.docs.forEach(doc => {
+        const user = doc.data();
+        (user.withdrawals || []).forEach(w => {
+            rows.push({
+                ...w,
+                username: user.username || doc.id,
+                email: user.email || user.contact || '-',
+                phone: user.phone || '-',
+                wechat: user.wechat || '-'
+            });
+        });
+    });
+    return rows.sort((a,b) => new Date(b.createdAt || b.completedAt || 0) - new Date(a.createdAt || a.completedAt || 0));
 }
 
 /**
@@ -217,6 +296,7 @@ app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
         const { contact, username, password } = req.body;
+        const referredBy = normalizeReferralCode(req.body.ref || req.body.referrer || req.body.referredBy);
         
         // SENSITIVE WORD CHECK
         if (await containsSensitiveWord(username)) {
@@ -239,14 +319,60 @@ app.post('/api/register', async (req, res) => {
         }
 
         const isEmail = contact.includes('@');
-        await userRef.set({ 
+        const userData = { 
             username, contact, password, 
             email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
             tokens: startTokens, profilePic: '', 
             purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
+            notifications: [], withdrawals: [], referredBy: referredBy || '',
             role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, 
             status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
+        };
+        await userRef.set({ 
+            ...userData
         });
+
+        const settings = await getGlobalSettings();
+        const refConfig = settings.referralConfig || DEFAULT_SETTINGS.referralConfig;
+        if(refConfig.enabled && referredBy && referredBy !== username.toLowerCase()) {
+            const referrerRef = db.collection('users').doc(referredBy);
+            const referrerDoc = await referrerRef.get();
+            if(referrerDoc.exists) {
+                const referrer = referrerDoc.data();
+                const reward = Math.max(parseInt(refConfig.referrerReward) || 10, 0);
+                if(reward > 0) {
+                    await referrerRef.update({ tokens: admin.firestore.FieldValue.increment(reward) });
+                    await addUserNotification(referrer.username || referredBy, createNotification(
+                        'referral',
+                        `推荐人物获得 - ${reward}`,
+                        `${username} 通过你的分享链接注册，奖励 ${reward} 钻石`,
+                        { reward, newUser: username }
+                    ));
+                }
+                const newUserReward = Math.max(parseInt(refConfig.newUserReward) || 0, 0);
+                if(newUserReward > 0) {
+                    await userRef.update({ tokens: admin.firestore.FieldValue.increment(newUserReward) });
+                    await addUserNotification(username, createNotification(
+                        'referral',
+                        `推荐注册奖励 - ${newUserReward}`,
+                        `你通过分享链接注册，获得 ${newUserReward} 钻石`,
+                        { reward: newUserReward, referrer: referrer.username || referredBy }
+                    ));
+                }
+                const record = {
+                    id: 'RF' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase(),
+                    sharer: referrer.username || referredBy,
+                    sharerEmail: referrer.email || referrer.contact || '-',
+                    newUser: username,
+                    newUserContact: contact,
+                    reward,
+                    timestamp: new Date().toISOString()
+                };
+                const records = Array.isArray(settings.referralRecords) ? settings.referralRecords : [];
+                await db.collection('settings').doc('global').set({ referralRecords: [record, ...records].slice(0, 300) }, { merge: true });
+            }
+        }
+
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         res.json({ success: true, username });
     } catch (e) { 
@@ -280,6 +406,8 @@ app.get('/api/users/:username', async (req, res) => {
             let data = doc.data(); 
             delete data.password;
             if(!data.playlists) data.playlists = [];
+            if(!data.notifications) data.notifications = [];
+            if(!data.withdrawals) data.withdrawals = [];
             res.json(data);
         } else res.status(404).send('User not found');
     } catch (e) {
@@ -293,6 +421,8 @@ app.get('/api/all-users', async (req, res) => {
             let data = d.data(); 
             delete data.password; 
             if(!data.playlists) data.playlists = [];
+            if(!data.notifications) data.notifications = [];
+            if(!data.withdrawals) data.withdrawals = [];
             return data;
         });
         res.json(users); 
@@ -432,20 +562,90 @@ app.post('/api/users/:username/favorites', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
+app.get('/api/users/:username/notifications', async (req, res) => {
+    try {
+        const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
+        if(!doc.exists) return res.status(404).send('User not found');
+        res.json((doc.data().notifications || []).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    } catch(e) { res.status(500).json([]); }
+});
+
+app.put('/api/users/:username/notifications/read', async (req, res) => {
+    try {
+        const ref = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await ref.get();
+        if(!doc.exists) return res.status(404).send('User not found');
+        const notifications = (doc.data().notifications || []).map(n => ({ ...n, read: true }));
+        await ref.update({ notifications });
+        res.json({ success: true, notifications });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/users/:username/withdrawals', async (req, res) => {
+    try {
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).send('User not found');
+        const earnings = await calculateUserEarnings(req.params.username);
+        res.json({
+            totalEarned: earnings.total,
+            locked: earnings.locked,
+            balance: earnings.balance,
+            withdrawals: earnings.withdrawals.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+        });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/users/:username/withdrawals', async (req, res) => {
+    try {
+        const amount = parseInt(req.body.amount);
+        if(Number.isNaN(amount) || amount < 1) return res.status(400).send('Amount must be at least 1');
+
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).send('User not found');
+
+        const earnings = await calculateUserEarnings(req.params.username);
+        if(amount > earnings.balance) return res.status(400).send('Amount exceeds available balance');
+
+        const user = doc.data();
+        const withdrawals = user.withdrawals || [];
+        const record = {
+            id: 'WD' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            amount,
+            currency: 'RM',
+            status: 'PENDING',
+            createdAt: new Date().toISOString(),
+            note: req.body.note || ''
+        };
+        withdrawals.unshift(record);
+        await userRef.update({ withdrawals });
+        await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 钻石，等待审核`, { amount }));
+        res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
-        const newTokens = (user.tokens || 0) + req.body.amount; 
+        const topupAmount = parseInt(req.body.amount) || 0;
+        const newTokens = (user.tokens || 0) + topupAmount; 
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
+        topups.push({ amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
+        await addUserNotification(req.params.username, createNotification(
+            'topup',
+            `成功充值 - ${topupAmount}`,
+            `充值 ${req.body.currency || 'RMB'} ${req.body.price || 0}，获得 ${topupAmount} 钻石`,
+            { amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB' }
+        ));
         
         await db.collection('orders').add({
             user: req.params.username, email: user.email || '-',
-            orderId: orderId, amount: req.body.amount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
+            orderId: orderId, amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
             method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
             status: 'COMPLETED', time: new Date().toISOString()
         });
@@ -475,6 +675,14 @@ app.post('/api/users/:username/purchase', async (req, res) => {
             
             await userRef.update({ tokens: user.tokens, purchases: user.purchases });
             await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
+            if(song.uploader && String(song.uploader).toUpperCase() !== 'FULLKIK') {
+                await addUserNotification(song.uploader, createNotification(
+                    'sale',
+                    `歌曲售出 - ${song.filename}`,
+                    `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 钻石`,
+                    { songId: req.body.songId, buyer: req.params.username, amount: price }
+                ));
+            }
 
             await db.collection('transactions').add({
                 buyer: req.params.username, email: user.email || '-',
@@ -786,6 +994,55 @@ app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
+app.get('/api/withdrawals', async (req, res) => {
+    try { res.json(await collectWithdrawals()); } catch(e) { res.status(500).json([]); }
+});
+
+app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
+    try {
+        const nextStatus = String(req.body.status || '').toUpperCase();
+        const allowed = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'REJECTED'];
+        if(!allowed.includes(nextStatus)) return res.status(400).send('Invalid status');
+
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).send('User not found');
+
+        const user = doc.data();
+        const withdrawals = user.withdrawals || [];
+        const index = withdrawals.findIndex(w => w.id === req.params.withdrawalId);
+        if(index === -1) return res.status(404).send('Withdrawal not found');
+
+        withdrawals[index] = {
+            ...withdrawals[index],
+            status: nextStatus,
+            adminNote: req.body.adminNote || withdrawals[index].adminNote || '',
+            updatedAt: new Date().toISOString(),
+            completedAt: ['COMPLETED', 'REJECTED'].includes(nextStatus) ? new Date().toISOString() : withdrawals[index].completedAt || ''
+        };
+
+        await userRef.update({ withdrawals });
+        const notificationTitle = nextStatus === 'REJECTED'
+            ? '退款消息 - 提现被拒绝'
+            : nextStatus === 'COMPLETED'
+                ? '提现已完成'
+                : `提现状态更新 - ${nextStatus}`;
+        await addUserNotification(user.username || req.params.username, createNotification(
+            'withdrawal',
+            notificationTitle,
+            `提现 ${withdrawals[index].amount} 钻石状态更新为 ${nextStatus}${withdrawals[index].adminNote ? `：${withdrawals[index].adminNote}` : ''}`,
+            { withdrawalId: req.params.withdrawalId, status: nextStatus, amount: withdrawals[index].amount }
+        ));
+        await logAdminAction(`Withdrawal ${nextStatus}: ${user.username || req.params.username}`, {
+            module: '财务',
+            action: '提现审批',
+            targetId: req.params.withdrawalId,
+            details: `${user.username || req.params.username} | ${withdrawals[index].amount} | ${nextStatus}`
+        });
+        res.json({ success: true, withdrawal: withdrawals[index] });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 // ==========================================
 // 8. GENRES AND SONGS
 // ==========================================
@@ -852,7 +1109,16 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
-    const docRef = await db.collection('songs').add(newSong); return { id: docRef.id, ...newSong };
+    const docRef = await db.collection('songs').add(newSong);
+    if(newSong.status === 'PENDING' && newSong.uploader && String(newSong.uploader).toUpperCase() !== 'FULLKIK') {
+        await addUserNotification(newSong.uploader, createNotification(
+            'upload',
+            `成功上传歌曲 - ${newSong.filename}`,
+            '歌曲已进入待审队列，请等待管理员审核',
+            { songId: docRef.id, status: newSong.status }
+        ));
+    }
+    return { id: docRef.id, ...newSong };
 }
 
 app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
@@ -893,6 +1159,24 @@ app.put('/api/songs/:id/settings', async (req, res) => {
                 targetId: req.params.id,
                 details: `${oldSong.filename || req.params.id} | ${oldSong.status || '-'} -> ${req.body.status}${req.body.rejectReason ? ` | Reason: ${req.body.rejectReason}` : ''}`
             });
+            if(oldSong.uploader && String(oldSong.uploader).toUpperCase() !== 'FULLKIK') {
+                if(req.body.status === 'APPROVED') {
+                    await addUserNotification(oldSong.uploader, createNotification(
+                        'upload-approved',
+                        `成功上传歌曲 - ${oldSong.filename || req.params.id}`,
+                        '歌曲审核通过，已发布到 FULLKIK',
+                        { songId: req.params.id, status: 'APPROVED' }
+                    ));
+                }
+                if(req.body.status === 'REJECTED') {
+                    await addUserNotification(oldSong.uploader, createNotification(
+                        'upload-rejected',
+                        `上传歌曲被拒绝 - ${oldSong.filename || req.params.id}`,
+                        req.body.rejectReason || '未符合规范',
+                        { songId: req.params.id, status: 'REJECTED', reason: req.body.rejectReason || '未符合规范' }
+                    ));
+                }
+            }
         }
 
         res.send('Updated');
@@ -928,10 +1212,23 @@ app.put('/api/settings', async (req, res) => {
                 ? req.body.featuredGenreIds.map(id => String(id)).filter(Boolean).slice(0, 10)
                 : [];
         }
+        if (req.body.topNavGenreIds !== undefined) {
+            updates.topNavGenreIds = Array.isArray(req.body.topNavGenreIds)
+                ? req.body.topNavGenreIds.map(id => String(id)).filter(Boolean).slice(0, 4)
+                : [];
+        }
         if (req.body.hotProducerIds !== undefined) {
             updates.hotProducerIds = Array.isArray(req.body.hotProducerIds)
                 ? req.body.hotProducerIds.map(id => String(id)).filter(Boolean).slice(0, 30)
                 : [];
+        }
+        if (req.body.referralConfig !== undefined) {
+            const cfg = req.body.referralConfig || {};
+            updates.referralConfig = {
+                enabled: !!cfg.enabled,
+                referrerReward: Math.max(parseInt(cfg.referrerReward) || 10, 0),
+                newUserReward: Math.max(parseInt(cfg.newUserReward) || 0, 0)
+            };
         }
         
         if (req.body.banners !== undefined) {
@@ -956,7 +1253,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'featuredGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
