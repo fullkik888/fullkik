@@ -12,7 +12,7 @@
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .header-top { width: 100%; padding: 20px 40px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; z-index: 100; background: rgba(11, 11, 11, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);}
-        .logo-container { font-size: 22px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(90deg, #fff, #a0a0a0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration:none; cursor:pointer;}
+        .logo-container { font-size: 26px; font-weight: 900; letter-spacing: 0; background: linear-gradient(90deg, #fff, #c9b4b4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration:none; cursor:pointer; min-height:44px; display:flex; align-items:center; padding:0 8px; margin-left:-8px;}
         .nav-tabs { display: flex; gap: 30px; align-items: center; overflow-x:auto; white-space:nowrap; scrollbar-width:none;}
         .nav-tabs::-webkit-scrollbar { display:none; }
         .nav-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; outline: none; text-decoration:none;}
@@ -151,6 +151,8 @@
         .player-meta { color: var(--text-muted); font-size: 14px; margin-bottom: 16px;}
         .uploader-link { color:var(--accent-light); font-weight:800; cursor:pointer; border-bottom:1px solid rgba(165,42,42,0.45); }
         .uploader-link:hover { color:white; border-bottom-color:white; }
+        .uploader-inline { color:var(--text-muted); cursor:pointer; border-bottom:1px solid rgba(165,42,42,0.35); }
+        .uploader-inline:hover { color:white; border-bottom-color:var(--accent-light); }
         
         .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 12px;}
         .wave-bar { flex: 1; background: var(--border-color); border-radius: 2px; transition: 0.2s;}
@@ -223,6 +225,9 @@
         .poster-box img { width: 100%; max-height: 86vh; object-fit: contain; display: block; }
         .poster-close { position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.55); color: white; cursor: pointer; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
         .poster-close:hover { background: var(--accent); }
+        .announcement-marquee { display:none; width:min(100%, 980px); margin:16px auto 18px; overflow:hidden; border-radius:22px; border:1px solid rgba(165,42,42,0.28); background:rgba(25,8,8,0.68); color:#eadede; white-space:nowrap; box-shadow:0 12px 28px rgba(0,0,0,0.22); }
+        .announcement-marquee span { display:inline-block; padding:10px 0; min-width:100%; animation: announcementMove 18s linear infinite; font-size:14px; font-weight:800; }
+        @keyframes announcementMove { from { transform:translateX(100%); } to { transform:translateX(-100%); } }
 
         .notification-list { display:flex; flex-direction:column; gap:12px; }
         .notification-card { border:1px solid var(--border-color); background:var(--card-bg); border-radius:14px; padding:16px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; }
@@ -230,6 +235,8 @@
         .notification-title { font-weight:900; color:white; margin-bottom:6px; }
         .notification-message { color:var(--text-muted); font-size:13px; line-height:1.45; }
         .notification-date { color:var(--text-muted); font-size:12px; white-space:nowrap; }
+        .notification-action { border:none; border-radius:10px; background:linear-gradient(135deg, #4b1515, #8b2020); color:white; font-weight:900; padding:10px 16px; cursor:pointer; }
+        .notification-action:hover { transform:translateY(-1px); }
         .site-footer { width:100%; text-align:center; color:rgba(255,255,255,0.35); font-size:12px; padding:14px 0 22px; }
         .mobile-bottom-nav { display:none; }
 
@@ -239,13 +246,15 @@
         .vip-tab.active { color: var(--accent-light); font-weight: bold; }
 
         @media (max-width: 768px) {
-            .header-top { padding: 12px 14px; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
-            .header-right { width: 100%; justify-content: flex-end; gap: 8px; }
+            .header-top { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; align-items:center; }
+            .nav-tabs { display:none; }
+            .header-right { width:auto; justify-content:flex-end; gap: 6px; margin-left:auto; }
             .header-right > div { gap: 8px !important; max-width: 100%; }
-            .vip-center-pill, .token-pill { min-height: 36px; padding: 0 12px; font-size: 12px; }
-            .profile-trigger { padding: 4px; }
-            .profile-pic { width: 30px; height: 30px; }
-            .container { padding: 132px 14px 34px; }
+            .mail-button { min-width:40px; height:40px; font-size:16px; }
+            .vip-center-pill, .token-pill { min-height: 40px; padding: 0 12px; font-size: 12px; }
+            .profile-trigger { padding: 5px; min-width:40px; min-height:40px; }
+            .profile-pic { width: 34px; height: 34px; }
+            .container { padding: 86px 14px 34px; }
             .hero h1 { font-size: 28px; line-height: 1.18; }
             .hero p { line-height: 1.5; }
             .player-container { flex-direction: column-reverse; padding: 18px; border-radius: 18px; gap: 20px;}
@@ -255,8 +264,7 @@
             .slider-container { flex-basis: calc(100% - 96px); }
             .action-row { flex-wrap: wrap; }
             .btn-buy-big { width: 100%; justify-content: center; box-sizing: border-box; padding: 14px 18px; }
-            .nav-tabs { gap: 15px; }
-            .logo-container { font-size: 18px; }
+            .logo-container { font-size: 22px; min-height:38px; padding:0 4px; margin-left:-4px; }
             .home-song-grid { grid-template-columns: 1fr; } 
             .featured-genre-tabs { gap:16px; }
             .recommend-grid { grid-template-columns:1fr; gap:12px; }
@@ -292,7 +300,7 @@
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <a href="/music.html" class="logo-container" id="logoText">FULLKIK</a>
+    <a href="/music.html" class="logo-container" id="logoText" onclick="window.location.href='/music.html'; return false;">FULLKIK</a>
     <div class="nav-tabs" id="mainNavTabs">
         <button class="nav-tab active" id="nav-home" onclick="switchView('home')" data-i18n="store">首页</button>
         <button class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</button>
@@ -324,6 +332,7 @@
             <p id="heroSubtitle" data-i18n="heroSub">专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品</p>
             
             <div id="homeBanners" class="banners-container"></div>
+            <div class="announcement-marquee" id="homeAnnouncementMarquee"><span id="homeAnnouncementText"></span></div>
 
             <div class="search-wrapper">
                 <input type="text" class="search-bar" id="mainSearch" placeholder="Search songs..." oninput="handleGlobalSearch(event)">
@@ -365,7 +374,7 @@
     <div id="view-notifications" class="view-section">
         <div style="margin-bottom: 30px;">
             <h2 style="font-size:32px; font-weight:800; margin:0;">通知</h2>
-            <p style="color:var(--text-muted); margin-top:5px;">退款、上传、推荐奖励和充值消息</p>
+            <p style="color:var(--text-muted); margin-top:5px;"></p>
         </div>
         <div class="notification-list" id="notificationList"></div>
     </div>
@@ -450,14 +459,17 @@
     const incomingReferralCode = initialUrlParams.get('ref');
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
     const skipInitialLoader = initialUrlParams.get('skipLoader') === '1';
+    const shouldShowWelcome = sessionStorage.getItem('fullkikShowWelcome') === '1';
+    if(shouldShowWelcome) sessionStorage.removeItem('fullkikShowWelcome');
+    const PREVIEW_LIMIT_SECONDS = 60;
     if(skipInitialLoader) {
         const sp = document.getElementById('splashLoader');
         if(sp) sp.style.display = 'none';
     }
     
     const dict = {
-        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 30s.", buyBtn: "BUY", report: "Report" },
-        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有30秒", buyBtn: "购买", report: "举报" }
+        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", report: "Report" },
+        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有60秒", buyBtn: "购买", report: "举报" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
     let currentDjRoleFilter = 'PRODUCER';
@@ -486,6 +498,7 @@
         const subtitle = document.getElementById('heroSubtitle');
         if(title) title.innerText = globalSettings.homeMainTitle || globalSettings.heroTitle || 'FULLKIK音乐空间';
         if(subtitle) subtitle.innerText = globalSettings.homeSubtitle || dict[currentLang].heroSub;
+        renderHomeAnnouncement();
     }
     function setMusicPageTitle(view, detail = '') {
         const titles = {
@@ -546,6 +559,42 @@
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function escapeJs(value) {
+        return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function songHasGenre(song, genreId) {
+        if(!genreId || genreId === 'ALL') return true;
+        const ids = Array.isArray(song.genreIds) && song.genreIds.length ? song.genreIds : [song.genreId];
+        return ids.includes(genreId);
+    }
+
+    function goUploader(uploader) {
+        const name = String(uploader || '').trim();
+        if(!name || name.toUpperCase() === 'FULLKIK') return;
+        window.location.href = `/vip.html?user=${encodeURIComponent(name)}`;
+    }
+
+    function uploaderInlineHtml(uploader) {
+        const name = uploader || 'FULLKIK';
+        if(!uploader || String(uploader).toUpperCase() === 'FULLKIK') return escapeHtml(name);
+        return `<span class="uploader-inline" onclick="event.stopPropagation(); goUploader('${escapeJs(uploader)}')">${escapeHtml(name)}</span>`;
+    }
+
+    function renderHomeAnnouncement() {
+        const wrap = document.getElementById('homeAnnouncementMarquee');
+        const text = document.getElementById('homeAnnouncementText');
+        const announcement = String(globalSettings.homeAnnouncement || '').trim();
+        if(!wrap || !text) return;
+        if(announcement) {
+            text.textContent = announcement;
+            wrap.style.display = 'block';
+        } else {
+            text.textContent = '';
+            wrap.style.display = 'none';
+        }
     }
 
     function buildWhatsappUrl(value) {
@@ -653,13 +702,14 @@
             const scw = document.querySelector('.splash-circle-wrap'); if(scw) scw.classList.add('loader-popout');
             setTimeout(() => {
                 if(scw) scw.style.display = 'none';
-                const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = 'block';
+                const wt = document.getElementById('welcomeText'); if(wt) wt.style.display = shouldShowWelcome ? 'block' : 'none';
             }, 420);
-            setTimeout(() => { 
-                const sp = document.getElementById('splashLoader'); 
-                if(sp) { sp.style.opacity = 0; setTimeout(() => { sp.style.display = 'none'; showHomePoster(); }, 800); }
+            const closeDelay = shouldShowWelcome ? 1500 : 640;
+            setTimeout(() => {
+                const sp = document.getElementById('splashLoader');
+                if(sp) { sp.style.opacity = 0; setTimeout(() => { sp.style.display = 'none'; showHomePoster(); }, 360); }
                 finishInitialNavigation();
-            }, 1500);
+            }, closeDelay);
         }, 400);
     }
 
@@ -669,7 +719,7 @@
         document.querySelectorAll('.top-genre-tab').forEach(el => el.remove());
         
         const selectedIds = Array.isArray(globalSettings.topNavGenreIds) && globalSettings.topNavGenreIds.length
-            ? globalSettings.topNavGenreIds.slice(0, 4)
+            ? globalSettings.topNavGenreIds.slice(0, 3)
             : allGenres.filter(g => g.status !== 'DISABLED').slice(0, 3).map(g => g.id);
         let validGenres = selectedIds.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean);
         validGenres.forEach(g => {
@@ -733,15 +783,19 @@
             list.innerHTML = `<div style="text-align:center; padding:50px; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:14px;">暂无通知</div>`;
             return;
         }
-        list.innerHTML = sorted.map(n => `
+        list.innerHTML = sorted.map(n => {
+            const songId = n.meta && n.meta.songId ? n.meta.songId : '';
+            const message = n.message ? `<div class="notification-message">${escapeHtml(n.message)}</div>` : '';
+            return `
             <div class="notification-card ${n.read ? '' : 'unread'}">
                 <div style="min-width:0;">
                     <div class="notification-title truncate">${escapeHtml(n.title || '通知')}</div>
-                    <div class="notification-message">${escapeHtml(n.message || '')}</div>
+                    ${message}
+                    <div class="notification-date">${n.timestamp ? new Date(n.timestamp).toLocaleString() : '-'}</div>
                 </div>
-                <div class="notification-date">${n.timestamp ? new Date(n.timestamp).toLocaleString() : '-'}</div>
-            </div>
-        `).join('');
+                ${songId ? `<button class="notification-action" onclick="openSong('${songId}')">查看</button>` : ''}
+            </div>`;
+        }).join('');
     }
 
     async function openNotificationsView(e) {
@@ -832,7 +886,7 @@
             if(vips.length > 0) {
                 let djHtml = `<div class="section-header"><h3>热门制作人</h3><span onclick="switchView('dj-list')">更多 ></span></div><div class="dj-scroll-container">`;
                 vips.slice(0, 10).forEach((v, i) => {
-                    const count = allSongs.filter(s => s.uploader === v.username).length;
+            const count = allSongs.filter(s => s.uploader === v.username).length;
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
                     const pfp = v.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                     djHtml += `
@@ -853,9 +907,10 @@
         if(latest.length > 0) container.innerHTML += generateSongGridHtml('最新歌曲', latest, 'ALL');
         container.innerHTML += generateFeaturedGenreHtml();
 
-        allGenres.forEach(g => {
+        const displayGenres = getCategoryDisplayGenres();
+        displayGenres.forEach(g => {
             if(g.status === 'DISABLED') return;
-            const gSongs = allSongs.filter(s => s.genreId === g.id && s.status === 'APPROVED');
+            const gSongs = allSongs.filter(s => songHasGenre(s, g.id) && s.status === 'APPROVED');
             if(gSongs.length > 0) container.innerHTML += generateSongGridHtml(g.name, gSongs, g.id);
         });
     }
@@ -880,7 +935,7 @@
                     <img src="${cover}">
                     <div class="info">
                         <div class="title truncate">${s.filename}</div>
-                        <div class="sub truncate">Uploader: ${s.uploader || 'FULLKIK'}</div>
+                        <div class="sub truncate">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div class="price">💎 ${s.price||0}</div>
@@ -895,7 +950,13 @@
 
     function getFeaturedGenres() {
         const ids = Array.isArray(globalSettings.featuredGenreIds) ? globalSettings.featuredGenreIds : [];
-        return ids.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean).slice(0, 10);
+        return ids.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean).slice(0, 6);
+    }
+
+    function getCategoryDisplayGenres() {
+        const ids = Array.isArray(globalSettings.categoryDisplayGenreIds) ? globalSettings.categoryDisplayGenreIds : [];
+        const selected = ids.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean).slice(0, 3);
+        return selected.length ? selected : allGenres.filter(g => g.status !== 'DISABLED');
     }
 
     function openFeaturedMore(genreId) {
@@ -914,7 +975,7 @@
         if(!featuredGenres.length) return '';
         if(!currentFeaturedGenreId || !featuredGenres.some(g => g.id === currentFeaturedGenreId)) currentFeaturedGenreId = featuredGenres[0].id;
         const activeGenre = featuredGenres.find(g => g.id === currentFeaturedGenreId) || featuredGenres[0];
-        const activeSongs = allSongs.filter(s => s.genreId === activeGenre.id && s.status === 'APPROVED').slice(0, 9);
+        const activeSongs = allSongs.filter(s => songHasGenre(s, activeGenre.id) && s.status === 'APPROVED').slice(0, 9);
         const tabs = featuredGenres.map(g => `<button class="featured-genre-tab ${g.id === activeGenre.id ? 'active' : ''}" onclick="selectFeaturedGenre('${g.id}')">${escapeHtml(g.name)}</button>`).join('');
         const cards = activeSongs.map(s => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
@@ -924,7 +985,7 @@
                     <img src="${cover}">
                     <div class="info">
                         <div class="title truncate">${escapeHtml(s.filename)}</div>
-                        <div class="sub truncate">Uploader: ${escapeHtml(s.uploader || 'FULLKIK')}</div>
+                        <div class="sub truncate">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <div class="price">💎 ${s.price || 0}</div>
@@ -1050,7 +1111,7 @@
                         <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
                         <div style="min-width:0;">
                             <div class="truncate" style="font-weight:bold; font-size:15px;">${s.filename}</div>
-                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">Uploader: ${s.uploader || 'FULLKIK'}</div>
+                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
                         </div>
                     </div>
                     <div style="display:flex; align-items:center; gap:15px; flex-shrink:0;">
@@ -1068,7 +1129,7 @@
     function openMoreSongs(title, filterId) {
         document.getElementById('moreSongsTitle').innerText = title;
         if(filterId === 'ALL') currentMoreSongs = [...allSongs].filter(s => s.status === 'APPROVED').sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
-        else currentMoreSongs = allSongs.filter(s => s.genreId === filterId && s.status === 'APPROVED');
+        else currentMoreSongs = allSongs.filter(s => songHasGenre(s, filterId) && s.status === 'APPROVED');
         currentMorePage = 1; renderMoreSongsPage(); switchView('more-songs'); setMusicPageTitle('more-songs', title);
     }
 
@@ -1089,7 +1150,7 @@
                         <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; flex-shrink:0;">
                         <div style="min-width:0;">
                             <div class="truncate" style="font-weight:bold; font-size:15px;">${s.filename}</div>
-                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">Uploader: ${s.uploader || 'FULLKIK'}</div>
+                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
                         </div>
                     </div>
                     <div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price||0} <span style="color:#666; margin-left:10px;">♡</span></div>
@@ -1136,7 +1197,7 @@
                     <img src="${cover}">
                     <div style="min-width:0;">
                         <div class="recommend-title truncate">${escapeHtml(s.filename)}</div>
-                        <div class="recommend-sub truncate">${escapeHtml(s.uploader || 'FULLKIK')}</div>
+                        <div class="recommend-sub truncate">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
                     </div>
                     <div class="recommend-price">💎 ${s.price || 0}</div>
                 </div>`;
@@ -1185,12 +1246,12 @@
 
     // AUDIO LOGIC
     if(audioEl) {
-        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > 30) ? 30 : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= 30) { audioEl.pause(); audioEl.currentTime = 30; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > 30) ? 30 : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
+        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
+        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) { audioEl.pause(); audioEl.currentTime = PREVIEW_LIMIT_SECONDS; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
         audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
     }
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= 30) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= 30) val = 29.9; audioEl.currentTime = val; }
+    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
+    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= PREVIEW_LIMIT_SECONDS) val = PREVIEW_LIMIT_SECONDS - 0.1; audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
         if(!username) return window.location.href = '/register.html'; 
