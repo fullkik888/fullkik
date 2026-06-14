@@ -22,12 +22,20 @@
         .lang-toggle:hover { color: white; border-color: white;}
 
         .header-right { display: flex; align-items: center; gap: 15px; }
-        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
+        .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none; border:none;}
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         .vip-center-pill { display:flex; align-items:center; justify-content:center; min-height:38px; padding:0 16px; border-radius:20px; background:linear-gradient(135deg, rgba(128,0,0,0.9), rgba(165,42,42,0.9)); color:white; text-decoration:none; font-size:13px; font-weight:800; border:1px solid rgba(255,255,255,0.12); white-space:nowrap; box-shadow:0 8px 20px rgba(128,0,0,0.25); }
         .vip-center-pill:hover { transform: translateY(-1px); box-shadow:0 10px 24px rgba(128,0,0,0.38); }
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .mail-button { position:relative; min-width:38px; height:38px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; }
+        .mail-button:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.22); }
+        .mail-badge { position:absolute; right:-5px; top:-5px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:var(--danger); color:white; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; box-shadow:0 0 0 4px rgba(255,69,58,0.12); }
+        .profile-dropdown { position:absolute; top:48px; right:0; width:170px; display:none; flex-direction:column; overflow:hidden; border-radius:14px; border:1px solid var(--border-color); background:rgba(25,10,10,0.98); box-shadow:0 18px 44px rgba(0,0,0,0.55); z-index:200; }
+        .profile-dropdown.show { display:flex; animation:popIn 0.2s ease; }
+        .profile-dropdown button { border:none; border-bottom:1px solid var(--border-color); background:transparent; color:white; text-align:left; padding:14px 16px; cursor:pointer; font-size:13px; font-weight:800; }
+        .profile-dropdown button:last-child { border-bottom:none; }
+        .profile-dropdown button:hover { background:rgba(165,42,42,0.18); }
 
         .container { width: 100%; max-width: 1200px; padding: 100px 20px 40px 20px; box-sizing: border-box; }
         
@@ -216,6 +224,15 @@
         .poster-close { position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.55); color: white; cursor: pointer; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
         .poster-close:hover { background: var(--accent); }
 
+        .notification-list { display:flex; flex-direction:column; gap:12px; }
+        .notification-card { border:1px solid var(--border-color); background:var(--card-bg); border-radius:14px; padding:16px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; }
+        .notification-card.unread { border-color:rgba(255,69,58,0.5); background:linear-gradient(135deg, rgba(128,0,0,0.22), rgba(30,15,15,0.85)); }
+        .notification-title { font-weight:900; color:white; margin-bottom:6px; }
+        .notification-message { color:var(--text-muted); font-size:13px; line-height:1.45; }
+        .notification-date { color:var(--text-muted); font-size:12px; white-space:nowrap; }
+        .site-footer { width:100%; text-align:center; color:rgba(255,255,255,0.35); font-size:12px; padding:14px 0 22px; }
+        .mobile-bottom-nav { display:none; }
+
         /* VIP TABS (For DJ List View) */
         .vip-tabs { display: flex; gap: 30px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap;}
         .vip-tab { background: none; border: none; color: var(--text-muted); font-size: 15px; cursor: pointer; padding: 0; outline: none;}
@@ -252,6 +269,11 @@
             .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
             .report-modal-box { padding:34px 24px; border-radius:24px; }
             .report-title { font-size:26px; }
+            .site-footer { padding-bottom:84px; }
+            .mobile-bottom-nav { position:fixed; left:0; right:0; bottom:0; height:68px; z-index:950; display:grid; grid-template-columns:repeat(5,1fr); background:rgba(20,10,10,0.96); border-top:1px solid var(--border-color); backdrop-filter:blur(20px); }
+            .mobile-bottom-nav button { background:none; border:none; color:var(--text-muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:12px; font-weight:800; }
+            .mobile-bottom-nav button.active { color:var(--accent-light); }
+            .mobile-bottom-nav .nav-ico { font-size:22px; line-height:1; }
         }
     </style>
 </head>
@@ -280,10 +302,17 @@
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
             <a href="/profile.html?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
+            <button class="mail-button" id="mailBtn" onclick="openNotificationsView(event)" aria-label="通知">✉<span class="mail-badge" id="mailBadge">0</span></button>
             <a href="/profile.html?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
             </a>
-            <a href="/profile.html" class="profile-trigger" id="profileBtn"></a>
+            <button class="profile-trigger" id="profileBtn" onclick="toggleProfileDropdown(event)"></button>
+            <div class="profile-dropdown" id="profileDropdown">
+                <button onclick="window.location.href='/profile.html'">个人中心</button>
+                <button onclick="window.location.href='/profile.html?view=topup&skipLoader=1'">充值中心</button>
+                <button onclick="window.location.href='/profile.html?view=history&skipLoader=1'">个人消费</button>
+                <button style="color:var(--danger);" onclick="logoutUser()">登出</button>
+            </div>
         </div>
     </div>
 </div>
@@ -333,6 +362,14 @@
         <div class="ranking-list" id="rankingList"></div>
     </div>
 
+    <div id="view-notifications" class="view-section">
+        <div style="margin-bottom: 30px;">
+            <h2 style="font-size:32px; font-weight:800; margin:0;">通知</h2>
+            <p style="color:var(--text-muted); margin-top:5px;">退款、上传、推荐奖励和充值消息</p>
+        </div>
+        <div class="notification-list" id="notificationList"></div>
+    </div>
+
     <div id="view-more-songs" class="view-section">
         <div class="player-header">
             <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
@@ -371,6 +408,16 @@
     </div>
 </div>
 
+<div class="site-footer">© 2026 FULLKIK</div>
+
+<div class="mobile-bottom-nav" id="mobileBottomNav">
+    <button id="mb-home" onclick="switchView('home')"><span class="nav-ico">⌂</span><span>首页</span></button>
+    <button id="mb-reco" onclick="openMobileRecommendations()"><span class="nav-ico">♫</span><span>歌曲推荐</span></button>
+    <button id="mb-ranking" onclick="switchView('ranking')"><span class="nav-ico">▥</span><span>排行</span></button>
+    <button id="mb-contest" onclick="showContestComingSoon()"><span class="nav-ico">♕</span><span>大赛</span></button>
+    <button id="mb-profile" onclick="goProfile()"><span class="nav-ico">♙</span><span>我的</span></button>
+</div>
+
 <audio id="mainAudio" preload="metadata"></audio>
 
 <div class="modal-overlay" id="purchaseModal"><div class="modal-box"><div class="modal-content" id="purchaseContent"></div><div class="modal-actions" id="purchaseActions"></div></div></div>
@@ -395,11 +442,13 @@
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [];
+    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [], userNotifications = [];
     let currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
     const initialUrlParams = new URLSearchParams(window.location.search);
+    const incomingReferralCode = initialUrlParams.get('ref');
+    if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
     const skipInitialLoader = initialUrlParams.get('skipLoader') === '1';
     if(skipInitialLoader) {
         const sp = document.getElementById('splashLoader');
@@ -443,6 +492,7 @@
             home: 'FULLKIK 首页',
             ranking: 'FULLKIK 排行榜',
             'dj-list': 'FULLKIK VIP',
+            notifications: 'FULLKIK 通知',
             'more-songs': detail ? `${detail} - 音乐` : 'FULLKIK 音乐',
             song: detail ? `${detail} - 音乐` : 'FULLKIK 音乐'
         };
@@ -466,6 +516,30 @@
         drop.style.display = 'block';
     }
     document.addEventListener('click', (e) => { const sw = e.target.closest('.search-wrapper'); const dr = document.getElementById('searchResults'); if(!sw && dr) dr.style.display = 'none'; });
+
+    function closeDropdowns(e) {
+        const profileDropdown = document.getElementById('profileDropdown');
+        if(profileDropdown && profileDropdown.classList.contains('show') && !e.target.closest('.profile-trigger') && !e.target.closest('#profileDropdown')) {
+            profileDropdown.classList.remove('show');
+        }
+    }
+
+    function toggleProfileDropdown(e) {
+        if(!username) return window.location.href = '/register.html';
+        e.stopPropagation();
+        const dropdown = document.getElementById('profileDropdown');
+        if(dropdown) dropdown.classList.toggle('show');
+    }
+
+    function logoutUser() {
+        localStorage.removeItem('djUsername');
+        localStorage.removeItem('djLastView');
+        window.location.href = '/register.html';
+    }
+
+    function goProfile() {
+        window.location.href = username ? '/profile.html' : '/register.html';
+    }
 
     let globalSettings = {};
     let currentFeaturedGenreId = null;
@@ -515,6 +589,7 @@
             const pb = document.getElementById('profileBtn');
             if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
             if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
+            const mailBtn = document.getElementById('mailBtn'); if(mailBtn) mailBtn.style.display = 'none';
             const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/register.html';
         }
 
@@ -531,8 +606,9 @@
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; isUserVip = data.isVip || false;
+                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; isUserVip = data.isVip || false;
                     if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens;
+                    updateNotificationBadge();
                     
                     const pfpUrl = data.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                     const profBtn = document.getElementById('profileBtn'); if(profBtn) profBtn.innerHTML = `<img class="profile-pic" src="${pfpUrl}">`;
@@ -550,9 +626,13 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const requestedSongId = urlParams.get('song');
+            const requestedView = urlParams.get('view');
             if(requestedSongId) {
                 openSong(requestedSongId);
                 openedInitialSong = !!currentSong;
+            } else if(requestedView === 'notifications') {
+                switchView('notifications');
+                openedInitialSong = true;
             }
         } catch(e) { console.error("Init Error:", e); } 
 
@@ -586,11 +666,15 @@
     function injectTopBarGenres() {
         const nav = document.getElementById('mainNavTabs');
         const homeNode = document.getElementById('nav-home');
+        document.querySelectorAll('.top-genre-tab').forEach(el => el.remove());
         
-        let validGenres = allGenres.filter(g => g.status !== 'DISABLED').slice(0, 3);
+        const selectedIds = Array.isArray(globalSettings.topNavGenreIds) && globalSettings.topNavGenreIds.length
+            ? globalSettings.topNavGenreIds.slice(0, 4)
+            : allGenres.filter(g => g.status !== 'DISABLED').slice(0, 3).map(g => g.id);
+        let validGenres = selectedIds.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean);
         validGenres.forEach(g => {
             const btn = document.createElement('button');
-            btn.className = 'nav-tab';
+            btn.className = 'nav-tab top-genre-tab';
             btn.innerText = g.name;
             btn.onclick = () => openMoreSongs(g.name, g.id);
             nav.insertBefore(btn, homeNode.nextSibling);
@@ -606,8 +690,70 @@
         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
         if(view === 'home' || view === 'song' || view === 'dj-list') { const ns = document.getElementById('nav-home'); if(ns) ns.classList.add('active'); }
         if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
+        if(view === 'notifications') renderNotifications();
+        updateMobileBottomNav(view);
 
-        if(['home', 'ranking', 'more-songs'].includes(view)) localStorage.setItem('djLastView', view);
+        if(['home', 'ranking', 'more-songs', 'notifications'].includes(view)) localStorage.setItem('djLastView', view);
+    }
+
+    function updateMobileBottomNav(view) {
+        document.querySelectorAll('.mobile-bottom-nav button').forEach(btn => btn.classList.remove('active'));
+        if(view === 'home') document.getElementById('mb-home')?.classList.add('active');
+        if(view === 'ranking') document.getElementById('mb-ranking')?.classList.add('active');
+        if(view === 'more-songs') document.getElementById('mb-reco')?.classList.add('active');
+    }
+
+    function showContestComingSoon() {
+        document.querySelectorAll('.mobile-bottom-nav button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('mb-contest')?.classList.add('active');
+        showToast('活动还未计划');
+    }
+
+    function openMobileRecommendations() {
+        openMoreSongs('歌曲推荐', 'ALL');
+    }
+
+    function updateNotificationBadge() {
+        const badge = document.getElementById('mailBadge');
+        if(!badge) return;
+        const unread = (userNotifications || []).filter(n => !n.read).length;
+        if(unread > 0) {
+            badge.style.display = 'flex';
+            badge.innerText = unread > 99 ? '99+' : unread;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderNotifications() {
+        const list = document.getElementById('notificationList');
+        if(!list) return;
+        const sorted = [...(userNotifications || [])].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if(!sorted.length) {
+            list.innerHTML = `<div style="text-align:center; padding:50px; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:14px;">暂无通知</div>`;
+            return;
+        }
+        list.innerHTML = sorted.map(n => `
+            <div class="notification-card ${n.read ? '' : 'unread'}">
+                <div style="min-width:0;">
+                    <div class="notification-title truncate">${escapeHtml(n.title || '通知')}</div>
+                    <div class="notification-message">${escapeHtml(n.message || '')}</div>
+                </div>
+                <div class="notification-date">${n.timestamp ? new Date(n.timestamp).toLocaleString() : '-'}</div>
+            </div>
+        `).join('');
+    }
+
+    async function openNotificationsView(e) {
+        if(e) e.stopPropagation();
+        if(!username) return window.location.href = '/register.html';
+        switchView('notifications');
+        try {
+            await fetch(`${API_URL}/users/${username}/notifications/read`, { method:'PUT' });
+            userNotifications = userNotifications.map(n => ({ ...n, read: true }));
+            updateNotificationBadge();
+            renderNotifications();
+        } catch(err) {}
     }
 
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
