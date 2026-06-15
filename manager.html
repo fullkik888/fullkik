@@ -113,6 +113,7 @@
         .grid-pending { grid-template-columns: 40px 40px 3fr 120px 100px 120px 140px; gap: 10px; min-width:1000px;}
         .grid-user-topup { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
         .grid-user-buy { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; min-width:700px;}
+        .grid-login-history { grid-template-columns: 1fr 1fr 2fr; min-width:760px;}
         .grid-transactions { grid-template-columns: 1.5fr 3fr 1.5fr 100px 100px 100px 150px; min-width:1100px;}
         .grid-orders { grid-template-columns: 1.5fr 2.5fr 80px 60px 80px 1fr 100px 150px 80px; min-width:1200px;}
         .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 150px; min-width: 1280px;}
@@ -159,7 +160,9 @@
         .settings-card p { margin: 0 0 28px 0; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
         .settings-label { display:block; color:var(--text-muted); font-size:13px; font-weight:800; margin-bottom:10px; }
         .settings-input { width: min(900px, 100%); height: 54px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-main); color: white; padding: 0 18px; font-size: 15px; outline: none; }
+        .settings-textarea { width:min(900px, 100%); min-height:150px; box-sizing:border-box; border:1px solid var(--border-color); border-radius:8px; background:var(--bg-main); color:white; padding:16px 18px; font-size:14px; line-height:1.65; outline:none; resize:vertical; }
         .settings-input:focus { border-color: var(--accent-light); box-shadow: 0 0 0 2px rgba(165,42,42,0.18); }
+        .settings-textarea:focus { border-color:var(--accent-light); box-shadow:0 0 0 2px rgba(165,42,42,0.18); }
         .settings-dash { border-top: 1px dashed var(--border-color); margin: 40px 0 8px; }
         .settings-actions { display:flex; justify-content:flex-end; align-items:center; gap:14px; }
         .poster-preview-box { min-height: 180px; border: 1px dashed var(--border-color); border-radius: 10px; background: var(--bg-main); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; }
@@ -265,7 +268,7 @@
         .choice-order-badge { display:inline-flex; width:22px; height:22px; border-radius:50%; align-items:center; justify-content:center; background:var(--accent); color:white; font-size:11px; font-weight:900; flex-shrink:0; }
         .finance-stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:24px; }
         .finance-stat { border:1px solid var(--border-color); border-radius:12px; padding:20px; background:var(--card-bg); }
-        .finance-stat strong { display:block; font-size:30px; margin:8px 0; color:white; }
+        .finance-stat strong { display:block; font-size:30px; margin:8px 0; color:white; font-weight:700; }
         .finance-stat.accent { border-color:var(--accent-light); background:linear-gradient(145deg, rgba(128,0,0,0.18), var(--card-bg)); }
         .finance-balance-flow { display:grid; grid-template-columns:1fr 36px 1fr 36px 1fr 36px 1fr; gap:10px; align-items:center; }
         .finance-flow-box { border:1px solid var(--border-color); border-radius:10px; padding:18px; background:rgba(255,255,255,0.03); }
@@ -284,12 +287,32 @@
         .finance-card { border:1px solid var(--border-color); border-radius:14px; padding:20px; background:rgba(255,255,255,0.025); }
         .finance-card.primary { border-color:var(--accent-light); box-shadow:inset 0 0 0 1px rgba(165,42,42,0.15); }
         .finance-title { color:var(--text-muted); font-size:13px; font-weight:900; margin-bottom:12px; }
-        .finance-value { font-size:34px; font-weight:1000; color:white; letter-spacing:0; }
+        .finance-value { font-size:34px; font-weight:600; color:white; letter-spacing:0; }
         .finance-sub { color:var(--text-muted); font-size:12px; margin-top:8px; }
         .finance-balance-flow { display:grid; grid-template-columns:1fr auto 1fr auto 1fr auto 1fr; gap:14px; align-items:center; }
         .finance-arrow { color:var(--text-muted); font-size:26px; text-align:center; }
         .finance-two-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         .finance-row-grid { grid-template-columns:1.4fr 1fr 70px 70px; min-width:640px; }
+        .contest-create-grid { display:grid; grid-template-columns:1.6fr 1fr 1fr auto; gap:14px; align-items:end; padding:22px; }
+        .contest-card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px; padding:20px 0; }
+        .contest-card { border:1px solid var(--border-color); border-radius:14px; background:var(--card-bg); padding:18px; cursor:pointer; transition:0.2s; }
+        .contest-card:hover { border-color:var(--accent-light); transform:translateY(-2px); background:rgba(40,12,12,0.82); }
+        .contest-status { display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(52,199,89,0.32); background:rgba(52,199,89,0.1); color:var(--success); border-radius:18px; padding:6px 12px; font-size:12px; font-weight:900; }
+        .contest-status.draft { border-color:rgba(255,204,0,0.35); color:#ffcc00; background:rgba(255,204,0,0.08); }
+        .contest-detail-tabs { display:flex; gap:22px; border-bottom:1px solid var(--border-color); margin:22px 0; }
+        .contest-tab { background:none; border:none; color:var(--text-muted); padding:0 0 13px; font-size:15px; font-weight:900; cursor:pointer; border-bottom:2px solid transparent; }
+        .contest-tab.active { color:white; border-color:var(--accent-light); }
+        .contest-stat-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:14px; margin:20px 0 26px; }
+        .contest-stat { border:1px solid var(--border-color); border-radius:12px; background:var(--card-bg); padding:20px; }
+        .contest-stat strong { display:block; font-size:28px; color:white; margin-top:8px; }
+        .contest-form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+        .contest-panel { display:none; }
+        .contest-panel.active { display:block; }
+        .contest-prize-row { display:grid; grid-template-columns:90px 1fr 160px 120px 36px; gap:12px; align-items:center; margin-bottom:10px; }
+        .contest-rank-row { display:grid; grid-template-columns:80px 1.5fr 1fr 1fr 1fr 260px; gap:14px; align-items:center; border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:12px; background:rgba(255,255,255,0.025); }
+        .contest-log-row { display:grid; grid-template-columns:140px 1fr 160px; gap:14px; border-bottom:1px solid var(--border-color); padding:14px 20px; color:var(--text-muted); }
+        .contest-sidebar-item { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-left:18px; padding:8px 12px; border-radius:8px; color:var(--text-muted); cursor:pointer; font-size:13px; }
+        .contest-sidebar-item:hover, .contest-sidebar-item.active { background:rgba(128,0,0,0.22); color:white; }
         .home-title-panel { padding:20px; display:grid; grid-template-columns:1fr 1fr auto; gap:14px; align-items:end; }
         .home-title-panel .input-text { width:100%; box-sizing:border-box; }
         .hot-producer-layout { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
@@ -360,7 +383,7 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
-            .home-title-panel { grid-template-columns:1fr; align-items:stretch; }
+            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row { grid-template-columns:1fr; align-items:stretch; }
             .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
             .finance-card-grid, .finance-two-grid { grid-template-columns:1fr; }
@@ -452,7 +475,8 @@
         <div class="nav-title">用户</div>
         <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
         <button class="nav-item" onclick="switchView('referrals', '用户 / 推荐配置')" id="nav-referrals">◇ 推荐配置</button>
-        <button class="nav-item" onclick="switchView('activity', '活动管理')" id="nav-activity">⚡ 活动管理</button>
+        <button class="nav-item" onclick="currentContestId=''; switchView('activity', '活动 / 活动列表')" id="nav-activity">🏆 活动列表</button>
+        <div id="contestSidebarList"></div>
         <button class="nav-item" onclick="switchView('downloads', '下载监控')" id="nav-downloads">⎋ 下载监控</button>
     </div>
 
@@ -525,7 +549,7 @@
             <div class="panel-header" style="padding:0; border:none;">
                 <div>
                     <div style="font-size:16px; font-weight:900;">顶部导航栏</div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选要显示在 music.html 顶部导航栏的分类，最多 3 个。</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选要显示在 music.page 顶部导航栏的分类，最多 3 个。</div>
                 </div>
                 <button class="btn-primary" onclick="saveTopNavGenres()">发布</button>
             </div>
@@ -607,6 +631,14 @@
             <input type="text" id="settingSupportWhatsapp" class="settings-input" placeholder="例如: 601117975043">
             <div class="settings-dash"></div>
             <div class="settings-actions"><button class="btn-text-action" onclick="testSupportWhatsapp()">打开测试</button><button class="btn-primary" onclick="saveSystemSettings()">保存</button></div>
+        </div>
+        <div class="settings-card">
+            <h3>提成声明</h3>
+            <p>发布后会显示在 profile.page 的「提成」页面，用来说明提钻条件、联系邮箱、审核时间等。</p>
+            <label class="settings-label">声明内容</label>
+            <textarea id="settingCommissionStatement" class="settings-textarea" placeholder="输入提成声明..."></textarea>
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-primary" onclick="saveCommissionStatement()">发布</button></div>
         </div>
         <div class="settings-card">
             <h3>默认图片</h3>
@@ -784,18 +816,114 @@
     </div>
 
     <div id="view-activity" class="view-section">
-        <div class="dash-header"><h2>活动管理</h2><p>配置注册赠送钻石等促销活动 · 启用后立即对新注册用户生效</p></div>
-        <div class="glass-panel" style="padding:20px;">
-            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>全部活动</div><div>共 1 个活动</div></div>
-            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
-                <div style="color:var(--text-muted); font-size:12px;">#1</div>
-                <div style="flex:1;">
-                    <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
-                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                        <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
+        <div id="activityListPanel">
+            <div class="dash-header"><h2>活动列表</h2><p>上传竞赛类活动 · 可同时运行多个 · 公开大赛页面下次再接。</p></div>
+            <div class="glass-panel">
+                <div class="panel-header">新建活动 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">先填标题与时间窗口即可创建；奖品 / 规则在详情页完善。</span></div>
+                <div class="contest-create-grid">
+                    <div><label class="settings-label">活动标题</label><input type="text" id="contestCreateTitle" class="input-text" placeholder="例如：FULLKIK 私货上传大赛" style="width:100%; box-sizing:border-box;"></div>
+                    <div><label class="settings-label">开始时间</label><input type="datetime-local" id="contestCreateStart" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                    <div><label class="settings-label">结束时间</label><input type="datetime-local" id="contestCreateEnd" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                    <button class="btn-primary" style="height:40px;" onclick="createContestActivity()">创建活动</button>
+                </div>
+            </div>
+            <div class="contest-card-grid" id="contestActivityList"></div>
+            <div class="glass-panel" style="padding:20px; margin-top:22px;">
+                <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>注册赠送活动</div><div>旧功能保留</div></div>
+                <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
+                    <div style="color:var(--text-muted); font-size:12px;">#R</div>
+                    <div style="flex:1;">
+                        <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
+                        <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px;"><button class="btn-top" onclick="openActivityModal()">编辑</button><button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="contestDetailPanel" style="display:none;">
+            <div class="dash-header" style="justify-content:space-between;">
+                <div>
+                    <button class="btn-text-action" onclick="backToContestList()">← 返回活动列表</button>
+                    <h2 id="contestDetailTitle" style="margin:12px 0 6px; font-size:34px;">活动标题</h2>
+                    <p id="contestDetailSub">#1 · event</p>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <span id="contestPublishState" class="contest-status draft">未发布</span>
+                    <button class="btn-text-action" onclick="previewContestActivity()">前台预览 ↗</button>
+                    <button class="btn-text-action danger" onclick="toggleContestPublished()">下架 / 发布</button>
+                </div>
+            </div>
+            <div class="flow-card">
+                <div class="flow-steps">
+                    <div class="flow-step"><strong>1</strong><div>未开始</div></div>
+                    <div class="flow-step"><strong>2</strong><div>进行中</div></div>
+                    <div class="flow-step"><strong>3</strong><div>已结束</div></div>
+                    <div class="flow-step"><strong>4</strong><div>冻结榜单</div></div>
+                    <div class="flow-step"><strong>5</strong><div>发奖结算</div></div>
+                </div>
+            </div>
+            <div class="contest-stat-grid">
+                <div class="contest-stat"><div style="color:var(--text-muted);">参赛报名</div><strong id="contestStatSignup">0</strong><div style="color:var(--text-muted); font-size:12px;">已移出 0</div></div>
+                <div class="contest-stat"><div style="color:var(--text-muted);">待审参赛歌曲</div><strong id="contestStatPending">0</strong><div style="color:var(--text-muted); font-size:12px;">队列已清空</div></div>
+                <div class="contest-stat"><div style="color:var(--text-muted);">参赛者</div><strong id="contestStatUsers">0</strong><div style="color:var(--text-muted); font-size:12px;">实时榜单</div></div>
+                <div class="contest-stat"><div style="color:var(--text-muted);">奖励预算</div><strong id="contestStatBudget">0 💎</strong><div style="color:var(--text-muted); font-size:12px;">名额统计</div></div>
+                <div class="contest-stat"><div style="color:var(--text-muted);">已发放</div><strong id="contestStatPaid">0</strong><div style="color:var(--text-muted); font-size:12px;">0 💎 已支出</div></div>
+            </div>
+            <div class="contest-detail-tabs">
+                <button class="contest-tab active" id="contestTab-config" onclick="setContestTab('config')">配置</button>
+                <button class="contest-tab" id="contestTab-participants" onclick="setContestTab('participants')">参赛名单 <span id="contestParticipantCount">0</span></button>
+                <button class="contest-tab" id="contestTab-ranking" onclick="setContestTab('ranking')">排行榜 · 发奖 <span id="contestRankingCount">0</span></button>
+                <button class="contest-tab" id="contestTab-logs" onclick="setContestTab('logs')">变更记录</button>
+            </div>
+
+            <div class="contest-panel active" id="contestPanel-config">
+                <div class="glass-panel">
+                    <div class="panel-header">基本信息</div>
+                    <div style="padding:24px;">
+                        <label class="settings-label">活动标题</label><input type="text" id="contestEditTitle" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:14px;">
+                        <label class="settings-label">副标题</label><input type="text" id="contestEditSubtitle" class="input-text" style="width:100%; box-sizing:border-box; margin-bottom:14px;">
+                        <div class="contest-form-grid">
+                            <div><label class="settings-label">开始时间 MYT</label><input type="datetime-local" id="contestEditStart" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                            <div><label class="settings-label">结束时间 MYT</label><input type="datetime-local" id="contestEditEnd" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                            <div><label class="settings-label">结果公布 MYT · 可选</label><input type="datetime-local" id="contestEditResult" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                        </div>
+                        <label class="settings-label" style="margin-top:16px;">活动声明 / 规则</label><textarea id="contestEditRules" class="settings-textarea" style="width:100%; max-width:100%;"></textarea>
+                        <label class="settings-label" style="margin-top:16px;">旧 Google 表单链接</label><input type="text" id="contestEditForm" class="input-text" style="width:100%; box-sizing:border-box;">
+                        <div class="contest-form-grid" style="margin-top:16px;">
+                            <div><label class="settings-label">大赛专属分类</label><input type="text" id="contestEditCategory" class="input-text" style="width:100%; box-sizing:border-box;"></div>
+                            <div><label class="settings-label">参赛曲目固定价 💎</label><input type="number" id="contestEditPrice" class="input-text" style="width:100%; box-sizing:border-box;" min="0"></div>
+                            <div><label class="settings-label">计分权重</label><div style="display:flex; gap:8px;"><input type="number" id="contestWeightUpload" class="input-text" min="0" placeholder="上传" style="width:100%;"><input type="number" id="contestWeightDownload" class="input-text" min="0" placeholder="下载" style="width:100%;"><input type="number" id="contestWeightFavorite" class="input-text" min="0" placeholder="收藏" style="width:100%;"></div></div>
+                        </div>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px;"><button class="btn-top" onclick="openActivityModal()">编辑</button><button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button></div>
+                <div class="glass-panel" style="margin-top:22px;">
+                    <div class="panel-header">奖品阶梯 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">按行分配名次，修改会写入变更记录。</span></div>
+                    <div style="padding:24px;" id="contestPrizeList"></div>
+                    <div style="padding:0 24px 24px;"><button class="btn-text-action" onclick="addContestPrize()">+ 添加奖档</button></div>
+                </div>
+                <div style="display:flex; gap:12px; align-items:center; margin-top:20px;"><button class="btn-primary" onclick="saveContestConfig()">保存配置</button><span style="color:var(--text-muted); font-size:12px;">改动会写入变更记录（含修改人与时间）</span></div>
+            </div>
+
+            <div class="contest-panel" id="contestPanel-participants">
+                <div class="glass-panel">
+                    <div class="panel-header">参赛名单 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">当前为后台占位列表；公开大赛页下次接入。</span></div>
+                    <div id="contestParticipantList"></div>
+                </div>
+            </div>
+            <div class="contest-panel" id="contestPanel-ranking">
+                <div class="glass-panel">
+                    <div class="panel-header">排行榜 <span class="contest-status">实时</span></div>
+                    <div id="contestRankingList"></div>
+                </div>
+            </div>
+            <div class="contest-panel" id="contestPanel-logs">
+                <div class="glass-panel">
+                    <div class="panel-header">变更记录 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">配置 / 发布 / 发奖等操作留痕</span></div>
+                    <div id="contestChangeLogList"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -814,7 +942,7 @@
             <div class="panel-header" style="padding:0; border:none;">
                 <div>
                     <div style="font-size:16px; font-weight:900;">顶部导航栏</div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选后会显示在桌面 music.html 顶部导航栏，最多 3 个。数字代表显示顺序。</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选后会显示在桌面 music.page 顶部导航栏，最多 3 个。数字代表显示顺序。</div>
                 </div>
                 <button class="btn-primary" onclick="saveTopNavGenres()">发布</button>
             </div>
@@ -825,7 +953,7 @@
             <div class="panel-header" style="padding:0; border:none;">
                 <div>
                     <div style="font-size:16px; font-weight:900;">专区管理</div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选已有分类，最多 6 个。发布后 music.html 首页「专区」会立即更新。</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">勾选已有分类，最多 6 个。发布后 music.page 首页「专区」会立即更新。</div>
                 </div>
                 <button class="btn-primary" onclick="saveFeaturedGenres()">发布</button>
             </div>
@@ -1058,6 +1186,14 @@
                 <div id="det-buy-list"></div>
             </div></div>
         </div>
+
+        <div class="glass-panel">
+            <div class="panel-header">登录历史 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;" id="det-login-summary">最近 20 次 · 共 0 次 · 0 个 IP · 0 个设备</span></div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-login-history"><div>时间</div><div>IP</div><div>设备 / 浏览器</div></div>
+                <div id="det-login-list"></div>
+            </div></div>
+        </div>
     </div>
 
     <div id="view-reconcile" class="view-section">
@@ -1072,6 +1208,7 @@
                 <span style="color:var(--text-muted);">—</span>
                 <input type="date" class="input-text" id="reconcileEndDate">
                 <button class="btn-primary" onclick="applyReconcileCustomRange()">应用</button>
+                <button class="btn-text-action danger" onclick="confirmClearReconcile()">清除</button>
             </div>
         </div>
 
@@ -1153,7 +1290,8 @@
 <div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="banConfirmModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">封禁账号</h3><p style="font-size:12px; color:var(--text-muted);" id="banConfirmTarget"></p><input type="text" id="banConfirmReason" class="modal-input" placeholder="请输入封禁原因(必填)"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeBanTarget()">封禁</button></div></div></div>
 <div class="modal-overlay" id="clearAdminLogsModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">清空日志</h3><p style="font-size:12px; color:var(--text-muted);">确定要清空所有管理员操作记录吗？该操作不可恢复。</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeClearAdminLogs()">确认清空</button></div></div></div>
-<div class="modal-overlay" id="adminDeleteModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">删除用户</h3><p style="font-size:13px; color:var(--text-muted); margin:0;" id="deleteModalTarget"></p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="confirmUserDelete()">确认删除</button></div></div></div>
+<div class="modal-overlay" id="clearReconcileModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">清除财务对账</h3><p style="font-size:12px; color:var(--text-muted);">确定清除充值订单与交易流水吗？用户余额、购买记录和提现审批不会被删除。</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeClearReconcile()">确认清除</button></div></div></div>
+<div class="modal-overlay" id="adminDeleteModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">删除用户</h3><p style="font-size:13px; color:var(--text-muted); margin:0;" id="deleteModalTarget"></p><p style="font-size:12px; color:var(--danger); margin-top:12px;">此操作会同时移除该用户上传过的歌曲。</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="confirmUserDelete()">确认删除</button></div></div></div>
 
 <div class="modal-overlay" id="songSettingsModal">
     <div class="modal-box">
@@ -1200,6 +1338,7 @@
     let selectedManagerBulkFiles = [];
     let hotProducerDraftIds = null;
     let reconcileRange = '7', reconcileCustomStart = '', reconcileCustomEnd = '';
+    let currentContestId = '', currentContestTab = 'config';
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -1270,7 +1409,7 @@
         if(viewId === 'users') loadUsers(); 
         if(viewId === 'songs') loadSongs();
         if(viewId === 'pending') loadPending();
-        if(viewId === 'activity') renderActivity();
+        if(viewId === 'activity') renderContestActivities();
         if(viewId === 'transactions') loadTransactions();
         if(viewId === 'orders') loadOrders();
         if(viewId === 'downloads') loadDlMonitor();
@@ -1303,6 +1442,8 @@
                 document.getElementById('homeMainTitleInput').value = globalSettings.homeMainTitle || "FULLKIK音乐空间";
                 document.getElementById('homeSubtitleInput').value = globalSettings.homeSubtitle || "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品";
                 document.getElementById('homeAnnouncementInput').value = globalSettings.homeAnnouncement || '';
+                const commissionInput = document.getElementById('settingCommissionStatement');
+                if(commissionInput) commissionInput.value = globalSettings.commissionStatement || getDefaultCommissionStatement();
                 currentBanners = globalSettings.banners || ['', '', ''];
                 hotProducerDraftIds = null;
                 renderSystemSettings();
@@ -1311,7 +1452,7 @@
             }
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); allReports = await (await fetch(`${API_URL}/reports`)).json();
             try { allWithdrawals = await (await fetch(`${API_URL}/withdrawals`)).json(); } catch(e) { allWithdrawals = []; }
-            buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); renderTopNavGenreSettings(); renderCategoryDisplayGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners();
+            buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); renderTopNavGenreSettings(); renderCategoryDisplayGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners(); renderContestSidebar();
             updateReportBadge();
             if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 30000);
             const savedView = localStorage.getItem('fkAdminLastView');
@@ -1730,9 +1871,30 @@
     function renderSystemSettings() {
         const maxInput = document.getElementById('settingMaxSongPrice');
         const supportInput = document.getElementById('settingSupportWhatsapp');
+        const commissionInput = document.getElementById('settingCommissionStatement');
         if(maxInput) maxInput.value = globalSettings.maxSongPrice || 200;
         if(supportInput) supportInput.value = globalSettings.supportWhatsapp || '';
+        if(commissionInput) commissionInput.value = globalSettings.commissionStatement || getDefaultCommissionStatement();
         renderDefaultCover();
+    }
+
+    function getDefaultCommissionStatement() {
+        return '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。';
+    }
+
+    async function saveCommissionStatement() {
+        const commissionStatement = document.getElementById('settingCommissionStatement').value.trim() || getDefaultCommissionStatement();
+        showGlobalLoader("发布提成声明...");
+        const res = await fetch(`${API_URL}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ commissionStatement }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderSystemSettings();
+            hideGlobalLoader();
+            showToast("提成声明已发布");
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
     }
 
     function renderDefaultCover() {
@@ -1840,16 +2002,634 @@
     }
 
     // --- ACTIVITY ---
+    function getContestActivities() {
+        return Array.isArray(globalSettings.contestActivities) ? globalSettings.contestActivities : [];
+    }
+    function getCurrentContest() {
+        return getContestActivities().find(a => a.id === currentContestId) || null;
+    }
+    function getContestStatus(activity) {
+        const now = Date.now();
+        const start = activity.startTime ? new Date(activity.startTime).getTime() : 0;
+        const end = activity.endTime ? new Date(activity.endTime).getTime() : 0;
+        if(start && now < start) return '未开始';
+        if(end && now > end) return '已结束';
+        return '进行中';
+    }
+    function formatContestDate(value) {
+        if(!value) return '-';
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? '-' : d.toLocaleString();
+    }
+    function toDatetimeLocal(value) {
+        if(!value) return '';
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return '';
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function contestBudget(activity) {
+        return (activity.prizes || []).reduce((sum, p) => sum + ((parseInt(p.diamonds) || 0) * (parseInt(p.slots) || 1)), 0);
+    }
+    function makeContestLog(action, detail) {
+        return { action, detail, admin: 'admin', time: new Date().toISOString() };
+    }
+    async function saveContestActivities(activities, toastText = '') {
+        showGlobalLoader("保存活动...");
+        const res = await fetch(`${API_URL}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contestActivities: activities }) });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderContestSidebar();
+            if(currentContestId) {
+                const listPanel = document.getElementById('activityListPanel');
+                const detailPanel = document.getElementById('contestDetailPanel');
+                if(listPanel) listPanel.style.display = 'none';
+                if(detailPanel) detailPanel.style.display = 'block';
+                renderContestDetail();
+            } else {
+                renderActivity();
+            }
+            hideGlobalLoader();
+            if(toastText) showToast(toastText);
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
+    function renderContestSidebar() {
+        const box = document.getElementById('contestSidebarList');
+        if(!box) return;
+        const activities = getContestActivities();
+        box.innerHTML = activities.slice(0, 10).map(a => `
+            <div class="contest-sidebar-item ${a.id === currentContestId ? 'active' : ''}" onclick="openContestActivity('${a.id}')">
+                <span class="truncate">${escapeHtml(a.title || '未命名活动')}</span>
+                <span style="width:9px;height:9px;border-radius:50%;background:${a.published ? 'var(--success)' : '#ffcc00'};flex-shrink:0;"></span>
+            </div>
+        `).join('');
+    }
     function renderActivity() {
         const act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 };
-        document.getElementById('act-reward').innerText = act.reward; document.getElementById('act-count').innerText = act.count; document.getElementById('act-total').innerText = act.total;
+        const listPanel = document.getElementById('activityListPanel');
+        const detailPanel = document.getElementById('contestDetailPanel');
+        if(listPanel && detailPanel && !currentContestId) {
+            listPanel.style.display = 'block';
+            detailPanel.style.display = 'none';
+        }
+        const list = document.getElementById('contestActivityList');
+        if(list) {
+            const activities = getContestActivities();
+            list.innerHTML = activities.map((a, index) => `
+                <div class="contest-card" onclick="openContestActivity('${a.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                        <span class="contest-status ${a.published ? '' : 'draft'}">${a.published ? '● 已发布' : '未发布'}</span>
+                        <span style="color:var(--text-muted); font-size:12px;">#${index + 1} · ${escapeHtml(a.slug || a.id)}</span>
+                    </div>
+                    <h3 style="margin:18px 0 10px; color:white;">${escapeHtml(a.title || '未命名活动')}</h3>
+                    <div style="color:var(--text-muted); font-size:13px;">${formatContestDate(a.startTime)} → ${formatContestDate(a.endTime)} MYT</div>
+                    <div style="color:var(--text-muted); font-size:13px; margin-top:16px;"><strong style="color:white;">${(a.participants || []).length}</strong> 参赛者 · <strong style="color:white;">${contestBudget(a).toLocaleString()}</strong> 💎 预算</div>
+                </div>
+            `).join('');
+            if(!activities.length) list.innerHTML = `<div style="grid-column:1/-1; padding:34px; text-align:center; color:var(--text-muted); border:1px dashed var(--border-color); border-radius:14px;">暂无活动，先创建一个吧。</div>`;
+        }
+        if(document.getElementById('act-reward')) document.getElementById('act-reward').innerText = act.reward; 
+        if(document.getElementById('act-count')) document.getElementById('act-count').innerText = act.count; 
+        if(document.getElementById('act-total')) document.getElementById('act-total').innerText = act.total;
         const st = document.getElementById('act-status'); const btn = document.getElementById('act-toggle-btn');
-        if(act.enabled) { st.innerText = '已启用'; st.style.color = 'var(--success)'; btn.innerText = '停用'; btn.classList.add('highlight'); }
-        else { st.innerText = '已停用'; st.style.color = 'var(--danger)'; btn.innerText = '启用'; btn.classList.remove('highlight'); }
+        if(st && btn) {
+            if(act.enabled) { st.innerText = '已启用'; st.style.color = 'var(--success)'; btn.innerText = '停用'; btn.classList.add('highlight'); }
+            else { st.innerText = '已停用'; st.style.color = 'var(--danger)'; btn.innerText = '启用'; btn.classList.remove('highlight'); }
+        }
+        renderContestSidebar();
+    }
+    function createContestActivity() {
+        const title = document.getElementById('contestCreateTitle').value.trim();
+        const start = document.getElementById('contestCreateStart').value;
+        const end = document.getElementById('contestCreateEnd').value;
+        if(!title) return showToast("请输入活动标题", true);
+        const activities = getContestActivities();
+        const id = 'event-' + Date.now();
+        const item = {
+            id,
+            slug: title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, '-').replace(/^-|-$/g, '') || id,
+            title,
+            subtitle: '',
+            startTime: start ? new Date(start).toISOString() : '',
+            endTime: end ? new Date(end).toISOString() : '',
+            resultTime: '',
+            rules: '',
+            formUrl: '',
+            categoryName: '',
+            entryPrice: 30,
+            weights: { uploads: 1, downloads: 1, favorites: 1 },
+            prizes: [
+                { rank: '1', name: '冠军', diamonds: 5888, slots: 1 },
+                { rank: '2', name: '亚军', diamonds: 3888, slots: 1 },
+                { rank: '3', name: '季军', diamonds: 1888, slots: 1 },
+                { rank: '4-13', name: '优秀奖', diamonds: 888, slots: 10 }
+            ],
+            participants: [],
+            ranking: [],
+            paidAmount: 0,
+            published: false,
+            logs: [makeContestLog('创建活动', title)]
+        };
+        currentContestId = id;
+        document.getElementById('contestCreateTitle').value = '';
+        document.getElementById('contestCreateStart').value = '';
+        document.getElementById('contestCreateEnd').value = '';
+        saveContestActivities([item, ...activities], "活动已创建");
+    }
+    function openContestActivity(id) {
+        currentContestId = id;
+        currentContestTab = 'config';
+        if(!document.getElementById('view-activity').classList.contains('active')) {
+            switchView('activity', '活动 / 活动列表');
+        }
+        const listPanel = document.getElementById('activityListPanel');
+        const detailPanel = document.getElementById('contestDetailPanel');
+        if(listPanel) listPanel.style.display = 'none';
+        if(detailPanel) detailPanel.style.display = 'block';
+        document.getElementById('breadcrumb-current').innerText = `活动 / 活动列表 / ${(getCurrentContest() || {}).title || ''}`;
+        renderContestSidebar();
+        renderContestDetail();
+    }
+    function backToContestList() {
+        currentContestId = '';
+        document.getElementById('breadcrumb-current').innerText = '活动 / 活动列表';
+        renderActivity();
+    }
+    function setContestTab(tab) {
+        currentContestTab = tab;
+        document.querySelectorAll('.contest-tab').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.contest-panel').forEach(panel => panel.classList.remove('active'));
+        const btn = document.getElementById(`contestTab-${tab}`);
+        const panel = document.getElementById(`contestPanel-${tab}`);
+        if(btn) btn.classList.add('active');
+        if(panel) panel.classList.add('active');
+    }
+    function renderContestDetail() {
+        const a = getCurrentContest();
+        if(!a) return backToContestList();
+        document.getElementById('contestDetailTitle').innerText = a.title || '未命名活动';
+        document.getElementById('contestDetailSub').innerText = `#${getContestActivities().findIndex(x => x.id === a.id) + 1} · ${a.slug || a.id}`;
+        const state = document.getElementById('contestPublishState');
+        state.innerText = a.published ? '● 已发布 · 前台可见' : '未发布';
+        state.classList.toggle('draft', !a.published);
+        document.getElementById('contestStatSignup').innerText = (a.participants || []).length;
+        document.getElementById('contestStatPending').innerText = (a.pendingEntries || []).length || 0;
+        document.getElementById('contestStatUsers').innerText = new Set((a.participants || []).map(p => p.username)).size;
+        document.getElementById('contestStatBudget').innerText = `${contestBudget(a).toLocaleString()} 💎`;
+        document.getElementById('contestStatPaid').innerText = a.paidAmount || 0;
+        document.getElementById('contestParticipantCount').innerText = (a.participants || []).length;
+        document.getElementById('contestRankingCount').innerText = (a.ranking || a.participants || []).length;
+        document.getElementById('contestEditTitle').value = a.title || '';
+        document.getElementById('contestEditSubtitle').value = a.subtitle || '';
+        document.getElementById('contestEditStart').value = toDatetimeLocal(a.startTime);
+        document.getElementById('contestEditEnd').value = toDatetimeLocal(a.endTime);
+        document.getElementById('contestEditResult').value = toDatetimeLocal(a.resultTime);
+        document.getElementById('contestEditRules').value = a.rules || '';
+        document.getElementById('contestEditForm').value = a.formUrl || '';
+        document.getElementById('contestEditCategory').value = a.categoryName || '';
+        document.getElementById('contestEditPrice').value = a.entryPrice || 30;
+        document.getElementById('contestWeightUpload').value = (a.weights || {}).uploads ?? 1;
+        document.getElementById('contestWeightDownload').value = (a.weights || {}).downloads ?? 1;
+        document.getElementById('contestWeightFavorite').value = (a.weights || {}).favorites ?? 1;
+        renderContestPrizes(a);
+        renderContestParticipants(a);
+        renderContestRanking(a);
+        renderContestLogs(a);
+        setContestTab(currentContestTab);
+    }
+    function renderContestPrizes(a) {
+        const box = document.getElementById('contestPrizeList');
+        box.innerHTML = (a.prizes || []).map((p, i) => `
+            <div class="contest-prize-row">
+                <input class="input-text contest-prize-rank" value="${escapeHtml(p.rank || '')}" placeholder="名次">
+                <input class="input-text contest-prize-name" value="${escapeHtml(p.name || '')}" placeholder="奖项名称">
+                <input class="input-text contest-prize-diamonds" type="number" min="0" value="${p.diamonds || 0}" placeholder="钻石">
+                <input class="input-text contest-prize-slots" type="number" min="1" value="${p.slots || 1}" placeholder="名额">
+                <button class="btn-text-action danger" onclick="removeContestPrize(${i})">×</button>
+            </div>
+        `).join('');
+    }
+    function collectContestPrizes() {
+        return Array.from(document.querySelectorAll('#contestPrizeList .contest-prize-row')).map(row => ({
+            rank: row.querySelector('.contest-prize-rank').value.trim(),
+            name: row.querySelector('.contest-prize-name').value.trim(),
+            diamonds: parseInt(row.querySelector('.contest-prize-diamonds').value) || 0,
+            slots: parseInt(row.querySelector('.contest-prize-slots').value) || 1
+        })).filter(p => p.rank || p.name);
+    }
+    function addContestPrize() {
+        const activities = getContestActivities();
+        const index = activities.findIndex(a => a.id === currentContestId);
+        if(index === -1) return;
+        activities[index].prizes = collectContestPrizes().concat({ rank: '', name: '', diamonds: 0, slots: 1 });
+        renderContestPrizes(activities[index]);
+    }
+    function removeContestPrize(index) {
+        const activities = getContestActivities();
+        const item = activities.find(a => a.id === currentContestId);
+        if(!item) return;
+        item.prizes = collectContestPrizes().filter((_, i) => i !== index);
+        renderContestPrizes(item);
+    }
+    async function saveContestConfig() {
+        const activities = getContestActivities();
+        const index = activities.findIndex(a => a.id === currentContestId);
+        if(index === -1) return;
+        const item = { ...activities[index] };
+        const oldTitle = item.title;
+        item.title = document.getElementById('contestEditTitle').value.trim() || item.title;
+        item.subtitle = document.getElementById('contestEditSubtitle').value.trim();
+        item.startTime = document.getElementById('contestEditStart').value ? new Date(document.getElementById('contestEditStart').value).toISOString() : '';
+        item.endTime = document.getElementById('contestEditEnd').value ? new Date(document.getElementById('contestEditEnd').value).toISOString() : '';
+        item.resultTime = document.getElementById('contestEditResult').value ? new Date(document.getElementById('contestEditResult').value).toISOString() : '';
+        item.rules = document.getElementById('contestEditRules').value.trim();
+        item.formUrl = document.getElementById('contestEditForm').value.trim();
+        item.categoryName = document.getElementById('contestEditCategory').value.trim();
+        item.entryPrice = parseInt(document.getElementById('contestEditPrice').value) || 0;
+        item.weights = {
+            uploads: parseFloat(document.getElementById('contestWeightUpload').value) || 0,
+            downloads: parseFloat(document.getElementById('contestWeightDownload').value) || 0,
+            favorites: parseFloat(document.getElementById('contestWeightFavorite').value) || 0
+        };
+        item.prizes = collectContestPrizes();
+        item.logs = [makeContestLog('配置修改', oldTitle === item.title ? '活动配置已保存' : `${oldTitle} → ${item.title}`), ...(item.logs || [])].slice(0, 80);
+        activities[index] = item;
+        await saveContestActivities(activities, "活动配置已保存");
+    }
+    function renderContestParticipants(a) {
+        const list = document.getElementById('contestParticipantList');
+        const rows = a.participants || [];
+        if(!rows.length) { list.innerHTML = `<div style="padding:36px; text-align:center; color:var(--text-muted);">暂无参赛名单</div>`; return; }
+        list.innerHTML = rows.map((p, i) => `<div class="contest-rank-row"><div>#${i+1}</div><div><strong>${escapeHtml(p.username || '-')}</strong><div style="color:var(--text-muted); font-size:12px;">${escapeHtml(p.email || '-')}</div></div><div>${p.songCount || 0} 首</div><div>${p.downloads || 0} 下载</div><div>${p.favorites || 0} 收藏</div><div><button class="btn-text-action" onclick='openUserFromFinance(${escapeHtml(JSON.stringify(p.username || ""))})'>用户</button></div></div>`).join('');
+    }
+    function renderContestRanking(a) {
+        const list = document.getElementById('contestRankingList');
+        const weights = a.weights || { uploads: 1, downloads: 1, favorites: 1 };
+        const rows = (a.ranking && a.ranking.length ? a.ranking : (a.participants || [])).map(p => ({
+            ...p,
+            score: (p.songCount || 0) * weights.uploads + (p.downloads || 0) * weights.downloads + (p.favorites || 0) * weights.favorites
+        })).sort((x,y) => y.score - x.score);
+        if(!rows.length) { list.innerHTML = `<div style="padding:36px; text-align:center; color:var(--text-muted);">暂无排行榜数据</div>`; return; }
+        list.innerHTML = rows.map((p, i) => `<div class="contest-rank-row"><div>#${i+1}</div><div><strong>${escapeHtml(p.username || '-')}</strong><div style="color:var(--text-muted); font-size:12px;">上传 ${p.songCount || 0} · 下载 ${p.downloads || 0} · 收藏 ${p.favorites || 0}</div></div><div>总分 ${p.score || 0}</div><div>${(a.prizes || [])[i]?.name || '-'}</div><div>💎 ${(a.prizes || [])[i]?.diamonds || 0}</div><div><button class="btn-text-action">收藏明细</button><button class="btn-text-action">用户</button><button class="btn-text-action danger">取消资格</button></div></div>`).join('');
+    }
+    function renderContestLogs(a) {
+        const list = document.getElementById('contestChangeLogList');
+        const rows = a.logs || [];
+        if(!rows.length) { list.innerHTML = `<div style="padding:36px; text-align:center; color:var(--text-muted);">暂无变更记录</div>`; return; }
+        list.innerHTML = rows.map(log => `<div class="contest-log-row"><div><span class="log-action-pill">${escapeHtml(log.action || '-')}</span><div style="font-size:12px; margin-top:6px;">${escapeHtml(log.admin || 'admin')}</div></div><div>${escapeHtml(log.detail || '-')}</div><div>${formatContestDate(log.time)}</div></div>`).join('');
+    }
+    async function toggleContestPublished() {
+        const activities = getContestActivities();
+        const index = activities.findIndex(a => a.id === currentContestId);
+        if(index === -1) return;
+        activities[index].published = !activities[index].published;
+        activities[index].logs = [makeContestLog(activities[index].published ? '发布' : '下架', activities[index].published ? 'published - visible on public pages' : 'unpublished'), ...(activities[index].logs || [])].slice(0, 80);
+        await saveContestActivities(activities, activities[index].published ? "活动已发布" : "活动已下架");
+    }
+    function previewContestActivity() {
+        showToast("大赛前台页面下次接入");
     }
     function openActivityModal() { const act = globalSettings.activity || { reward: 10 }; document.getElementById('actRewardInput').value = act.reward; document.getElementById('activityModal').style.display = 'flex'; }
     async function saveActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, count: 0, total: 0 }; act.reward = parseInt(document.getElementById('actRewardInput').value) || 0; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); closeModals(); hideGlobalLoader(); showToast("Saved"); }
     async function toggleActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideGlobalLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
+
+    function getContestActivities() {
+        if(!Array.isArray(globalSettings.contestActivities)) globalSettings.contestActivities = [];
+        return globalSettings.contestActivities;
+    }
+
+    function contestDate(value) {
+        if(!value) return '-';
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    }
+
+    function contestInputDate(value) {
+        if(!value) return '';
+        const d = new Date(value);
+        if(Number.isNaN(d.getTime())) return String(value);
+        const offset = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - offset).toISOString().slice(0, 16);
+    }
+
+    function addContestLog(activity, action, detail) {
+        if(!activity.logs) activity.logs = [];
+        activity.logs.unshift({ action, admin: 'ADMIN', detail, timestamp: new Date().toISOString() });
+        activity.logs = activity.logs.slice(0, 80);
+    }
+
+    function getContestStatus(activity) {
+        if(!activity.published) return { text: '未发布', cls: 'draft' };
+        const now = Date.now();
+        const startValue = activity.startAt || activity.startTime;
+        const endValue = activity.endAt || activity.endTime;
+        const start = startValue ? new Date(startValue).getTime() : 0;
+        const end = endValue ? new Date(endValue).getTime() : 0;
+        if(start && now < start) return { text: '未开始', cls: 'draft' };
+        if(end && now > end) return { text: '已结束', cls: 'draft' };
+        return { text: '进行中', cls: '' };
+    }
+
+    function renderContestSidebar() {
+        const wrap = document.getElementById('contestSidebarList');
+        if(!wrap) return;
+        wrap.innerHTML = getContestActivities().map(activity => {
+            const status = getContestStatus(activity);
+            return `<div class="contest-sidebar-item ${activity.id === currentContestId ? 'active' : ''}" onclick="switchView('activity', '活动 / 活动列表'); openContestActivity('${activity.id}')"><span class="truncate">${escapeHtml(activity.title || '未命名活动')}</span><span style="color:${status.cls ? '#ffcc00' : 'var(--success)'};">●</span></div>`;
+        }).join('');
+    }
+
+    function renderContestActivities() {
+        const listPanel = document.getElementById('activityListPanel');
+        const detailPanel = document.getElementById('contestDetailPanel');
+        const list = document.getElementById('contestActivityList');
+        if(listPanel) listPanel.style.display = 'block';
+        if(detailPanel) detailPanel.style.display = 'none';
+        currentContestId = '';
+        renderContestSidebar();
+        renderActivity();
+        if(!list) return;
+        const activities = getContestActivities();
+        if(!activities.length) {
+            list.innerHTML = `<div class="glass-panel" style="padding:34px; text-align:center; color:var(--text-muted);">暂无活动，创建后会出现在这里。</div>`;
+            return;
+        }
+        list.innerHTML = activities.map((activity, index) => {
+            const status = getContestStatus(activity);
+            const participants = Array.isArray(activity.participants) ? activity.participants.length : 0;
+            const budget = (activity.prizes || []).reduce((sum, p) => sum + ((parseInt(p.diamonds) || 0) * (parseInt(p.slots) || 1)), 0);
+            return `
+                <div class="contest-card" onclick="openContestActivity('${activity.id}')">
+                    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom:18px;">
+                        <span class="contest-status ${status.cls}">${status.text}</span>
+                        <span style="color:var(--text-muted); font-size:12px;">#${index + 1} · ${escapeHtml(activity.id)}</span>
+                    </div>
+                    <div style="font-size:18px; font-weight:900; margin-bottom:12px;">${escapeHtml(activity.title || '未命名活动')}</div>
+                    <div style="color:var(--text-muted); font-size:13px; line-height:1.7;">${contestDate(activity.startAt || activity.startTime)} → ${contestDate(activity.endAt || activity.endTime)}</div>
+                    <div style="margin-top:14px; color:var(--text-muted); font-size:13px;">${participants} 参赛者 · ${budget.toLocaleString()} 💎 预算</div>
+                </div>`;
+        }).join('');
+    }
+
+    async function createContestActivity() {
+        const titleInput = document.getElementById('contestCreateTitle');
+        const startInput = document.getElementById('contestCreateStart');
+        const endInput = document.getElementById('contestCreateEnd');
+        const title = (titleInput.value || '').trim();
+        if(!title) return showToast("请输入活动标题", true);
+        const activity = {
+            id: `event-${Date.now()}`,
+            title,
+            subtitle: '',
+            startAt: startInput.value || '',
+            endAt: endInput.value || '',
+            resultAt: '',
+            startTime: startInput.value || '',
+            endTime: endInput.value || '',
+            resultTime: '',
+            published: false,
+            rules: '',
+            formUrl: '',
+            category: '',
+            price: 30,
+            categoryName: '',
+            entryPrice: 30,
+            weights: { upload: 1, download: 1, favorite: 1, uploads: 1, downloads: 1, favorites: 1 },
+            prizes: [
+                { range: '1', name: '冠军', diamonds: 5888, slots: 1 },
+                { range: '2', name: '亚军', diamonds: 3888, slots: 1 },
+                { range: '3', name: '季军', diamonds: 1888, slots: 1 }
+            ],
+            participants: [],
+            logs: []
+        };
+        addContestLog(activity, '创建活动', `${title} · ${new Date().toLocaleString()}`);
+        getContestActivities().unshift(activity);
+        titleInput.value = '';
+        startInput.value = '';
+        endInput.value = '';
+        await saveContestActivities("活动已创建");
+        openContestActivity(activity.id);
+    }
+
+    function getCurrentContest() {
+        return getContestActivities().find(activity => activity.id === currentContestId);
+    }
+
+    function openContestActivity(id) {
+        currentContestId = id;
+        currentContestTab = 'config';
+        document.getElementById('activityListPanel').style.display = 'none';
+        document.getElementById('contestDetailPanel').style.display = 'block';
+        document.getElementById('breadcrumb-current').innerText = '活动 / 活动列表';
+        renderContestSidebar();
+        renderContestDetail();
+    }
+
+    function backToContestList() {
+        renderContestActivities();
+    }
+
+    function setContestTab(tab) {
+        currentContestTab = tab;
+        renderContestDetail();
+    }
+
+    function renderContestDetail() {
+        const activity = getCurrentContest();
+        if(!activity) return backToContestList();
+        const status = getContestStatus(activity);
+        const participants = Array.isArray(activity.participants) ? activity.participants : [];
+        const ranking = [...participants].sort((a, b) => (b.score || 0) - (a.score || 0));
+        const budget = (activity.prizes || []).reduce((sum, p) => sum + ((parseInt(p.diamonds) || 0) * (parseInt(p.slots) || 1)), 0);
+        document.getElementById('contestDetailTitle').innerText = activity.title || '未命名活动';
+        document.getElementById('contestDetailSub').innerText = `${activity.id} · ${activity.subtitle || '上传竞赛活动'}`;
+        const state = document.getElementById('contestPublishState');
+        state.innerText = status.text;
+        state.className = `contest-status ${status.cls}`;
+        document.getElementById('contestStatSignup').innerText = participants.length;
+        document.getElementById('contestStatPending').innerText = activity.pendingSongs || 0;
+        document.getElementById('contestStatUsers').innerText = participants.length;
+        document.getElementById('contestStatBudget').innerText = `${budget.toLocaleString()} 💎`;
+        document.getElementById('contestStatPaid').innerText = activity.paidOut || 0;
+        document.getElementById('contestParticipantCount').innerText = participants.length;
+        document.getElementById('contestRankingCount').innerText = ranking.length;
+        document.querySelectorAll('.contest-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.contest-panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(`contestTab-${currentContestTab}`)?.classList.add('active');
+        document.getElementById(`contestPanel-${currentContestTab}`)?.classList.add('active');
+        document.getElementById('contestEditTitle').value = activity.title || '';
+        document.getElementById('contestEditSubtitle').value = activity.subtitle || '';
+        document.getElementById('contestEditStart').value = contestInputDate(activity.startAt || activity.startTime);
+        document.getElementById('contestEditEnd').value = contestInputDate(activity.endAt || activity.endTime);
+        document.getElementById('contestEditResult').value = contestInputDate(activity.resultAt || activity.resultTime);
+        document.getElementById('contestEditRules').value = activity.rules || '';
+        document.getElementById('contestEditForm').value = activity.formUrl || '';
+        document.getElementById('contestEditCategory').value = activity.category || activity.categoryName || '';
+        document.getElementById('contestEditPrice').value = activity.price || activity.entryPrice || 30;
+        document.getElementById('contestWeightUpload').value = activity.weights?.upload ?? activity.weights?.uploads ?? 1;
+        document.getElementById('contestWeightDownload').value = activity.weights?.download ?? activity.weights?.downloads ?? 1;
+        document.getElementById('contestWeightFavorite').value = activity.weights?.favorite ?? activity.weights?.favorites ?? 1;
+        renderContestPrizes(activity);
+        renderContestParticipants(participants);
+        renderContestRanking(ranking, activity);
+        renderContestLogs(activity);
+    }
+
+    function renderContestPrizes(activity = getCurrentContest()) {
+        const wrap = document.getElementById('contestPrizeList');
+        if(!wrap || !activity) return;
+        if(!Array.isArray(activity.prizes)) activity.prizes = [];
+        wrap.innerHTML = activity.prizes.map((p, index) => `
+            <div class="contest-prize-row">
+                <input class="input-text" value="${escapeHtml(p.range || p.rank || '')}" placeholder="名次" onchange="updateContestPrize(${index}, 'range', this.value)">
+                <input class="input-text" value="${escapeHtml(p.name || '')}" placeholder="奖项名称" onchange="updateContestPrize(${index}, 'name', this.value)">
+                <input class="input-text" type="number" min="0" value="${p.diamonds || 0}" placeholder="钻石" onchange="updateContestPrize(${index}, 'diamonds', this.value)">
+                <input class="input-text" type="number" min="1" value="${p.slots || 1}" placeholder="名额" onchange="updateContestPrize(${index}, 'slots', this.value)">
+                <button class="hot-mini-btn remove" onclick="removeContestPrize(${index})">×</button>
+            </div>`).join('');
+        if(!activity.prizes.length) wrap.innerHTML = `<div style="color:var(--text-muted);">暂无奖档</div>`;
+    }
+
+    function updateContestPrize(index, key, value) {
+        const activity = getCurrentContest();
+        if(!activity || !activity.prizes[index]) return;
+        activity.prizes[index][key] = ['diamonds', 'slots'].includes(key) ? Math.max(key === 'slots' ? 1 : 0, parseInt(value) || 0) : value;
+    }
+
+    function addContestPrize() {
+        const activity = getCurrentContest();
+        if(!activity) return;
+        if(!Array.isArray(activity.prizes)) activity.prizes = [];
+        activity.prizes.push({ range: `${activity.prizes.length + 1}`, name: '新奖项', diamonds: 0, slots: 1 });
+        renderContestPrizes(activity);
+    }
+
+    function removeContestPrize(index) {
+        const activity = getCurrentContest();
+        if(!activity || !activity.prizes) return;
+        activity.prizes.splice(index, 1);
+        renderContestPrizes(activity);
+    }
+
+    function renderContestParticipants(participants) {
+        const wrap = document.getElementById('contestParticipantList');
+        if(!wrap) return;
+        if(!participants.length) {
+            wrap.innerHTML = `<div style="padding:44px; text-align:center; color:var(--text-muted);">暂无参赛名单</div>`;
+            return;
+        }
+        wrap.innerHTML = participants.map((p, index) => `
+            <div class="contest-rank-row">
+                <div>#${index + 1}</div>
+                <div><strong>${escapeHtml(p.username || '-')}</strong><div style="color:var(--text-muted); font-size:12px;">${escapeHtml(p.email || '-')}</div></div>
+                <div>上传 ${p.uploads || 0}</div>
+                <div>下载 ${p.downloads || 0}</div>
+                <div>收藏 ${p.favorites || 0}</div>
+                <div style="text-align:right;"><button class="btn-text-action" onclick='openUserFromFinance(${escapeHtml(JSON.stringify(p.username || ""))})'>用户</button></div>
+            </div>`).join('');
+    }
+
+    function renderContestRanking(ranking, activity) {
+        const wrap = document.getElementById('contestRankingList');
+        if(!wrap) return;
+        if(!ranking.length) {
+            wrap.innerHTML = `<div style="padding:44px; text-align:center; color:var(--text-muted);">暂无排行榜数据</div>`;
+            return;
+        }
+        wrap.innerHTML = ranking.map((p, index) => {
+            const prize = (activity.prizes || []).find(pr => String(pr.range || pr.rank || '').includes(String(index + 1)));
+            return `
+                <div class="contest-rank-row">
+                    <div>#${index + 1}</div>
+                    <div><strong>${escapeHtml(p.username || '-')}</strong>${prize ? `<span style="margin-left:10px; color:#ffcc00;">${escapeHtml(prize.name)} ${prize.diamonds || 0} 💎</span>` : ''}</div>
+                    <div>上传 ${p.uploads || 0}</div>
+                    <div>下载 ${p.downloads || 0}</div>
+                    <div>收藏 ${p.favorites || 0}</div>
+                    <div style="text-align:right;"><button class="btn-text-action">收藏明细</button><button class="btn-text-action" onclick='openUserFromFinance(${escapeHtml(JSON.stringify(p.username || ""))})'>用户</button><button class="btn-text-action danger">取消资格</button></div>
+                </div>`;
+        }).join('');
+    }
+
+    function renderContestLogs(activity) {
+        const wrap = document.getElementById('contestChangeLogList');
+        if(!wrap) return;
+        const logs = Array.isArray(activity.logs) ? activity.logs : [];
+        if(!logs.length) {
+            wrap.innerHTML = `<div style="padding:34px; text-align:center; color:var(--text-muted);">暂无变更记录</div>`;
+            return;
+        }
+        wrap.innerHTML = logs.map(log => `
+            <div class="contest-log-row">
+                <div><span class="log-action-pill">${escapeHtml(log.action || '-')}</span></div>
+                <div><strong>${escapeHtml(log.admin || 'ADMIN')}</strong><div style="margin-top:6px;">${escapeHtml(log.detail || '-')}</div></div>
+                <div style="text-align:right;">${contestDate(log.timestamp)}</div>
+            </div>`).join('');
+    }
+
+    async function saveContestConfig() {
+        const activity = getCurrentContest();
+        if(!activity) return;
+        activity.title = document.getElementById('contestEditTitle').value.trim() || activity.title;
+        activity.subtitle = document.getElementById('contestEditSubtitle').value.trim();
+        activity.startAt = document.getElementById('contestEditStart').value;
+        activity.endAt = document.getElementById('contestEditEnd').value;
+        activity.resultAt = document.getElementById('contestEditResult').value;
+        activity.startTime = activity.startAt;
+        activity.endTime = activity.endAt;
+        activity.resultTime = activity.resultAt;
+        activity.rules = document.getElementById('contestEditRules').value.trim();
+        activity.formUrl = document.getElementById('contestEditForm').value.trim();
+        activity.category = document.getElementById('contestEditCategory').value.trim();
+        activity.price = parseInt(document.getElementById('contestEditPrice').value) || 0;
+        activity.categoryName = activity.category;
+        activity.entryPrice = activity.price;
+        activity.weights = {
+            upload: parseInt(document.getElementById('contestWeightUpload').value) || 0,
+            download: parseInt(document.getElementById('contestWeightDownload').value) || 0,
+            favorite: parseInt(document.getElementById('contestWeightFavorite').value) || 0,
+            uploads: parseInt(document.getElementById('contestWeightUpload').value) || 0,
+            downloads: parseInt(document.getElementById('contestWeightDownload').value) || 0,
+            favorites: parseInt(document.getElementById('contestWeightFavorite').value) || 0
+        };
+        addContestLog(activity, '配置修改', `${activity.title} · ${new Date().toLocaleString()}`);
+        await saveContestActivities("活动配置已保存");
+        renderContestDetail();
+    }
+
+    async function toggleContestPublished() {
+        const activity = getCurrentContest();
+        if(!activity) return;
+        activity.published = !activity.published;
+        addContestLog(activity, activity.published ? '发布' : '下架', activity.published ? 'published - 后台可见，前台大赛页下次接入' : 'unpublished');
+        await saveContestActivities(activity.published ? "活动已发布" : "活动已下架");
+        renderContestDetail();
+    }
+
+    function previewContestActivity() {
+        showToast("大赛前台页面下次接入，本次先完成后台管理。");
+    }
+
+    async function saveContestActivities(message = "活动已保存") {
+        showGlobalLoader("保存活动...");
+        const res = await fetch(`${API_URL}/settings`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ contestActivities: getContestActivities() })
+        });
+        if(res.ok) {
+            globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+            renderContestSidebar();
+            hideGlobalLoader();
+            showToast(message);
+        } else {
+            hideGlobalLoader();
+            showToast(await res.text(), true);
+        }
+    }
 
     // --- REPORTS ---
     function formatDateSafe(value) {
@@ -2314,6 +3094,23 @@
             showToast("财务对账加载失败", true);
         } finally {
             hideContentLoader();
+        }
+    }
+
+    function confirmClearReconcile() {
+        document.getElementById('clearReconcileModal').style.display = 'flex';
+    }
+    async function executeClearReconcile() {
+        closeModals();
+        showGlobalLoader("清除财务对账...");
+        try {
+            await fetch(`${API_URL}/finance/reconcile`, { method:'DELETE' });
+            hideGlobalLoader();
+            showToast("财务对账已清除");
+            loadReconcile();
+        } catch(e) {
+            hideGlobalLoader();
+            showToast("清除失败", true);
         }
     }
 
@@ -2888,6 +3685,23 @@
             buyDiv.innerHTML += `<div class="data-row grid-user-buy"><div class="truncate">${p.songName}</div><div>${new Date(p.purchaseTime).toISOString().split('T')[0]}</div><div style="color:var(--danger);font-weight:bold;">-💎 ${p.tokensSpent}</div><div>1</div><div style="color:var(--success);">COMPLETED</div></div>`;
         });
         if(!(currentEditUser.purchases||[]).length) buyDiv.innerHTML = `<div style="padding:15px; color:var(--text-muted); text-align:center;">暂无记录</div>`;
+
+        const loginRows = (currentEditUser.loginHistory || []).slice(0, 20);
+        const loginDiv = document.getElementById('det-login-list');
+        const summary = document.getElementById('det-login-summary');
+        const uniqueIps = new Set(loginRows.map(r => r.ip).filter(ip => ip && ip !== '-')).size;
+        const uniqueDevices = new Set(loginRows.map(r => r.device).filter(dev => dev && dev !== '-')).size;
+        if(summary) summary.innerText = `最近 20 次 · 共 ${(currentEditUser.loginHistory || []).length} 次 · ${uniqueIps} 个 IP · ${uniqueDevices} 个设备`;
+        if(loginDiv) {
+            loginDiv.innerHTML = loginRows.map(row => `
+                <div class="data-row grid-login-history">
+                    <div>${row.time ? new Date(row.time).toLocaleString() : '-'}</div>
+                    <div>${escapeHtml(row.ip || '-')}</div>
+                    <div class="truncate" title="${escapeHtml(row.device || '-')}">${escapeHtml(row.device || '-')}</div>
+                </div>
+            `).join('');
+            if(!loginRows.length) loginDiv.innerHTML = `<div style="padding:22px; text-align:center; color:var(--text-muted);">暂无登录历史</div>`;
+        }
     }
 
     async function adminSaveUserProfile() {
@@ -2958,10 +3772,12 @@
         closeModals();
         if(res.ok) {
             allUsers = await (await fetch(`${API_URL}/all-users`)).json();
+            allSongs = await (await fetch(`${API_URL}/songs`)).json();
+            updatePendingBadge();
             currentEditUser = null;
             pendingDeleteUsername = '';
             hideGlobalLoader();
-            showToast("User deleted.");
+            showToast(await res.text());
             switchView('users', '用户管理');
         } else {
             hideGlobalLoader();
