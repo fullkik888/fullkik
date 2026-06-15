@@ -25,6 +25,17 @@ const PORT = process.env.PORT || 80;
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+function redirectWithQuery(target) {
+    return (req, res) => {
+        const query = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+        res.redirect(302, target + query);
+    };
+}
+app.get('/music.html', redirectWithQuery('/fullkik/main.page'));
+app.get('/profile.html', redirectWithQuery('/fullkik/profile.page'));
+app.get('/manager.html', redirectWithQuery('/fullkik/manager.page'));
+app.get('/register.html', redirectWithQuery('/fullkik/register'));
+app.get('/vip.html', redirectWithQuery('/fullkik/vip'));
 app.use(express.static(__dirname));
 
 let db, bucket;
@@ -86,10 +97,12 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 // 2. HTML ROUTES & ANTI-THEFT STREAMING
 // ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
-app.get('/', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
-app.get('/profile.html', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
-app.get('/manager.html', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/vip.html', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); }); 
+app.get('/', redirectWithQuery('/fullkik/main.page'));
+app.get('/fullkik/main.page', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/fullkik/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get('/fullkik/manager.page', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/fullkik/register', (req, res) => { res.sendFile(path.join(__dirname, 'register.html')); });
+app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
@@ -116,6 +129,8 @@ const DEFAULT_SETTINGS = {
     categoryDisplayGenreIds: [],
     topNavGenreIds: [],
     hotProducerIds: null,
+    commissionStatement: '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。',
+    contestActivities: [],
     referralConfig: { enabled: false, referrerReward: 10, newUserReward: 0 },
     referralRecords: []
 };
@@ -369,7 +384,7 @@ app.post('/api/register', async (req, res) => {
             email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
             tokens: startTokens, profilePic: '', 
             purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
-            notifications: [], withdrawals: [], referredBy: referredBy || '',
+            notifications: [], withdrawals: [], loginHistory: [], referredBy: referredBy || '',
             role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false, 
             status: 'ACTIVE', banReason: '', createdAt: new Date().toISOString() 
         };
@@ -436,7 +451,17 @@ app.post('/api/login', async (req, res) => {
         if (!uDoc || !uDoc.exists) return res.status(400).send('Invalid credentials.');
         
         if (uDoc.data().status === 'BANNED') return res.status(403).send(`Account Banned: ${uDoc.data().banReason || 'Violation of terms'}`);
-        if (uDoc.data().password === password) res.json({ success: true, username: uDoc.data().username }); 
+        if (uDoc.data().password === password) {
+            const userData = uDoc.data();
+            const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim() || '-';
+            const device = req.get('user-agent') || '-';
+            const loginHistory = [
+                { time: new Date().toISOString(), ip, device },
+                ...((userData.loginHistory || []).filter(Boolean))
+            ].slice(0, 20);
+            await uDoc.ref.update({ loginHistory });
+            res.json({ success: true, username: userData.username }); 
+        }
         else res.status(400).send('Invalid credentials.');
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -453,6 +478,7 @@ app.get('/api/users/:username', async (req, res) => {
             if(!data.playlists) data.playlists = [];
             if(!data.notifications) data.notifications = [];
             if(!data.withdrawals) data.withdrawals = [];
+            if(!data.loginHistory) data.loginHistory = [];
             res.json(data);
         } else res.status(404).send('User not found');
     } catch (e) {
@@ -468,6 +494,7 @@ app.get('/api/all-users', async (req, res) => {
             if(!data.playlists) data.playlists = [];
             if(!data.notifications) data.notifications = [];
             if(!data.withdrawals) data.withdrawals = [];
+            if(!data.loginHistory) data.loginHistory = [];
             return data;
         });
         res.json(users); 
@@ -834,14 +861,27 @@ async function deleteUserAccount(req, res) {
         const userDoc = await userRef.get();
         if (!userDoc.exists) return res.status(404).send('User not found');
 
+        const deletedUser = userDoc.data();
+        const deletedUsername = deletedUser.username || req.params.username;
+        const uploaderNames = [req.params.username, deletedUser.username, deletedUser.djName]
+            .filter(Boolean)
+            .map(name => String(name).toLowerCase());
+        const songSnap = await db.collection('songs').get();
+        const songsToDelete = songSnap.docs.filter(doc => uploaderNames.includes(String(doc.data().uploader || '').toLowerCase()));
+        for(let i = 0; i < songsToDelete.length; i += 450) {
+            const batch = db.batch();
+            songsToDelete.slice(i, i + 450).forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+
         await userRef.delete(); 
-        await logAdminAction(`Deleted user account: <span style="color:var(--danger);">${userDoc.data().username || req.params.username}</span>`, {
+        await logAdminAction(`Deleted user account: <span style="color:var(--danger);">${deletedUsername}</span>`, {
             module: '用户',
             action: '删除用户',
-            targetId: userDoc.data().username || req.params.username,
-            details: 'Delete User'
+            targetId: deletedUsername,
+            details: `Delete User | Removed uploaded songs: ${songsToDelete.length}`
         }); 
-        res.send('Deleted'); 
+        res.send(`Deleted. Removed uploaded songs: ${songsToDelete.length}`); 
     } catch(e) { res.status(500).send(e.message); }
 }
 
@@ -1037,6 +1077,30 @@ app.get('/api/transactions', async (req, res) => {
 });
 app.delete('/api/transactions/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/finance/reconcile', async (req, res) => {
+    try {
+        let deleted = 0;
+        for (const name of ['orders', 'transactions']) {
+            const snap = await db.collection(name).get();
+            for(let i = 0; i < snap.docs.length; i += 450) {
+                const batch = db.batch();
+                snap.docs.slice(i, i + 450).forEach(doc => {
+                    batch.delete(doc.ref);
+                    deleted++;
+                });
+                await batch.commit();
+            }
+        }
+        await logAdminAction('Cleared finance reconciliation records', {
+            module: '财务',
+            action: '清除对账',
+            targetId: 'finance',
+            details: `Deleted orders and transactions: ${deleted}`
+        });
+        res.json({ success: true, deleted });
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/withdrawals', async (req, res) => {
@@ -1278,7 +1342,13 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.homeMainTitle !== undefined) updates.homeMainTitle = String(req.body.homeMainTitle || '').trim() || DEFAULT_SETTINGS.homeMainTitle;
         if (req.body.homeSubtitle !== undefined) updates.homeSubtitle = String(req.body.homeSubtitle || '').trim() || DEFAULT_SETTINGS.homeSubtitle;
         if (req.body.homeAnnouncement !== undefined) updates.homeAnnouncement = String(req.body.homeAnnouncement || '').trim();
+        if (req.body.commissionStatement !== undefined) updates.commissionStatement = String(req.body.commissionStatement || '').trim() || DEFAULT_SETTINGS.commissionStatement;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
+        if (req.body.contestActivities !== undefined) {
+            updates.contestActivities = Array.isArray(req.body.contestActivities)
+                ? req.body.contestActivities.slice(0, 50)
+                : [];
+        }
         if (req.body.maxSongPrice !== undefined) {
             let maxSongPrice = parseInt(req.body.maxSongPrice);
             if(Number.isNaN(maxSongPrice)) maxSongPrice = 200;
@@ -1346,7 +1416,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
