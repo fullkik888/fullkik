@@ -313,7 +313,7 @@
 <div class="header-top">
     <div class="logo-container" id="logoText">FULLKIK</div>
     <div class="nav-tabs">
-        <a href="/music.html" class="nav-tab" data-i18n="backHome">回到首页</a>
+        <a href="/fullkik/main.page" class="nav-tab" data-i18n="backHome">回到首页</a>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
@@ -508,7 +508,7 @@
                 <h2 style="margin:12px 0 0 0;">提成</h2>
             </div>
         </div>
-        <div class="withdraw-note">
+        <div class="withdraw-note" id="withdrawStatementBox">
             <div>• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。</div>
             <div>• 提钻申请后请联系 Gmail：<strong style="color:white;">fullkick@gmail.com</strong>，邮件内容请附上你的签名 / 联系方式。</div>
             <div>• 系统将进行 1-3 天审核处理。</div>
@@ -603,7 +603,7 @@
 <div class="site-footer">© 2026 FULLKIK</div>
 
 <div class="global-player" id="globalPlayerUI">
-    <div class="gp-info" id="gpInfo" onclick="window.location.href='/music.html'">
+    <div class="gp-info" id="gpInfo" onclick="window.location.href='/fullkik/main.page'">
         <img id="gpCover" src="">
         <div style="min-width:0; cursor:pointer;">
             <div class="truncate" style="font-weight:bold; font-size:14px; color:white;" id="gpTitle">Title</div>
@@ -711,13 +711,14 @@
     const API_URL = '/api';
     let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userTopups = [], userFavorites = [], userPlaylists = [];
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
+    let globalSettings = {};
     let currentProfileUserData = null;
     let withdrawalSummary = { totalEarned: 0, locked: 0, balance: 0, withdrawals: [] };
     const username = localStorage.getItem('djUsername');
     const profileUrlParams = new URLSearchParams(window.location.search);
     const incomingReferralCode = profileUrlParams.get('ref');
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
-    if(!username) window.location.href = incomingReferralCode ? `/register.html?ref=${encodeURIComponent(incomingReferralCode)}` : '/register.html';
+    if(!username) window.location.href = incomingReferralCode ? `/fullkik/register?ref=${encodeURIComponent(incomingReferralCode)}` : '/fullkik/register';
     const skipProfileLoader = profileUrlParams.get('skipLoader') === '1';
 
     const dict = {
@@ -750,6 +751,21 @@
     function hideGlobalLoader() { document.getElementById('globalLoader').style.display = 'none'; }
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
+    function getDefaultCommissionStatement() {
+        return '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。';
+    }
+    function escapeHtmlProfile(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    }
+    function renderWithdrawStatement() {
+        const box = document.getElementById('withdrawStatementBox');
+        if(!box) return;
+        const statement = String(globalSettings.commissionStatement || getDefaultCommissionStatement()).trim();
+        box.innerHTML = statement.split(/\n+/).map(line => {
+            const safe = escapeHtmlProfile(line);
+            return `<div>${safe.replace(/Gmail：([^，,]+)/, 'Gmail：<strong style="color:white;">$1</strong>')}</div>`;
+        }).join('');
+    }
 
     // --- INITIALIZATION ---
     async function init() {
@@ -761,6 +777,11 @@
         let p = 0; const pInt = setInterval(() => { p += Math.random() * 20; if(p > 95) p = 95; setProfileProgress(p); }, 50);
 
         try {
+            try {
+                const settingsRes = await fetch(`${API_URL}/settings`);
+                if(settingsRes.ok) globalSettings = await settingsRes.json();
+                renderWithdrawStatement();
+            } catch(e) { renderWithdrawStatement(); }
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
                 const data = await uRes.json(); 
@@ -789,7 +810,7 @@
                     document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
                     if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
                 }
-            } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.href = '/register.html'; }
+            } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.href = '/fullkik/register'; }
             
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
@@ -825,7 +846,7 @@
         if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show');
         if(!e.target.closest('.playlist-card')) document.querySelectorAll('.manage-dropdown').forEach(menu => menu.classList.remove('show'));
     }
-    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/register.html'; }
+    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/fullkik/register'; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
     function getProfileAvatar(user) {
         return user.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E♪%3C/text%3E%3C/svg%3E";
@@ -843,7 +864,7 @@
         grid.innerHTML = following.map(name => {
             const user = allUsers.find(u => u.username === name) || { username: name };
             return `
-                <div class="following-card" onclick="window.location.href='/vip.html?user=${encodeURIComponent(user.username)}'">
+                <div class="following-card" onclick="window.location.href='/fullkik/vip?user=${encodeURIComponent(user.username)}'">
                     <img src="${getProfileAvatar(user)}">
                     <div style="min-width:0;">
                         <div class="following-card-name truncate">${user.djName || user.username}</div>
