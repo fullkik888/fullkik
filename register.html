@@ -75,7 +75,7 @@
         <div class="input-group password-wrap"><input type="password" id="loginPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('loginPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
-        <div style="margin-top: 20px;"><a href="music.html" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
+        <div style="margin-top: 20px;"><a href="/fullkik/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
     </div>
 
     <div id="registerView" class="view-section">
@@ -139,7 +139,7 @@
         const contact = document.getElementById('loginContact').value, password = document.getElementById('loginPass').value;
         if(!contact || !password) return showToast(dict[currentLang].errFill, true);
         const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, password }) });
-        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/music.html'; } 
+        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/fullkik/main.page'; } 
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
@@ -151,7 +151,7 @@
             localStorage.setItem('djUsername', (await res.json()).username); 
             sessionStorage.setItem('fullkikShowWelcome', '1');
             document.getElementById('successModal').style.display = 'flex';
-            setTimeout(() => window.location.href = '/music.html', 2000); 
+            setTimeout(() => window.location.href = '/fullkik/main.page', 2000); 
         } else { showToast(await res.text(), true); }
     }
 
