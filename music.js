@@ -131,6 +131,7 @@ const DEFAULT_SETTINGS = {
     hotProducerIds: null,
     commissionStatement: '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。',
     contestActivities: [],
+    coupons: [],
     referralConfig: { enabled: false, referrerReward: 10, newUserReward: 0 },
     referralRecords: []
 };
@@ -195,6 +196,65 @@ function normalizeSongName(value) {
         .trim()
         .toLowerCase()
         .replace(/\s+/g, ' ');
+}
+
+function normalizeCouponCode(value) {
+    return String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+}
+
+function getCouponState(coupon, username, price, amount) {
+    const now = Date.now();
+    const code = normalizeCouponCode(coupon.code);
+    const userKey = String(username || '').toLowerCase();
+    const usedBy = Array.isArray(coupon.usedBy) ? coupon.usedBy : [];
+    const maxUses = parseInt(coupon.maxUses);
+    const minPrice = Math.max(parseFloat(coupon.minPrice) || 0, 0);
+    const startAt = coupon.startAt ? new Date(coupon.startAt).getTime() : 0;
+    const endAt = coupon.endAt ? new Date(coupon.endAt).getTime() : 0;
+    if(!code) return { ok: false, reason: '优惠码无效' };
+    if(coupon.status === 'DISABLED') return { ok: false, reason: '优惠码已停用' };
+    if(startAt && now < startAt) return { ok: false, reason: '优惠码尚未生效' };
+    if(endAt && now > endAt) return { ok: false, reason: '优惠码已过期' };
+    if(minPrice && price < minPrice) return { ok: false, reason: `最低充值金额为 ${minPrice}` };
+    if(maxUses && usedBy.length >= maxUses) return { ok: false, reason: '优惠码已用完' };
+    if(usedBy.some(row => String(row.username || row).toLowerCase() === userKey)) return { ok: false, reason: '每位用户只能使用一次此优惠码' };
+
+    const type = String(coupon.type || 'PERCENT').toUpperCase();
+    const value = Math.max(parseFloat(coupon.value) || 0, 0);
+    let finalPrice = price;
+    let discount = 0;
+    let bonusDiamonds = 0;
+    if(type === 'PERCENT') {
+        discount = Math.round(price * Math.min(value, 100) / 100);
+        finalPrice = Math.max(0, price - discount);
+    } else if(type === 'FIXED') {
+        discount = Math.min(price, value);
+        finalPrice = Math.max(0, price - discount);
+    } else if(type === 'BONUS_DIAMONDS') {
+        bonusDiamonds = Math.floor(value);
+    }
+    return {
+        ok: true,
+        code,
+        coupon,
+        type,
+        value,
+        baseAmount: amount,
+        finalAmount: amount + bonusDiamonds,
+        basePrice: price,
+        finalPrice,
+        discount,
+        bonusDiamonds,
+        description: coupon.description || ''
+    };
+}
+
+async function validateCouponForUser(username, code, price, amount) {
+    const settings = await getGlobalSettings();
+    const coupons = Array.isArray(settings.coupons) ? settings.coupons : [];
+    const coupon = coupons.find(c => normalizeCouponCode(c.code) === normalizeCouponCode(code));
+    if(!coupon) return { ok: false, reason: '找不到优惠码' };
+    return getCouponState(coupon, username, Math.max(parseFloat(price) || 0, 0), Math.max(parseInt(amount) || 0, 0));
 }
 
 function parseGenreIds(body = {}) {
@@ -352,11 +412,104 @@ app.get('/api/stream/:songId', async (req, res) => {
 // ==========================================
 // 3. AUTHENTICATION & USER MANAGEMENT
 // ==========================================
+app.post('/api/otp/send', async (req, res) => {
+    try {
+        if(!db) return res.status(500).send('DB disconnected');
+        const phone = String(req.body.phone || req.body.contact || '').trim();
+        const type = String(req.body.type || 'register').trim() || 'register';
+        if(!phone) return res.status(400).send('Phone required');
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+        const channel = req.body.channel || 'simulated';
+        const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim() || '-';
+        const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        const ref = await db.collection('otp_logs').add({
+            phone,
+            code,
+            type,
+            channel,
+            ip,
+            userId: req.body.userId || '-',
+            errors: 0,
+            status: 'ACTIVE',
+            msgid,
+            timestamp: now.toISOString(),
+            expiresAt,
+            consumed: false
+        });
+        res.json({ success: true, otpId: ref.id, otp: code, expiresAt, msgid, simulated: true });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/otp/verify', async (req, res) => {
+    try {
+        if(!db) return res.status(500).send('DB disconnected');
+        const phone = String(req.body.phone || '').trim();
+        const code = String(req.body.code || '').trim();
+        const type = String(req.body.type || 'register').trim() || 'register';
+        const snap = await db.collection('otp_logs').where('phone', '==', phone).where('type', '==', type).get();
+        const rows = snap.docs.map(d => ({ id: d.id, ref: d.ref, ...d.data() })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const active = rows.find(row => !row.consumed && ['ACTIVE', 'VERIFIED'].includes(row.status));
+        if(!active) return res.status(400).send('OTP 不存在或已过期');
+        if(active.expiresAt && new Date(active.expiresAt).getTime() < Date.now()) {
+            await active.ref.update({ status: 'EXPIRED' });
+            return res.status(400).send('OTP 已过期');
+        }
+        if(active.code !== code) {
+            await active.ref.update({ errors: (parseInt(active.errors) || 0) + 1 });
+            return res.status(400).send('验证码错误');
+        }
+        await active.ref.update({ status: 'VERIFIED', verifiedAt: new Date().toISOString() });
+        res.json({ success: true, otpToken: active.id });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/otp-history', async (req, res) => {
+    try {
+        const snap = await db.collection('otp_logs').orderBy('timestamp', 'desc').limit(500).get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch(e) { res.json([]); }
+});
+
+app.post('/api/otp/resend/:id', async (req, res) => {
+    try {
+        const doc = await db.collection('otp_logs').doc(req.params.id).get();
+        if(!doc.exists) return res.status(404).send('OTP not found');
+        const data = doc.data();
+        req.body.phone = data.phone;
+        req.body.type = data.type || 'register';
+        req.body.channel = data.channel || 'simulated';
+        req.body.userId = data.userId || '-';
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
+        const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        const ref = await db.collection('otp_logs').add({
+            phone: data.phone,
+            code,
+            type: data.type || 'register',
+            channel: data.channel || 'simulated',
+            ip: data.ip || '-',
+            userId: data.userId || '-',
+            errors: 0,
+            status: 'ACTIVE',
+            msgid,
+            timestamp: now.toISOString(),
+            expiresAt,
+            consumed: false,
+            resentFrom: req.params.id
+        });
+        res.json({ success: true, otpId: ref.id, otp: code, expiresAt, msgid, simulated: true });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/register', async (req, res) => {
     try {
         if(!db) return res.status(500).send('DB disconnected');
-        const { contact, username, password } = req.body;
+        const { contact, username, password, otpToken } = req.body;
         const referredBy = normalizeReferralCode(req.body.ref || req.body.referrer || req.body.referredBy);
+        if(!contact || !username || !password) return res.status(400).send('请填写所有字段');
         
         // SENSITIVE WORD CHECK
         if (await containsSensitiveWord(username)) {
@@ -366,6 +519,18 @@ app.post('/api/register', async (req, res) => {
         const userRef = db.collection('users').doc(username.toLowerCase());
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
+
+        const isEmail = contact.includes('@');
+        if(!isEmail) {
+            if(!otpToken) return res.status(400).send('请先完成 OTP 验证');
+            const otpDoc = await db.collection('otp_logs').doc(String(otpToken)).get();
+            if(!otpDoc.exists) return res.status(400).send('OTP 验证无效');
+            const otpData = otpDoc.data();
+            if(otpData.phone !== contact || otpData.type !== 'register' || otpData.status !== 'VERIFIED' || otpData.consumed) {
+                return res.status(400).send('OTP 验证无效');
+            }
+            await otpDoc.ref.update({ status: 'USED', consumed: true, userId: username, consumedAt: new Date().toISOString() });
+        }
         
         const sysDoc = await db.collection('settings').doc('global').get();
         let startTokens = 0;
@@ -378,7 +543,6 @@ app.post('/api/register', async (req, res) => {
             }
         }
 
-        const isEmail = contact.includes('@');
         const userData = { 
             username, contact, password, 
             email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
@@ -697,27 +861,103 @@ app.post('/api/users/:username/withdrawals', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.get('/api/coupons', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        res.json(Array.isArray(settings.coupons) ? settings.coupons : []);
+    } catch(e) { res.json([]); }
+});
+
+app.post('/api/coupons/validate', async (req, res) => {
+    try {
+        const result = await validateCouponForUser(req.body.username, req.body.code, req.body.price, req.body.amount);
+        if(!result.ok) return res.status(400).send(result.reason);
+        res.json(result);
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/coupons', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const coupons = Array.isArray(settings.coupons) ? settings.coupons : [];
+        const code = normalizeCouponCode(req.body.code);
+        if(!code) return res.status(400).send('Code required');
+        if(coupons.some(c => normalizeCouponCode(c.code) === code)) return res.status(400).send('优惠码已存在');
+        const coupon = {
+            id: 'CP' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase(),
+            code,
+            description: String(req.body.description || '').trim(),
+            type: String(req.body.type || 'PERCENT').toUpperCase(),
+            value: Math.max(parseFloat(req.body.value) || 0, 0),
+            minPrice: Math.max(parseFloat(req.body.minPrice) || 0, 0),
+            maxUses: Math.max(parseInt(req.body.maxUses) || 0, 0),
+            startAt: req.body.startAt || '',
+            endAt: req.body.endAt || '',
+            status: 'ACTIVE',
+            usedBy: [],
+            createdAt: new Date().toISOString()
+        };
+        await db.collection('settings').doc('global').set({ coupons: [coupon, ...coupons].slice(0, 200) }, { merge: true });
+        await logAdminAction(`Created coupon ${code}`, { module: '财务', action: '创建优惠码', targetId: code, details: JSON.stringify(coupon) });
+        res.json(coupon);
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/coupons/:code', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const code = normalizeCouponCode(req.params.code);
+        const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).filter(c => normalizeCouponCode(c.code) !== code);
+        await db.collection('settings').doc('global').set({ coupons }, { merge: true });
+        await logAdminAction(`Deleted coupon ${code}`, { module: '财务', action: '删除优惠码', targetId: code, details: 'Delete coupon' });
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
-        const topupAmount = parseInt(req.body.amount) || 0;
+        let topupAmount = parseInt(req.body.amount) || 0;
+        let finalPrice = Math.max(parseFloat(req.body.price) || 0, 0);
+        let couponMeta = null;
+        const couponCode = normalizeCouponCode(req.body.couponCode);
+        if(couponCode) {
+            const validation = await validateCouponForUser(req.params.username, couponCode, finalPrice, topupAmount);
+            if(!validation.ok) return res.status(400).send(validation.reason);
+            topupAmount = validation.finalAmount;
+            finalPrice = validation.finalPrice;
+            couponMeta = {
+                code: validation.code,
+                type: validation.type,
+                discount: validation.discount,
+                bonusDiamonds: validation.bonusDiamonds,
+                description: validation.description
+            };
+            const settings = await getGlobalSettings();
+            const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).map(c => {
+                if(normalizeCouponCode(c.code) !== couponCode) return c;
+                const usedBy = Array.isArray(c.usedBy) ? c.usedBy : [];
+                return { ...c, usedBy: [{ username: req.params.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
+            });
+            await db.collection('settings').doc('global').set({ coupons }, { merge: true });
+        }
         const newTokens = (user.tokens || 0) + topupAmount; 
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB', date: new Date().toISOString() });
+        topups.push({ amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta, date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
         await addUserNotification(req.params.username, createNotification(
             'topup',
             `成功充值 - ${topupAmount}`,
-            `充值 ${req.body.currency || 'RMB'} ${req.body.price || 0}，获得 ${topupAmount} 钻石`,
-            { amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB' }
+            `充值 ${req.body.currency || 'RMB'} ${finalPrice}，获得 ${topupAmount} 钻石`,
+            { amount: topupAmount, price: finalPrice, currency: req.body.currency || 'RMB', coupon: couponMeta }
         ));
         
         await db.collection('orders').add({
             user: req.params.username, email: user.email || '-',
-            orderId: orderId, amount: topupAmount, price: req.body.price || 0, currency: req.body.currency || 'RMB',
+            orderId: orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta,
             method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
             status: 'COMPLETED', time: new Date().toISOString()
         });
@@ -1349,6 +1589,11 @@ app.put('/api/settings', async (req, res) => {
                 ? req.body.contestActivities.slice(0, 50)
                 : [];
         }
+        if (req.body.coupons !== undefined) {
+            updates.coupons = Array.isArray(req.body.coupons)
+                ? req.body.coupons.slice(0, 200)
+                : [];
+        }
         if (req.body.maxSongPrice !== undefined) {
             let maxSongPrice = parseInt(req.body.maxSongPrice);
             if(Number.isNaN(maxSongPrice)) maxSongPrice = 200;
@@ -1416,7 +1661,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
