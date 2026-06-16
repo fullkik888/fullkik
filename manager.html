@@ -119,6 +119,8 @@
         .grid-reports { grid-template-columns: 3fr 1.5fr 1.5fr 80px 2fr 120px 80px 150px; min-width: 1280px;}
         .grid-sensitive { grid-template-columns: 90px 1fr 140px 200px 160px; min-width:900px;}
         .grid-referrals { grid-template-columns: 80px 1.3fr 1.6fr 1.3fr 90px 170px; min-width:900px; }
+        .grid-coupons { grid-template-columns: 1.1fr 1.6fr 120px 100px 110px 100px 150px 110px; min-width:1180px; }
+        .grid-otp { grid-template-columns: 150px 140px 90px 110px 120px 1.8fr 90px 80px 100px 1.2fr 120px; min-width:1420px; }
         .grid-withdraw-pending { grid-template-columns: 1.3fr 100px 80px 160px 160px; min-width:820px; }
         .grid-withdraw-done { grid-template-columns: 1.3fr 100px 80px 120px 160px; min-width:820px; }
         .grid-finance { grid-template-columns:1.4fr 1fr 90px 90px 130px 90px; min-width:900px; }
@@ -129,6 +131,14 @@
         .settings-inline-grid { display:grid; grid-template-columns:1fr 1fr 220px; gap:16px; align-items:end; }
         .toggle-line { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-weight:800; }
         .toggle-line input { width:18px; height:18px; accent-color:var(--accent-light); }
+        .log-detail-text { white-space:pre-wrap !important; overflow:visible !important; text-overflow:clip !important; line-height:1.55; color:var(--text-muted); word-break:break-word; }
+        .log-meta-line { margin-top:7px; display:flex; gap:8px; flex-wrap:wrap; }
+        .log-meta-chip { border:1px solid var(--border-color); background:rgba(0,0,0,0.24); border-radius:999px; padding:3px 8px; font-size:11px; color:var(--text-muted); }
+        .coupon-form-grid { display:grid; grid-template-columns:1.1fr 1.1fr 150px 120px; gap:14px; padding:22px; align-items:end; }
+        .coupon-form-grid.second { grid-template-columns:1fr 1fr 1fr 1fr; padding-top:0; }
+        .otp-status { display:inline-flex; align-items:center; justify-content:center; min-width:56px; border:1px solid var(--border-color); border-radius:8px; padding:5px 8px; font-weight:900; font-size:12px; }
+        .otp-status.active, .otp-status.verified, .otp-status.used { color:var(--success); border-color:rgba(52,199,89,0.45); }
+        .otp-status.expired { color:var(--danger); border-color:rgba(255,69,58,0.45); }
 
         .sensitive-page { padding: 35px 34px 60px; }
         .sensitive-hero { padding-bottom: 34px; border-bottom: 1px solid var(--border-color); margin-bottom: 44px; }
@@ -383,7 +393,7 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
-            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row { grid-template-columns:1fr; align-items:stretch; }
+            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second { grid-template-columns:1fr; align-items:stretch; }
             .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
             .finance-card-grid, .finance-two-grid { grid-template-columns:1fr; }
@@ -475,6 +485,7 @@
         <div class="nav-title">用户</div>
         <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
         <button class="nav-item" onclick="switchView('referrals', '用户 / 推荐配置')" id="nav-referrals">◇ 推荐配置</button>
+        <button class="nav-item" onclick="switchView('promotions', '用户 / 促销活动')" id="nav-promotions">⚡ 促销活动</button>
         <button class="nav-item" onclick="currentContestId=''; switchView('activity', '活动 / 活动列表')" id="nav-activity">🏆 活动列表</button>
         <div id="contestSidebarList"></div>
         <button class="nav-item" onclick="switchView('downloads', '下载监控')" id="nav-downloads">⎋ 下载监控</button>
@@ -487,7 +498,7 @@
         <button class="nav-item" onclick="switchView('orders', '充值订单')" id="nav-orders">$ 充值订单</button>
         <button class="nav-item" onclick="switchView('wip', '充值套餐')" id="nav-wip-topup">▤ 充值套餐</button>
         <button class="nav-item" onclick="switchView('wip', '支付方式')" id="nav-wip-pay">▤ 支付方式</button>
-        <button class="nav-item" onclick="switchView('wip', '优惠码')" id="nav-wip-promo">★ 优惠码</button>
+        <button class="nav-item" onclick="switchView('coupons', '财务 / 优惠码')" id="nav-coupons">★ 优惠码</button>
         <button class="nav-item" onclick="switchView('withdrawals', '财务 / 提现审批')" id="nav-withdrawals">↗ 提现审批</button>
     </div>
 
@@ -495,6 +506,7 @@
         <div class="nav-title">系统</div>
         <button class="nav-item" onclick="switchView('system-settings', '系统设置')" id="nav-system-settings">⚙ 系统设置</button>
         <button class="nav-item" onclick="switchView('adminlogs', '操作日志')" id="nav-adminlogs">■ 操作日志</button>
+        <button class="nav-item" onclick="switchView('otp-history', '运营 / OTP 历史')" id="nav-otp-history">■ OTP 历史</button>
         <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
     </div>
 </div>
@@ -726,6 +738,30 @@
         </div>
     </div>
 
+    <div id="view-otp-history" class="view-section">
+        <div class="dash-header"><h2>OTP 发送历史</h2><p>短信验证码发送记录 · 共 <span id="otpTotalCount">0</span> 条</p></div>
+        <div class="glass-panel">
+            <div class="filter-bar">
+                <div class="filter-group"><label>手机号</label><input class="input-text" id="otpPhoneFilter" placeholder="模糊匹配，例如 +60 12" oninput="renderOtpHistory()"></div>
+                <div class="filter-group"><label>类型</label><select class="select-box" id="otpTypeFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="register">register</option><option value="verify_existing">verify_existing</option></select></div>
+                <div class="filter-group"><label>渠道</label><select class="select-box" id="otpChannelFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="simulated">simulated</option><option value="telesms">telesms</option><option value="abosend">abosend</option></select></div>
+                <div class="filter-group"><label>从（日期）</label><input class="input-text" type="date" id="otpStartFilter" onchange="renderOtpHistory()"></div>
+                <div class="filter-group"><label>到（日期）</label><input class="input-text" type="date" id="otpEndFilter" onchange="renderOtpHistory()"></div>
+                <button class="btn-primary" onclick="renderOtpHistory()">筛选</button>
+                <button class="btn-text-action" onclick="resetOtpFilters()">重置</button>
+            </div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header" style="color:var(--text-muted); font-weight:normal;">验证码以明文存储，紫色高亮 = 仍在 5 分钟有效期内；灰色 = 已过期或已使用。如需重发，点该行的「重新发送」。</div>
+            <div class="table-container">
+                <div class="table-inner">
+                    <div class="header-row grid-otp"><div>发送时间</div><div>手机号</div><div>验证码</div><div>类型</div><div>渠道</div><div>IP</div><div>用户 ID</div><div>错误次数</div><div>状态</div><div>SMS msgid</div><div style="text-align:right;">操作</div></div>
+                    <div id="otpHistoryList"><div style="padding:40px; text-align:center; color:var(--text-muted);">暂无 OTP 记录</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="view-upload" class="view-section">
         <div class="dash-header" style="justify-content:space-between; align-items:center;">
             <div><h2>上传歌曲</h2><p>管理员直接上传歌曲到平台</p></div>
@@ -828,19 +864,6 @@
                 </div>
             </div>
             <div class="contest-card-grid" id="contestActivityList"></div>
-            <div class="glass-panel" style="padding:20px; margin-top:22px;">
-                <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>注册赠送活动</div><div>旧功能保留</div></div>
-                <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px;">
-                    <div style="color:var(--text-muted); font-size:12px;">#R</div>
-                    <div style="flex:1;">
-                        <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
-                        <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:10px;"><button class="btn-top" onclick="openActivityModal()">编辑</button><button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button></div>
-                </div>
-            </div>
         </div>
 
         <div id="contestDetailPanel" style="display:none;">
@@ -853,6 +876,7 @@
                 <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
                     <span id="contestPublishState" class="contest-status draft">未发布</span>
                     <button class="btn-text-action" onclick="previewContestActivity()">前台预览 ↗</button>
+                    <button class="btn-text-action danger" onclick="confirmDeleteContest(currentContestId, event)">删除活动</button>
                     <button class="btn-text-action danger" onclick="toggleContestPublished()">下架 / 发布</button>
                 </div>
             </div>
@@ -1076,6 +1100,52 @@
         </div>
     </div>
 
+    <div id="view-promotions" class="view-section">
+        <div class="dash-header"><h2>促销活动</h2><p>注册赠送钻石活动，和大赛活动分开管理。</p></div>
+        <div class="glass-panel" style="padding:20px;">
+            <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:12px; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:20px;"><div>注册赠送活动</div><div>新用户注册时自动发放</div></div>
+            <div style="display:flex; align-items:center; background:rgba(0,0,0,0.2); border:1px solid var(--border-color); border-radius:12px; padding:20px; gap:20px; flex-wrap:wrap;">
+                <div style="color:var(--text-muted); font-size:12px;">#PROMO</div>
+                <div style="flex:1; min-width:220px;">
+                    <div style="font-size:16px; font-weight:bold; margin-bottom:5px;">注册送钻石</div>
+                    <div style="font-size:12px; color:var(--text-muted); display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <span>注册赠送 · 💎 <span id="act-reward">10</span></span><span>·</span><span>已发放 <span id="act-count">0</span> 次</span><span>·</span><span>共发出 <span id="act-total">0</span> 💎</span><span>·</span><span id="act-status" style="color:var(--danger)">已停用</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;"><button class="btn-top" onclick="openActivityModal()">编辑</button><button class="btn-top highlight" id="act-toggle-btn" onclick="toggleActivity()">启用</button></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-coupons" class="view-section">
+        <div class="dash-header"><h2>优惠码 / 促销码</h2><p>创建后用户可在充值中心使用；每个优惠码每位注册用户只能使用一次。</p></div>
+        <div class="glass-panel">
+            <div class="panel-header">创建优惠码</div>
+            <div class="coupon-form-grid">
+                <div><label class="settings-label">代号 *</label><input class="input-text" id="couponCodeInput" placeholder="WELCOME10" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">说明</label><input class="input-text" id="couponDescInput" placeholder="新人 10 折" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">类型 *</label><select class="select-box" id="couponTypeInput" style="width:100%;"><option value="PERCENT">PERCENT (%)</option><option value="FIXED">FIXED 减免</option><option value="BONUS_DIAMONDS">BONUS_DIAMONDS</option></select></div>
+                <div><label class="settings-label">数值 *</label><input class="input-text" type="number" id="couponValueInput" min="0" placeholder="10" style="width:100%; box-sizing:border-box;"></div>
+            </div>
+            <div class="coupon-form-grid second">
+                <div><label class="settings-label">最低充值金额</label><input class="input-text" type="number" id="couponMinInput" min="0" value="0" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">最大使用次数</label><input class="input-text" type="number" id="couponMaxInput" min="0" placeholder="∞" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">生效时间</label><input class="input-text" type="datetime-local" id="couponStartInput" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">失效时间</label><input class="input-text" type="datetime-local" id="couponEndInput" style="width:100%; box-sizing:border-box;"></div>
+            </div>
+            <div style="padding:0 22px 22px; border-top:1px dashed var(--border-color); margin-top:8px; display:flex; justify-content:flex-end;"><button class="btn-primary" onclick="createCoupon()">+ 创建优惠码</button></div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">现有优惠码 <span id="couponCountText" style="font-size:12px; color:var(--text-muted); font-weight:normal;">共 0 条</span></div>
+            <div class="table-container">
+                <div class="table-inner">
+                    <div class="header-row grid-coupons"><div>代号</div><div>说明</div><div>类型</div><div>数值</div><div>最低门槛</div><div>使用</div><div>有效期</div><div style="text-align:right;">操作</div></div>
+                    <div id="couponList"><div style="padding:40px; text-align:center; color:var(--text-muted);">暂无优惠码</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="view-withdrawals" class="view-section">
         <div class="dash-header"><h2>提现审批</h2><p>共 <span id="withdrawPendingCount">0</span> 条待审 · <span id="withdrawProcessingCount">0</span> 条处理中</p></div>
         <div class="flow-card">
@@ -1288,6 +1358,7 @@
 <div class="modal-overlay" id="quickPriceModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑价格</h3><input type="number" id="quickPriceInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickPrice()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="quickGenreModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">移动分类</h3><select id="quickGenreSelect" class="modal-input" style="background:#0f0f13;"></select></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickGenre()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
+<div class="modal-overlay" id="contestDeleteModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">删除活动</h3><p style="font-size:13px; color:var(--text-muted); margin:0;" id="contestDeleteText">确定删除此活动吗？</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeDeleteContest()">确认删除</button></div></div></div>
 <div class="modal-overlay" id="banConfirmModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">封禁账号</h3><p style="font-size:12px; color:var(--text-muted);" id="banConfirmTarget"></p><input type="text" id="banConfirmReason" class="modal-input" placeholder="请输入封禁原因(必填)"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeBanTarget()">封禁</button></div></div></div>
 <div class="modal-overlay" id="clearAdminLogsModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">清空日志</h3><p style="font-size:12px; color:var(--text-muted);">确定要清空所有管理员操作记录吗？该操作不可恢复。</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeClearAdminLogs()">确认清空</button></div></div></div>
 <div class="modal-overlay" id="clearReconcileModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0; color:var(--danger);">清除财务对账</h3><p style="font-size:12px; color:var(--text-muted);">确定清除充值订单与交易流水吗？用户余额、购买记录和提现审批不会被删除。</p></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="executeClearReconcile()">确认清除</button></div></div></div>
@@ -1330,8 +1401,8 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [], allWithdrawals = [];
-    let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '';
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [], allWithdrawals = [], allCoupons = [], allOtpLogs = [];
+    let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '', pendingContestDeleteId = '';
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null, pendingDefaultCoverBase64 = null; 
     let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
     let badgeRefreshTimer = null;
@@ -1410,10 +1481,13 @@
         if(viewId === 'songs') loadSongs();
         if(viewId === 'pending') loadPending();
         if(viewId === 'activity') renderContestActivities();
+        if(viewId === 'promotions') renderPromotionActivity();
+        if(viewId === 'coupons') loadCoupons();
         if(viewId === 'transactions') loadTransactions();
         if(viewId === 'orders') loadOrders();
         if(viewId === 'downloads') loadDlMonitor();
         if(viewId === 'adminlogs') loadAdminLogs();
+        if(viewId === 'otp-history') loadOtpHistory();
         if(viewId === 'reports') loadReports();
         if(viewId === 'sensitive') loadSensitiveWords();
         if(viewId === 'system-settings') renderSystemSettings();
@@ -2293,8 +2367,204 @@
         showToast("大赛前台页面下次接入");
     }
     function openActivityModal() { const act = globalSettings.activity || { reward: 10 }; document.getElementById('actRewardInput').value = act.reward; document.getElementById('activityModal').style.display = 'flex'; }
-    async function saveActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, count: 0, total: 0 }; act.reward = parseInt(document.getElementById('actRewardInput').value) || 0; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); closeModals(); hideGlobalLoader(); showToast("Saved"); }
-    async function toggleActivity() { showGlobalLoader(); let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 }; act.enabled = !act.enabled; await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) }); globalSettings.activity = act; renderActivity(); hideGlobalLoader(); showToast(act.enabled ? "Activity Enabled" : "Activity Disabled"); }
+    function renderPromotionActivity() {
+        const act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 };
+        if(document.getElementById('act-reward')) document.getElementById('act-reward').innerText = act.reward || 0;
+        if(document.getElementById('act-count')) document.getElementById('act-count').innerText = act.count || 0;
+        if(document.getElementById('act-total')) document.getElementById('act-total').innerText = act.total || 0;
+        const st = document.getElementById('act-status');
+        const btn = document.getElementById('act-toggle-btn');
+        if(st && btn) {
+            st.innerText = act.enabled ? '已启用' : '已停用';
+            st.style.color = act.enabled ? 'var(--success)' : 'var(--danger)';
+            btn.innerText = act.enabled ? '停用' : '启用';
+            btn.classList.toggle('highlight', !act.enabled);
+        }
+    }
+    async function saveActivity() {
+        showGlobalLoader();
+        let act = globalSettings.activity || { enabled: false, count: 0, total: 0 };
+        act.reward = parseInt(document.getElementById('actRewardInput').value) || 0;
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) });
+        globalSettings.activity = act;
+        renderPromotionActivity();
+        closeModals();
+        hideGlobalLoader();
+        showToast("Saved");
+    }
+    async function toggleActivity() {
+        showGlobalLoader();
+        let act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 };
+        act.enabled = !act.enabled;
+        await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ activity: act }) });
+        globalSettings.activity = act;
+        renderPromotionActivity();
+        hideGlobalLoader();
+        showToast(act.enabled ? "Activity Enabled" : "Activity Disabled");
+    }
+
+    function confirmDeleteContest(id, event) {
+        if(event) event.stopPropagation();
+        pendingContestDeleteId = id;
+        const activity = getContestActivities().find(a => a.id === id);
+        document.getElementById('contestDeleteText').innerText = `确定删除活动「${activity?.title || id}」吗？此操作不可恢复。`;
+        document.getElementById('contestDeleteModal').style.display = 'flex';
+    }
+    async function executeDeleteContest() {
+        if(!pendingContestDeleteId) return closeModals();
+        const next = getContestActivities().filter(a => a.id !== pendingContestDeleteId);
+        pendingContestDeleteId = '';
+        currentContestId = '';
+        closeModals();
+        globalSettings.contestActivities = next;
+        await saveContestActivities("活动已删除");
+        renderContestActivities();
+    }
+
+    async function loadCoupons() {
+        showContentLoader();
+        try {
+            allCoupons = await (await fetch(`${API_URL}/coupons`)).json();
+            renderCoupons();
+        } catch(e) {
+            showToast("优惠码加载失败", true);
+        } finally {
+            hideContentLoader();
+        }
+    }
+    function couponDateRange(c) {
+        const start = c.startAt ? formatLogTime(c.startAt) : '立即';
+        const end = c.endAt ? formatLogTime(c.endAt) : '不限';
+        return `${start} → ${end}`;
+    }
+    function renderCoupons() {
+        const list = document.getElementById('couponList');
+        const count = document.getElementById('couponCountText');
+        if(count) count.innerText = `共 ${allCoupons.length} 条`;
+        if(!list) return;
+        if(!allCoupons.length) {
+            list.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无优惠码</div>`;
+            return;
+        }
+        list.innerHTML = allCoupons.map(c => {
+            const used = Array.isArray(c.usedBy) ? c.usedBy.length : 0;
+            const max = parseInt(c.maxUses) || 0;
+            return `
+                <div class="data-row grid-coupons">
+                    <div style="font-weight:900; color:white;">${escapeHtml(c.code || '-')}</div>
+                    <div class="truncate" title="${escapeHtml(c.description || '-')}">${escapeHtml(c.description || '-')}</div>
+                    <div><span class="log-action-pill">${escapeHtml(c.type || '-')}</span></div>
+                    <div>${c.value || 0}</div>
+                    <div>${c.minPrice || 0}</div>
+                    <div>${used} / ${max || '∞'}</div>
+                    <div class="truncate" title="${escapeHtml(couponDateRange(c))}">${escapeHtml(couponDateRange(c))}</div>
+                    <div style="text-align:right;"><button class="btn-text-action danger" onclick="deleteCoupon('${encodeURIComponent(c.code || '')}')">删除</button></div>
+                </div>`;
+        }).join('');
+    }
+    async function createCoupon() {
+        const payload = {
+            code: document.getElementById('couponCodeInput').value,
+            description: document.getElementById('couponDescInput').value,
+            type: document.getElementById('couponTypeInput').value,
+            value: document.getElementById('couponValueInput').value,
+            minPrice: document.getElementById('couponMinInput').value,
+            maxUses: document.getElementById('couponMaxInput').value,
+            startAt: document.getElementById('couponStartInput').value,
+            endAt: document.getElementById('couponEndInput').value
+        };
+        if(!payload.code || !payload.value) return showToast("请填写代号与数值", true);
+        showGlobalLoader("创建优惠码...");
+        const res = await fetch(`${API_URL}/coupons`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        ['couponCodeInput','couponDescInput','couponValueInput','couponMaxInput','couponStartInput','couponEndInput'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('couponMinInput').value = '0';
+        showToast("优惠码已创建");
+        loadCoupons();
+    }
+    async function deleteCoupon(encodedCode) {
+        const code = decodeURIComponent(encodedCode || '');
+        if(!confirm(`删除优惠码 ${code} ?`)) return;
+        showGlobalLoader("删除优惠码...");
+        const res = await fetch(`${API_URL}/coupons/${encodeURIComponent(code)}`, { method:'DELETE' });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        showToast("优惠码已删除");
+        loadCoupons();
+    }
+
+    async function loadOtpHistory() {
+        showContentLoader();
+        try {
+            allOtpLogs = await (await fetch(`${API_URL}/otp-history`)).json();
+            renderOtpHistory();
+        } catch(e) {
+            showToast("OTP 历史加载失败", true);
+        } finally {
+            hideContentLoader();
+        }
+    }
+    function getOtpStatus(row) {
+        if(row.status === 'USED' || row.status === 'VERIFIED') return row.status;
+        if(row.expiresAt && new Date(row.expiresAt).getTime() < Date.now()) return 'EXPIRED';
+        return row.status || 'ACTIVE';
+    }
+    function renderOtpHistory() {
+        const phone = (document.getElementById('otpPhoneFilter')?.value || '').toLowerCase();
+        const type = document.getElementById('otpTypeFilter')?.value || 'ALL';
+        const channel = document.getElementById('otpChannelFilter')?.value || 'ALL';
+        const start = document.getElementById('otpStartFilter')?.value;
+        const end = document.getElementById('otpEndFilter')?.value;
+        const rows = (allOtpLogs || []).filter(row => {
+            const time = new Date(row.timestamp);
+            return (!phone || String(row.phone || '').toLowerCase().includes(phone))
+                && (type === 'ALL' || row.type === type)
+                && (channel === 'ALL' || row.channel === channel)
+                && (!start || time >= new Date(`${start}T00:00:00`))
+                && (!end || time <= new Date(`${end}T23:59:59`));
+        });
+        const total = document.getElementById('otpTotalCount');
+        if(total) total.innerText = rows.length;
+        const list = document.getElementById('otpHistoryList');
+        if(!list) return;
+        if(!rows.length) {
+            list.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无 OTP 记录</div>`;
+            return;
+        }
+        list.innerHTML = rows.map(row => {
+            const status = getOtpStatus(row);
+            return `
+                <div class="data-row grid-otp">
+                    <div>${formatLogTime(row.timestamp)}</div>
+                    <div>${escapeHtml(row.phone || '-')}</div>
+                    <div style="font-weight:900; letter-spacing:2px;">${escapeHtml(row.code || '-')}</div>
+                    <div><span class="log-action-pill">${escapeHtml(row.type || '-')}</span></div>
+                    <div><span class="log-action-pill">${escapeHtml(row.channel || 'simulated')}</span></div>
+                    <div class="truncate" title="${escapeHtml(row.ip || '-')}">${escapeHtml(row.ip || '-')}</div>
+                    <div>${escapeHtml(row.userId || '-')}</div>
+                    <div>${row.errors || 0}</div>
+                    <div><span class="otp-status ${status.toLowerCase()}">${status === 'EXPIRED' ? '已过期' : status === 'USED' ? '已使用' : status === 'VERIFIED' ? '已验证' : '有效'}</span></div>
+                    <div class="truncate" title="${escapeHtml(row.msgid || '-')}">${escapeHtml(row.msgid || '-')}</div>
+                    <div style="text-align:right;"><button class="btn-primary" style="background:var(--success);" onclick="resendOtp('${row.id}')">重新发送</button></div>
+                </div>`;
+        }).join('');
+    }
+    function resetOtpFilters() {
+        ['otpPhoneFilter','otpStartFilter','otpEndFilter'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('otpTypeFilter').value = 'ALL';
+        document.getElementById('otpChannelFilter').value = 'ALL';
+        renderOtpHistory();
+    }
+    async function resendOtp(id) {
+        showGlobalLoader("重新发送 OTP...");
+        const res = await fetch(`${API_URL}/otp/resend/${id}`, { method:'POST' });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        const data = await res.json();
+        showToast(`已重新发送，模拟验证码：${data.otp}`);
+        loadOtpHistory();
+    }
 
     function getContestActivities() {
         if(!Array.isArray(globalSettings.contestActivities)) globalSettings.contestActivities = [];
@@ -2370,6 +2640,7 @@
                     <div style="font-size:18px; font-weight:900; margin-bottom:12px;">${escapeHtml(activity.title || '未命名活动')}</div>
                     <div style="color:var(--text-muted); font-size:13px; line-height:1.7;">${contestDate(activity.startAt || activity.startTime)} → ${contestDate(activity.endAt || activity.endTime)}</div>
                     <div style="margin-top:14px; color:var(--text-muted); font-size:13px;">${participants} 参赛者 · ${budget.toLocaleString()} 💎 预算</div>
+                    <div style="margin-top:16px; display:flex; justify-content:flex-end;"><button class="btn-text-action danger" onclick="confirmDeleteContest('${activity.id}', event)">删除</button></div>
                 </div>`;
         }).join('');
     }
@@ -2821,6 +3092,18 @@
         hideContentLoader();
     }
 
+    function formatLogDetails(value) {
+        if(value === undefined || value === null || value === '') return '-';
+        if(typeof value === 'object') return JSON.stringify(value, null, 2);
+        const str = String(value);
+        try {
+            const parsed = JSON.parse(str);
+            return JSON.stringify(parsed, null, 2);
+        } catch(e) {
+            return str.replace(/<[^>]+>/g, '');
+        }
+    }
+
     function renderAdminLogs() {
         const moduleFilter = document.getElementById('logModuleFilter').value;
         const actionFilter = document.getElementById('logActionFilter').value;
@@ -2856,7 +3139,8 @@
             const adminName = log.adminName || 'ADMIN';
             const adminEmail = log.adminEmail || 'admin@fullkik.local';
             const targetId = log.targetId || '-';
-            const details = log.details || log.message || '-';
+            const details = formatLogDetails(log.details || log.message || '-');
+            const rawMessage = String(log.message || '').replace(/<[^>]+>/g, '');
             listDiv.innerHTML += `
                 <div class="data-row grid-logs">
                     <div style="color:var(--text-muted); font-size:13px;">${formatLogTime(log.timestamp)}</div>
@@ -2864,7 +3148,14 @@
                     <div><span class="log-action-pill">${actionName}</span></div>
                     <div style="color:var(--text-muted);">${moduleName}</div>
                     <div style="font-weight:bold;">${targetId}</div>
-                    <div class="truncate" title="${String(details).replace(/"/g, '&quot;')}">${details}</div>
+                    <div class="log-detail-text">
+                        <div style="color:var(--text-main); font-weight:700;">${escapeHtml(details)}</div>
+                        <div class="log-meta-line">
+                            <span class="log-meta-chip">ID: ${escapeHtml(log.id || '-')}</span>
+                            <span class="log-meta-chip">type: ${escapeHtml(log.type || 'admin')}</span>
+                            <span class="log-meta-chip">msg: ${escapeHtml(rawMessage || '-')}</span>
+                        </div>
+                    </div>
                 </div>`;
         });
         if(!filtered.length) listDiv.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
@@ -3453,11 +3744,11 @@
         if(isTransloadMode || url) {
             if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
             showGlobalProgress(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId, genreIds, coverBase64: pendingUploadBase64, uploader }) });
-            if (res.ok) { showToast("Transload successful!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); await showUploadError(res); }
+            if (res.ok) { const saved = await res.json(); allSongs = [saved, ...allSongs.filter(s => s.id !== saved.id)]; updatePendingBadge(); resetUploadModal(); hideGlobalProgress(); showToast("Transload successful!"); switchView('songs', '歌曲管理 / 全部歌曲'); handleSongSearch(); } else { hideGlobalProgress(); await showUploadError(res); }
         } else if(file) {
             showGlobalProgress(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); fd.append('genreIds', JSON.stringify(genreIds)); fd.append('uploader', uploader); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
-            if (res.ok) { showToast("Audio Uploaded!"); loadSongs(); switchView('songs'); } else { hideGlobalProgress(); await showUploadError(res); }
+            if (res.ok) { const saved = await res.json(); allSongs = [saved, ...allSongs.filter(s => s.id !== saved.id)]; updatePendingBadge(); resetUploadModal(); hideGlobalProgress(); showToast("Audio Uploaded!"); switchView('songs', '歌曲管理 / 全部歌曲'); handleSongSearch(); } else { hideGlobalProgress(); await showUploadError(res); }
         } else { showToast("Please provide file or URL", true); }
     }
 
