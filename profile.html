@@ -139,9 +139,11 @@
         .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
         .pay-btn { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
         .pay-btn.active { border-color: var(--accent-light); color: white;}
-        .promo-bar { display: flex; gap: 10px; margin-bottom: 30px;}
+        .promo-bar { display: flex; gap: 10px; margin-bottom: 10px;}
         .promo-bar input { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
+        .promo-info { min-height:18px; margin-bottom:22px; color:var(--text-muted); font-size:12px; }
+        .promo-info.active { color:var(--accent-light); font-weight:800; }
         .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
 
         /* --- HISTORY LISTS --- */
@@ -462,7 +464,8 @@
         </div>
         <div class="pay-methods" id="payMethodList"></div>
 
-        <div class="promo-bar"><input type="text" placeholder="促销码 (即将上线)"><button>应用</button></div>
+        <div class="promo-bar"><input type="text" id="topupCouponInput" placeholder="优惠码 / 促销码"><button onclick="applyTopupCoupon()">应用</button></div>
+        <div class="promo-info" id="topupCouponInfo"></div>
 
         <div class="topup-footer">
             <div style="color:var(--text-muted); font-size:14px;">总计 (Total)</div>
@@ -972,6 +975,7 @@
     // --- TOPUP CENTER ---
     let currentCurrency = 'RMB';
     let currentTopupAmt = 500, currentTopupPrice = 850;
+    let baseTopupAmt = 500, baseTopupPrice = 850, appliedCoupon = null;
     const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
     function setCurrency(curr) {
         currentCurrency = curr; document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
@@ -988,11 +992,45 @@
             if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
         });
     }
-    function selectTopup(amt, bonus, price, el) { if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); } currentTopupAmt = amt + bonus; currentTopupPrice = price; const sym = currentCurrency === 'RMB' ? '¥' : 'RM'; document.getElementById('topupTotalDisplay').innerText = `${sym}${price}`; }
+    function resetTopupCoupon() {
+        appliedCoupon = null;
+        const info = document.getElementById('topupCouponInfo');
+        if(info) { info.innerText = ''; info.classList.remove('active'); }
+    }
+    function updateTopupTotal() {
+        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        document.getElementById('topupTotalDisplay').innerText = `${sym}${currentTopupPrice}`;
+    }
+    function selectTopup(amt, bonus, price, el) {
+        if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
+        baseTopupAmt = amt + bonus;
+        baseTopupPrice = price;
+        currentTopupAmt = baseTopupAmt;
+        currentTopupPrice = baseTopupPrice;
+        resetTopupCoupon();
+        updateTopupTotal();
+    }
+    async function applyTopupCoupon() {
+        const code = document.getElementById('topupCouponInput').value.trim();
+        const info = document.getElementById('topupCouponInfo');
+        if(!code) return showToast("请输入优惠码", true);
+        showGlobalLoader("验证优惠码...");
+        const res = await fetch(`${API_URL}/coupons/validate`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, code, price: baseTopupPrice, amount: baseTopupAmt }) });
+        hideGlobalLoader();
+        if(!res.ok) { resetTopupCoupon(); return showToast(await res.text(), true); }
+        const data = await res.json();
+        appliedCoupon = data;
+        currentTopupAmt = data.finalAmount;
+        currentTopupPrice = data.finalPrice;
+        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        info.classList.add('active');
+        info.innerText = data.bonusDiamonds > 0 ? `已应用 ${data.code}：额外 +${data.bonusDiamonds} 钻石` : `已应用 ${data.code}：优惠 ${sym}${data.discount}，应付 ${sym}${data.finalPrice}`;
+        updateTopupTotal();
+    }
     async function executeRealTopup() {
         showGlobalLoader("正在处理订单...");
-        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: currentTopupAmt, price: currentTopupPrice, currency: currentCurrency }) });
-        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { hideGlobalLoader(); showToast("Top up failed", true); }
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: baseTopupAmt, price: baseTopupPrice, currency: currentCurrency, couponCode: appliedCoupon?.code || '' }) });
+        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; const couponInput = document.getElementById('topupCouponInput'); if(couponInput) couponInput.value = ''; resetTopupCoupon(); hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { const msg = await res.text(); hideGlobalLoader(); showToast(msg || "Top up failed", true); }
     }
 
     // --- PLAYLIST LIBRARY (WITH QUEUE ENGINE) ---
