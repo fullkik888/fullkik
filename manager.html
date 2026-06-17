@@ -19,6 +19,12 @@
         
         .nav-section { margin-bottom: 5px; }
         .nav-title { font-size: 11px; color: #555; padding: 10px 20px; margin-top: 5px;}
+        .nav-section.collapsible .nav-title { width:100%; box-sizing:border-box; border:none; background:transparent; display:flex; align-items:center; justify-content:space-between; cursor:pointer; color:var(--text-muted); font-size:14px; font-weight:900; }
+        .nav-section.collapsible .nav-title::after { content:'›'; color:var(--text-muted); transition:transform 0.2s, color 0.2s; }
+        .nav-section.collapsible:not(.collapsed) .nav-title { color:white; }
+        .nav-section.collapsible:not(.collapsed) .nav-title::after { transform:rotate(90deg); color:var(--accent-light); }
+        .nav-collapse-body { display:flex; flex-direction:column; }
+        .nav-section.collapsed .nav-collapse-body { display:none; }
         .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; width: 100%; text-align: left; transition: 0.2s;}
         .nav-item.active { background: rgba(165, 42, 42, 0.1); color: var(--text-main); position: relative;}
         .nav-item.active::before { content: ''; position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
@@ -121,6 +127,7 @@
         .grid-referrals { grid-template-columns: 80px 1.3fr 1.6fr 1.3fr 90px 170px; min-width:900px; }
         .grid-coupons { grid-template-columns: 1.1fr 1.6fr 120px 100px 110px 100px 150px 110px; min-width:1180px; }
         .grid-otp { grid-template-columns: 150px 140px 90px 110px 120px 1.8fr 90px 80px 100px 1.2fr 120px; min-width:1420px; }
+        .grid-topup-packages { grid-template-columns: 1.2fr 100px 100px 100px 100px 120px 80px 90px 140px; min-width:1200px; }
         .grid-withdraw-pending { grid-template-columns: 1.3fr 100px 80px 160px 160px; min-width:820px; }
         .grid-withdraw-done { grid-template-columns: 1.3fr 100px 80px 120px 160px; min-width:820px; }
         .grid-finance { grid-template-columns:1.4fr 1fr 90px 90px 130px 90px; min-width:900px; }
@@ -136,6 +143,7 @@
         .log-meta-chip { border:1px solid var(--border-color); background:rgba(0,0,0,0.24); border-radius:999px; padding:3px 8px; font-size:11px; color:var(--text-muted); }
         .coupon-form-grid { display:grid; grid-template-columns:1.1fr 1.1fr 150px 120px; gap:14px; padding:22px; align-items:end; }
         .coupon-form-grid.second { grid-template-columns:1fr 1fr 1fr 1fr; padding-top:0; }
+        .package-form-grid { display:grid; grid-template-columns:1.2fr repeat(5, 1fr) auto; gap:14px; padding:22px; align-items:end; }
         .otp-status { display:inline-flex; align-items:center; justify-content:center; min-width:56px; border:1px solid var(--border-color); border-radius:8px; padding:5px 8px; font-weight:900; font-size:12px; }
         .otp-status.active, .otp-status.verified, .otp-status.used { color:var(--success); border-color:rgba(52,199,89,0.45); }
         .otp-status.expired { color:var(--danger); border-color:rgba(255,69,58,0.45); }
@@ -373,6 +381,11 @@
             .sidebar-header { display: none; }
             .nav-section { display: flex; margin: 0; }
             .nav-title { display: none; }
+            .nav-section.collapsible { flex:0 0 auto; }
+            .nav-section.collapsible .nav-title { display:flex; height:60px; align-items:center; padding:0 16px; margin:0; min-width:max-content; }
+            .nav-collapse-body { position:fixed; left:0; right:0; top:60px; z-index:460; background:var(--bg-dark); border-bottom:1px solid var(--border-color); flex-direction:row; overflow-x:auto; padding:8px 10px; box-shadow:0 10px 24px rgba(0,0,0,0.45); }
+            .nav-section.collapsed .nav-collapse-body { display:none; }
+            .nav-collapse-body { display:flex; flex-direction:row; }
             .nav-item { white-space: nowrap; padding: 0 16px; min-width:max-content; }
             .sub-nav { position:fixed; left:0; right:0; top:60px; z-index:120; margin:0; border-left:none; border-bottom:1px solid var(--border-color); flex-direction:row; overflow-x:auto; padding:8px 10px; }
             .sub-nav-item { white-space:nowrap; padding:8px 14px; }
@@ -393,7 +406,7 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
-            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second { grid-template-columns:1fr; align-items:stretch; }
+            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid { grid-template-columns:1fr; align-items:stretch; }
             .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
             .finance-card-grid, .finance-two-grid { grid-template-columns:1fr; }
@@ -461,53 +474,73 @@
     
     <div class="nav-section"><button class="nav-item active" onclick="switchView('dashboard', '总览')" id="nav-dashboard">◆ 总览</button></div>
 
-    <div class="nav-section">
-        <div class="nav-title">内容</div>
-        <div class="nav-item-group">
-            <button class="nav-item" onclick="toggleSongSubNav()" id="nav-songs">♪ 全部歌曲 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
-            <div class="sub-nav" id="sub-songs">
-                <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 管理歌曲')">管理歌曲</button>
-                <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
-                <button class="sub-nav-item" onclick="switchView('upload', '歌曲管理 / 上传歌曲')">上传歌曲</button>
-                <button class="sub-nav-item" onclick="switchView('bulk-upload', '歌曲管理 / 批量上传')">批量上传</button>
+    <div class="nav-section collapsible collapsed" data-nav-group="content">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('content')">内容</button>
+        <div class="nav-collapse-body">
+            <div class="nav-item-group">
+                <button class="nav-item" onclick="toggleSongSubNav()" id="nav-songs">♪ 全部歌曲 <span class="nav-count-badge" id="nav-songs-pending-count">0</span></button>
+                <div class="sub-nav" id="sub-songs">
+                    <button class="sub-nav-item active" onclick="switchView('songs', '歌曲管理 / 管理歌曲')">管理歌曲</button>
+                    <button class="sub-nav-item" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列 <span class="badge-pending" id="sidebar-pending-count">0</span></button>
+                    <button class="sub-nav-item" onclick="switchView('upload', '歌曲管理 / 上传歌曲')">上传歌曲</button>
+                    <button class="sub-nav-item" onclick="switchView('bulk-upload', '歌曲管理 / 批量上传')">批量上传</button>
+                </div>
             </div>
+            <button class="nav-item" onclick="switchView('homepage', '首页内容')" id="nav-homepage">⌂ 首页内容</button>
+            <button class="nav-item" onclick="switchView('hot-producers', '首页 / 热门制作人排序')" id="nav-hot-producers">★ 热门制作人排序</button>
+            <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
+            <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
+            <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理 <span class="nav-count-badge" id="nav-reports-pending-count">0</span></button>
+            <button class="nav-item" onclick="switchView('sensitive', '内容 / 敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
+            <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
         </div>
-        <button class="nav-item" onclick="switchView('homepage', '首页内容')" id="nav-homepage">⌂ 首页内容</button>
-        <button class="nav-item" onclick="switchView('hot-producers', '首页 / 热门制作人排序')" id="nav-hot-producers">★ 热门制作人排序</button>
-        <button class="nav-item" onclick="switchView('categories', '分类管理')" id="nav-categories">≡ 分类管理</button>
-        <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
-        <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理 <span class="nav-count-badge" id="nav-reports-pending-count">0</span></button>
-        <button class="nav-item" onclick="switchView('sensitive', '内容 / 敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
-        <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
     </div>
 
-    <div class="nav-section">
-        <div class="nav-title">用户</div>
-        <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
-        <button class="nav-item" onclick="switchView('referrals', '用户 / 推荐配置')" id="nav-referrals">◇ 推荐配置</button>
-        <button class="nav-item" onclick="switchView('promotions', '用户 / 促销活动')" id="nav-promotions">⚡ 促销活动</button>
-        <button class="nav-item" onclick="currentContestId=''; switchView('activity', '活动 / 活动列表')" id="nav-activity">🏆 活动列表</button>
-        <div id="contestSidebarList"></div>
-        <button class="nav-item" onclick="switchView('downloads', '下载监控')" id="nav-downloads">⎋ 下载监控</button>
+    <div class="nav-section collapsible collapsed" data-nav-group="activity">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('activity')">活动</button>
+        <div class="nav-collapse-body">
+            <button class="nav-item" onclick="currentContestId=''; switchView('activity', '活动 / 活动列表')" id="nav-activity">🏆 活动列表</button>
+            <div id="contestSidebarList"></div>
+        </div>
     </div>
 
-    <div class="nav-section">
-        <div class="nav-title">财务</div>
-        <button class="nav-item" onclick="switchView('reconcile', '财务 / 对账聚合')" id="nav-reconcile">♧ 财务对账</button>
-        <button class="nav-item" onclick="switchView('transactions', '交易记录')" id="nav-transactions">◇ 交易记录</button>
-        <button class="nav-item" onclick="switchView('orders', '充值订单')" id="nav-orders">$ 充值订单</button>
-        <button class="nav-item" onclick="switchView('wip', '充值套餐')" id="nav-wip-topup">▤ 充值套餐</button>
-        <button class="nav-item" onclick="switchView('wip', '支付方式')" id="nav-wip-pay">▤ 支付方式</button>
-        <button class="nav-item" onclick="switchView('coupons', '财务 / 优惠码')" id="nav-coupons">★ 优惠码</button>
-        <button class="nav-item" onclick="switchView('withdrawals', '财务 / 提现审批')" id="nav-withdrawals">↗ 提现审批</button>
+    <div class="nav-section collapsible collapsed" data-nav-group="users">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('users')">用户</button>
+        <div class="nav-collapse-body">
+            <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
+        </div>
     </div>
 
-    <div class="nav-section">
-        <div class="nav-title">系统</div>
-        <button class="nav-item" onclick="switchView('system-settings', '系统设置')" id="nav-system-settings">⚙ 系统设置</button>
-        <button class="nav-item" onclick="switchView('adminlogs', '操作日志')" id="nav-adminlogs">■ 操作日志</button>
-        <button class="nav-item" onclick="switchView('otp-history', '运营 / OTP 历史')" id="nav-otp-history">■ OTP 历史</button>
-        <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
+    <div class="nav-section collapsible collapsed" data-nav-group="promotion">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('promotion')">推广</button>
+        <div class="nav-collapse-body">
+            <button class="nav-item" onclick="switchView('referrals', '用户 / 推荐配置')" id="nav-referrals">◇ 推荐配置</button>
+            <button class="nav-item" onclick="switchView('promotions', '用户 / 促销活动')" id="nav-promotions">⚡ 促销活动</button>
+            <button class="nav-item" onclick="switchView('downloads', '下载监控')" id="nav-downloads">⎋ 下载监控</button>
+        </div>
+    </div>
+
+    <div class="nav-section collapsible collapsed" data-nav-group="finance">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('finance')">财务</button>
+        <div class="nav-collapse-body">
+            <button class="nav-item" onclick="switchView('reconcile', '财务 / 对账聚合')" id="nav-reconcile">♧ 财务对账</button>
+            <button class="nav-item" onclick="switchView('transactions', '交易记录')" id="nav-transactions">◇ 交易记录</button>
+            <button class="nav-item" onclick="switchView('orders', '充值订单')" id="nav-orders">$ 充值订单</button>
+            <button class="nav-item" onclick="switchView('topup-packages', '财务 / 充值套餐')" id="nav-topup-packages">▤ 充值套餐</button>
+            <button class="nav-item" onclick="switchView('wip', '支付方式')" id="nav-wip-pay">▤ 支付方式</button>
+            <button class="nav-item" onclick="switchView('coupons', '财务 / 优惠码')" id="nav-coupons">★ 优惠码</button>
+            <button class="nav-item" onclick="switchView('withdrawals', '财务 / 提现审批')" id="nav-withdrawals">↗ 提现审批</button>
+        </div>
+    </div>
+
+    <div class="nav-section collapsible collapsed" data-nav-group="system">
+        <button class="nav-title" type="button" onclick="toggleAdminNavGroup('system')">系统</button>
+        <div class="nav-collapse-body">
+            <button class="nav-item" onclick="switchView('system-settings', '系统设置')" id="nav-system-settings">⚙ 系统设置</button>
+            <button class="nav-item" onclick="switchView('adminlogs', '操作日志')" id="nav-adminlogs">■ 操作日志</button>
+            <button class="nav-item" onclick="switchView('otp-history', '运营 / OTP 历史')" id="nav-otp-history">■ OTP 历史</button>
+            <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
+        </div>
     </div>
 </div>
 
@@ -742,7 +775,7 @@
         <div class="dash-header"><h2>OTP 发送历史</h2><p>短信验证码发送记录 · 共 <span id="otpTotalCount">0</span> 条</p></div>
         <div class="glass-panel">
             <div class="filter-bar">
-                <div class="filter-group"><label>手机号</label><input class="input-text" id="otpPhoneFilter" placeholder="模糊匹配，例如 +60 12" oninput="renderOtpHistory()"></div>
+                <div class="filter-group"><label>邮箱 / 手机号</label><input class="input-text" id="otpPhoneFilter" placeholder="模糊匹配，例如 gmail 或 +60 12" oninput="renderOtpHistory()"></div>
                 <div class="filter-group"><label>类型</label><select class="select-box" id="otpTypeFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="register">register</option><option value="verify_existing">verify_existing</option></select></div>
                 <div class="filter-group"><label>渠道</label><select class="select-box" id="otpChannelFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="simulated">simulated</option><option value="telesms">telesms</option><option value="abosend">abosend</option></select></div>
                 <div class="filter-group"><label>从（日期）</label><input class="input-text" type="date" id="otpStartFilter" onchange="renderOtpHistory()"></div>
@@ -755,7 +788,7 @@
             <div class="panel-header" style="color:var(--text-muted); font-weight:normal;">验证码以明文存储，紫色高亮 = 仍在 5 分钟有效期内；灰色 = 已过期或已使用。如需重发，点该行的「重新发送」。</div>
             <div class="table-container">
                 <div class="table-inner">
-                    <div class="header-row grid-otp"><div>发送时间</div><div>手机号</div><div>验证码</div><div>类型</div><div>渠道</div><div>IP</div><div>用户 ID</div><div>错误次数</div><div>状态</div><div>SMS msgid</div><div style="text-align:right;">操作</div></div>
+                    <div class="header-row grid-otp"><div>发送时间</div><div>邮箱 / 手机号</div><div>验证码</div><div>类型</div><div>渠道</div><div>IP</div><div>用户 ID</div><div>错误次数</div><div>状态</div><div>SMS msgid</div><div style="text-align:right;">操作</div></div>
                     <div id="otpHistoryList"><div style="padding:40px; text-align:center; color:var(--text-muted);">暂无 OTP 记录</div></div>
                 </div>
             </div>
@@ -1146,6 +1179,39 @@
         </div>
     </div>
 
+    <div id="view-topup-packages" class="view-section">
+        <div class="dash-header"><h2>充值套餐</h2><p>/topup-page 显示的所有套餐 · 汇率与套餐保存后立即生效</p></div>
+        <div class="settings-card">
+            <h3>汇率设置</h3>
+            <p>RM 为定价基准；RMB 用户实际支付金额 = RM × 此汇率。</p>
+            <label class="settings-label">1 RM = ? RMB</label>
+            <input class="settings-input" type="number" step="0.0001" min="0.0001" id="topupRateInput" placeholder="1.7000">
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-primary" onclick="saveTopupRate()">保存汇率</button></div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">添加套餐 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">基础 = 充值钻石，赠送 = 额外钻石，首充 = 仅第一次充值额外赠送，RM = 支付价格</span></div>
+            <div class="package-form-grid">
+                <div><label class="settings-label">标签</label><input class="input-text" id="pkgLabelInput" placeholder="限时优惠 / 留空" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">基础 *</label><input class="input-text" type="number" id="pkgAmountInput" min="1" placeholder="100" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">赠送</label><input class="input-text" type="number" id="pkgBonusInput" min="0" value="0" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">首充</label><input class="input-text" type="number" id="pkgFirstInput" min="0" value="0" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">RM *</label><input class="input-text" type="number" id="pkgRmInput" min="0.01" step="0.01" placeholder="100" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">排序</label><input class="input-text" type="number" id="pkgSortInput" value="0" style="width:100%; box-sizing:border-box;"></div>
+                <button class="btn-primary" onclick="createTopupPackage()">+ 创建套餐</button>
+            </div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">现有套餐 <span id="topupPackageCountText" style="font-size:12px; color:var(--text-muted); font-weight:normal;">共 0 组</span></div>
+            <div class="table-container">
+                <div class="table-inner">
+                    <div class="header-row grid-topup-packages"><div>标签</div><div>基础</div><div>赠送</div><div>首充</div><div>RM</div><div>RMB ≈</div><div>排序</div><div>状态</div><div style="text-align:right;">操作</div></div>
+                    <div id="topupPackageList"><div style="padding:40px; text-align:center; color:var(--text-muted);">暂无套餐</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="view-withdrawals" class="view-section">
         <div class="dash-header"><h2>提现审批</h2><p>共 <span id="withdrawPendingCount">0</span> 条待审 · <span id="withdrawProcessingCount">0</span> 条处理中</p></div>
         <div class="flow-card">
@@ -1448,11 +1514,40 @@
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
     function toggleSongSubNav() {
+        openAdminNavGroup('content');
         const sub = document.getElementById('sub-songs');
         const shouldShow = !sub.classList.contains('show');
         sub.classList.toggle('show', shouldShow);
         document.body.classList.toggle('admin-subnav-open', shouldShow);
         switchView('songs', '歌曲管理 / 全部歌曲');
+    }
+
+    function getNavGroupForView(viewId) {
+        if(['songs','pending','upload','bulk-upload','homepage','hot-producers','categories','reports','sensitive'].includes(viewId)) return 'content';
+        if(['activity'].includes(viewId)) return 'activity';
+        if(['users','user-detail'].includes(viewId)) return 'users';
+        if(['referrals','promotions','downloads'].includes(viewId)) return 'promotion';
+        if(['reconcile','transactions','orders','topup-packages','coupons','withdrawals'].includes(viewId)) return 'finance';
+        if(['system-settings','adminlogs','otp-history'].includes(viewId)) return 'system';
+        return '';
+    }
+
+    function openAdminNavGroup(group) {
+        if(!group) {
+            document.querySelectorAll('.nav-section.collapsible').forEach(sec => sec.classList.add('collapsed'));
+            return;
+        }
+        document.querySelectorAll('.nav-section.collapsible').forEach(sec => {
+            sec.classList.toggle('collapsed', sec.dataset.navGroup !== group);
+        });
+    }
+
+    function toggleAdminNavGroup(group) {
+        const sec = document.querySelector(`.nav-section[data-nav-group="${group}"]`);
+        if(!sec) return;
+        const willOpen = sec.classList.contains('collapsed');
+        document.querySelectorAll('.nav-section.collapsible').forEach(item => item.classList.add('collapsed'));
+        if(willOpen) sec.classList.remove('collapsed');
     }
 
     function switchView(viewId, titleStr = '') {
@@ -1463,6 +1558,7 @@
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.sub-nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        openAdminNavGroup(getNavGroupForView(viewId));
         if(!['songs', 'pending', 'upload', 'bulk-upload'].includes(viewId)) {
             const songSub = document.getElementById('sub-songs');
             if(songSub) songSub.classList.remove('show');
@@ -1483,6 +1579,7 @@
         if(viewId === 'activity') renderContestActivities();
         if(viewId === 'promotions') renderPromotionActivity();
         if(viewId === 'coupons') loadCoupons();
+        if(viewId === 'topup-packages') renderTopupPackagesManager();
         if(viewId === 'transactions') loadTransactions();
         if(viewId === 'orders') loadOrders();
         if(viewId === 'downloads') loadDlMonitor();
@@ -2494,6 +2591,123 @@
         loadCoupons();
     }
 
+    function getTopupRate() {
+        const rate = parseFloat(globalSettings.topupExchangeRate);
+        return Number.isFinite(rate) && rate > 0 ? rate : 1.7;
+    }
+    function getTopupPackages() {
+        const rows = Array.isArray(globalSettings.topupPackages) ? globalSettings.topupPackages : [];
+        return rows.slice().sort((a, b) => (parseInt(a.sort) || 0) - (parseInt(b.sort) || 0));
+    }
+    function sanitizeTopupPackages(rows) {
+        return rows.map((p, index) => ({
+            id: String(p.id || ('PK' + Date.now() + index)).trim(),
+            label: String(p.label || '').trim(),
+            amount: Math.max(parseInt(p.amount) || 0, 0),
+            bonus: Math.max(parseInt(p.bonus) || 0, 0),
+            firstTopupBonus: Math.max(parseInt(p.firstTopupBonus) || 0, 0),
+            rmPrice: Math.max(parseFloat(p.rmPrice) || 0, 0),
+            sort: parseInt(p.sort) || (index + 1) * 10,
+            enabled: p.enabled !== false
+        })).filter(p => p.amount > 0 && p.rmPrice > 0);
+    }
+    function renderTopupPackagesManager() {
+        const rateInput = document.getElementById('topupRateInput');
+        if(rateInput) rateInput.value = getTopupRate().toFixed(4);
+        const rows = getTopupPackages();
+        const count = document.getElementById('topupPackageCountText');
+        if(count) count.innerText = `共 ${rows.length} 组`;
+        const list = document.getElementById('topupPackageList');
+        if(!list) return;
+        if(!rows.length) {
+            list.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无套餐</div>`;
+            return;
+        }
+        const rate = getTopupRate();
+        list.innerHTML = rows.map(p => `
+            <div class="data-row grid-topup-packages">
+                <div><input class="input-text" id="pkg-label-${p.id}" value="${escapeHtml(p.label || '')}" placeholder="-" style="width:100%; box-sizing:border-box;"></div>
+                <div><input class="input-text" type="number" min="1" id="pkg-amount-${p.id}" value="${p.amount || 0}" style="width:100%; box-sizing:border-box;"></div>
+                <div><input class="input-text" type="number" min="0" id="pkg-bonus-${p.id}" value="${p.bonus || 0}" style="width:100%; box-sizing:border-box;"></div>
+                <div><input class="input-text" type="number" min="0" id="pkg-first-${p.id}" value="${p.firstTopupBonus || 0}" style="width:100%; box-sizing:border-box;"></div>
+                <div><input class="input-text" type="number" min="0.01" step="0.01" id="pkg-rm-${p.id}" value="${p.rmPrice || 0}" style="width:100%; box-sizing:border-box;"></div>
+                <div>≈ ¥${((parseFloat(p.rmPrice) || 0) * rate).toFixed(2)}</div>
+                <div><input class="input-text" type="number" id="pkg-sort-${p.id}" value="${p.sort || 0}" style="width:100%; box-sizing:border-box;"></div>
+                <div><span class="otp-status ${p.enabled === false ? 'expired' : 'used'}">${p.enabled === false ? '已停用' : '启用'}</span></div>
+                <div style="text-align:right; display:flex; gap:8px; justify-content:flex-end;">
+                    <button class="btn-text-action" onclick="saveTopupPackage('${p.id}')">保存</button>
+                    <button class="btn-text-action" onclick="toggleTopupPackage('${p.id}')">${p.enabled === false ? '启用' : '停用'}</button>
+                    <button class="btn-text-action danger" onclick="deleteTopupPackage('${p.id}')">删除</button>
+                </div>
+            </div>`).join('');
+    }
+    async function persistTopupSettings(message = '充值套餐已保存') {
+        showGlobalLoader(message);
+        const payload = {
+            topupExchangeRate: getTopupRate(),
+            topupPackages: sanitizeTopupPackages(getTopupPackages())
+        };
+        const res = await fetch(`${API_URL}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(!res.ok) {
+            hideGlobalLoader();
+            return showToast(await res.text(), true);
+        }
+        globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+        renderTopupPackagesManager();
+        hideGlobalLoader();
+        showToast(message);
+    }
+    async function saveTopupRate() {
+        const rate = parseFloat(document.getElementById('topupRateInput').value);
+        if(!Number.isFinite(rate) || rate <= 0) return showToast("请输入正确汇率", true);
+        globalSettings.topupExchangeRate = rate;
+        await persistTopupSettings("汇率已保存");
+    }
+    async function createTopupPackage() {
+        const pkg = {
+            id: 'PK' + Date.now(),
+            label: document.getElementById('pkgLabelInput').value.trim(),
+            amount: parseInt(document.getElementById('pkgAmountInput').value) || 0,
+            bonus: parseInt(document.getElementById('pkgBonusInput').value) || 0,
+            firstTopupBonus: parseInt(document.getElementById('pkgFirstInput').value) || 0,
+            rmPrice: parseFloat(document.getElementById('pkgRmInput').value) || 0,
+            sort: parseInt(document.getElementById('pkgSortInput').value) || (getTopupPackages().length + 1) * 10,
+            enabled: true
+        };
+        if(pkg.amount <= 0 || pkg.rmPrice <= 0) return showToast("请填写基础钻石和 RM 价格", true);
+        globalSettings.topupPackages = sanitizeTopupPackages([...(globalSettings.topupPackages || []), pkg]);
+        ['pkgLabelInput','pkgAmountInput','pkgRmInput'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('pkgBonusInput').value = '0';
+        document.getElementById('pkgFirstInput').value = '0';
+        document.getElementById('pkgSortInput').value = '0';
+        await persistTopupSettings("套餐已创建");
+    }
+    async function saveTopupPackage(id) {
+        const rows = getTopupPackages().map(p => {
+            if(p.id !== id) return p;
+            return {
+                ...p,
+                label: document.getElementById(`pkg-label-${id}`).value.trim(),
+                amount: parseInt(document.getElementById(`pkg-amount-${id}`).value) || 0,
+                bonus: parseInt(document.getElementById(`pkg-bonus-${id}`).value) || 0,
+                firstTopupBonus: parseInt(document.getElementById(`pkg-first-${id}`).value) || 0,
+                rmPrice: parseFloat(document.getElementById(`pkg-rm-${id}`).value) || 0,
+                sort: parseInt(document.getElementById(`pkg-sort-${id}`).value) || 0
+            };
+        });
+        globalSettings.topupPackages = sanitizeTopupPackages(rows);
+        await persistTopupSettings("套餐已保存");
+    }
+    async function toggleTopupPackage(id) {
+        globalSettings.topupPackages = getTopupPackages().map(p => p.id === id ? { ...p, enabled: p.enabled === false } : p);
+        await persistTopupSettings("套餐状态已更新");
+    }
+    async function deleteTopupPackage(id) {
+        if(!confirm("确定删除此充值套餐吗？")) return;
+        globalSettings.topupPackages = getTopupPackages().filter(p => p.id !== id);
+        await persistTopupSettings("套餐已删除");
+    }
+
     async function loadOtpHistory() {
         showContentLoader();
         try {
@@ -3094,13 +3308,30 @@
 
     function formatLogDetails(value) {
         if(value === undefined || value === null || value === '') return '-';
-        if(typeof value === 'object') return JSON.stringify(value, null, 2);
-        const str = String(value);
+        const summarize = (obj) => {
+            if(Array.isArray(obj)) {
+                if(obj.every(item => ['string','number','boolean'].includes(typeof item))) return obj.join(', ');
+                return `${obj.length} items`;
+            }
+            if(obj && typeof obj === 'object') {
+                return Object.entries(obj).map(([key, val]) => {
+                    if(Array.isArray(val)) {
+                        const simple = val.every(item => ['string','number','boolean'].includes(typeof item));
+                        return `${key}: ${simple ? val.join(', ') : `${val.length} items`}`;
+                    }
+                    if(val && typeof val === 'object') return `${key}: ${Object.keys(val).length} fields`;
+                    return `${key}: ${val}`;
+                }).join('\n');
+            }
+            return String(obj);
+        };
+        if(typeof value === 'object') return summarize(value);
+        const str = String(value).replace(/<[^>]+>/g, '');
         try {
             const parsed = JSON.parse(str);
-            return JSON.stringify(parsed, null, 2);
+            return summarize(parsed);
         } catch(e) {
-            return str.replace(/<[^>]+>/g, '');
+            return str;
         }
     }
 
