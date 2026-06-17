@@ -225,7 +225,7 @@
         .poster-box img { width: 100%; max-height: 86vh; object-fit: contain; display: block; }
         .poster-close { position: absolute; right: 12px; top: 12px; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.55); color: white; cursor: pointer; font-size: 20px; line-height: 1; display: flex; align-items: center; justify-content: center; }
         .poster-close:hover { background: var(--accent); }
-        .announcement-marquee { display:none; width:min(100%, 980px); margin:16px auto 18px; overflow:hidden; border-radius:22px; border:1px solid rgba(165,42,42,0.28); background:rgba(25,8,8,0.68); color:#eadede; white-space:nowrap; box-shadow:0 12px 28px rgba(0,0,0,0.22); }
+        .announcement-marquee { display:none; width:min(100%, 1180px); margin:16px auto 18px; overflow:hidden; border-radius:0; border:none; background:rgba(25,8,8,0.42); color:#eadede; white-space:nowrap; box-shadow:none; }
         .announcement-marquee span { display:inline-block; padding:10px 0; min-width:100%; animation: announcementMove 18s linear infinite; font-size:14px; font-weight:800; }
         @keyframes announcementMove { from { transform:translateX(100%); } to { transform:translateX(-100%); } }
 
@@ -300,25 +300,25 @@
 <div id="toast" class="toast"></div>
 
 <div class="header-top">
-    <a href="/music.html" class="logo-container" id="logoText" onclick="window.location.href='/music.html'; return false;">FULLKIK</a>
+    <a href="/fullkik/main.page" class="logo-container" id="logoText" onclick="window.location.href='/fullkik/main.page'; return false;">FULLKIK</a>
     <div class="nav-tabs" id="mainNavTabs">
         <button class="nav-tab active" id="nav-home" onclick="switchView('home')" data-i18n="store">首页</button>
         <button class="nav-tab" id="nav-ranking" onclick="switchView('ranking')" data-i18n="ranking">排行榜</button>
-        <button class="nav-tab" id="nav-library" onclick="window.location.href='/profile.html?view=library'">我的音乐</button>
+        <button class="nav-tab" id="nav-library" onclick="window.location.href='/fullkik/profile.page?view=library'">我的音乐</button>
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
-            <a href="/profile.html?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
+            <a href="/fullkik/profile.page?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
             <button class="mail-button" id="mailBtn" onclick="openNotificationsView(event)" aria-label="通知">✉<span class="mail-badge" id="mailBadge">0</span></button>
-            <a href="/profile.html?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
+            <a href="/fullkik/profile.page?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
             </a>
             <button class="profile-trigger" id="profileBtn" onclick="toggleProfileDropdown(event)"></button>
             <div class="profile-dropdown" id="profileDropdown">
-                <button onclick="window.location.href='/profile.html'">个人中心</button>
-                <button onclick="window.location.href='/profile.html?view=topup&skipLoader=1'">充值中心</button>
-                <button onclick="window.location.href='/profile.html?view=history&skipLoader=1'">个人消费</button>
+                <button onclick="window.location.href='/fullkik/profile.page'">个人中心</button>
+                <button onclick="window.location.href='/fullkik/profile.page?view=topup&skipLoader=1'">充值中心</button>
+                <button onclick="window.location.href='/fullkik/profile.page?view=history&skipLoader=1'">个人消费</button>
                 <button style="color:var(--danger);" onclick="logoutUser()">登出</button>
             </div>
         </div>
@@ -451,7 +451,7 @@
 
 <script>
     const API_URL = '/api';
-    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [], userNotifications = [];
+    let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [], userNotifications = [], userFollowing = [];
     let currentSong = null; let userTokens = 0, isUserVip = false;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
@@ -538,7 +538,7 @@
     }
 
     function toggleProfileDropdown(e) {
-        if(!username) return window.location.href = '/register.html';
+        if(!username) return window.location.href = '/fullkik/register';
         e.stopPropagation();
         const dropdown = document.getElementById('profileDropdown');
         if(dropdown) dropdown.classList.toggle('show');
@@ -547,11 +547,11 @@
     function logoutUser() {
         localStorage.removeItem('djUsername');
         localStorage.removeItem('djLastView');
-        window.location.href = '/register.html';
+        window.location.href = '/fullkik/register';
     }
 
     function goProfile() {
-        window.location.href = username ? '/profile.html' : '/register.html';
+        window.location.href = username ? '/fullkik/profile.page' : '/fullkik/register';
     }
 
     let globalSettings = {};
@@ -574,7 +574,7 @@
     function goUploader(uploader) {
         const name = String(uploader || '').trim();
         if(!name || name.toUpperCase() === 'FULLKIK') return;
-        window.location.href = `/vip.html?user=${encodeURIComponent(name)}`;
+        window.location.href = `/fullkik/vip?user=${encodeURIComponent(name)}`;
     }
 
     function uploaderInlineHtml(uploader) {
@@ -636,10 +636,10 @@
         
         if(!username) { 
             const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register.html'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
+            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/fullkik/register'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
             if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
             const mailBtn = document.getElementById('mailBtn'); if(mailBtn) mailBtn.style.display = 'none';
-            const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/register.html';
+            const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/fullkik/register';
         }
 
         try {
@@ -655,7 +655,7 @@
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; isUserVip = data.isVip || false;
+                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; userFollowing = data.following || []; isUserVip = data.isVip || false;
                     if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens;
                     updateNotificationBadge();
                     
@@ -800,7 +800,7 @@
 
     async function openNotificationsView(e) {
         if(e) e.stopPropagation();
-        if(!username) return window.location.href = '/register.html';
+        if(!username) return window.location.href = '/fullkik/register';
         switchView('notifications');
         try {
             await fetch(`${API_URL}/users/${username}/notifications/read`, { method:'PUT' });
@@ -845,15 +845,17 @@
 
     async function toggleFav(songId, event) {
         event.stopPropagation();
-        if(!username) return window.location.href = '/register.html';
+        if(!username) return window.location.href = '/fullkik/register';
         
         const isCurrentlyLiked = userFavorites.includes(songId);
         const btn1 = document.getElementById(`fav-btn-${songId}`);
         const btn2 = document.getElementById(`fav-btn-view-${songId}`);
         const btn3 = document.getElementById(`fav-btn-featured-${songId}`);
+        const btn4 = document.getElementById(`fav-btn-follow-${songId}`);
         if(btn1) btn1.classList.toggle('liked', !isCurrentlyLiked);
         if(btn2) btn2.classList.toggle('liked', !isCurrentlyLiked);
         if(btn3) btn3.classList.toggle('liked', !isCurrentlyLiked);
+        if(btn4) btn4.classList.toggle('liked', !isCurrentlyLiked);
 
         const res = await fetch(`${API_URL}/users/${username}/favorites`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ songId }) });
         if(res.ok) {
@@ -862,6 +864,7 @@
             if(btn1) btn1.classList.toggle('liked', isCurrentlyLiked);
             if(btn2) btn2.classList.toggle('liked', isCurrentlyLiked);
             if(btn3) btn3.classList.toggle('liked', isCurrentlyLiked);
+            if(btn4) btn4.classList.toggle('liked', isCurrentlyLiked);
         }
     }
 
@@ -890,7 +893,7 @@
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
                     const pfp = v.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
                     djHtml += `
-                        <div class="dj-card" onclick="window.location.href='/vip.html?user=${v.username}'">
+                        <div class="dj-card" onclick="window.location.href='/fullkik/vip?user=${v.username}'">
                             ${rClass ? `<div class="dj-rank ${rClass}">${i+1}</div>` : ''}
                             <img src="${pfp}">
                             <div class="dj-name truncate">${v.djName || v.username}</div>
@@ -900,6 +903,7 @@
                 djHtml += `</div>`;
                 container.innerHTML += djHtml;
             }
+            container.innerHTML += generateFollowUpdateHtml();
             renderDjList('PRODUCER'); 
         }
 
@@ -913,6 +917,33 @@
             const gSongs = allSongs.filter(s => songHasGenre(s, g.id) && s.status === 'APPROVED');
             if(gSongs.length > 0) container.innerHTML += generateSongGridHtml(g.name, gSongs, g.id);
         });
+    }
+
+    function generateFollowUpdateHtml() {
+        if(!username || !Array.isArray(userFollowing) || !userFollowing.length) return '';
+        const followedKeys = userFollowing.map(name => String(name || '').toLowerCase());
+        const rows = [...allSongs]
+            .filter(s => s.status === 'APPROVED' && followedKeys.includes(String(s.uploader || '').toLowerCase()))
+            .sort((a,b) => new Date(b.uploadTime || 0) - new Date(a.uploadTime || 0))
+            .slice(0, 12);
+        if(!rows.length) return '';
+        const cards = rows.map(s => {
+            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+            const isFav = userFavorites.includes(s.id);
+            return `
+                <div class="home-song-row-card" onclick="openSong('${s.id}')">
+                    <img src="${cover}">
+                    <div class="info">
+                        <div class="title truncate">${escapeHtml(s.filename)}</div>
+                        <div class="sub truncate">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="price">💎 ${s.price || 0}</div>
+                        <button class="heart-btn ${isFav ? 'liked' : ''}" id="fav-btn-follow-${s.id}" onclick="toggleFav('${s.id}', event)" style="padding:4px; border:none;"><svg viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                    </div>
+                </div>`;
+        }).join('');
+        return `<div class="section-header"><h3>关注更新 <span style="font-size:14px; color:var(--text-muted); margin-left:8px;">· 你关注的创作人</span></h3></div><div class="home-song-grid">${cards}</div>`;
     }
 
     function getHomepageHotProducers(users) {
@@ -1064,7 +1095,7 @@
             });
 
             grid.innerHTML += `
-                <div class="dj-card-large" onclick="window.location.href='/vip.html?user=${u.username}'">
+                <div class="dj-card-large" onclick="window.location.href='/fullkik/vip?user=${u.username}'">
                     <img src="${pfp}" class="pfp">
                     <div class="name truncate">${u.djName || u.username}</div>
                     <div class="songs">${uSongs.length} 首作品</div>
@@ -1214,7 +1245,7 @@
         document.getElementById('playerTitle').innerText = currentSong.filename;
         const uploaderName = currentSong.uploader || 'FULLKIK';
         const uploaderHtml = currentSong.uploader
-            ? `<span class="uploader-link" onclick="window.location.href='/vip.html?user=${encodeURIComponent(currentSong.uploader)}'">${escapeHtml(uploaderName)}</span>`
+            ? `<span class="uploader-link" onclick="window.location.href='/fullkik/vip?user=${encodeURIComponent(currentSong.uploader)}'">${escapeHtml(uploaderName)}</span>`
             : escapeHtml(uploaderName);
         document.getElementById('playerMeta').innerHTML = `${uploaderHtml} • ${currentSong.filename.split('.').pop().toUpperCase()} ${formatBytes(currentSong.size)}`;
         document.getElementById('playerCover').src = currentSong.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
@@ -1254,7 +1285,7 @@
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= PREVIEW_LIMIT_SECONDS) val = PREVIEW_LIMIT_SECONDS - 0.1; audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
-        if(!username) return window.location.href = '/register.html'; 
+        if(!username) return window.location.href = '/fullkik/register'; 
         if(price === 0) return executePurchase(songId, songName, filepath, 0); 
         if(userTokens < price) return showToast("Insufficient tokens!", true); 
         document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">确认购买</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} 💎</div>`; 
