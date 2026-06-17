@@ -708,6 +708,8 @@
 </div>
 
 <div class="modal-overlay" id="infoModal"><div class="modal-box"><div class="modal-content" style="text-align: left;"><h3 style="margin: 0 0 15px 0; text-align:center;" data-i18n="buyDetails">Purchase Details</h3><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">ID: <span id="infoId" style="color:white; font-family: monospace;"></span></div><div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Date: <span id="infoDate" style="color:white;"></span></div><div style="font-size: 14px; color: var(--text-muted);">Cost: <span id="infoCost" style="color:var(--token); font-weight:bold;"></span> Tokens</div></div><div class="modal-actions"><button class="modal-btn cancel" style="border:none;" onclick="closeModals()" data-i18n="close">Close</button></div></div></div>
+<div class="modal-overlay" id="profilePurchaseModal"><div class="modal-box"><div class="modal-content" id="profilePurchaseContent"></div><div class="modal-actions" id="profilePurchaseActions"></div></div></div>
+<div class="modal-overlay" id="profilePurchaseSuccess"><div class="modal-box" style="padding: 40px 20px; text-align:center;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent-light); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size:20px;">购买成功!</h2></div></div>
 
 
 <script>
@@ -976,7 +978,15 @@
     let currentCurrency = 'RMB';
     let currentTopupAmt = 500, currentTopupPrice = 850;
     let baseTopupAmt = 500, baseTopupPrice = 850, appliedCoupon = null;
-    const EX_RATE = 0.65; const packs = [ { t: 500, b: 200, p: 850 }, { t: 400, b: 150, p: 680 }, { t: 300, b: 100, p: 510 }, { t: 200, b: 0, p: 340 }, { t: 100, b: 0, p: 170 }, { t: 50, b: 0, p: 85 } ];
+    const fallbackTopupPackages = [ { amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, label: '限时优惠', sort: 10 }, { amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, label: '限时优惠', sort: 20 }, { amount: 300, bonus: 100, firstTopupBonus: 0, rmPrice: 300, label: '限时优惠', sort: 30 }, { amount: 200, bonus: 0, firstTopupBonus: 0, rmPrice: 200, label: '', sort: 40 }, { amount: 100, bonus: 0, firstTopupBonus: 0, rmPrice: 100, label: '', sort: 50 }, { amount: 50, bonus: 0, firstTopupBonus: 0, rmPrice: 50, label: '', sort: 60 } ];
+    function getTopupRate() {
+        const rate = parseFloat(globalSettings.topupExchangeRate);
+        return Number.isFinite(rate) && rate > 0 ? rate : 1.7;
+    }
+    function getTopupPackages() {
+        const rows = Array.isArray(globalSettings.topupPackages) ? globalSettings.topupPackages : fallbackTopupPackages;
+        return rows.filter(p => p.enabled !== false).sort((a,b) => (parseInt(a.sort) || 0) - (parseInt(b.sort) || 0));
+    }
     function setCurrency(curr) {
         currentCurrency = curr; document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
         const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
@@ -985,12 +995,21 @@
     }
     function renderTopupPacks() {
         const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
+        const packs = getTopupPackages();
+        const rate = getTopupRate();
+        const isFirstTopup = !userTopups.length;
         packs.forEach((pk, i) => {
-            const price = currentCurrency === 'RMB' ? pk.p : Math.round(pk.p * EX_RATE); const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-            const bonusStr = pk.b > 0 ? `<div class="tag">限时优惠</div><div class="amt">💎 ${pk.t} + ${pk.b}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${pk.t}</div>`;
-            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${pk.t}, ${pk.b}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div></div>`;
-            if(i === 0) selectTopup(pk.t, pk.b, price, grid.lastElementChild);
+            const rmPrice = parseFloat(pk.rmPrice) || 0;
+            const price = currentCurrency === 'RMB' ? Math.round(rmPrice * rate) : rmPrice;
+            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const base = parseInt(pk.amount) || 0;
+            const bonus = (parseInt(pk.bonus) || 0) + (isFirstTopup ? (parseInt(pk.firstTopupBonus) || 0) : 0);
+            const label = pk.label || (bonus > 0 ? '限时优惠' : '');
+            const bonusStr = bonus > 0 ? `<div class="tag">${label || '优惠'}</div><div class="amt">💎 ${base} + ${bonus}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${base}</div>`;
+            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${base}, ${bonus}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div>${isFirstTopup && (parseInt(pk.firstTopupBonus)||0) > 0 ? `<div style="font-size:10px; color:var(--accent-light); margin-top:4px;">首充 +${parseInt(pk.firstTopupBonus)||0}</div>` : ''}</div>`;
+            if(i === 0) selectTopup(base, bonus, price, grid.lastElementChild);
         });
+        if(!packs.length) grid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); text-align:center; padding:30px;">暂无可用套餐</div>`;
     }
     function resetTopupCoupon() {
         appliedCoupon = null;
@@ -1080,10 +1099,11 @@
             const songName = s.songName || s.filename;
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             
+            const isOwned = userPurchases.some(p => p.songId === s.id) || !!s.purchaseId;
             let downloadAndInfoHTML = filter === 'BUY' ? `
                 <a href="/api/stream/${s.id}" download="${songName}" class="icon-btn" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></a>
                 <button class="icon-btn" onclick="event.stopPropagation(); showInfo('${s.purchaseId}', '${s.purchaseTime}', ${s.tokensSpent})"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></button>
-            ` : `<button class="icon-btn liked" title="取消收藏" onclick="removeFavoriteFromLibrary('${s.id}', event)"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`;
+            ` : `${!isOwned ? `<button class="btn-text-action" style="color:var(--accent-light); font-weight:900;" onclick="promptProfilePurchase('${s.id}', event)">购买</button>` : `<span style="color:var(--success); font-size:12px; font-weight:900;">已购买</span>`}<button class="icon-btn liked" title="取消收藏" onclick="removeFavoriteFromLibrary('${s.id}', event)"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>`;
 
             let reorderInput = filter === 'BUY' ? `<input type="number" class="seq-input" value="${index+1}" onclick="event.stopPropagation()" onchange="reorderPlaylist(${index}, this.value, '${filter}')">` : `<div style="width:40px; text-align:center; color:var(--text-muted); font-size:14px; font-weight:bold;">${index+1}</div>`;
 
@@ -1095,6 +1115,32 @@
                     <div style="color:var(--text-muted); font-size:12px; text-align:right;">前往播放</div>
                 </div>`;
         });
+    }
+
+    function promptProfilePurchase(songId, event) {
+        if(event) event.stopPropagation();
+        const song = allSongs.find(s => s.id === songId);
+        if(!song) return showToast("歌曲不存在", true);
+        const price = parseInt(song.price) || 0;
+        if(price === 0) return executeProfilePurchase(songId);
+        document.getElementById('profilePurchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0; text-align:center;">确认购买</h3><p style="color:var(--text-muted); margin:0; font-size:14px; text-align:center;">${escapeHtmlProfile(song.filename || 'Untitled')}</p><div style="font-size:26px; font-weight:bold; color:var(--token); margin-top:18px; text-align:center;">${price} 💎</div>`;
+        document.getElementById('profilePurchaseActions').innerHTML = `<button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeProfilePurchase('${songId}')" style="color:var(--accent-light);">确认支付</button>`;
+        document.getElementById('profilePurchaseModal').style.display = 'flex';
+    }
+
+    async function executeProfilePurchase(songId) {
+        closeModals();
+        showGlobalLoader("购买中...");
+        const res = await fetch(`${API_URL}/users/${username}/purchase`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ songId }) });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        const data = await res.json();
+        userTokens = data.tokens;
+        userPurchases = data.purchases || [];
+        document.getElementById('profileBannerTokens').innerText = userTokens;
+        document.getElementById('headerTokenDisplay').innerText = userTokens;
+        document.getElementById('profilePurchaseSuccess').style.display = 'flex';
+        setTimeout(() => { document.getElementById('profilePurchaseSuccess').style.display = 'none'; renderLibrary('FAV'); }, 1200);
     }
 
     async function removeFavoriteFromLibrary(songId, event) {
