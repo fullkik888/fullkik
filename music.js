@@ -132,6 +132,15 @@ const DEFAULT_SETTINGS = {
     commissionStatement: '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。',
     contestActivities: [],
     coupons: [],
+    topupExchangeRate: 1.7,
+    topupPackages: [
+        { id: 'PK500', label: '限时优惠', amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, sort: 10, enabled: true },
+        { id: 'PK400', label: '限时优惠', amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, sort: 20, enabled: true },
+        { id: 'PK300', label: '限时优惠', amount: 300, bonus: 100, firstTopupBonus: 0, rmPrice: 300, sort: 30, enabled: true },
+        { id: 'PK200', label: '', amount: 200, bonus: 0, firstTopupBonus: 0, rmPrice: 200, sort: 40, enabled: true },
+        { id: 'PK100', label: '', amount: 100, bonus: 0, firstTopupBonus: 0, rmPrice: 100, sort: 50, enabled: true },
+        { id: 'PK50', label: '', amount: 50, bonus: 0, firstTopupBonus: 0, rmPrice: 50, sort: 60, enabled: true }
+    ],
     referralConfig: { enabled: false, referrerReward: 10, newUserReward: 0 },
     referralRecords: []
 };
@@ -417,7 +426,7 @@ app.post('/api/otp/send', async (req, res) => {
         if(!db) return res.status(500).send('DB disconnected');
         const phone = String(req.body.phone || req.body.contact || '').trim();
         const type = String(req.body.type || 'register').trim() || 'register';
-        if(!phone) return res.status(400).send('Phone required');
+        if(!phone) return res.status(400).send('Contact required');
         const code = String(Math.floor(100000 + Math.random() * 900000));
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
@@ -520,17 +529,14 @@ app.post('/api/register', async (req, res) => {
         if ((await userRef.get()).exists) return res.status(400).send('USER HAS BEEN REGISTERED');
         if (!(await db.collection('users').where('contact', '==', contact).get()).empty) return res.status(400).send('USER HAS BEEN REGISTERED');
 
-        const isEmail = contact.includes('@');
-        if(!isEmail) {
-            if(!otpToken) return res.status(400).send('请先完成 OTP 验证');
-            const otpDoc = await db.collection('otp_logs').doc(String(otpToken)).get();
-            if(!otpDoc.exists) return res.status(400).send('OTP 验证无效');
-            const otpData = otpDoc.data();
-            if(otpData.phone !== contact || otpData.type !== 'register' || otpData.status !== 'VERIFIED' || otpData.consumed) {
-                return res.status(400).send('OTP 验证无效');
-            }
-            await otpDoc.ref.update({ status: 'USED', consumed: true, userId: username, consumedAt: new Date().toISOString() });
+        if(!otpToken) return res.status(400).send('请先完成 OTP 验证');
+        const otpDoc = await db.collection('otp_logs').doc(String(otpToken)).get();
+        if(!otpDoc.exists) return res.status(400).send('OTP 验证无效');
+        const otpData = otpDoc.data();
+        if(otpData.phone !== contact || otpData.type !== 'register' || otpData.status !== 'VERIFIED' || otpData.consumed) {
+            return res.status(400).send('OTP 验证无效');
         }
+        await otpDoc.ref.update({ status: 'USED', consumed: true, userId: username, consumedAt: new Date().toISOString() });
         
         const sysDoc = await db.collection('settings').doc('global').get();
         let startTokens = 0;
@@ -1594,6 +1600,23 @@ app.put('/api/settings', async (req, res) => {
                 ? req.body.coupons.slice(0, 200)
                 : [];
         }
+        if (req.body.topupExchangeRate !== undefined) {
+            const rate = parseFloat(req.body.topupExchangeRate);
+            updates.topupExchangeRate = Number.isFinite(rate) && rate > 0 ? Math.min(rate, 999) : DEFAULT_SETTINGS.topupExchangeRate;
+        }
+        if (req.body.topupPackages !== undefined) {
+            const rows = Array.isArray(req.body.topupPackages) ? req.body.topupPackages : [];
+            updates.topupPackages = rows.slice(0, 100).map((p, index) => ({
+                id: String(p.id || ('PK' + Date.now() + index)).trim(),
+                label: String(p.label || '').trim(),
+                amount: Math.max(parseInt(p.amount) || 0, 0),
+                bonus: Math.max(parseInt(p.bonus) || 0, 0),
+                firstTopupBonus: Math.max(parseInt(p.firstTopupBonus) || 0, 0),
+                rmPrice: Math.max(parseFloat(p.rmPrice) || 0, 0),
+                sort: parseInt(p.sort) || (index + 1) * 10,
+                enabled: p.enabled !== false
+            })).filter(p => p.amount > 0 && p.rmPrice > 0);
+        }
         if (req.body.maxSongPrice !== undefined) {
             let maxSongPrice = parseInt(req.body.maxSongPrice);
             if(Number.isNaN(maxSongPrice)) maxSongPrice = 200;
@@ -1661,7 +1684,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupPackages', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
