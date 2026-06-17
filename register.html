@@ -95,9 +95,9 @@
     </div>
 
     <div id="otpView" class="view-section">
-        <h2>OTP 验证</h2><p>请输入手机验证码完成注册</p>
+        <h2>OTP 验证</h2><p>请输入验证码完成注册</p>
         <div class="otp-panel">
-            <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;">手机号</div>
+            <div style="color:var(--text-muted); font-size:13px; margin-bottom:6px;">邮箱 / 手机号</div>
             <div class="otp-phone" id="otpPhoneText">-</div>
             <div class="otp-hint" id="otpSimHint"></div>
         </div>
@@ -162,10 +162,6 @@
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
-    function isPhoneContact(contact) {
-        return contact && !contact.includes('@');
-    }
-
     async function finishRegister(payload) {
         const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         if(res.ok) { 
@@ -176,8 +172,8 @@
         } else { showToast(await res.text(), true); }
     }
 
-    async function requestRegisterOtp(phone) {
-        const res = await fetch(`${API_URL}/otp/send`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ phone, type: 'register' }) });
+    async function requestRegisterOtp(contact) {
+        const res = await fetch(`${API_URL}/otp/send`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, type: 'register' }) });
         if(!res.ok) throw new Error(await res.text());
         return res.json();
     }
@@ -186,7 +182,6 @@
         const contact = document.getElementById('regContact').value, username = document.getElementById('regUsername').value, pass = document.getElementById('regPass').value, confirm = document.getElementById('regConfirm').value;
         if(!contact || !username || !pass) return showToast(dict[currentLang].errFill, true); if(pass !== confirm) return showToast(dict[currentLang].errMatch, true);
         pendingRegisterPayload = { contact, username, password: pass, ref: referralCode };
-        if(!isPhoneContact(contact)) return finishRegister(pendingRegisterPayload);
         try {
             const data = await requestRegisterOtp(contact);
             pendingOtpPhone = contact;
