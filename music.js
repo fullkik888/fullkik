@@ -15,6 +15,7 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const cloudinary = require('cloudinary').v2;
 const { Readable } = require('stream');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -129,6 +130,8 @@ const DEFAULT_SETTINGS = {
     categoryDisplayGenreIds: [],
     topNavGenreIds: [],
     hotProducerIds: null,
+    uploadSuccessMessage: '完成提交～ 请等待 1-3 天审核时间.',
+    uploadSuccessDuration: 4,
     commissionStatement: '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。',
     contestActivities: [],
     coupons: [],
@@ -364,6 +367,40 @@ async function containsSensitiveWord(text) {
     }
 }
 
+function getClientIp(req) {
+    const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+    return String(forwarded || req.ip || req.socket?.remoteAddress || '')
+        .replace(/^::ffff:/, '')
+        .trim() || '-';
+}
+
+async function isIpBlocked(ip) {
+    if(!db || !ip || ip === '-') return false;
+    const snap = await db.collection('blocked_ips').where('ip', '==', ip).limit(1).get();
+    return !snap.empty;
+}
+
+const STAFF_PERMISSIONS = [
+    'upload_song',
+    'bulk_upload',
+    'view_all_songs',
+    'edit_all_songs',
+    'takedown_songs',
+    'audit_songs',
+    'manage_reports',
+    'manage_categories',
+    'manage_recommend',
+    'manage_homepage',
+    'manage_nav',
+    'manage_banned_words',
+    'manage_banned_ips',
+    'manage_activity'
+];
+
+function generateStaffPassword() {
+    return crypto.randomBytes(9).toString('base64url');
+}
+
 /**
  * Core Media Streaming Route
  * Prevents hotlinking and direct access outside of the platform.
@@ -427,11 +464,15 @@ app.post('/api/otp/send', async (req, res) => {
         const phone = String(req.body.phone || req.body.contact || '').trim();
         const type = String(req.body.type || 'register').trim() || 'register';
         if(!phone) return res.status(400).send('Contact required');
+        const clientIp = getClientIp(req);
+        if(type === 'register' && await isIpBlocked(clientIp)) {
+            return res.status(403).send('此 IP 已被拉黑，无法注册');
+        }
         const code = String(Math.floor(100000 + Math.random() * 900000));
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
         const channel = req.body.channel || 'simulated';
-        const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim() || '-';
+        const ip = clientIp;
         const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
         const ref = await db.collection('otp_logs').add({
             phone,
@@ -519,6 +560,9 @@ app.post('/api/register', async (req, res) => {
         const { contact, username, password, otpToken } = req.body;
         const referredBy = normalizeReferralCode(req.body.ref || req.body.referrer || req.body.referredBy);
         if(!contact || !username || !password) return res.status(400).send('请填写所有字段');
+        const clientIp = getClientIp(req);
+        if(await isIpBlocked(clientIp)) return res.status(403).send('此 IP 已被拉黑，无法注册');
+        const isEmail = String(contact).includes('@');
         
         // SENSITIVE WORD CHECK
         if (await containsSensitiveWord(username)) {
@@ -623,7 +667,7 @@ app.post('/api/login', async (req, res) => {
         if (uDoc.data().status === 'BANNED') return res.status(403).send(`Account Banned: ${uDoc.data().banReason || 'Violation of terms'}`);
         if (uDoc.data().password === password) {
             const userData = uDoc.data();
-            const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim() || '-';
+            const ip = getClientIp(req);
             const device = req.get('user-agent') || '-';
             const loginHistory = [
                 { time: new Date().toISOString(), ip, device },
@@ -1256,6 +1300,127 @@ app.delete('/api/sensitive-words/:id', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.get('/api/blocked-ips', async (req, res) => {
+    try {
+        const snap = await db.collection('blocked_ips').orderBy('timestamp', 'desc').get();
+        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/blocked-ips', async (req, res) => {
+    try {
+        const ip = String(req.body.ip || '').trim().replace(/^::ffff:/, '');
+        const note = String(req.body.note || '').trim().slice(0, 200);
+        const validIpv4 = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(ip) && ip.split('.').every(part => Number(part) >= 0 && Number(part) <= 255);
+        if(!validIpv4) return res.status(400).send('请输入完整 IPv4 地址');
+        const existing = await db.collection('blocked_ips').where('ip', '==', ip).limit(1).get();
+        if(!existing.empty) return res.status(400).send('此 IP 已在拉黑列表');
+        const row = {
+            ip,
+            note,
+            blockedBy: String(req.body.blockedBy || 'masteradmin').trim() || 'masteradmin',
+            timestamp: new Date().toISOString()
+        };
+        const ref = await db.collection('blocked_ips').add(row);
+        await logAdminAction(`Blocked IP ${ip}`, { module: '内容', action: 'IP 拉黑', targetId: ip, details: note || 'No note' });
+        res.json({ id: ref.id, ...row });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/blocked-ips/:id', async (req, res) => {
+    try {
+        const ref = db.collection('blocked_ips').doc(req.params.id);
+        const doc = await ref.get();
+        if(!doc.exists) return res.status(404).send('IP not found');
+        await ref.delete();
+        await logAdminAction(`Unblocked IP ${doc.data().ip}`, { module: '内容', action: '解除 IP 拉黑', targetId: doc.data().ip });
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/admin/staff', async (req, res) => {
+    try {
+        const snap = await db.collection('admin_staff').orderBy('createdAt', 'desc').get();
+        const staff = snap.docs.map(d => {
+            const data = d.data();
+            delete data.password;
+            return { id: d.id, ...data };
+        });
+        res.json([{
+            id: 'masteradmin',
+            username: 'masteradmin',
+            email: process.env.ADMIN_EMAIL || 'masteradmin@fullkik.local',
+            role: 'ADMIN',
+            status: 'ACTIVE',
+            permissions: STAFF_PERMISSIONS,
+            createdAt: '',
+            lastLoginAt: '',
+            system: true
+        }, ...staff]);
+    } catch(e) { res.status(500).json([]); }
+});
+
+app.post('/api/admin/staff', async (req, res) => {
+    try {
+        const email = String(req.body.email || '').trim().toLowerCase();
+        const username = String(req.body.username || '').trim();
+        const permissions = Array.isArray(req.body.permissions)
+            ? req.body.permissions.filter(p => STAFF_PERMISSIONS.includes(p))
+            : [];
+        if(!email && !username) return res.status(400).send('邮箱与显示名至少填写一项');
+        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).send('邮箱格式不正确');
+        if(email) {
+            const duplicate = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
+            if(!duplicate.empty) return res.status(400).send('此邮箱已存在');
+        }
+        const password = generateStaffPassword();
+        const now = new Date().toISOString();
+        const row = {
+            username: username || email.split('@')[0],
+            email: email || `staff-${Date.now().toString(36)}@fullkik.local`,
+            password,
+            role: 'MAINTAINER',
+            status: 'ACTIVE',
+            permissions,
+            createdAt: now,
+            lastLoginAt: ''
+        };
+        const ref = await db.collection('admin_staff').add(row);
+        await logAdminAction(`Created staff ${row.username}`, { module: '用户', action: '新建员工账号', targetId: ref.id, details: `${row.email} | ${permissions.length} permissions` });
+        res.json({ id: ref.id, ...row });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.put('/api/admin/staff/:id/permissions', async (req, res) => {
+    try {
+        const permissions = Array.isArray(req.body.permissions)
+            ? req.body.permissions.filter(p => STAFF_PERMISSIONS.includes(p))
+            : [];
+        await db.collection('admin_staff').doc(req.params.id).update({ permissions, updatedAt: new Date().toISOString() });
+        await logAdminAction(`Updated staff permissions ${req.params.id}`, { module: '用户', action: '保存员工权限', targetId: req.params.id, details: permissions.join(', ') });
+        res.json({ permissions });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.get('/api/admin/staff/:id/password', async (req, res) => {
+    try {
+        const doc = await db.collection('admin_staff').doc(req.params.id).get();
+        if(!doc.exists) return res.status(404).send('Staff not found');
+        res.json({ password: doc.data().password || '' });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/admin/staff/:id', async (req, res) => {
+    try {
+        const ref = db.collection('admin_staff').doc(req.params.id);
+        const doc = await ref.get();
+        if(!doc.exists) return res.status(404).send('Staff not found');
+        await ref.delete();
+        await logAdminAction(`Deleted staff ${doc.data().username || req.params.id}`, { module: '用户', action: '删除员工账号', targetId: req.params.id });
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.get('/api/reports', async (req, res) => {
     try {
         const snap = await db.collection('reports').orderBy('timestamp', 'desc').get();
@@ -1483,7 +1648,9 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const newSong = {
         filename: title, originalName, filepath: url, coverUrl: coverUrl, genreId: genreIds[0] || 'none', genreIds,
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader,
+        credit: String(reqBody.credit || uploader).trim() || uploader,
+        rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong);
     if(newSong.status === 'PENDING' && newSong.uploader && String(newSong.uploader).toUpperCase() !== 'FULLKIK') {
@@ -1505,10 +1672,40 @@ app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
     catch (e) { res.status(e.status || 500).send(e.message); }
 });
 
-app.post('/api/transload', async (req, res) => {
+app.put('/api/users/:username/songs/:id', async (req, res) => {
     try {
-        res.json(await saveSongData(null, 'TransloadedTrack.m4a', req.body));
-    } catch (e) { res.status(e.status || 400).send(e.message); }
+        const songRef = db.collection('songs').doc(req.params.id);
+        const doc = await songRef.get();
+        if(!doc.exists) return res.status(404).send('Song not found');
+        const song = doc.data();
+        if(String(song.uploader || '').toLowerCase() !== String(req.params.username || '').toLowerCase()) {
+            return res.status(403).send('You do not own this song');
+        }
+        if(song.status !== 'APPROVED') return res.status(400).send('Only published songs can be edited');
+        const filename = String(req.body.name || '').trim();
+        const credit = String(req.body.credit || '').trim();
+        if(!filename) return res.status(400).send('歌曲名称不能为空');
+        if(await containsSensitiveWord(filename) || await containsSensitiveWord(credit)) {
+            return res.status(400).send('歌曲资料包含敏感词');
+        }
+        await songRef.update({ filename, credit: credit || song.uploader || 'FULLKIK', updatedAt: new Date().toISOString() });
+        res.json({ id: doc.id, ...song, filename, credit: credit || song.uploader || 'FULLKIK' });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+app.delete('/api/users/:username/songs/:id', async (req, res) => {
+    try {
+        const songRef = db.collection('songs').doc(req.params.id);
+        const doc = await songRef.get();
+        if(!doc.exists) return res.status(404).send('Song not found');
+        const song = doc.data();
+        if(String(song.uploader || '').toLowerCase() !== String(req.params.username || '').toLowerCase()) {
+            return res.status(403).send('You do not own this song');
+        }
+        if(song.status !== 'APPROVED') return res.status(400).send('Only published songs can be deleted here');
+        await songRef.delete();
+        res.send('Deleted');
+    } catch(e) { res.status(500).send(e.message); }
 });
 
 app.put('/api/songs/:id/settings', async (req, res) => {
@@ -1588,6 +1785,13 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.homeMainTitle !== undefined) updates.homeMainTitle = String(req.body.homeMainTitle || '').trim() || DEFAULT_SETTINGS.homeMainTitle;
         if (req.body.homeSubtitle !== undefined) updates.homeSubtitle = String(req.body.homeSubtitle || '').trim() || DEFAULT_SETTINGS.homeSubtitle;
         if (req.body.homeAnnouncement !== undefined) updates.homeAnnouncement = String(req.body.homeAnnouncement || '').trim();
+        if (req.body.uploadSuccessMessage !== undefined) {
+            updates.uploadSuccessMessage = String(req.body.uploadSuccessMessage || '').trim().slice(0, 300) || DEFAULT_SETTINGS.uploadSuccessMessage;
+        }
+        if (req.body.uploadSuccessDuration !== undefined) {
+            const duration = parseFloat(req.body.uploadSuccessDuration);
+            updates.uploadSuccessDuration = Number.isFinite(duration) ? Math.min(Math.max(duration, 1), 30) : DEFAULT_SETTINGS.uploadSuccessDuration;
+        }
         if (req.body.commissionStatement !== undefined) updates.commissionStatement = String(req.body.commissionStatement || '').trim() || DEFAULT_SETTINGS.commissionStatement;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         if (req.body.contestActivities !== undefined) {
@@ -1684,7 +1888,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupPackages', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupPackages', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
