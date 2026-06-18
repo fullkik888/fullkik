@@ -174,6 +174,31 @@
         .sensitive-stop { color: var(--text-muted); font-weight: 800; }
         .sensitive-delete { color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.45); background: rgba(255,107,107,0.08); border-radius: 7px; padding: 8px 14px; font-size: 14px; font-weight: 800; cursor: pointer; }
         .sensitive-delete:hover { color: white; border-color: var(--danger); background: rgba(255,69,58,0.18); }
+        .ip-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+        .grid-blocked-ip { grid-template-columns:90px 1.2fr 2fr 1.2fr 1.4fr 100px; min-width:980px; }
+        .blocked-ip-value { color:white; font-weight:900; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .staff-permission-guide { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:20px; padding:24px; }
+        .permission-guide-item code { display:inline-block; color:#a970ff; background:rgba(142,72,255,0.12); border-radius:5px; padding:3px 8px; font-size:11px; }
+        .permission-guide-item strong { display:block; margin:8px 0 5px; }
+        .permission-guide-item span { color:var(--text-muted); font-size:12px; line-height:1.5; }
+        .staff-list { display:flex; flex-direction:column; gap:20px; }
+        .staff-card { border:1px solid var(--border-color); border-radius:14px; background:var(--card-bg); padding:26px 30px; }
+        .staff-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border-color); }
+        .staff-identity { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .staff-username { color:white; font-size:18px; font-weight:900; cursor:pointer; }
+        .staff-username:hover { color:#a970ff; }
+        .staff-badge { border:1px solid #2c5f92; color:#69aaf0; border-radius:5px; padding:4px 9px; font-size:11px; font-weight:900; }
+        .staff-badge.maintainer, .staff-badge.active { border-color:rgba(52,199,89,0.5); color:var(--success); }
+        .staff-password-reveal { color:#ffcc00; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; min-width:110px; }
+        .staff-permissions { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:12px; padding-top:20px; }
+        .permission-toggle { border:1px solid var(--border-color); border-radius:9px; padding:13px 15px; color:var(--text-muted); background:rgba(255,255,255,0.02); display:flex; align-items:center; gap:9px; cursor:pointer; font-size:13px; }
+        .permission-toggle.enabled { border-color:rgba(52,199,89,0.45); background:rgba(52,199,89,0.08); color:white; }
+        .permission-toggle input { accent-color:#9b4dff; width:17px; height:17px; }
+        .staff-card-actions { display:flex; align-items:center; gap:14px; margin-top:20px; }
+        .staff-danger { margin-left:auto; border:1px solid rgba(255,69,58,0.45); background:rgba(255,69,58,0.08); color:var(--danger); border-radius:7px; padding:9px 15px; cursor:pointer; }
+        .staff-modal-grid { display:grid; grid-template-columns:1fr; gap:16px; }
+        .staff-modal-permissions { display:flex; flex-wrap:wrap; gap:10px; }
+        .staff-modal-permissions .permission-toggle { background:#08080d; }
 
         .settings-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 34px 36px; margin-bottom: 28px; }
         .settings-card h3 { margin: 0 0 12px 0; font-size: 22px; font-weight: 900; }
@@ -520,7 +545,8 @@
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
             .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid { grid-template-columns:1fr; align-items:stretch; }
-            .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow { grid-template-columns:1fr; }
+            .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow, .ip-form-grid { grid-template-columns:1fr; }
+            .staff-permission-guide, .staff-permissions { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
             .finance-card-grid, .finance-two-grid { grid-template-columns:1fr; }
             .finance-balance-flow { grid-template-columns:1fr; }
@@ -603,7 +629,7 @@
             <button class="nav-item" onclick="switchView('wip', '推荐分类')" id="nav-wip3">✦ 推荐分类</button>
             <button class="nav-item" onclick="switchView('reports', '举报管理')" id="nav-reports">⚑ 举报管理 <span class="nav-count-badge" id="nav-reports-pending-count">0</span></button>
             <button class="nav-item" onclick="switchView('sensitive', '内容 / 敏感词管理')" id="nav-sensitive">∅ 敏感词</button>
-            <button class="nav-item" onclick="switchView('wip', '外部解析')" id="nav-wip-ext">◱ 外部解析</button>
+            <button class="nav-item" onclick="switchView('blocked-ips', '内容 / IP 拉黑')" id="nav-blocked-ips">⊖ IP 拉黑</button>
         </div>
     </div>
 
@@ -619,6 +645,7 @@
         <button class="nav-title" type="button" onclick="toggleAdminNavGroup('users')">用户</button>
         <div class="nav-collapse-body">
             <button class="nav-item" onclick="switchView('users', '用户管理')" id="nav-users">◉ 用户管理</button>
+            <button class="nav-item" onclick="switchView('staff', '用户 / 员工与权限')" id="nav-staff">⌁ 员工与权限</button>
         </div>
     </div>
 
@@ -806,6 +833,16 @@
             <div class="settings-actions"><button class="btn-text-action" onclick="testSupportWhatsapp()">打开测试</button><button class="btn-primary" onclick="saveSystemSettings()">保存</button></div>
         </div>
         <div class="settings-card">
+            <h3>VIP 上传完成提示</h3>
+            <p>VIP 提交歌曲后显示的提示文字与停留时间。停留时间可设 1 至 30 秒。</p>
+            <label class="settings-label">提示文字</label>
+            <textarea id="settingUploadSuccessMessage" class="settings-textarea" style="min-height:100px;" placeholder="完成提交～ 请等待 1-3 天审核时间."></textarea>
+            <label class="settings-label" style="margin-top:18px;">显示时间（秒）</label>
+            <input type="number" id="settingUploadSuccessDuration" class="settings-input" min="1" max="30" step="0.5" value="4">
+            <div class="settings-dash"></div>
+            <div class="settings-actions"><button class="btn-primary" onclick="saveSystemSettings()">保存</button></div>
+        </div>
+        <div class="settings-card">
             <h3>提成声明</h3>
             <p>发布后会显示在 profile.page 的「提成」页面，用来说明提钻条件、联系邮箱、审核时间等。</p>
             <label class="settings-label">声明内容</label>
@@ -864,6 +901,32 @@
                     <div id="sensitiveWordList"><div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="view-blocked-ips" class="view-section sensitive-page">
+        <div class="sensitive-hero">
+            <h1>IP 拉黑列表</h1>
+            <p>永久禁止注册 · 共 <span id="blockedIpCount">0</span> 个 IP</p>
+        </div>
+        <div class="sensitive-card sensitive-add-card">
+            <h3>添加 IP 拉黑</h3>
+            <div class="ip-form-grid">
+                <div><label class="sensitive-label">IP 地址 *</label><input type="text" id="blockedIpInput" class="sensitive-input" style="width:100%;" placeholder="例如 1.2.3.4"></div>
+                <div><label class="sensitive-label">备注（可选）</label><input type="text" id="blockedIpNote" class="sensitive-input" style="width:100%;" placeholder="例如 刷收藏 / 恶意注册"></div>
+            </div>
+            <div class="sensitive-dash"></div>
+            <div style="display:flex; align-items:center; gap:20px; justify-content:space-between; flex-wrap:wrap;">
+                <div style="color:var(--text-muted); font-size:13px; line-height:1.7;">拉黑后该 IPv4 无法注册。当前使用完整 IP 匹配，不支持 CIDR 段。</div>
+                <button class="sensitive-delete" style="font-size:15px; padding:12px 20px;" onclick="addBlockedIp()">⊖ 拉黑</button>
+            </div>
+        </div>
+        <div class="sensitive-card sensitive-table">
+            <div class="sensitive-table-title">已拉黑 IP</div>
+            <div class="table-container"><div class="table-inner">
+                <div class="header-row grid-blocked-ip"><div>ID</div><div>IP</div><div>备注</div><div>拉黑人</div><div>时间</div><div style="text-align:right;">操作</div></div>
+                <div id="blockedIpList"><div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div></div>
+            </div></div>
         </div>
     </div>
 
@@ -935,15 +998,9 @@
             </div>
             
             <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
-            <div class="upload-tabs" id="audio-tabs">
-                <button class="active" id="btn-mode-file" onclick="setUploadMode(false)">上传文件</button>
-                <button id="btn-mode-link" onclick="setUploadMode(true)">粘贴链接</button>
-            </div>
-            
             <div class="upload-dropzone" id="audio-dropzone" onclick="document.getElementById('uploadFileInput').click()">
                 拖拽 MP3 / WAV 文件到此处，或 <span style="color:var(--accent-light)">点击选择</span>
             </div>
-            <input type="text" class="input-text" id="transloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-top:10px;">
             <input type="file" id="uploadFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleAudioSelect(event)">
             <div id="audio-filename" style="font-size:12px; color:var(--accent-light); margin-top:5px; text-align:center;"></div>
 
@@ -1215,6 +1272,18 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="view-staff" class="view-section">
+        <div class="dash-header" style="align-items:flex-end;">
+            <div><h2>员工与权限</h2><p><span id="staffCount">0</span> 个员工账号 · ADMIN + MAINTAINER · 在线编辑权限矩阵</p></div>
+            <button class="btn-primary" style="background:#9747ff;" onclick="openCreateStaffModal()">+ 新建员工账号</button>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">权限项说明（<span id="permissionCount">0</span> 项 · 勾选即生效）</div>
+            <div class="staff-permission-guide" id="staffPermissionGuide"></div>
+        </div>
+        <div class="staff-list" id="staffList"><div style="padding:40px; text-align:center; color:var(--text-muted);">暂无员工账号</div></div>
     </div>
 
     <div id="view-downloads" class="view-section">
@@ -1549,6 +1618,39 @@
 
 <audio id="adminAudioPlayer" style="display:none;"></audio>
 
+<div class="modal-overlay" id="createStaffModal">
+    <div class="modal-box" style="max-width:860px;">
+        <div class="modal-content">
+            <h2 style="margin:0 0 12px;">新建员工账号</h2>
+            <p style="color:var(--text-muted); line-height:1.7; margin:0 0 22px;">员工角色为 <strong style="color:var(--success);">MAINTAINER</strong>，只能访问被勾选的权限页面。系统会生成临时密码。</p>
+            <div class="staff-modal-grid">
+                <div><label class="settings-label">邮箱</label><input class="modal-input" id="staffEmailInput" placeholder="staff@example.com"></div>
+                <div><label class="settings-label">显示名 / 用户名</label><input class="modal-input" id="staffUsernameInput" placeholder="张三"></div>
+                <div style="color:var(--text-muted); font-size:13px;">邮箱与显示名至少填一项。</div>
+                <div><label class="settings-label">初始权限</label><div class="staff-modal-permissions" id="createStaffPermissions"></div></div>
+            </div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:#a970ff;" onclick="createStaffAccount()">创建并生成临时密码</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="staffCreatedModal">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-content">
+            <h2 style="margin:0 0 12px; color:var(--success);">员工账号已创建</h2>
+            <p style="color:var(--text-muted); margin:0 0 20px;">请复制以下账号资料交给员工。密码也可以之后点击员工用户名查看 5 秒。</p>
+            <label class="settings-label">Gmail / 邮箱</label><div id="createdStaffEmail" class="modal-input" style="color:white; user-select:all;"></div>
+            <label class="settings-label">临时密码</label><div id="createdStaffPassword" class="modal-input" style="color:#ffcc00; user-select:all; font-family:ui-monospace,monospace;"></div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn" onclick="closeModals()" style="color:var(--success);">完成</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="deleteStaffModal">
+    <div class="modal-box">
+        <div class="modal-content"><h3 style="margin:0 0 12px; color:var(--danger);">删除员工账号</h3><p id="deleteStaffText" style="color:var(--text-muted); margin:0;">确定删除吗？</p></div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="confirmDeleteStaff()">确认删除</button></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="quickPriceModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑价格</h3><input type="number" id="quickPriceInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickPrice()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="quickGenreModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">移动分类</h3><select id="quickGenreSelect" class="modal-input" style="background:#0f0f13;"></select></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="confirmQuickGenre()" style="color:var(--accent-light)">保存</button></div></div></div>
 <div class="modal-overlay" id="activityModal"><div class="modal-box"><div class="modal-content"><h3 style="margin: 0 0 10px 0;">编辑注册活动</h3><label class="input-label">注册赠送 💎</label><input type="number" id="actRewardInput" class="modal-input" min="0"></div><div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="saveActivity()" style="color:var(--accent-light)">保存</button></div></div></div>
@@ -1595,15 +1697,33 @@
 
 <script>
     const API_URL = '/api'; 
-    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allReports = [], allAdminLogs = [], allWithdrawals = [], allCoupons = [], allOtpLogs = [];
+    let allSongs = [], allUsers = [], allGenres = [], allTrans = [], allOrders = [], allSensitiveWords = [], allBlockedIps = [], allStaff = [], allReports = [], allAdminLogs = [], allWithdrawals = [], allCoupons = [], allOtpLogs = [];
     let currentEditUser = null, currentEditId = null, draggedGenreId = null, currentQuickEditId = null, pendingDeleteUsername = '', pendingContestDeleteId = '';
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null, pendingDefaultCoverBase64 = null; 
-    let isTransloadMode = false; let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
+    let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
     let badgeRefreshTimer = null;
     let selectedManagerBulkFiles = [];
     let hotProducerDraftIds = null;
     let reconcileRange = '7', reconcileCustomStart = '', reconcileCustomEnd = '';
     let currentContestId = '', currentContestTab = 'config';
+    let pendingDeleteStaffId = '';
+
+    const STAFF_PERMISSION_DEFS = [
+        { id:'upload_song', label:'上传歌曲', desc:'访问单首歌曲上传页面' },
+        { id:'bulk_upload', label:'批量上传', desc:'访问批量上传页面' },
+        { id:'view_all_songs', label:'查看歌曲列表', desc:'访问后台歌曲列表与筛选' },
+        { id:'edit_all_songs', label:'编辑歌曲', desc:'编辑标题、价格、封面与艺人' },
+        { id:'takedown_songs', label:'下架/恢复/删除', desc:'管理歌曲上下架与删除' },
+        { id:'audit_songs', label:'审核 VIP 歌曲', desc:'查看与处理 VIP 待审提交' },
+        { id:'manage_reports', label:'处理用户举报', desc:'查看举报列表与更新状态' },
+        { id:'manage_categories', label:'分类管理', desc:'创建、重命名与删除分类' },
+        { id:'manage_recommend', label:'推荐分类', desc:'管理首页推荐分类与排序' },
+        { id:'manage_homepage', label:'首页内容', desc:'管理 Banner、公告与首页内容' },
+        { id:'manage_nav', label:'导航管理', desc:'管理顶部导航分类入口' },
+        { id:'manage_banned_words', label:'敏感词', desc:'管理标题敏感词过滤' },
+        { id:'manage_banned_ips', label:'IP 拉黑', desc:'管理禁止注册的 IP' },
+        { id:'manage_activity', label:'上传大赛', desc:'管理活动配置与奖项' }
+    ];
 
     let songPage = 1, songLimit = 20, songFiltered = [];
     let pendPage = 1, pendLimit = 20, pendFiltered = [];
@@ -1680,9 +1800,9 @@
     }
 
     function getNavGroupForView(viewId) {
-        if(['songs','pending','upload','bulk-upload','homepage','hot-producers','categories','reports','sensitive'].includes(viewId)) return 'content';
+        if(['songs','pending','upload','bulk-upload','homepage','hot-producers','categories','reports','sensitive','blocked-ips'].includes(viewId)) return 'content';
         if(['activity'].includes(viewId)) return 'activity';
-        if(['users','user-detail'].includes(viewId)) return 'users';
+        if(['users','user-detail','staff'].includes(viewId)) return 'users';
         if(['referrals','promotions','downloads'].includes(viewId)) return 'promotion';
         if(['reconcile','transactions','orders','topup-packages','coupons','withdrawals'].includes(viewId)) return 'finance';
         if(['system-settings','adminlogs','otp-history'].includes(viewId)) return 'system';
@@ -1764,6 +1884,8 @@
         if(viewId === 'otp-history') loadOtpHistory();
         if(viewId === 'reports') loadReports();
         if(viewId === 'sensitive') loadSensitiveWords();
+        if(viewId === 'blocked-ips') loadBlockedIps();
+        if(viewId === 'staff') loadStaff();
         if(viewId === 'system-settings') renderSystemSettings();
         if(viewId === 'categories') { renderFeaturedGenreSettings(); renderTopNavGenreSettings(); renderCategoryDisplayGenreSettings(); }
         if(viewId === 'bulk-upload') renderManagerBulkList();
@@ -2224,9 +2346,13 @@
         const maxInput = document.getElementById('settingMaxSongPrice');
         const supportInput = document.getElementById('settingSupportWhatsapp');
         const commissionInput = document.getElementById('settingCommissionStatement');
+        const uploadMessageInput = document.getElementById('settingUploadSuccessMessage');
+        const uploadDurationInput = document.getElementById('settingUploadSuccessDuration');
         if(maxInput) maxInput.value = globalSettings.maxSongPrice || 200;
         if(supportInput) supportInput.value = globalSettings.supportWhatsapp || '';
         if(commissionInput) commissionInput.value = globalSettings.commissionStatement || getDefaultCommissionStatement();
+        if(uploadMessageInput) uploadMessageInput.value = globalSettings.uploadSuccessMessage || '完成提交～ 请等待 1-3 天审核时间.';
+        if(uploadDurationInput) uploadDurationInput.value = globalSettings.uploadSuccessDuration || 4;
         renderDefaultCover();
     }
 
@@ -2287,8 +2413,10 @@
     async function saveSystemSettings() {
         const maxSongPrice = document.getElementById('settingMaxSongPrice').value;
         const supportWhatsapp = document.getElementById('settingSupportWhatsapp').value.trim();
+        const uploadSuccessMessage = document.getElementById('settingUploadSuccessMessage').value.trim();
+        const uploadSuccessDuration = document.getElementById('settingUploadSuccessDuration').value;
         showGlobalLoader("保存设置...");
-        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ maxSongPrice, supportWhatsapp }) });
+        const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ maxSongPrice, supportWhatsapp, uploadSuccessMessage, uploadSuccessDuration }) });
         if(res.ok) {
             globalSettings = await (await fetch(`${API_URL}/settings`)).json();
             renderSystemSettings();
@@ -3447,6 +3575,190 @@
         else showToast("删除失败", true);
     }
 
+    async function loadBlockedIps() {
+        showContentLoader();
+        const res = await fetch(`${API_URL}/blocked-ips`);
+        allBlockedIps = res.ok ? await res.json() : [];
+        document.getElementById('blockedIpCount').innerText = allBlockedIps.length;
+        const list = document.getElementById('blockedIpList');
+        list.innerHTML = allBlockedIps.map((item, index) => `
+            <div class="data-row grid-blocked-ip">
+                <div class="sensitive-id">#${String(allBlockedIps.length - index).padStart(3, '0')}</div>
+                <div class="blocked-ip-value">${escapeHtml(item.ip)}</div>
+                <div style="color:var(--text-muted);">${escapeHtml(item.note || '-')}</div>
+                <div style="color:var(--text-muted);">${escapeHtml(item.blockedBy || 'masteradmin')}</div>
+                <div style="color:var(--text-muted);">${formatSensitiveDate(item.timestamp)}</div>
+                <div style="text-align:right;"><button class="sensitive-delete" onclick="unblockIp('${item.id}')">解禁</button></div>
+            </div>`).join('');
+        if(!allBlockedIps.length) list.innerHTML = `<div style="padding:30px; text-align:center; color:var(--text-muted);">暂无记录</div>`;
+        hideContentLoader();
+    }
+
+    async function addBlockedIp() {
+        const ip = document.getElementById('blockedIpInput').value.trim();
+        const note = document.getElementById('blockedIpNote').value.trim();
+        if(!ip) return showToast('请输入 IP 地址', true);
+        showGlobalLoader('正在拉黑 IP...');
+        const res = await fetch(`${API_URL}/blocked-ips`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ ip, note, blockedBy:'masteradmin' })
+        });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        document.getElementById('blockedIpInput').value = '';
+        document.getElementById('blockedIpNote').value = '';
+        showToast('IP 已拉黑');
+        loadBlockedIps();
+    }
+
+    async function unblockIp(id) {
+        if(!confirm('确定解除这个 IP 的注册限制吗？')) return;
+        showGlobalLoader('解除拉黑...');
+        const res = await fetch(`${API_URL}/blocked-ips/${encodeURIComponent(id)}`, { method:'DELETE' });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        showToast('IP 已解禁');
+        loadBlockedIps();
+    }
+
+    function renderPermissionGuide() {
+        const guide = document.getElementById('staffPermissionGuide');
+        if(!guide) return;
+        document.getElementById('permissionCount').innerText = STAFF_PERMISSION_DEFS.length;
+        guide.innerHTML = STAFF_PERMISSION_DEFS.map(item => `
+            <div class="permission-guide-item"><code>${item.id}</code><strong>${item.label}</strong><span>${item.desc}</span></div>
+        `).join('');
+    }
+
+    async function loadStaff() {
+        renderPermissionGuide();
+        showContentLoader();
+        const res = await fetch(`${API_URL}/admin/staff`);
+        allStaff = res.ok ? await res.json() : [];
+        document.getElementById('staffCount').innerText = allStaff.length;
+        renderStaffList();
+        hideContentLoader();
+    }
+
+    function renderStaffList() {
+        const list = document.getElementById('staffList');
+        if(!list) return;
+        list.innerHTML = allStaff.map(staff => {
+            const permissions = Array.isArray(staff.permissions) ? staff.permissions : [];
+            const isAdmin = staff.role === 'ADMIN';
+            const permissionHtml = isAdmin
+                ? `<div style="margin-top:20px; border-left:4px solid #58a6ff; border-radius:6px; background:rgba(88,166,255,0.08); padding:18px 22px; color:var(--text-muted);">ADMIN 角色拥有全部权限，无需逐项配置。</div>`
+                : `<div class="staff-permissions">${STAFF_PERMISSION_DEFS.map(item => {
+                    const enabled = permissions.includes(item.id);
+                    return `<label class="permission-toggle ${enabled ? 'enabled' : ''}"><input type="checkbox" class="staff-permission-check" data-staff-id="${staff.id}" value="${item.id}" ${enabled ? 'checked' : ''} onchange="this.parentElement.classList.toggle('enabled', this.checked)"> ${item.label}</label>`;
+                }).join('')}</div>
+                <div class="staff-card-actions"><button class="btn-primary" style="background:#9747ff;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
+            return `
+                <div class="staff-card">
+                    <div class="staff-card-head">
+                        <div>
+                            <div class="staff-identity">
+                                <span class="staff-username" onclick="revealStaffPassword('${staff.id}')">${escapeHtml(staff.username || '-')}</span>
+                                <span class="staff-badge ${isAdmin ? '' : 'maintainer'}">${escapeHtml(staff.role || 'MAINTAINER')}</span>
+                                <span class="staff-badge active">${escapeHtml(staff.status || 'ACTIVE')}</span>
+                                ${!isAdmin ? `<span class="staff-badge">${permissions.length} / ${STAFF_PERMISSION_DEFS.length}</span>` : ''}
+                                <span class="staff-password-reveal" id="staff-password-${staff.id}"></span>
+                            </div>
+                            <div style="color:var(--text-muted); margin-top:10px;">${escapeHtml(staff.email || '-')}</div>
+                            <div style="color:var(--text-muted); font-size:12px; margin-top:6px;">注册 ${staff.createdAt ? formatSensitiveDate(staff.createdAt) : '-'} · 上次登录 ${staff.lastLoginAt ? formatSensitiveDate(staff.lastLoginAt) : '-'}</div>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:13px;">${isAdmin ? '全部权限' : '在线编辑权限'}</div>
+                    </div>
+                    ${permissionHtml}
+                </div>`;
+        }).join('');
+        if(!allStaff.length) list.innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无员工账号</div>`;
+    }
+
+    function openCreateStaffModal() {
+        document.getElementById('staffEmailInput').value = '';
+        document.getElementById('staffUsernameInput').value = '';
+        const defaults = new Set(['upload_song','bulk_upload','view_all_songs','edit_all_songs','takedown_songs']);
+        document.getElementById('createStaffPermissions').innerHTML = STAFF_PERMISSION_DEFS.map(item => `
+            <label class="permission-toggle ${defaults.has(item.id) ? 'enabled' : ''}"><input type="checkbox" class="create-staff-permission" value="${item.id}" ${defaults.has(item.id) ? 'checked' : ''} onchange="this.parentElement.classList.toggle('enabled', this.checked)"> ${item.label}</label>
+        `).join('');
+        document.getElementById('createStaffModal').style.display = 'flex';
+    }
+
+    async function createStaffAccount() {
+        const email = document.getElementById('staffEmailInput').value.trim();
+        const username = document.getElementById('staffUsernameInput').value.trim();
+        const permissions = Array.from(document.querySelectorAll('.create-staff-permission:checked')).map(input => input.value);
+        if(!email && !username) return showToast('邮箱与显示名至少填写一项', true);
+        showGlobalLoader('创建员工账号...');
+        const res = await fetch(`${API_URL}/admin/staff`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ email, username, permissions })
+        });
+        if(!res.ok) {
+            hideGlobalLoader();
+            return showToast(await res.text(), true);
+        }
+        const created = await res.json();
+        hideGlobalLoader();
+        closeModals();
+        document.getElementById('createdStaffEmail').innerText = created.email;
+        document.getElementById('createdStaffPassword').innerText = created.password;
+        document.getElementById('staffCreatedModal').style.display = 'flex';
+        await loadStaff();
+    }
+
+    async function saveStaffPermissions(staffId) {
+        const permissions = Array.from(document.querySelectorAll(`.staff-permission-check[data-staff-id="${staffId}"]:checked`)).map(input => input.value);
+        showGlobalLoader('保存权限...');
+        const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/permissions`, {
+            method:'PUT',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ permissions })
+        });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        showToast('员工权限已保存');
+        loadStaff();
+    }
+
+    async function revealStaffPassword(staffId) {
+        const target = document.getElementById(`staff-password-${staffId}`);
+        if(!target) return;
+        if(staffId === 'masteradmin') {
+            target.innerText = '系统管理员';
+            setTimeout(() => { target.innerText = ''; }, 5000);
+            return;
+        }
+        const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/password`);
+        if(!res.ok) return showToast(await res.text(), true);
+        const data = await res.json();
+        target.innerText = `密码: ${data.password}`;
+        setTimeout(() => { target.innerText = ''; }, 5000);
+    }
+
+    function openDeleteStaff(staffId) {
+        const staff = allStaff.find(item => item.id === staffId);
+        if(!staff || staff.system) return;
+        pendingDeleteStaffId = staffId;
+        document.getElementById('deleteStaffText').innerText = `确定删除员工「${staff.username || staff.email}」吗？此操作无法恢复。`;
+        document.getElementById('deleteStaffModal').style.display = 'flex';
+    }
+
+    async function confirmDeleteStaff() {
+        if(!pendingDeleteStaffId) return;
+        showGlobalLoader('删除员工...');
+        const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(pendingDeleteStaffId)}`, { method:'DELETE' });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        pendingDeleteStaffId = '';
+        closeModals();
+        showToast('员工账号已删除');
+        loadStaff();
+    }
+
     // --- ADMIN LOGS ---
     function inferLogAction(log) {
         const msg = (log.message || '').toLowerCase();
@@ -4113,12 +4425,6 @@
     async function toggleSongStatus(id, currentStatus) { const newStatus = currentStatus === 'APPROVED' ? 'UNLISTED' : 'APPROVED'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus }) }); hideGlobalLoader(); loadSongs(); }
     async function deleteSong(id) { if(!confirm("Delete song?")) return; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}`, { method: 'DELETE' }); hideGlobalLoader(); loadSongs(); }
 
-    function setUploadMode(isTransload) {
-        isTransloadMode = isTransload;
-        document.getElementById('btn-mode-file').classList.toggle('active', !isTransload); document.getElementById('btn-mode-link').classList.toggle('active', isTransload);
-        document.getElementById('audio-dropzone').style.display = isTransload ? 'none' : 'block'; document.getElementById('audio-filename').style.display = isTransload ? 'none' : 'block'; document.getElementById('transloadUrlInput').style.display = isTransload ? 'block' : 'none';
-    }
-
     function handleAudioSelect(e) { const file = e.target.files[0]; if(file) { document.getElementById('audio-filename').innerText = file.name; document.getElementById('uploadTitleInput').value = file.name.replace(/\.[^/.]+$/, ""); } }
 
     function resetUploadModal() { 
@@ -4133,7 +4439,6 @@
         document.getElementById('songCoverPreview').style.display = 'none';
         pendingUploadBase64 = null; 
         renderUploadGenrePicker();
-        document.getElementById('transloadUrlInput').classList.remove('shake'); 
     }
     function openUploadModal() { resetUploadModal(); switchView('upload'); }
 
@@ -4149,19 +4454,15 @@
         const genreIds = getUploadGenreIds(); 
         const genreId = genreIds[0] || ''; 
         const uploader = document.getElementById('uploadUploaderInput').value.trim() || 'FULLKIK';
-        const urlInput = document.getElementById('transloadUrlInput'); const url = urlInput.value.trim(); const file = document.getElementById('uploadFileInput').files[0];
+        const file = document.getElementById('uploadFileInput').files[0];
         if(!title) return showToast("请输入歌曲标题", true);
         if(!genreIds.length) return showToast("请选择至少一个分类", true);
         
-        if(isTransloadMode || url) {
-            if(!url.startsWith('http') || !url.includes('.m4a')) { urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); showToast("Invalid URL or not .m4a", true); return; }
-            showGlobalProgress(); const res = await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, title, price, genreId, genreIds, coverBase64: pendingUploadBase64, uploader }) });
-            if (res.ok) { const saved = await res.json(); allSongs = [saved, ...allSongs.filter(s => s.id !== saved.id)]; updatePendingBadge(); resetUploadModal(); hideGlobalProgress(); showToast("Transload successful!"); switchView('songs', '歌曲管理 / 全部歌曲'); handleSongSearch(); } else { hideGlobalProgress(); await showUploadError(res); }
-        } else if(file) {
-            showGlobalProgress(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); fd.append('genreIds', JSON.stringify(genreIds)); fd.append('uploader', uploader); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
+        if(file) {
+            showGlobalProgress(); const fd = new FormData(); fd.append('mp3file', file); fd.append('title', title); fd.append('price', price); fd.append('genreId', genreId); fd.append('genreIds', JSON.stringify(genreIds)); fd.append('uploader', uploader); fd.append('credit', uploader); if(pendingUploadBase64) fd.append('coverBase64', pendingUploadBase64);
             const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd }); 
             if (res.ok) { const saved = await res.json(); allSongs = [saved, ...allSongs.filter(s => s.id !== saved.id)]; updatePendingBadge(); resetUploadModal(); hideGlobalProgress(); showToast("Audio Uploaded!"); switchView('songs', '歌曲管理 / 全部歌曲'); handleSongSearch(); } else { hideGlobalProgress(); await showUploadError(res); }
-        } else { showToast("Please provide file or URL", true); }
+        } else { showToast("请选择歌曲文件", true); }
     }
 
     function getManagerFileTitle(file) { return file.name.replace(/\.[^/.]+$/, ""); }
