@@ -1243,7 +1243,7 @@
         setMusicPageTitle('song', currentSong.filename);
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
-        const uploaderName = currentSong.uploader || 'FULLKIK';
+        const uploaderName = currentSong.credit || currentSong.uploader || 'FULLKIK';
         const uploaderHtml = currentSong.uploader
             ? `<span class="uploader-link" onclick="window.location.href='/fullkik/vip?user=${encodeURIComponent(currentSong.uploader)}'">${escapeHtml(uploaderName)}</span>`
             : escapeHtml(uploaderName);
