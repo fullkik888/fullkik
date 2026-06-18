@@ -152,7 +152,10 @@
         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
         .lib-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 100px; gap: 14px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
-        .vip-own-song-row { grid-template-columns: 54px minmax(0,1fr) 100px 90px 110px; }
+        .vip-own-song-row { grid-template-columns: 54px minmax(0,1fr) 100px 90px 110px 80px; }
+        .vip-song-credit { font-size:11px; color:var(--text-muted); margin-top:5px; }
+        .vip-song-edit-btn { border:1px solid rgba(165,42,42,0.55); background:rgba(128,0,0,0.14); color:var(--accent-light); border-radius:9px; padding:8px 13px; cursor:pointer; font-weight:800; }
+        .vip-song-edit-btn:hover { color:white; border-color:var(--accent-light); background:rgba(165,42,42,0.24); }
         .lib-main { display:flex; align-items:center; gap:12px; min-width:0; }
         .lib-cover { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; flex-shrink: 0;}
         
@@ -546,15 +549,9 @@
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">歌曲将归属于输入的账号。默认免费上传，如需收费请在价格栏填入钻石数量。</div>
             
             <label class="input-label">歌曲文件 (MP3 / WAV) <span style="color:var(--danger)">*</span></label>
-            <div class="upload-tabs" id="vip-audio-tabs">
-                <button class="active" id="vip-btn-file" onclick="setVipUploadMode(false)">上传文件</button>
-                <button id="vip-btn-link" onclick="setVipUploadMode(true)">粘贴链接</button>
-            </div>
-            
             <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()">
                 点击选择 MP3 / WAV
             </div>
-            <input type="text" class="input-field" id="vipTransloadUrlInput" placeholder="转运歌曲 (粘贴 .m4a URL)" style="display:none; width:100%; margin-bottom:10px;">
             <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:10px;"></div>
             <div class="batch-upload-shell" id="vipBatchShell">
@@ -658,6 +655,24 @@
             <input type="text" id="newNameInput" class="input-field" style="width:100%; box-sizing:border-box;" placeholder="输入新用户名">
         </div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" onclick="executeNameChange()" style="color:var(--accent-light);">保存</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="vipSongEditModal">
+    <div class="modal-box" style="max-width:430px;">
+        <div class="modal-content">
+            <h3 style="margin:0 0 20px; text-align:center;">编辑已发布歌曲</h3>
+            <label class="input-label">歌曲名称</label>
+            <input type="text" id="vipEditSongName" class="input-field" style="width:100%; box-sizing:border-box; margin-bottom:16px;" placeholder="歌曲名称">
+            <label class="input-label">Credit / 艺人署名</label>
+            <input type="text" id="vipEditSongCredit" class="input-field" style="width:100%; box-sizing:border-box;" placeholder="例如：DJ Name / Producer">
+            <p style="font-size:12px; color:var(--text-muted); margin:12px 0 0;">Credit 只改变公开显示的艺人署名，不会改变歌曲所属账号。</p>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn" onclick="deletePublishedVipSong()" style="color:var(--danger);">删除</button>
+            <button class="modal-btn cancel" onclick="closeModals()">取消</button>
+            <button class="modal-btn" onclick="savePublishedVipSong()" style="color:var(--accent-light);">保存</button>
+        </div>
     </div>
 </div>
 
@@ -1540,28 +1555,71 @@
         
         filtered.forEach(s => {
             const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
+            const canEdit = status === 'APPROVED';
             listDiv.innerHTML += `
                 <div class="lib-row vip-own-song-row">
                     <img src="${cover}" class="lib-cover">
-                    <div class="truncate" style="font-weight: 500;">${s.filename}</div>
-                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price||10}</div>
+                    <div style="min-width:0;"><div class="truncate" style="font-weight:500;">${escapeHtmlProfile(s.filename)}</div><div class="vip-song-credit truncate">Credit: ${escapeHtmlProfile(s.credit || s.uploader || username)}</div></div>
+                    <div style="color: var(--token); font-weight: bold;">💎 ${s.price ?? 0}</div>
                     <div><div style="color:${status === 'APPROVED' ? 'var(--success)' : 'var(--text-muted)'}; font-size:12px;">${getVipStatusLabel(status)}</div></div>
                     <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
+                    <div>${canEdit ? `<button class="vip-song-edit-btn" onclick="openPublishedVipSongEdit('${s.id}')">编辑</button>` : ''}</div>
                 </div>`;
         });
+    }
+
+    let currentEditVipSongId = '';
+    function openPublishedVipSongEdit(songId) {
+        const song = allSongs.find(s => s.id === songId);
+        if(!song || getProfileSongStatus(song) !== 'APPROVED') return;
+        currentEditVipSongId = songId;
+        document.getElementById('vipEditSongName').value = song.filename || '';
+        document.getElementById('vipEditSongCredit').value = song.credit || song.uploader || username;
+        document.getElementById('vipSongEditModal').style.display = 'flex';
+    }
+
+    async function savePublishedVipSong() {
+        const name = document.getElementById('vipEditSongName').value.trim();
+        const credit = document.getElementById('vipEditSongCredit').value.trim();
+        if(!name) return showToast('请输入歌曲名称', true);
+        showGlobalLoader('保存歌曲资料...');
+        const res = await fetch(`${API_URL}/users/${encodeURIComponent(username)}/songs/${encodeURIComponent(currentEditVipSongId)}`, {
+            method: 'PUT',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ name, credit })
+        });
+        if(!res.ok) {
+            hideGlobalLoader();
+            return showToast(await res.text(), true);
+        }
+        allSongs = await (await fetch(`${API_URL}/songs`)).json();
+        closeModals();
+        hideGlobalLoader();
+        renderVipCenter();
+        showToast('歌曲资料已更新');
+    }
+
+    async function deletePublishedVipSong() {
+        const song = allSongs.find(s => s.id === currentEditVipSongId);
+        if(!song || !confirm(`确定删除「${song.filename}」吗？删除后无法恢复。`)) return;
+        showGlobalLoader('删除歌曲...');
+        const res = await fetch(`${API_URL}/users/${encodeURIComponent(username)}/songs/${encodeURIComponent(currentEditVipSongId)}`, { method:'DELETE' });
+        if(!res.ok) {
+            hideGlobalLoader();
+            return showToast(await res.text(), true);
+        }
+        allSongs = await (await fetch(`${API_URL}/songs`)).json();
+        closeModals();
+        hideGlobalLoader();
+        renderVipCenter();
+        showToast('歌曲已删除');
     }
 
     function populateGenreDropdowns() {
         const uploadSel = document.getElementById('vipGenreSelect'); if(uploadSel) { uploadSel.innerHTML = ''; allGenres.forEach(g => { if(g.status !== 'DISABLED') uploadSel.innerHTML += `<option value="${g.id}">${g.name}</option>`; }); }
     }
 
-    let pendingVipCover = null; let isVipTransload = false; let currentVipUploadIsBatch = false; let selectedVipFiles = [];
-    function setVipUploadMode(isTransload) {
-        isVipTransload = isTransload;
-        document.getElementById('vip-btn-file').classList.toggle('active', !isTransload); document.getElementById('vip-btn-link').classList.toggle('active', isTransload);
-        document.getElementById('vip-audio-dropzone').style.display = isTransload ? 'none' : 'block'; document.getElementById('vipFileCount').style.display = isTransload ? 'none' : 'block'; document.getElementById('vipTransloadUrlInput').style.display = isTransload ? 'block' : 'none';
-        renderVipBatchList();
-    }
+    let pendingVipCover = null; let currentVipUploadIsBatch = false; let selectedVipFiles = [];
 
     function getFileTitle(file) { return file.name.replace(/\.[^/.]+$/, ""); }
     function getGenreOptions(selectedId) {
@@ -1580,7 +1638,7 @@
         const shell = document.getElementById('vipBatchShell');
         const list = document.getElementById('vipBatchList');
         if(!shell || !list) return;
-        const showBatch = currentVipUploadIsBatch && !isVipTransload && selectedVipFiles.length > 0;
+        const showBatch = currentVipUploadIsBatch && selectedVipFiles.length > 0;
         shell.style.display = showBatch ? 'block' : 'none';
         if(!showBatch) { list.innerHTML = ''; return; }
         document.getElementById('vipBatchCount').innerText = selectedVipFiles.length;
@@ -1624,7 +1682,7 @@
 
     function openVipUpload(isBatch) {
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-        document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = ''; document.getElementById('vipTransloadUrlInput').value = '';
+        document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
         const fileInput = document.getElementById('vipFileInput');
         currentVipUploadIsBatch = isBatch;
         selectedVipFiles = [];
@@ -1639,13 +1697,13 @@
         }
         document.getElementById('vipFileCount').innerText = ''; fileInput.onchange = handleVipAudioSelect;
         renderVipBatchList();
-        setVipUploadMode(false); switchView('vip-upload');
+        switchView('vip-upload');
     }
 
     async function executeVipUpload() {
         const titleBase = document.getElementById('vipTitleInput').value.trim(); const price = document.getElementById('vipPriceInput').value; const genreId = document.getElementById('vipGenreSelect').value;
         const errRow = document.getElementById('vipErrRow'); errRow.innerText = '';
-        if(!isVipTransload && currentVipUploadIsBatch) {
+        if(currentVipUploadIsBatch) {
             if(!selectedVipFiles.length) return errRow.innerText = "请选择 1 - 20 首歌曲";
             if(selectedVipFiles.length > 20) return errRow.innerText = "批量上传最多 20 首";
             if(selectedVipFiles.some(item => !item.title || !item.genreId)) return errRow.innerText = "每首歌都需要标题和分类";
@@ -1655,28 +1713,27 @@
         let p = 0; const bF = document.getElementById('vipUploadBarFill'); bF.style.width = '0%';
         const pInt = setInterval(() => { p += Math.random()*10; if(p>90) p=90; bF.style.width = `${p}%`; }, 100);
 
-        if(isVipTransload) {
-            const urlInput = document.getElementById('vipTransloadUrlInput'); const url = urlInput.value.trim();
-            if(!url.startsWith('http') || !url.includes('.m4a')) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; urlInput.classList.add('shake'); setTimeout(() => urlInput.classList.remove('shake'), 200); return errRow.innerText = "Invalid URL or not .m4a"; }
-            const payload = { url, title: titleBase, price, genreId, uploader: username, status: 'PENDING', coverBase64: pendingVipCover };
-            await fetch(`${API_URL}/transload`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        } else {
-            const uploadItems = currentVipUploadIsBatch ? selectedVipFiles : selectedVipFiles.slice(0, 1);
-            if(!uploadItems.length || !uploadItems[0].file) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
-            for(let i=0; i<uploadItems.length; i++) {
-                const item = uploadItems[i];
-                const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING');  
-                if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
-                await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+        const uploadItems = currentVipUploadIsBatch ? selectedVipFiles : selectedVipFiles.slice(0, 1);
+        if(!uploadItems.length || !uploadItems[0].file) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
+        for(let i=0; i<uploadItems.length; i++) {
+            const item = uploadItems[i];
+            const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('credit', username); fd.append('status', 'PENDING');
+            if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
+            const uploadRes = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+            if(!uploadRes.ok) {
+                clearInterval(pInt);
+                document.getElementById('vipUploadProgOverlay').style.display = 'none';
+                return errRow.innerText = await uploadRes.text();
             }
         }
 
         clearInterval(pInt); bF.style.width = '100%';
         setTimeout(async () => {
             document.getElementById('vipUploadProgOverlay').style.display = 'none';
-            const msg = "完成提交～ 请等待 1-3 天审核时间.";
+            const msg = String(globalSettings.uploadSuccessMessage || "完成提交～ 请等待 1-3 天审核时间.");
+            const displayMs = Math.max(1, Math.min(parseFloat(globalSettings.uploadSuccessDuration) || 4, 30)) * 1000;
             const sText = document.getElementById('vipSuccessText'); sText.innerHTML = '';
-            msg.split('').forEach((char, i) => { sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.1}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.1}s;">${char}</span>`; });
+            msg.split('').forEach((char, i) => { sText.innerHTML += char === ' ' ? `<span style="animation-delay:${i*0.04}s; margin-right:8px;">&nbsp;</span>` : `<span style="animation-delay:${i*0.04}s;">${escapeHtmlProfile(char)}</span>`; });
             
             const sucOver = document.getElementById('vipUploadSuccessOverlay');
             sucOver.style.opacity = 1; sucOver.style.display = 'flex';
@@ -1684,7 +1741,7 @@
             setTimeout(() => {
                 sucOver.style.opacity = 0;
                 setTimeout(() => { sucOver.style.display = 'none'; init(); switchView('vip'); }, 500);
-            }, msg.length * 100 + 1500);
+            }, displayMs);
         }, 300);
     }
 
