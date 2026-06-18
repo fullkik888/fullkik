@@ -37,6 +37,7 @@
         .sub-nav-item.active { color: var(--accent-light); font-weight: bold; }
         .badge-pending { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: none;}
         .nav-count-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--danger); color: white; font-size: 10px; font-weight: 900; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 5px rgba(255,69,58,0.12); }
+        .mobile-song-toolbar { display:none; }
 
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-main); position: relative;}
         .top-bar { height: 60px; min-height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; border-bottom: 1px solid var(--border-color); background: var(--bg-dark);}
@@ -383,12 +384,80 @@
             .nav-title { display: none; }
             .nav-section.collapsible { flex:0 0 auto; }
             .nav-section.collapsible .nav-title { display:flex; height:60px; align-items:center; padding:0 16px; margin:0; min-width:max-content; }
-            .nav-collapse-body { position:fixed; left:0; right:0; top:60px; z-index:460; background:var(--bg-dark); border-bottom:1px solid var(--border-color); flex-direction:row; overflow-x:auto; padding:8px 10px; box-shadow:0 10px 24px rgba(0,0,0,0.45); }
+            .nav-collapse-body {
+                position:fixed;
+                left:0;
+                right:0;
+                top:60px;
+                z-index:900;
+                display:flex;
+                flex-direction:column;
+                align-items:stretch;
+                max-height:calc(100dvh - 60px);
+                overflow-y:auto;
+                overflow-x:hidden;
+                padding:10px 14px 18px;
+                box-sizing:border-box;
+                background:#120a0a;
+                border-top:1px solid var(--border-color);
+                border-bottom:1px solid var(--border-color);
+                box-shadow:0 18px 32px rgba(0,0,0,0.72);
+            }
             .nav-section.collapsed .nav-collapse-body { display:none; }
-            .nav-collapse-body { display:flex; flex-direction:row; }
-            .nav-item { white-space: nowrap; padding: 0 16px; min-width:max-content; }
-            .sub-nav { position:fixed; left:0; right:0; top:60px; z-index:120; margin:0; border-left:none; border-bottom:1px solid var(--border-color); flex-direction:row; overflow-x:auto; padding:8px 10px; }
-            .sub-nav-item { white-space:nowrap; padding:8px 14px; }
+            .nav-collapse-body .nav-item {
+                width:100%;
+                min-width:0;
+                min-height:48px;
+                padding:0 14px;
+                box-sizing:border-box;
+                white-space:normal;
+                border-bottom:1px solid rgba(255,255,255,0.05);
+                border-radius:6px;
+            }
+            .nav-collapse-body .nav-item-group, .nav-collapse-body #contestSidebarList { width:100%; }
+            .nav-collapse-body .contest-sidebar-item { margin:4px 0; min-height:42px; box-sizing:border-box; }
+            .sub-nav, .sub-nav.show { display:none !important; }
+            .sub-nav-item {
+                min-width:0;
+                min-height:48px;
+                padding:8px 5px;
+                white-space:normal;
+                text-align:center;
+                line-height:1.25;
+                border-radius:7px;
+            }
+            .mobile-song-toolbar {
+                position:fixed;
+                left:0;
+                right:0;
+                bottom:0;
+                z-index:1200;
+                grid-template-columns:repeat(4, minmax(0, 1fr));
+                gap:6px;
+                padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+                box-sizing:border-box;
+                background:#120a0a;
+                border-top:1px solid var(--border-color);
+                box-shadow:0 -12px 30px rgba(0,0,0,0.72);
+            }
+            body.admin-subnav-open .mobile-song-toolbar { display:grid; }
+            .mobile-song-toolbar button {
+                min-width:0;
+                min-height:50px;
+                padding:7px 4px;
+                border:1px solid transparent;
+                border-radius:7px;
+                background:rgba(255,255,255,0.035);
+                color:var(--text-muted);
+                font-size:12px;
+                font-weight:800;
+                line-height:1.25;
+            }
+            .mobile-song-toolbar button.active {
+                color:white;
+                border-color:var(--accent-light);
+                background:rgba(128,0,0,0.28);
+            }
             .main-content { width:100%; min-height:0; }
             .top-bar { height:auto; min-height:54px; padding:10px 14px; gap:10px; align-items:flex-start; }
             .breadcrumb { line-height:1.4; }
@@ -431,9 +500,7 @@
             .genre-card .overlay div { font-size: 10px; }
             .genre-settings-icon { padding: 4px; bottom: 5px; right: 5px; }
             .genre-settings-icon svg { width: 14px; height: 14px; }
-            .sub-nav.show { display:flex !important; }
-            .sub-nav { top:60px; z-index:500; background:var(--bg-dark); box-shadow:0 10px 24px rgba(0,0,0,0.45); }
-            body.admin-subnav-open .top-bar { margin-top:50px; }
+            body.admin-subnav-open .top-bar { margin-top:0; }
         }
 
         @media (max-width: 480px) {
@@ -542,6 +609,13 @@
             <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
         </div>
     </div>
+</div>
+
+<div class="mobile-song-toolbar" id="mobileSongToolbar" aria-label="歌曲管理快捷菜单">
+    <button type="button" data-song-view="songs" onclick="switchView('songs', '歌曲管理 / 管理歌曲')">管理歌曲</button>
+    <button type="button" data-song-view="pending" onclick="switchView('pending', '歌曲管理 / 待审队列')">待审队列</button>
+    <button type="button" data-song-view="upload" onclick="switchView('upload', '歌曲管理 / 上传歌曲')">上传歌曲</button>
+    <button type="button" data-song-view="bulk-upload" onclick="switchView('bulk-upload', '歌曲管理 / 批量上传')">批量上传</button>
 </div>
 
 <div class="main-content">
@@ -1546,6 +1620,11 @@
         const sec = document.querySelector(`.nav-section[data-nav-group="${group}"]`);
         if(!sec) return;
         const willOpen = sec.classList.contains('collapsed');
+        if(window.matchMedia('(max-width: 768px)').matches) {
+            const songSub = document.getElementById('sub-songs');
+            if(songSub) songSub.classList.remove('show');
+            document.body.classList.remove('admin-subnav-open');
+        }
         document.querySelectorAll('.nav-section.collapsible').forEach(item => item.classList.add('collapsed'));
         if(willOpen) sec.classList.remove('collapsed');
     }
@@ -1558,7 +1637,9 @@
         document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.sub-nav-item').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-        openAdminNavGroup(getNavGroupForView(viewId));
+        const isMobileAdmin = window.matchMedia('(max-width: 768px)').matches;
+        if(isMobileAdmin) openAdminNavGroup('');
+        else openAdminNavGroup(getNavGroupForView(viewId));
         if(!['songs', 'pending', 'upload', 'bulk-upload'].includes(viewId)) {
             const songSub = document.getElementById('sub-songs');
             if(songSub) songSub.classList.remove('show');
@@ -1566,6 +1647,15 @@
         }
         
         if(document.getElementById(`nav-${viewId}`)) document.getElementById(`nav-${viewId}`).classList.add('active');
+        if(['songs', 'pending', 'upload', 'bulk-upload'].includes(viewId)) {
+            document.getElementById('nav-songs')?.classList.add('active');
+            const songTabs = Array.from(document.querySelectorAll('#sub-songs .sub-nav-item'));
+            const songIndex = { songs:0, pending:1, upload:2, 'bulk-upload':3 }[viewId];
+            if(songTabs[songIndex]) songTabs[songIndex].classList.add('active');
+        }
+        document.querySelectorAll('#mobileSongToolbar [data-song-view]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.songView === viewId);
+        });
         if(document.getElementById(`view-${viewId}`)) document.getElementById(`view-${viewId}`).classList.add('active');
         if(titleStr) {
             if(viewId === 'user-detail') document.getElementById('breadcrumb-current').innerHTML = `<span style="cursor:pointer; color:var(--text-muted);" onclick="switchView('users', '用户管理')">用户管理</span> / ${titleStr}`;
