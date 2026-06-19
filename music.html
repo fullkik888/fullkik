@@ -174,8 +174,17 @@
         .btn-buy-big.purchased { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color:var(--text-muted); cursor:default;}
         .btn-buy-big.purchased:hover { transform: none; box-shadow: none; }
         
-        .player-right { width: 350px; flex-shrink: 0; position:relative;}
-        .player-cover { width: 100%; aspect-ratio: 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);}
+        .player-right { width: 390px; flex-shrink: 0; position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+        .song-visualizer-stage { width:100%; aspect-ratio:1; position:relative; display:flex; align-items:center; justify-content:center; isolation:isolate; }
+        .song-visualizer-stage::before { content:''; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.23) 0%, rgba(128,0,0,0.08) 44%, transparent 70%); filter:blur(14px); opacity:0.65; transition:opacity 0.35s, transform 0.35s; }
+        .song-visualizer-stage.is-playing::before { opacity:1; transform:scale(1.08); }
+        .song-visualizer-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; filter:drop-shadow(0 0 10px rgba(165,42,42,0.38)); }
+        .player-cover { width:61%; aspect-ratio:1; border-radius:50%; object-fit:cover; position:relative; z-index:2; box-shadow:0 22px 55px rgba(0,0,0,0.88), 0 0 0 7px rgba(255,255,255,0.035), 0 0 0 9px rgba(165,42,42,0.24); border:1px solid rgba(255,255,255,0.16); animation:playerCoverSpin 14s linear infinite; animation-play-state:paused; }
+        .song-visualizer-stage.is-playing .player-cover { animation-play-state:running; }
+        .player-cover-center { position:absolute; z-index:3; width:12%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 35% 30%, #3b2828, #080505 68%); border:2px solid rgba(255,255,255,0.14); box-shadow:0 0 0 3px rgba(0,0,0,0.38); pointer-events:none; }
+        .song-visualizer-label { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); color:var(--text-muted); font-size:10px; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; opacity:0.7; }
+        .song-report-btn { margin-top:12px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px; }
+        @keyframes playerCoverSpin { to { transform:rotate(360deg); } }
         .recommend-section { margin-top:34px; padding-top:28px; border-top:1px solid var(--border-color); }
         .recommend-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
         .recommend-header h3 { margin:0; font-size:24px; font-weight:900; }
@@ -259,6 +268,7 @@
             .hero p { line-height: 1.5; }
             .player-container { flex-direction: column-reverse; padding: 18px; border-radius: 18px; gap: 20px;}
             .player-right { width: 100%; }
+            .song-visualizer-stage { width:min(360px, 100%); margin:0 auto; }
             .player-title { font-size: 24px; white-space: normal; line-height: 1.22; }
             .audio-controls { flex-wrap: wrap; gap: 10px; padding: 12px; }
             .slider-container { flex-basis: calc(100% - 96px); }
@@ -406,8 +416,13 @@
                 <div class="action-row" id="playerActions"></div>
             </div>
             <div class="player-right">
-                <img class="player-cover" id="playerCover" src="">
-                <button style="position:absolute; bottom:20px; right:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;" onclick="openReportModal()"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
+                <div class="song-visualizer-stage" id="songVisualizerStage">
+                    <canvas class="song-visualizer-canvas" id="songVisualizerCanvas"></canvas>
+                    <img class="player-cover" id="playerCover" src="">
+                    <span class="player-cover-center"></span>
+                    <span class="song-visualizer-label">FULLKIK AUDIO REACTIVE</span>
+                </div>
+                <button class="song-report-btn" onclick="openReportModal()"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
             </div>
         </div>
         <div class="recommend-section">
@@ -462,6 +477,11 @@
     const shouldShowWelcome = sessionStorage.getItem('fullkikShowWelcome') === '1';
     if(shouldShowWelcome) sessionStorage.removeItem('fullkikShowWelcome');
     const PREVIEW_LIMIT_SECONDS = 60;
+    let visualizerAudioContext = null;
+    let visualizerAnalyser = null;
+    let visualizerSource = null;
+    let visualizerFrequencyData = null;
+    let visualizerFrame = null;
     if(skipInitialLoader) {
         const sp = document.getElementById('splashLoader');
         if(sp) sp.style.display = 'none';
@@ -493,6 +513,130 @@
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
+
+    function resizeSongVisualizer() {
+        const canvas = document.getElementById('songVisualizerCanvas');
+        if(!canvas) return null;
+        const rect = canvas.getBoundingClientRect();
+        if(!rect.width || !rect.height) return null;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const nextWidth = Math.round(rect.width * dpr);
+        const nextHeight = Math.round(rect.height * dpr);
+        if(canvas.width !== nextWidth || canvas.height !== nextHeight) {
+            canvas.width = nextWidth;
+            canvas.height = nextHeight;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { canvas, ctx, width: rect.width, height: rect.height };
+    }
+
+    function drawSongVisualizer(active = false) {
+        const surface = resizeSongVisualizer();
+        if(!surface) return;
+        const { ctx, width, height } = surface;
+        const cx = width / 2;
+        const cy = height / 2;
+        const minSide = Math.min(width, height);
+        const baseRadius = minSide * 0.335;
+        const barCount = 96;
+        ctx.clearRect(0, 0, width, height);
+
+        if(active && visualizerAnalyser && visualizerFrequencyData) {
+            visualizerAnalyser.getByteFrequencyData(visualizerFrequencyData);
+        }
+
+        for(let ring = 0; ring < 4; ring++) {
+            ctx.beginPath();
+            const ringOffset = ring * 4.5;
+            for(let i = 0; i <= barCount; i++) {
+                const index = i % barCount;
+                const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
+                const dataIndex = visualizerFrequencyData
+                    ? Math.min(Math.floor(index * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
+                    : 0;
+                const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
+                const idleWave = 2.8 + Math.sin(index * 0.31 + ring * 1.25) * 1.8;
+                const pulse = active ? frequency * (25 + ring * 3) : idleWave;
+                const radius = baseRadius + ringOffset + pulse;
+                const x = cx + Math.cos(angle) * radius;
+                const y = cy + Math.sin(angle) * radius;
+                if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = `rgba(${ring < 2 ? '165,42,42' : '255,120,105'},${active ? 0.24 - ring * 0.035 : 0.08})`;
+            ctx.lineWidth = ring === 0 ? 1.8 : 1;
+            ctx.stroke();
+        }
+
+        for(let i = 0; i < barCount; i++) {
+            const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
+            const dataIndex = visualizerFrequencyData
+                ? Math.min(Math.floor(i * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
+                : 0;
+            const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
+            const idle = 4 + (Math.sin(i * 0.43) + 1) * 2;
+            const length = active ? 7 + Math.pow(frequency, 1.35) * 48 : idle;
+            const innerRadius = baseRadius - 1;
+            const outerRadius = innerRadius + length;
+            const x1 = cx + Math.cos(angle) * innerRadius;
+            const y1 = cy + Math.sin(angle) * innerRadius;
+            const x2 = cx + Math.cos(angle) * outerRadius;
+            const y2 = cy + Math.sin(angle) * outerRadius;
+            const red = Math.round(145 + frequency * 110);
+            const green = Math.round(35 + frequency * 55);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(${red},${green},${Math.round(42 + frequency * 55)},${active ? 0.48 + frequency * 0.48 : 0.2})`;
+            ctx.lineWidth = active ? 1.4 + frequency * 1.8 : 1;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+    }
+
+    async function prepareSongVisualizerAudio() {
+        if(!audioEl || visualizerAnalyser) {
+            if(visualizerAudioContext?.state === 'suspended') await visualizerAudioContext.resume();
+            return;
+        }
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if(!AudioContextClass) return;
+            visualizerAudioContext = new AudioContextClass();
+            visualizerAnalyser = visualizerAudioContext.createAnalyser();
+            visualizerAnalyser.fftSize = 512;
+            visualizerAnalyser.smoothingTimeConstant = 0.84;
+            visualizerFrequencyData = new Uint8Array(visualizerAnalyser.frequencyBinCount);
+            visualizerSource = visualizerAudioContext.createMediaElementSource(audioEl);
+            visualizerSource.connect(visualizerAnalyser);
+            visualizerAnalyser.connect(visualizerAudioContext.destination);
+            if(visualizerAudioContext.state === 'suspended') await visualizerAudioContext.resume();
+        } catch(e) {
+            visualizerAnalyser = null;
+            visualizerFrequencyData = null;
+        }
+    }
+
+    function setSongVisualizerPlaying(isPlaying) {
+        document.getElementById('songVisualizerStage')?.classList.toggle('is-playing', isPlaying);
+        if(visualizerFrame) {
+            cancelAnimationFrame(visualizerFrame);
+            visualizerFrame = null;
+        }
+        if(isPlaying) {
+            const renderFrame = () => {
+                drawSongVisualizer(true);
+                if(!audioEl.paused && !audioEl.ended) visualizerFrame = requestAnimationFrame(renderFrame);
+                else visualizerFrame = null;
+            };
+            renderFrame();
+        } else {
+            drawSongVisualizer(false);
+        }
+    }
+
+    window.addEventListener('resize', () => drawSongVisualizer(!!audioEl && !audioEl.paused));
     function applyHomeHeroText() {
         const title = document.getElementById('heroTitle');
         const subtitle = document.getElementById('heroSubtitle');
@@ -1271,17 +1415,37 @@
         }
 
         audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        setSongVisualizerPlaying(false);
         renderSongRecommendations(false);
         switchView('song');
+        requestAnimationFrame(() => drawSongVisualizer(false));
     }
 
     // AUDIO LOGIC
     if(audioEl) {
         audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
         audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) { audioEl.pause(); audioEl.currentTime = PREVIEW_LIMIT_SECONDS; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
-        audioEl.addEventListener('ended', () => { document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
+        audioEl.addEventListener('play', () => setSongVisualizerPlaying(true));
+        audioEl.addEventListener('pause', () => setSongVisualizerPlaying(false));
+        audioEl.addEventListener('ended', () => { setSongVisualizerPlaying(false); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
     }
-    function togglePlayerAudio() { const btn = document.getElementById('playerPlayBtn'); if(audioEl.paused) { if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) audioEl.currentTime = 0; audioEl.play(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`; } else { audioEl.pause(); btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } }
+    async function togglePlayerAudio() {
+        const btn = document.getElementById('playerPlayBtn');
+        if(audioEl.paused) {
+            if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) audioEl.currentTime = 0;
+            await prepareSongVisualizerAudio();
+            try {
+                await audioEl.play();
+                btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`;
+            } catch(e) {
+                setSongVisualizerPlaying(false);
+                showToast('歌曲暂时无法播放', true);
+            }
+        } else {
+            audioEl.pause();
+            btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
+        }
+    }
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= PREVIEW_LIMIT_SECONDS) val = PREVIEW_LIMIT_SECONDS - 0.1; audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
