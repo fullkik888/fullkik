@@ -3586,7 +3586,7 @@
                 <div class="sensitive-id">#${String(allBlockedIps.length - index).padStart(3, '0')}</div>
                 <div class="blocked-ip-value">${escapeHtml(item.ip)}</div>
                 <div style="color:var(--text-muted);">${escapeHtml(item.note || '-')}</div>
-                <div style="color:var(--text-muted);">${escapeHtml(item.blockedBy || 'masteradmin')}</div>
+                <div style="color:var(--text-muted);">${escapeHtml(item.blockedBy || 'ADMIN')}</div>
                 <div style="color:var(--text-muted);">${formatSensitiveDate(item.timestamp)}</div>
                 <div style="text-align:right;"><button class="sensitive-delete" onclick="unblockIp('${item.id}')">解禁</button></div>
             </div>`).join('');
@@ -3602,7 +3602,7 @@
         const res = await fetch(`${API_URL}/blocked-ips`, {
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({ ip, note, blockedBy:'masteradmin' })
+            body:JSON.stringify({ ip, note, blockedBy:'ADMIN' })
         });
         hideGlobalLoader();
         if(!res.ok) return showToast(await res.text(), true);
@@ -3727,11 +3727,6 @@
     async function revealStaffPassword(staffId) {
         const target = document.getElementById(`staff-password-${staffId}`);
         if(!target) return;
-        if(staffId === 'masteradmin') {
-            target.innerText = '系统管理员';
-            setTimeout(() => { target.innerText = ''; }, 5000);
-            return;
-        }
         const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/password`);
         if(!res.ok) return showToast(await res.text(), true);
         const data = await res.json();
