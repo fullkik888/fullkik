@@ -1318,7 +1318,7 @@ app.post('/api/blocked-ips', async (req, res) => {
         const row = {
             ip,
             note,
-            blockedBy: String(req.body.blockedBy || 'masteradmin').trim() || 'masteradmin',
+            blockedBy: String(req.body.blockedBy || 'ADMIN').trim() || 'ADMIN',
             timestamp: new Date().toISOString()
         };
         const ref = await db.collection('blocked_ips').add(row);
@@ -1346,17 +1346,7 @@ app.get('/api/admin/staff', async (req, res) => {
             delete data.password;
             return { id: d.id, ...data };
         });
-        res.json([{
-            id: 'masteradmin',
-            username: 'masteradmin',
-            email: process.env.ADMIN_EMAIL || 'masteradmin@fullkik.local',
-            role: 'ADMIN',
-            status: 'ACTIVE',
-            permissions: STAFF_PERMISSIONS,
-            createdAt: '',
-            lastLoginAt: '',
-            system: true
-        }, ...staff]);
+        res.json(staff);
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1684,12 +1674,17 @@ app.put('/api/users/:username/songs/:id', async (req, res) => {
         if(song.status !== 'APPROVED') return res.status(400).send('Only published songs can be edited');
         const filename = String(req.body.name || '').trim();
         const credit = String(req.body.credit || '').trim();
+        const price = parseInt(req.body.price);
+        const settings = await getGlobalSettings();
+        const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
         if(!filename) return res.status(400).send('歌曲名称不能为空');
+        if(Number.isNaN(price) || price < 0) return res.status(400).send('歌曲价格无效');
+        if(price > maxSongPrice) return res.status(400).send(`歌曲钻石价格不能超过 ${maxSongPrice}`);
         if(await containsSensitiveWord(filename) || await containsSensitiveWord(credit)) {
             return res.status(400).send('歌曲资料包含敏感词');
         }
-        await songRef.update({ filename, credit: credit || song.uploader || 'FULLKIK', updatedAt: new Date().toISOString() });
-        res.json({ id: doc.id, ...song, filename, credit: credit || song.uploader || 'FULLKIK' });
+        await songRef.update({ filename, credit: credit || song.uploader || 'FULLKIK', price, updatedAt: new Date().toISOString() });
+        res.json({ id: doc.id, ...song, filename, credit: credit || song.uploader || 'FULLKIK', price });
     } catch(e) { res.status(500).send(e.message); }
 });
 
