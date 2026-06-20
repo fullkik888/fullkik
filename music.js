@@ -1638,9 +1638,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const newSong = {
         filename: title, originalName, filepath: url, coverUrl: coverUrl, genreId: genreIds[0] || 'none', genreIds,
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader,
-        credit: String(reqBody.credit || uploader).trim() || uploader,
-        rejectReason: ''
+        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong);
     if(newSong.status === 'PENDING' && newSong.uploader && String(newSong.uploader).toUpperCase() !== 'FULLKIK') {
@@ -1673,18 +1671,17 @@ app.put('/api/users/:username/songs/:id', async (req, res) => {
         }
         if(song.status !== 'APPROVED') return res.status(400).send('Only published songs can be edited');
         const filename = String(req.body.name || '').trim();
-        const credit = String(req.body.credit || '').trim();
         const price = parseInt(req.body.price);
         const settings = await getGlobalSettings();
         const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
         if(!filename) return res.status(400).send('歌曲名称不能为空');
         if(Number.isNaN(price) || price < 0) return res.status(400).send('歌曲价格无效');
         if(price > maxSongPrice) return res.status(400).send(`歌曲钻石价格不能超过 ${maxSongPrice}`);
-        if(await containsSensitiveWord(filename) || await containsSensitiveWord(credit)) {
+        if(await containsSensitiveWord(filename)) {
             return res.status(400).send('歌曲资料包含敏感词');
         }
-        await songRef.update({ filename, credit: credit || song.uploader || 'FULLKIK', price, updatedAt: new Date().toISOString() });
-        res.json({ id: doc.id, ...song, filename, credit: credit || song.uploader || 'FULLKIK', price });
+        await songRef.update({ filename, price, updatedAt: new Date().toISOString() });
+        res.json({ id: doc.id, ...song, filename, price });
     } catch(e) { res.status(500).send(e.message); }
 });
 
