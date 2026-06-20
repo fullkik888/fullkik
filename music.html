@@ -179,12 +179,12 @@
         .song-visualizer-stage::before { content:''; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.23) 0%, rgba(128,0,0,0.08) 44%, transparent 70%); filter:blur(14px); opacity:0.65; transition:opacity 0.35s, transform 0.35s; }
         .song-visualizer-stage.is-playing::before { opacity:1; transform:scale(1.08); }
         .song-visualizer-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; filter:drop-shadow(0 0 10px rgba(165,42,42,0.38)); }
-        .player-cover { width:61%; aspect-ratio:1; border-radius:50%; object-fit:cover; position:relative; z-index:2; box-shadow:0 22px 55px rgba(0,0,0,0.88), 0 0 0 7px rgba(255,255,255,0.035), 0 0 0 9px rgba(165,42,42,0.24); border:1px solid rgba(255,255,255,0.16); animation:playerCoverSpin 14s linear infinite; animation-play-state:paused; }
+        .player-cover-mask { width:62%; aspect-ratio:1; position:relative; z-index:2; overflow:hidden; background:#090505; clip-path:polygon(4% 39%, 10% 22%, 23% 16%, 35% 3%, 46% 18%, 54% 18%, 65% 3%, 77% 16%, 90% 22%, 96% 39%, 98% 60%, 91% 81%, 74% 94%, 50% 99%, 26% 94%, 9% 81%, 2% 60%); filter:drop-shadow(0 20px 28px rgba(0,0,0,0.88)) drop-shadow(0 0 8px rgba(255,75,48,0.32)); }
+        .player-cover { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.08); animation:playerCoverSpin 18s linear infinite; animation-play-state:paused; }
         .song-visualizer-stage.is-playing .player-cover { animation-play-state:running; }
-        .player-cover-center { position:absolute; z-index:3; width:12%; aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 35% 30%, #3b2828, #080505 68%); border:2px solid rgba(255,255,255,0.14); box-shadow:0 0 0 3px rgba(0,0,0,0.38); pointer-events:none; }
         .song-visualizer-label { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); color:var(--text-muted); font-size:10px; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; opacity:0.7; }
         .song-report-btn { margin-top:12px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px; }
-        @keyframes playerCoverSpin { to { transform:rotate(360deg); } }
+        @keyframes playerCoverSpin { from { transform:scale(1.08) rotate(0deg); } to { transform:scale(1.08) rotate(360deg); } }
         .recommend-section { margin-top:34px; padding-top:28px; border-top:1px solid var(--border-color); }
         .recommend-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
         .recommend-header h3 { margin:0; font-size:24px; font-weight:900; }
@@ -418,8 +418,7 @@
             <div class="player-right">
                 <div class="song-visualizer-stage" id="songVisualizerStage">
                     <canvas class="song-visualizer-canvas" id="songVisualizerCanvas"></canvas>
-                    <img class="player-cover" id="playerCover" src="">
-                    <span class="player-cover-center"></span>
+                    <div class="player-cover-mask"><img class="player-cover" id="playerCover" src=""></div>
                     <span class="song-visualizer-label">FULLKIK AUDIO REACTIVE</span>
                 </div>
                 <button class="song-report-btn" onclick="openReportModal()"><svg viewBox="0 0 24 24" style="width:14px;fill:currentColor;"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg> <span data-i18n="report">举报</span></button>
@@ -538,17 +537,31 @@
         const cx = width / 2;
         const cy = height / 2;
         const minSide = Math.min(width, height);
-        const baseRadius = minSide * 0.335;
-        const barCount = 96;
+        const baseRadius = minSide * 0.31;
+        const barCount = 128;
         ctx.clearRect(0, 0, width, height);
 
         if(active && visualizerAnalyser && visualizerFrequencyData) {
             visualizerAnalyser.getByteFrequencyData(visualizerFrequencyData);
         }
 
-        for(let ring = 0; ring < 4; ring++) {
+        const angleDistance = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+        const organicRadius = (angle, frequency = 0, ringOffset = 0) => {
+            const leftPeak = Math.exp(-Math.pow(angleDistance(angle, -2.08) / 0.24, 2));
+            const rightPeak = Math.exp(-Math.pow(angleDistance(angle, -1.06) / 0.24, 2));
+            const topDip = Math.exp(-Math.pow(angleDistance(angle, -Math.PI / 2) / 0.28, 2));
+            const sideSoftness = Math.cos(angle * 2) * 2.2;
+            return baseRadius
+                + (leftPeak + rightPeak) * minSide * 0.105
+                - topDip * minSide * 0.035
+                + sideSoftness
+                + ringOffset
+                + frequency;
+        };
+
+        for(let ring = 0; ring < 5; ring++) {
             ctx.beginPath();
-            const ringOffset = ring * 4.5;
+            const ringOffset = ring * 3.4;
             for(let i = 0; i <= barCount; i++) {
                 const index = i % barCount;
                 const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
@@ -556,18 +569,23 @@
                     ? Math.min(Math.floor(index * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
                     : 0;
                 const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
-                const idleWave = 2.8 + Math.sin(index * 0.31 + ring * 1.25) * 1.8;
-                const pulse = active ? frequency * (25 + ring * 3) : idleWave;
-                const radius = baseRadius + ringOffset + pulse;
+                const idleWave = 1.5 + Math.sin(index * 0.22 + ring * 0.9) * 1.3;
+                const pulse = active ? Math.pow(frequency, 1.35) * (18 + ring * 2) : idleWave;
+                const radius = organicRadius(angle, pulse, ringOffset);
                 const x = cx + Math.cos(angle) * radius;
                 const y = cy + Math.sin(angle) * radius;
                 if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.closePath();
-            ctx.strokeStyle = `rgba(${ring < 2 ? '165,42,42' : '255,120,105'},${active ? 0.24 - ring * 0.035 : 0.08})`;
-            ctx.lineWidth = ring === 0 ? 1.8 : 1;
+            ctx.strokeStyle = ring < 2
+                ? `rgba(255,74,38,${active ? 0.72 - ring * 0.16 : 0.28 - ring * 0.06})`
+                : `rgba(255,174,69,${active ? 0.3 - ring * 0.035 : 0.08})`;
+            ctx.lineWidth = ring === 0 ? 2.6 : 1.1;
+            ctx.shadowColor = active ? 'rgba(255,62,25,0.9)' : 'rgba(165,42,42,0.35)';
+            ctx.shadowBlur = active ? 11 - ring : 4;
             ctx.stroke();
         }
+        ctx.shadowBlur = 0;
 
         for(let i = 0; i < barCount; i++) {
             const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
@@ -575,21 +593,21 @@
                 ? Math.min(Math.floor(i * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
                 : 0;
             const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
-            const idle = 4 + (Math.sin(i * 0.43) + 1) * 2;
-            const length = active ? 7 + Math.pow(frequency, 1.35) * 48 : idle;
-            const innerRadius = baseRadius - 1;
+            const idle = 2 + (Math.sin(i * 0.36) + 1) * 1.4;
+            const length = active ? 4 + Math.pow(frequency, 1.45) * 38 : idle;
+            const innerRadius = organicRadius(angle, 0, -2);
             const outerRadius = innerRadius + length;
             const x1 = cx + Math.cos(angle) * innerRadius;
             const y1 = cy + Math.sin(angle) * innerRadius;
             const x2 = cx + Math.cos(angle) * outerRadius;
             const y2 = cy + Math.sin(angle) * outerRadius;
-            const red = Math.round(145 + frequency * 110);
-            const green = Math.round(35 + frequency * 55);
+            const red = 255;
+            const green = Math.round(58 + frequency * 120);
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = `rgba(${red},${green},${Math.round(42 + frequency * 55)},${active ? 0.48 + frequency * 0.48 : 0.2})`;
-            ctx.lineWidth = active ? 1.4 + frequency * 1.8 : 1;
+            ctx.strokeStyle = `rgba(${red},${green},${Math.round(25 + frequency * 35)},${active ? 0.38 + frequency * 0.58 : 0.16})`;
+            ctx.lineWidth = active ? 1 + frequency * 1.7 : 0.8;
             ctx.lineCap = 'round';
             ctx.stroke();
         }
@@ -1387,7 +1405,7 @@
         setMusicPageTitle('song', currentSong.filename);
         
         document.getElementById('playerTitle').innerText = currentSong.filename;
-        const uploaderName = currentSong.credit || currentSong.uploader || 'FULLKIK';
+        const uploaderName = currentSong.uploader || 'FULLKIK';
         const uploaderHtml = currentSong.uploader
             ? `<span class="uploader-link" onclick="window.location.href='/fullkik/vip?user=${encodeURIComponent(currentSong.uploader)}'">${escapeHtml(uploaderName)}</span>`
             : escapeHtml(uploaderName);
