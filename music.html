@@ -179,13 +179,13 @@
         .song-visualizer-stage::before { content:''; position:absolute; inset:12%; border-radius:50%; background:radial-gradient(circle, rgba(165,42,42,0.23) 0%, rgba(128,0,0,0.08) 44%, transparent 70%); filter:blur(14px); opacity:0.65; transition:opacity 0.35s, transform 0.35s; }
         .song-visualizer-stage.is-playing::before { opacity:1; transform:scale(1.08); }
         .song-visualizer-canvas { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; filter:drop-shadow(0 0 10px rgba(165,42,42,0.38)); }
-        .player-cover-mask { width:62%; aspect-ratio:1; position:relative; z-index:2; overflow:hidden; background:transparent; clip-path:polygon(4% 39%, 10% 22%, 23% 16%, 35% 3%, 46% 18%, 54% 18%, 65% 3%, 77% 16%, 90% 22%, 96% 39%, 98% 60%, 91% 81%, 74% 94%, 50% 99%, 26% 94%, 9% 81%, 2% 60%); filter:drop-shadow(0 20px 28px rgba(0,0,0,0.88)) drop-shadow(0 0 8px rgba(255,75,48,0.32)); }
+        .player-cover-mask { width:62%; aspect-ratio:1; position:relative; z-index:2; overflow:hidden; border-radius:50%; background:transparent; clip-path:none; box-shadow:0 22px 55px rgba(0,0,0,0.88), 0 0 0 3px rgba(255,255,255,0.08), 0 0 22px rgba(255,70,35,0.28); }
         .player-cover-center, .player-cover-mask::before, .player-cover-mask::after { display:none !important; content:none !important; }
-        .player-cover { width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.08); animation:playerCoverSpin 18s linear infinite; animation-play-state:paused; }
+        .player-cover { width:100%; height:100%; object-fit:cover; display:block; border-radius:50%; transform:rotate(0deg); animation:playerCoverSpin 18s linear infinite; animation-play-state:paused; }
         .song-visualizer-stage.is-playing .player-cover { animation-play-state:running; }
         .song-visualizer-label { position:absolute; bottom:2px; left:50%; transform:translateX(-50%); color:var(--text-muted); font-size:10px; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; opacity:0.7; }
         .song-report-btn { margin-top:12px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px; }
-        @keyframes playerCoverSpin { from { transform:scale(1.08) rotate(0deg); } to { transform:scale(1.08) rotate(360deg); } }
+        @keyframes playerCoverSpin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
         .recommend-section { margin-top:34px; padding-top:28px; border-top:1px solid var(--border-color); }
         .recommend-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
         .recommend-header h3 { margin:0; font-size:24px; font-weight:900; }
@@ -538,65 +538,62 @@
         const cx = width / 2;
         const cy = height / 2;
         const minSide = Math.min(width, height);
-        const baseRadius = minSide * 0.31;
-        const barCount = 128;
+        const baseRadius = minSide * 0.318;
+        const barCount = 144;
         ctx.clearRect(0, 0, width, height);
 
         if(active && visualizerAnalyser && visualizerFrequencyData) {
             visualizerAnalyser.getByteFrequencyData(visualizerFrequencyData);
         }
 
-        const angleDistance = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
-        const organicRadius = (angle, frequency = 0, ringOffset = 0) => {
-            const leftPeak = Math.exp(-Math.pow(angleDistance(angle, -2.08) / 0.24, 2));
-            const rightPeak = Math.exp(-Math.pow(angleDistance(angle, -1.06) / 0.24, 2));
-            const topDip = Math.exp(-Math.pow(angleDistance(angle, -Math.PI / 2) / 0.28, 2));
-            const sideSoftness = Math.cos(angle * 2) * 2.2;
-            return baseRadius
-                + (leftPeak + rightPeak) * minSide * 0.105
-                - topDip * minSide * 0.035
-                + sideSoftness
-                + ringOffset
-                + frequency;
+        const getFrequency = index => {
+            if(!active || !visualizerFrequencyData) return 0;
+            const dataIndex = Math.min(
+                Math.floor(index * visualizerFrequencyData.length / barCount * 0.76),
+                visualizerFrequencyData.length - 1
+            );
+            const current = visualizerFrequencyData[dataIndex] / 255;
+            const previous = visualizerFrequencyData[Math.max(0, dataIndex - 2)] / 255;
+            const next = visualizerFrequencyData[Math.min(visualizerFrequencyData.length - 1, dataIndex + 2)] / 255;
+            return (current * 0.55) + (previous * 0.225) + (next * 0.225);
         };
 
-        for(let ring = 0; ring < 5; ring++) {
+        for(let ring = 0; ring < 6; ring++) {
             ctx.beginPath();
-            const ringOffset = ring * 3.4;
+            const ringOffset = ring * 4.2;
             for(let i = 0; i <= barCount; i++) {
                 const index = i % barCount;
                 const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
-                const dataIndex = visualizerFrequencyData
-                    ? Math.min(Math.floor(index * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
+                const frequency = getFrequency(index);
+                const idleWave = 2.2 + Math.sin(index * 0.19 + ring * 0.82) * 1.5;
+                const musicPulse = Math.pow(frequency, 1.28) * (29 + ring * 2.3);
+                const fineWave = active
+                    ? Math.sin(index * 0.36 + audioEl.currentTime * 4.2 + ring) * (1.5 + frequency * 4)
                     : 0;
-                const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
-                const idleWave = 1.5 + Math.sin(index * 0.22 + ring * 0.9) * 1.3;
-                const pulse = active ? Math.pow(frequency, 1.35) * (18 + ring * 2) : idleWave;
-                const radius = organicRadius(angle, pulse, ringOffset);
+                const radius = baseRadius + ringOffset + (active ? musicPulse + fineWave : idleWave);
                 const x = cx + Math.cos(angle) * radius;
                 const y = cy + Math.sin(angle) * radius;
                 if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
             }
             ctx.closePath();
-            ctx.strokeStyle = ring < 2
-                ? `rgba(255,74,38,${active ? 0.72 - ring * 0.16 : 0.28 - ring * 0.06})`
-                : `rgba(255,174,69,${active ? 0.3 - ring * 0.035 : 0.08})`;
-            ctx.lineWidth = ring === 0 ? 2.6 : 1.1;
-            ctx.shadowColor = active ? 'rgba(255,62,25,0.9)' : 'rgba(165,42,42,0.35)';
-            ctx.shadowBlur = active ? 11 - ring : 4;
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, `rgba(255,38,25,${active ? 0.88 - ring * 0.11 : 0.28})`);
+            gradient.addColorStop(0.48, `rgba(255,197,72,${active ? 0.95 - ring * 0.11 : 0.34})`);
+            gradient.addColorStop(1, `rgba(255,47,24,${active ? 0.85 - ring * 0.11 : 0.25})`);
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = ring === 0 ? 3 : Math.max(0.7, 1.4 - ring * 0.12);
+            ctx.shadowColor = active ? 'rgba(255,72,20,0.95)' : 'rgba(165,42,42,0.35)';
+            ctx.shadowBlur = active ? Math.max(3, 15 - ring * 1.7) : 4;
             ctx.stroke();
         }
         ctx.shadowBlur = 0;
 
         for(let i = 0; i < barCount; i++) {
             const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
-            const dataIndex = visualizerFrequencyData
-                ? Math.min(Math.floor(i * visualizerFrequencyData.length / barCount * 0.72), visualizerFrequencyData.length - 1)
-                : 0;
-            const frequency = active && visualizerFrequencyData ? visualizerFrequencyData[dataIndex] / 255 : 0;
+            const frequency = getFrequency(i);
             const idle = 2 + (Math.sin(i * 0.36) + 1) * 1.4;
-            const length = active ? 4 + Math.pow(frequency, 1.45) * 38 : idle;
-            const innerRadius = organicRadius(angle, 0, -2);
+            const length = active ? 5 + Math.pow(frequency, 1.35) * 45 : idle;
+            const innerRadius = baseRadius - 3;
             const outerRadius = innerRadius + length;
             const x1 = cx + Math.cos(angle) * innerRadius;
             const y1 = cy + Math.sin(angle) * innerRadius;
@@ -611,6 +608,19 @@
             ctx.lineWidth = active ? 1 + frequency * 1.7 : 0.8;
             ctx.lineCap = 'round';
             ctx.stroke();
+
+            if(active && frequency > 0.62 && i % 3 === 0) {
+                const sparkRadius = outerRadius + 4 + frequency * 8;
+                const sparkX = cx + Math.cos(angle) * sparkRadius;
+                const sparkY = cy + Math.sin(angle) * sparkRadius;
+                ctx.beginPath();
+                ctx.arc(sparkX, sparkY, 0.8 + frequency * 1.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,215,125,${0.3 + frequency * 0.65})`;
+                ctx.shadowColor = 'rgba(255,82,28,0.95)';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
         }
     }
 
