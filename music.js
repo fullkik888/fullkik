@@ -995,7 +995,7 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const newTokens = (user.tokens || 0) + topupAmount; 
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta, date: new Date().toISOString() });
+        topups.push({ orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta, status: 'COMPLETED', date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
         await addUserNotification(req.params.username, createNotification(
@@ -1075,10 +1075,12 @@ app.put('/api/admin/users/:username/role', async (req, res) => {
         const allowedRoles = ['NORMAL', 'VIP', 'PRODUCER'];
         if (!allowedRoles.includes(requestedRole)) return res.status(400).send('Invalid role');
 
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ 
+        const roleUpdates = {
             isVip: requestedRole === 'VIP' || requestedRole === 'PRODUCER', 
             role: requestedRole 
-        });
+        };
+        if(requestedRole === 'VIP' || requestedRole === 'PRODUCER') roleUpdates.vipActivatedAt = new Date().toISOString();
+        await db.collection('users').doc(req.params.username.toLowerCase()).update(roleUpdates);
         await logAdminAction(`Updated role for ${req.params.username} to ${requestedRole}`, {
             module: '用户',
             action: '设置角色',
@@ -1153,11 +1155,16 @@ async function deleteUserAccount(req, res) {
 
         const deletedUser = userDoc.data();
         const deletedUsername = deletedUser.username || req.params.username;
-        const uploaderNames = [req.params.username, deletedUser.username, deletedUser.djName]
+        const uploaderNames = [req.params.username, deletedUser.username, deletedUser.djName, userDoc.id]
             .filter(Boolean)
             .map(name => String(name).toLowerCase());
         const songSnap = await db.collection('songs').get();
-        const songsToDelete = songSnap.docs.filter(doc => uploaderNames.includes(String(doc.data().uploader || '').toLowerCase()));
+        const songsToDelete = songSnap.docs.filter(doc => {
+            const song = doc.data();
+            return [song.uploader, song.ownerId, song.uploaderId, song.createdBy]
+                .filter(Boolean)
+                .some(value => uploaderNames.includes(String(value).toLowerCase()));
+        });
         for(let i = 0; i < songsToDelete.length; i += 450) {
             const batch = db.batch();
             songsToDelete.slice(i, i + 450).forEach(doc => batch.delete(doc.ref));
@@ -1237,7 +1244,7 @@ app.put('/api/users/:username/vip', async (req, res) => {
             return res.status(400).send('包含敏感词 (Contains sensitive word)');
         }
 
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true });
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true, vipActivatedAt: new Date().toISOString() });
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1469,8 +1476,138 @@ app.put('/api/reports/:id/unlist', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
     try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
 });
+app.post('/api/orders/:id/refund', async (req, res) => {
+    try {
+        const reason = String(req.body.reason || '').trim();
+        if(!reason) return res.status(400).send('Refund reason required');
+
+        const orderRef = db.collection('orders').doc(req.params.id);
+        const orderDoc = await orderRef.get();
+        if(!orderDoc.exists) return res.status(404).send('Order not found');
+        const order = orderDoc.data();
+        if(order.status === 'REFUNDED') return res.status(409).send('Order already refunded');
+
+        const username = String(order.user || '').toLowerCase();
+        const userRef = db.collection('users').doc(username);
+        const userDoc = username ? await userRef.get() : null;
+        let newTokens = null;
+        let topups = [];
+        if(userDoc && userDoc.exists) {
+            const user = userDoc.data();
+            newTokens = Number(user.tokens || 0) - Number(order.amount || 0);
+            topups = Array.isArray(user.topups) ? user.topups.map(topup => {
+                const sameOrder = topup.orderId && topup.orderId === order.orderId;
+                const sameLegacyTopup = !topup.orderId
+                    && Number(topup.amount || 0) === Number(order.amount || 0)
+                    && Math.abs(new Date(topup.date || 0).getTime() - new Date(order.time || 0).getTime()) < 120000;
+                return sameOrder || sameLegacyTopup
+                    ? { ...topup, status: 'REFUNDED', refundReason: reason, refundedAt: new Date().toISOString() }
+                    : topup;
+            }) : [];
+            await userRef.update({ tokens: newTokens, topups });
+            await addUserNotification(username, createNotification(
+                'topup-refunded',
+                `充值已退款 - ${order.orderId || req.params.id}`,
+                `退款原因：${reason}。账户扣回 ${Number(order.amount || 0)} 钻石。`,
+                { orderId: order.orderId || req.params.id, amount: Number(order.amount || 0), reason }
+            ));
+        }
+
+        const refundedAt = new Date().toISOString();
+        await orderRef.update({
+            status: 'REFUNDED',
+            refundReason: reason,
+            refundedAt,
+            refundAmount: -Math.abs(Number(order.price || 0)),
+            refundDiamonds: -Math.abs(Number(order.amount || 0))
+        });
+        await logAdminAction(`Refunded top-up order ${order.orderId || req.params.id}`, {
+            module: '财务',
+            action: '充值退款',
+            targetId: order.orderId || req.params.id,
+            details: `Refund reason: ${reason} | Amount: -${Number(order.price || 0)} ${order.currency || ''} | Diamonds: -${Number(order.amount || 0)}`
+        });
+
+        res.json({ success: true, status: 'REFUNDED', refundedAt, reason, userTokens: newTokens });
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
+});
 app.delete('/api/orders/all', async (req, res) => {
     try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+});
+
+function malaysiaDateKey(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if(Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(date);
+}
+
+app.get('/api/admin/finance/daily', async (req, res) => {
+    try {
+        const days = Math.min(Math.max(parseInt(req.query.days, 10) || 3, 1), 31);
+        const keys = Array.from({ length: days }, (_, index) => malaysiaDateKey(new Date(Date.now() - index * 86400000)));
+        const base = Object.fromEntries(keys.map(key => [key, {
+            date: key,
+            registrations: 0,
+            newVip: 0,
+            logins: 0,
+            uploads: 0,
+            rechargeOrders: 0,
+            rechargeAmount: 0,
+            rechargeDiamonds: 0,
+            purchases: 0,
+            spentDiamonds: 0
+        }]));
+
+        const [usersSnap, songsSnap, ordersSnap, transactionsSnap] = await Promise.all([
+            db.collection('users').get(),
+            db.collection('songs').get(),
+            db.collection('orders').get(),
+            db.collection('transactions').get()
+        ]);
+
+        usersSnap.docs.forEach(doc => {
+            const user = doc.data();
+            const registeredKey = malaysiaDateKey(user.createdAt);
+            if(base[registeredKey]) base[registeredKey].registrations++;
+            const vipKey = malaysiaDateKey(user.vipActivatedAt || ((user.isVip || user.role === 'VIP' || user.role === 'PRODUCER') ? user.createdAt : ''));
+            if(base[vipKey]) base[vipKey].newVip++;
+            const loginDays = new Set((Array.isArray(user.loginHistory) ? user.loginHistory : [])
+                .map(entry => malaysiaDateKey(entry.time || entry.date))
+                .filter(key => base[key]));
+            loginDays.forEach(key => base[key].logins++);
+        });
+
+        songsSnap.docs.forEach(doc => {
+            const key = malaysiaDateKey(doc.data().uploadTime || doc.data().createdAt);
+            if(base[key]) base[key].uploads++;
+        });
+        ordersSnap.docs.forEach(doc => {
+            const order = doc.data();
+            const key = malaysiaDateKey(order.time || order.createdAt);
+            if(!base[key] || order.status === 'REFUNDED') return;
+            base[key].rechargeOrders++;
+            base[key].rechargeAmount += Number(order.price || 0);
+            base[key].rechargeDiamonds += Number(order.amount || 0);
+        });
+        transactionsSnap.docs.forEach(doc => {
+            const transaction = doc.data();
+            const key = malaysiaDateKey(transaction.time || transaction.createdAt);
+            if(!base[key]) return;
+            base[key].purchases++;
+            base[key].spentDiamonds += Number(transaction.tokens || transaction.tokensSpent || 0);
+        });
+
+        res.json(keys.map(key => base[key]));
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
 });
 
 app.get('/api/transactions', async (req, res) => {
@@ -1761,6 +1898,27 @@ app.put('/api/songs/:id/settings', async (req, res) => {
 
 app.put('/api/songs/reorder', async (req, res) => {
     const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+});
+app.post('/api/songs/bulk-delete', async (req, res) => {
+    try {
+        const ids = Array.from(new Set(Array.isArray(req.body.ids) ? req.body.ids.map(String).filter(Boolean) : []));
+        if(!ids.length) return res.status(400).send('No songs selected');
+        if(ids.length > 1000) return res.status(400).send('Too many songs selected');
+        for(let i = 0; i < ids.length; i += 450) {
+            const batch = db.batch();
+            ids.slice(i, i + 450).forEach(id => batch.delete(db.collection('songs').doc(id)));
+            await batch.commit();
+        }
+        await logAdminAction(`Bulk deleted ${ids.length} songs`, {
+            module: '歌曲',
+            action: '批量删除',
+            targetId: ids.join(','),
+            details: `Deleted song documents: ${ids.length}`
+        });
+        res.json({ success: true, deleted: ids.length });
+    } catch(e) {
+        res.status(500).send(e.message);
+    }
 });
 app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
 
