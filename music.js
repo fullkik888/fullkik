@@ -136,6 +136,8 @@ const DEFAULT_SETTINGS = {
     contestActivities: [],
     coupons: [],
     topupExchangeRate: 1.7,
+    topupUsdRate: 0.23,
+    diamondTerms: '1. 钻石充值即时到账，仅可用于本平台音乐购买、VIP 升级、创作人打赏。\n2. 钻石不可提现、不可转账、不可兑换现金或其他平台货币。\n3. 购买完成的歌曲可重复下载，下载链接为限时有效签名。\n4. 充值订单完成后不支持人工退款；若因系统故障未到账，请联系客服核实。\n5. VIP 创作人分成金额可通过提现页面申请提现，与用户钻石余额是不同账本。\n6. 平台保留对充值套餐、首充奖励、限时活动的最终解释权。\n7. 使用前请确保已年满 18 岁；若由家长 / 监护人为未成年人代充，请监督钱包使用。\n\n遇到问题请联系客服，或点击页面右下角悬浮按钮。',
     topupPackages: [
         { id: 'PK500', label: '限时优惠', amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, sort: 10, enabled: true },
         { id: 'PK400', label: '限时优惠', amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, sort: 20, enabled: true },
@@ -968,6 +970,13 @@ app.post('/api/users/:username/topup', async (req, res) => {
     try {
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
+        const allowedCurrencies = ['RMB', 'MYR', 'USD'];
+        const currency = allowedCurrencies.includes(String(req.body.currency || '').toUpperCase())
+            ? String(req.body.currency).toUpperCase()
+            : 'RMB';
+        const paymentMethod = String(req.body.paymentMethod || (
+            currency === 'MYR' ? 'FPX 网上银行' : currency === 'USD' ? 'USDT (TRC20/ERC20)' : '支付宝转账'
+        )).trim().slice(0, 80);
         let topupAmount = parseInt(req.body.amount) || 0;
         let finalPrice = Math.max(parseFloat(req.body.price) || 0, 0);
         let couponMeta = null;
@@ -995,20 +1004,20 @@ app.post('/api/users/:username/topup', async (req, res) => {
         const newTokens = (user.tokens || 0) + topupAmount; 
         const topups = user.topups || [];
         const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta, status: 'COMPLETED', date: new Date().toISOString() });
+        topups.push({ orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency, paymentMethod, coupon: couponMeta, status: 'COMPLETED', date: new Date().toISOString() });
         
         await userRef.update({ tokens: newTokens, topups: topups }); 
         await addUserNotification(req.params.username, createNotification(
             'topup',
             `成功充值 - ${topupAmount}`,
-            `充值 ${req.body.currency || 'RMB'} ${finalPrice}，获得 ${topupAmount} 钻石`,
-            { amount: topupAmount, price: finalPrice, currency: req.body.currency || 'RMB', coupon: couponMeta }
+            `充值 ${currency} ${finalPrice}，获得 ${topupAmount} 钻石`,
+            { amount: topupAmount, price: finalPrice, currency, paymentMethod, coupon: couponMeta }
         ));
         
         await db.collection('orders').add({
             user: req.params.username, email: user.email || '-',
-            orderId: orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency: req.body.currency || 'RMB', coupon: couponMeta,
-            method: req.body.currency === 'MYR' ? 'SUPERPAY_FPX' : 'ALIPAY/WECHAT',
+            orderId: orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency, coupon: couponMeta,
+            method: paymentMethod,
             status: 'COMPLETED', time: new Date().toISOString()
         });
 
@@ -1958,6 +1967,13 @@ app.put('/api/settings', async (req, res) => {
             const rate = parseFloat(req.body.topupExchangeRate);
             updates.topupExchangeRate = Number.isFinite(rate) && rate > 0 ? Math.min(rate, 999) : DEFAULT_SETTINGS.topupExchangeRate;
         }
+        if (req.body.topupUsdRate !== undefined) {
+            const rate = parseFloat(req.body.topupUsdRate);
+            updates.topupUsdRate = Number.isFinite(rate) && rate > 0 ? Math.min(rate, 999) : DEFAULT_SETTINGS.topupUsdRate;
+        }
+        if (req.body.diamondTerms !== undefined) {
+            updates.diamondTerms = String(req.body.diamondTerms || '').trim().slice(0, 5000) || DEFAULT_SETTINGS.diamondTerms;
+        }
         if (req.body.topupPackages !== undefined) {
             const rows = Array.isArray(req.body.topupPackages) ? req.body.topupPackages : [];
             updates.topupPackages = rows.slice(0, 100).map((p, index) => ({
@@ -2038,7 +2054,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupPackages', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'diamondTerms', 'topupPackages', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
