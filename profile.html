@@ -136,15 +136,24 @@
         .topup-pack .amt { font-size: 18px; font-weight: bold; margin: 15px 0 5px 0; color: var(--token);}
         .topup-pack .prc { font-size: 14px; color: var(--text-muted);}
 
-        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px;}
-        .pay-btn { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); color: var(--text-muted); padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;}
-        .pay-btn.active { border-color: var(--accent-light); color: white;}
+        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap:wrap;}
+        .pay-btn { flex: 1 1 160px; background: #1a0f0f; border: 1px solid #3b1c1c; color: var(--text-muted); padding: 13px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight:800;}
+        .pay-btn:hover { border-color:var(--accent-light); color:white; background:rgba(128,0,0,0.16); }
+        .pay-btn.active { border-color: var(--accent-light); color: white; background:linear-gradient(135deg, rgba(128,0,0,0.38), rgba(54,12,12,0.78)); box-shadow:0 0 0 1px rgba(165,42,42,0.12) inset;}
+        .payment-hint { margin:-8px 0 22px; color:var(--text-muted); font-size:12px; line-height:1.6; }
         .promo-bar { display: flex; gap: 10px; margin-bottom: 10px;}
         .promo-bar input { flex: 1; background: #1a0f0f; border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 8px; color: white; outline: none;}
         .promo-bar button { background: rgba(255,255,255,0.1); border: none; color: white; padding: 0 20px; border-radius: 8px; cursor: pointer;}
         .promo-info { min-height:18px; margin-bottom:22px; color:var(--text-muted); font-size:12px; }
         .promo-info.active { color:var(--accent-light); font-weight:800; }
         .topup-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 20px;}
+        .diamond-terms { margin-top:24px; border:1px solid #3a1b1b; border-radius:12px; background:linear-gradient(145deg, rgba(55,16,16,0.74), rgba(20,8,8,0.94)); overflow:hidden; }
+        .diamond-terms summary { list-style:none; cursor:pointer; padding:18px 20px; display:flex; align-items:center; gap:10px; color:white; font-weight:900; }
+        .diamond-terms summary::-webkit-details-marker { display:none; }
+        .diamond-terms summary::after { content:'⌄'; margin-left:auto; color:var(--accent-light); transition:transform .2s; }
+        .diamond-terms[open] summary::after { transform:rotate(180deg); }
+        .diamond-terms-note { color:var(--text-muted); font-size:12px; font-weight:500; }
+        .diamond-terms-body { border-top:1px solid #321717; padding:0 20px 20px; color:#c3b7b7; white-space:pre-line; line-height:1.9; font-size:13px; }
 
         /* --- HISTORY LISTS --- */
         .hist-list { display: flex; flex-direction: column; gap: 10px; }
@@ -463,8 +472,10 @@
         <div class="pay-methods">
             <button class="pay-btn active" id="btnCurrRMB" onclick="setCurrency('RMB')">RMB</button>
             <button class="pay-btn" id="btnCurrMYR" onclick="setCurrency('MYR')">MYR</button>
+            <button class="pay-btn" id="btnCurrUSD" onclick="setCurrency('USD')">USD</button>
         </div>
         <div class="pay-methods" id="payMethodList"></div>
+        <div class="payment-hint" id="topupPaymentHint"></div>
 
         <div class="promo-bar"><input type="text" id="topupCouponInput" placeholder="优惠码 / 促销码"><button onclick="applyTopupCoupon()">应用</button></div>
         <div class="promo-info" id="topupCouponInfo"></div>
@@ -474,6 +485,10 @@
             <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥0</div>
         </div>
         <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
+        <details class="diamond-terms" open>
+            <summary>📋 钻石使用条款 <span class="diamond-terms-note">仅用于购买音乐 / VIP / 打赏 · 不可提现</span></summary>
+            <div class="diamond-terms-body" id="diamondTermsDisplay"></div>
+        </details>
     </div>
 
     <div id="view-vip" class="view-section">
@@ -800,7 +815,8 @@
                 const settingsRes = await fetch(`${API_URL}/settings`);
                 if(settingsRes.ok) globalSettings = await settingsRes.json();
                 renderWithdrawStatement();
-            } catch(e) { renderWithdrawStatement(); }
+                renderDiamondTerms();
+            } catch(e) { renderWithdrawStatement(); renderDiamondTerms(); }
             const uRes = await fetch(`${API_URL}/users/${username}`);
             if(uRes.ok) { 
                 const data = await uRes.json(); 
@@ -990,6 +1006,8 @@
 
     // --- TOPUP CENTER ---
     let currentCurrency = 'RMB';
+    let currentPaymentMethod = '支付宝转账';
+    let visiblePaymentMethods = [];
     let currentTopupAmt = 500, currentTopupPrice = 850;
     let baseTopupAmt = 500, baseTopupPrice = 850, appliedCoupon = null;
     const fallbackTopupPackages = [ { amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, label: '限时优惠', sort: 10 }, { amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, label: '限时优惠', sort: 20 }, { amount: 300, bonus: 100, firstTopupBonus: 0, rmPrice: 300, label: '限时优惠', sort: 30 }, { amount: 200, bonus: 0, firstTopupBonus: 0, rmPrice: 200, label: '', sort: 40 }, { amount: 100, bonus: 0, firstTopupBonus: 0, rmPrice: 100, label: '', sort: 50 }, { amount: 50, bonus: 0, firstTopupBonus: 0, rmPrice: 50, label: '', sort: 60 } ];
@@ -997,15 +1015,49 @@
         const rate = parseFloat(globalSettings.topupExchangeRate);
         return Number.isFinite(rate) && rate > 0 ? rate : 1.7;
     }
+    function getTopupUsdRate() {
+        const rate = parseFloat(globalSettings.topupUsdRate);
+        return Number.isFinite(rate) && rate > 0 ? rate : 0.23;
+    }
+    function getDefaultDiamondTerms() {
+        return '1. 钻石充值即时到账，仅可用于本平台音乐购买、VIP 升级、创作人打赏。\n2. 钻石不可提现、不可转账、不可兑换现金或其他平台货币。\n3. 购买完成的歌曲可重复下载，下载链接为限时有效签名。\n4. 充值订单完成后不支持人工退款；若因系统故障未到账，请联系客服核实。\n5. VIP 创作人分成金额可通过提现页面申请提现，与用户钻石余额是不同账本。\n6. 平台保留对充值套餐、首充奖励、限时活动的最终解释权。\n7. 使用前请确保已年满 18 岁；若由家长 / 监护人为未成年人代充，请监督钱包使用。\n\n遇到问题请联系客服，或点击页面右下角悬浮按钮。';
+    }
+    function renderDiamondTerms() {
+        const box = document.getElementById('diamondTermsDisplay');
+        if(box) box.textContent = String(globalSettings.diamondTerms || getDefaultDiamondTerms()).trim();
+    }
     function getTopupPackages() {
         const rows = Array.isArray(globalSettings.topupPackages) ? globalSettings.topupPackages : fallbackTopupPackages;
         return rows.filter(p => p.enabled !== false).sort((a,b) => (parseInt(a.sort) || 0) - (parseInt(b.sort) || 0));
     }
     function setCurrency(curr) {
-        currentCurrency = curr; document.getElementById('btnCurrRMB').classList.toggle('active', curr === 'RMB'); document.getElementById('btnCurrMYR').classList.toggle('active', curr === 'MYR');
-        const methods = curr === 'RMB' ? ['支付宝转账', '微联扫码', '微信原生'] : ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost'];
-        document.getElementById('payMethodList').innerHTML = methods.map((m, i) => `<button class="pay-btn ${i===0?'active':''}">${m}</button>`).join('');
+        currentCurrency = curr;
+        ['RMB','MYR','USD'].forEach(code => document.getElementById(`btnCurr${code}`)?.classList.toggle('active', curr === code));
+        visiblePaymentMethods = curr === 'RMB'
+            ? ['支付宝转账', '微信扫码', '银联支付']
+            : curr === 'MYR'
+                ? ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost']
+                : ['USDT (TRC20/ERC20)'];
+        currentPaymentMethod = visiblePaymentMethods[0];
+        document.getElementById('payMethodList').innerHTML = visiblePaymentMethods.map((method, index) =>
+            `<button class="pay-btn ${index === 0 ? 'active' : ''}" onclick="selectPaymentMethod(${index}, this)">${method}</button>`
+        ).join('');
+        renderPaymentHint();
         renderTopupPacks();
+    }
+    function selectPaymentMethod(index, button) {
+        currentPaymentMethod = visiblePaymentMethods[index] || visiblePaymentMethods[0] || '';
+        document.querySelectorAll('#payMethodList .pay-btn').forEach(item => item.classList.remove('active'));
+        if(button) button.classList.add('active');
+        renderPaymentHint();
+        updateTopupTotal();
+    }
+    function renderPaymentHint() {
+        const hint = document.getElementById('topupPaymentHint');
+        if(!hint) return;
+        hint.innerText = currentCurrency === 'USD'
+            ? '实际支付的 USDT 金额按后台设置的 USD 汇率折算，以支付平台收银台显示为准。'
+            : `已选择：${currentPaymentMethod}`;
     }
     function renderTopupPacks() {
         const grid = document.getElementById('topupGridRender'); grid.innerHTML = '';
@@ -1014,8 +1066,12 @@
         const isFirstTopup = !userTopups.length;
         packs.forEach((pk, i) => {
             const rmPrice = parseFloat(pk.rmPrice) || 0;
-            const price = currentCurrency === 'RMB' ? Math.round(rmPrice * rate) : rmPrice;
-            const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+            const price = currentCurrency === 'RMB'
+                ? Math.round(rmPrice * rate)
+                : currentCurrency === 'USD'
+                    ? Number((rmPrice * getTopupUsdRate()).toFixed(2))
+                    : rmPrice;
+            const sym = currentCurrency === 'RMB' ? '¥' : currentCurrency === 'USD' ? '$' : 'RM';
             const base = parseInt(pk.amount) || 0;
             const bonus = (parseInt(pk.bonus) || 0) + (isFirstTopup ? (parseInt(pk.firstTopupBonus) || 0) : 0);
             const label = pk.label || (bonus > 0 ? '限时优惠' : '');
@@ -1031,8 +1087,8 @@
         if(info) { info.innerText = ''; info.classList.remove('active'); }
     }
     function updateTopupTotal() {
-        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
-        document.getElementById('topupTotalDisplay').innerText = `${sym}${currentTopupPrice}`;
+        const sym = currentCurrency === 'RMB' ? '¥' : currentCurrency === 'USD' ? '$' : 'RM';
+        document.getElementById('topupTotalDisplay').innerText = `${sym}${currentTopupPrice}${currentCurrency === 'USD' ? '（USDT 支付）' : ''}`;
     }
     function selectTopup(amt, bonus, price, el) {
         if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
@@ -1055,14 +1111,14 @@
         appliedCoupon = data;
         currentTopupAmt = data.finalAmount;
         currentTopupPrice = data.finalPrice;
-        const sym = currentCurrency === 'RMB' ? '¥' : 'RM';
+        const sym = currentCurrency === 'RMB' ? '¥' : currentCurrency === 'USD' ? '$' : 'RM';
         info.classList.add('active');
         info.innerText = data.bonusDiamonds > 0 ? `已应用 ${data.code}：额外 +${data.bonusDiamonds} 钻石` : `已应用 ${data.code}：优惠 ${sym}${data.discount}，应付 ${sym}${data.finalPrice}`;
         updateTopupTotal();
     }
     async function executeRealTopup() {
         showGlobalLoader("正在处理订单...");
-        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: baseTopupAmt, price: baseTopupPrice, currency: currentCurrency, couponCode: appliedCoupon?.code || '' }) });
+        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: baseTopupAmt, price: baseTopupPrice, currency: currentCurrency, paymentMethod: currentPaymentMethod, couponCode: appliedCoupon?.code || '' }) });
         if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; const couponInput = document.getElementById('topupCouponInput'); if(couponInput) couponInput.value = ''; resetTopupCoupon(); hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { const msg = await res.text(); hideGlobalLoader(); showToast(msg || "Top up failed", true); }
     }
 
