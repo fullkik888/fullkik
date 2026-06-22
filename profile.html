@@ -566,7 +566,7 @@
             <div class="upload-dropzone" id="vip-audio-dropzone" onclick="document.getElementById('vipFileInput').click()">
                 点击选择 MP3 / WAV
             </div>
-            <input type="file" id="vipFileInput" accept="audio/*,video/mp4,.m4a,.mp3" style="display:none;" onchange="handleVipAudioSelect(event)">
+            <input type="file" id="vipFileInput" accept=".mp3,.wav" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:10px;"></div>
             <div class="batch-upload-shell" id="vipBatchShell">
                 <div class="batch-upload-head">
@@ -1717,7 +1717,9 @@
         `).join('');
     }
     function handleVipAudioSelect(e) {
-        const pickedFiles = Array.from(e.target.files || []);
+        const rawFiles = Array.from(e.target.files || []);
+        const pickedFiles = rawFiles.filter(file => /\.(mp3|wav)$/i.test(file.name || ''));
+        if(rawFiles.length !== pickedFiles.length) showToast("只支持 MP3 / WAV 文件", true);
         if(!pickedFiles.length) return;
         const defaultPrice = document.getElementById('vipPriceInput').value || 0;
         const defaultGenre = document.getElementById('vipGenreSelect').value;
