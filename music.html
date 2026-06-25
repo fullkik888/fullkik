@@ -111,13 +111,50 @@
         .ranking-list { display: flex; flex-direction: column; gap: 10px; }
         .list-song-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); border-radius: 8px; cursor:pointer; transition:0.2s;}
         .list-song-row:hover { border-color: var(--accent); }
-        .ranking-num { width: 30px; font-size: 18px; font-weight: bold; text-align: center; }
-        .rank-gold { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-        .rank-silver { color: #C0C0C0; }
-        .rank-bronze { color: #CD7F32; }
-        .rank-normal { color: var(--text-muted); }
+         .ranking-num { width: 30px; font-size: 18px; font-weight: bold; text-align: center; }
+         .rank-gold { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+         .rank-silver { color: #C0C0C0; }
+         .rank-bronze { color: #CD7F32; }
+         .rank-normal { color: var(--text-muted); }
 
-        .custom-pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; flex-wrap:wrap;}
+         /* GENRE DETAIL / MORE SONGS */
+         .more-page-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+         .more-view-toggle { display:flex; align-items:center; gap:6px; padding:6px; border-radius:16px; background:rgba(32,10,10,0.86); border:1px solid rgba(165,42,42,0.28); box-shadow:0 18px 44px rgba(60,0,0,0.24); }
+         .more-view-toggle button { width:42px; height:38px; border:none; border-radius:12px; background:transparent; color:var(--text-muted); cursor:pointer; font-size:18px; font-weight:900; transition:0.2s; }
+         .more-view-toggle button.active { background:linear-gradient(135deg, #6d1111, #a52a2a); color:white; box-shadow:0 10px 24px rgba(128,0,0,0.42); }
+         .genre-hero { min-height:230px; border-radius:24px; overflow:hidden; border:1px solid rgba(165,42,42,0.26); background:#1b0808 center/cover no-repeat; position:relative; display:none; align-items:flex-end; padding:42px; box-sizing:border-box; margin-bottom:44px; box-shadow:0 28px 70px rgba(40,0,0,0.45); }
+         .genre-hero::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(8,0,0,0.72), rgba(38,7,7,0.48), rgba(8,0,0,0.74)); z-index:0; }
+         .genre-hero::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 52% 35%, rgba(165,42,42,0.35), transparent 48%); z-index:0; }
+         .genre-hero-content { position:relative; z-index:1; max-width:760px; }
+         .more-kicker { color:rgba(255,255,255,0.68); font-size:14px; font-weight:900; letter-spacing:1px; margin-bottom:12px; }
+         .genre-hero h1, .more-title-block h1 { margin:0; font-size:48px; line-height:1.08; font-weight:950; letter-spacing:-1px; }
+         .genre-hero p, .more-title-block p { color:var(--text-muted); font-size:15px; margin:18px 0 0; font-weight:800; }
+         .more-title-block { margin:4px 0 28px; }
+         .more-quick-tabs { display:flex; gap:28px; align-items:center; overflow-x:auto; scrollbar-width:none; padding:0 0 16px; margin-bottom:6px; }
+         .more-quick-tabs::-webkit-scrollbar { display:none; }
+         .more-quick-tab { border:none; background:none; color:var(--text-muted); font-size:19px; font-weight:950; padding:0 0 12px; border-bottom:3px solid transparent; cursor:pointer; white-space:nowrap; transition:0.2s; }
+         .more-quick-tab:hover { color:white; }
+         .more-quick-tab.active { color:var(--accent-light); border-bottom-color:var(--accent-light); text-shadow:0 0 18px rgba(165,42,42,0.45); }
+         .more-sort-tabs { display:flex; gap:28px; align-items:center; overflow-x:auto; scrollbar-width:none; padding:8px 0 28px; margin-bottom:8px; }
+         .more-sort-tabs::-webkit-scrollbar { display:none; }
+         .more-sort-tab { border:none; background:none; color:var(--text-muted); font-size:17px; font-weight:950; padding:0 0 10px; border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap; transition:0.2s; }
+         .more-sort-tab.active { color:var(--accent-light); border-bottom-color:var(--accent-light); }
+         .more-song-results.list-mode { display:flex; flex-direction:column; gap:12px; }
+         .more-song-results.grid-mode { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:30px; }
+         .more-song-card-list { display:grid; grid-template-columns:64px minmax(0,1fr) auto; gap:16px; align-items:center; background:linear-gradient(135deg, rgba(42,14,14,0.88), rgba(27,8,8,0.88)); border:1px solid rgba(165,42,42,0.22); border-radius:16px; padding:14px 18px; cursor:pointer; transition:0.2s; box-shadow:0 12px 34px rgba(30,0,0,0.18); }
+         .more-song-card-list:hover { border-color:var(--accent-light); transform:translateY(-2px); background:linear-gradient(135deg, rgba(69,17,17,0.9), rgba(30,8,8,0.92)); }
+         .more-song-card-list img { width:64px; height:64px; border-radius:12px; object-fit:cover; box-shadow:0 12px 28px rgba(0,0,0,0.32); }
+         .more-song-card-grid { cursor:pointer; transition:0.2s; min-width:0; }
+         .more-song-card-grid:hover { transform:translateY(-4px); }
+         .more-song-card-grid .cover-wrap { aspect-ratio:1; width:100%; border-radius:18px; overflow:hidden; background:linear-gradient(135deg, rgba(60,14,14,0.92), rgba(18,4,4,0.92)); border:1px solid rgba(165,42,42,0.2); box-shadow:0 18px 48px rgba(30,0,0,0.32); }
+         .more-song-card-grid img { width:100%; height:100%; object-fit:cover; display:block; }
+         .more-song-title { color:white; font-weight:950; font-size:15px; line-height:1.32; }
+         .more-song-card-grid .more-song-title { margin-top:14px; }
+         .more-song-sub { color:var(--text-muted); font-size:13px; font-weight:700; margin-top:7px; }
+         .more-song-price { color:var(--token); font-weight:950; white-space:nowrap; display:flex; align-items:center; gap:10px; }
+         .more-empty { border:1px dashed rgba(165,42,42,0.38); background:rgba(35,9,9,0.46); border-radius:18px; padding:46px 22px; color:var(--text-muted); text-align:center; font-weight:800; }
+
+         .custom-pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; flex-wrap:wrap;}
         .p-btn { background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size:13px;}
         .p-btn:hover:not(:disabled) { border-color: var(--accent-light); color: white;}
         .p-btn.active { background: var(--accent-light); color: white; border-color: var(--accent-light);}
@@ -226,9 +263,9 @@
         .report-submit { width:100%; min-height:58px; border:none; border-radius:14px; background:linear-gradient(90deg, var(--accent), var(--accent-light)); color:white; font-size:18px; font-weight:900; cursor:pointer; margin-top:6px; }
         .report-submit:hover { transform:translateY(-1px); box-shadow:0 14px 30px rgba(128,0,0,0.34); }
 
-        .whatsapp-float { position: fixed; right: 24px; bottom: 24px; width: 58px; height: 58px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: white; display: none; align-items: center; justify-content: center; z-index: 900; box-shadow: 0 12px 28px rgba(128,0,0,0.45); border: 1px solid rgba(255,255,255,0.18); transition: 0.2s; }
-        .whatsapp-float:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 16px 34px rgba(128,0,0,0.55); }
-        .whatsapp-float svg { width: 30px; height: 30px; fill: currentColor; }
+         .whatsapp-float { position: fixed; right: 24px; bottom: 24px; min-width: 108px; height: 58px; padding:0 18px; box-sizing:border-box; border-radius: 22px; background: linear-gradient(135deg, #5c1010, var(--accent-light)); color: white; display: none; align-items: center; justify-content: center; gap:9px; z-index: 900; box-shadow: 0 12px 28px rgba(128,0,0,0.45); border: 1px solid rgba(255,255,255,0.18); transition: 0.2s; text-decoration:none; font-size:16px; font-weight:950; letter-spacing:0.5px; }
+         .whatsapp-float:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 16px 34px rgba(128,0,0,0.55); }
+         .support-chat-icon { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.12); font-size:16px; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.1); }
 
         .poster-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.72); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 9998; padding: 24px; box-sizing: border-box; }
         .poster-box { position: relative; width: min(92vw, 560px); max-height: 86vh; border-radius: 18px; overflow: hidden; border: 1px solid var(--border-color); background: rgba(30,15,15,0.98); box-shadow: 0 24px 70px rgba(0,0,0,0.85); }
@@ -282,11 +319,22 @@
             .recommend-card { grid-template-columns:56px minmax(0,1fr) auto; padding:8px; }
             .recommend-card img { width:56px; height:56px; }
             .search-wrapper { max-width: 90%; }
-            .banners-container img { width: 250px; flex-shrink: 0;}
-            .dj-grid-large { grid-template-columns: 1fr 1fr; }
-            .list-song-row { gap: 12px; padding: 12px; }
-            .whatsapp-float { right: 16px; bottom: 16px; width: 52px; height: 52px; }
-            .report-modal-box { padding:34px 24px; border-radius:24px; }
+             .banners-container img { width: 250px; flex-shrink: 0;}
+             .dj-grid-large { grid-template-columns: 1fr 1fr; }
+             .list-song-row { gap: 12px; padding: 12px; }
+             .more-page-bar { align-items:flex-start; }
+             .more-view-toggle button { width:38px; height:36px; }
+             .genre-hero { min-height:190px; border-radius:18px; padding:28px 24px; margin-bottom:28px; }
+             .genre-hero h1, .more-title-block h1 { font-size:34px; }
+             .more-quick-tabs, .more-sort-tabs { gap:22px; }
+             .more-quick-tab { font-size:18px; }
+             .more-sort-tab { font-size:16px; }
+             .more-song-results.grid-mode { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:22px 16px; }
+             .more-song-card-list { grid-template-columns:56px minmax(0,1fr) auto; padding:12px; gap:12px; }
+             .more-song-card-list img { width:56px; height:56px; }
+             .more-song-price { font-size:13px; }
+             .whatsapp-float { right: 16px; bottom: 84px; min-width: 96px; height: 52px; border-radius:20px; padding:0 14px; }
+             .report-modal-box { padding:34px 24px; border-radius:24px; }
             .report-title { font-size:26px; }
             .site-footer { padding-bottom:84px; }
             .mobile-bottom-nav { position:fixed; left:0; right:0; bottom:0; height:68px; z-index:950; display:grid; grid-template-columns:repeat(5,1fr); background:rgba(20,10,10,0.96); border-top:1px solid var(--border-color); backdrop-filter:blur(20px); }
@@ -390,14 +438,36 @@
         <div class="notification-list" id="notificationList"></div>
     </div>
 
-    <div id="view-more-songs" class="view-section">
-        <div class="player-header">
-            <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
-            <h2 id="moreSongsTitle" style="margin: 0 0 0 20px;">Category</h2>
-        </div>
-        <div id="moreSongsList"></div>
-        <div class="custom-pagination" id="moreSongsPagination"></div>
-    </div>
+     <div id="view-more-songs" class="view-section">
+         <div class="more-page-bar">
+             <button class="btn-back" onclick="switchView('home')"><svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:currentColor;"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> 返回</button>
+             <div class="more-view-toggle" aria-label="切换显示方式">
+                 <button id="moreLayoutGridBtn" onclick="setMoreLayout('grid')" title="方块显示">▦</button>
+                 <button id="moreLayoutListBtn" onclick="setMoreLayout('list')" title="列表显示">☰</button>
+             </div>
+         </div>
+         <div class="genre-hero" id="moreGenreHero">
+             <div class="genre-hero-content">
+                 <div class="more-kicker">分类</div>
+                 <h1 id="moreGenreTitle">Category</h1>
+                 <p id="moreGenreCount">0 首歌曲</p>
+             </div>
+         </div>
+         <div class="more-title-block" id="moreTitleBlock">
+             <div class="more-kicker">热门推荐</div>
+             <h1 id="moreSongsTitle">歌曲推荐</h1>
+             <p id="moreSongsSub">精选已上架音乐</p>
+         </div>
+         <div class="more-quick-tabs" id="moreQuickTabs"></div>
+         <div class="more-sort-tabs" id="moreSortTabs">
+             <button class="more-sort-tab active" id="moreSort-latest" onclick="setMoreSort('latest')">最新上架</button>
+             <button class="more-sort-tab" id="moreSort-downloads" onclick="setMoreSort('downloads')">最多下载</button>
+             <button class="more-sort-tab" id="moreSort-plays" onclick="setMoreSort('plays')">最多播放</button>
+             <button class="more-sort-tab" id="moreSort-priceHigh" onclick="setMoreSort('priceHigh')">价格从高</button>
+         </div>
+         <div id="moreSongsList" class="more-song-results list-mode"></div>
+         <div class="custom-pagination" id="moreSongsPagination"></div>
+     </div>
 
     <div id="view-song" class="view-section">
         <div class="player-header">
@@ -461,7 +531,7 @@
         <button class="report-submit" onclick="submitSongReport()">提交举报</button>
     </div>
 </div>
-<a class="whatsapp-float" id="supportWhatsappBtn" href="#" target="_blank" rel="noopener" aria-label="WhatsApp 客服"><svg viewBox="0 0 32 32"><path d="M16.04 3C9.35 3 3.9 8.45 3.9 15.14c0 2.14.56 4.22 1.63 6.05L3.8 27.5l6.47-1.7a12.05 12.05 0 0 0 5.77 1.47c6.69 0 12.14-5.45 12.14-12.14S22.73 3 16.04 3zm0 22.2c-1.8 0-3.57-.48-5.12-1.39l-.37-.22-3.84 1.01 1.03-3.74-.24-.38a10 10 0 0 1-1.53-5.34c0-5.55 4.52-10.07 10.07-10.07S26.1 9.59 26.1 15.14 21.59 25.2 16.04 25.2zm5.52-7.54c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.96 1.18-.18.2-.35.23-.65.08-.3-.15-1.27-.47-2.42-1.49-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.68-1.64-.93-2.25-.24-.58-.49-.5-.68-.51h-.58c-.2 0-.53.08-.8.38-.28.3-1.05 1.03-1.05 2.51s1.08 2.91 1.23 3.11c.15.2 2.13 3.25 5.16 4.56.72.31 1.29.5 1.73.64.73.23 1.39.2 1.91.12.58-.09 1.78-.73 2.03-1.43.25-.7.25-1.31.18-1.43-.08-.13-.28-.2-.58-.35z"/></svg></a>
+<a class="whatsapp-float" id="supportWhatsappBtn" href="#" target="_blank" rel="noopener" aria-label="客服"><span class="support-chat-icon">💬</span><span>客服</span></a>
 <div class="poster-overlay" id="homePosterOverlay"><div class="poster-box"><button class="poster-close" onclick="closeHomePoster()">×</button><img id="homePosterImage" src="" alt="海报"></div></div>
 
 <script>
@@ -727,16 +797,25 @@
         window.location.href = username ? '/fullkik/profile.page' : '/fullkik/register';
     }
 
-    let globalSettings = {};
-    let currentFeaturedGenreId = null;
+     let globalSettings = {};
+     let currentFeaturedGenreId = null;
+     let currentMoreFilterId = 'ALL';
+     let currentMoreTitle = '歌曲推荐';
+     let currentMoreSort = 'latest';
+     let currentMoreLayout = localStorage.getItem('fullkikMoreLayout') || 'list';
+     const DEFAULT_AUDIO_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     }
 
-    function escapeJs(value) {
-        return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    }
+     function escapeJs(value) {
+         return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+     }
+
+     function escapeAttrJs(value) {
+         return escapeHtml(escapeJs(value));
+     }
 
     function songHasGenre(song, genreId) {
         if(!genreId || genreId === 'ALL') return true;
@@ -858,12 +937,13 @@
             }
         } catch(e) { console.error("Init Error:", e); } 
 
-        const finishInitialNavigation = () => {
-            if(openedInitialSong) return;
-            const savedView = localStorage.getItem('djLastView');
-            if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView);
-            else switchView('home');
-        };
+         const finishInitialNavigation = () => {
+             if(openedInitialSong) return;
+             const savedView = localStorage.getItem('djLastView');
+             if(savedView === 'more-songs') openMoreSongs('歌曲推荐', 'ALL');
+             else if(savedView && document.getElementById(`view-${savedView}`)) switchView(savedView);
+             else switchView('home');
+         };
 
         if(skipInitialLoader) {
             finishInitialNavigation();
@@ -895,14 +975,17 @@
             ? globalSettings.topNavGenreIds.slice(0, 3)
             : allGenres.filter(g => g.status !== 'DISABLED').slice(0, 3).map(g => g.id);
         let validGenres = selectedIds.map(id => allGenres.find(g => g.id === id && g.status !== 'DISABLED')).filter(Boolean);
-        validGenres.forEach(g => {
-            const btn = document.createElement('button');
-            btn.className = 'nav-tab top-genre-tab';
-            btn.innerText = g.name;
-            btn.onclick = () => openMoreSongs(g.name, g.id);
-            nav.insertBefore(btn, homeNode.nextSibling);
-        });
-    }
+         let insertAfter = homeNode;
+         validGenres.forEach(g => {
+             const btn = document.createElement('button');
+             btn.className = 'nav-tab top-genre-tab';
+             btn.dataset.genreId = g.id;
+             btn.innerText = g.name;
+             btn.onclick = () => openMoreSongs(g.name, g.id);
+             nav.insertBefore(btn, insertAfter.nextSibling);
+             insertAfter = btn;
+         });
+     }
 
     function switchView(view) {
         if(audioEl) audioEl.pause(); document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -910,10 +993,15 @@
         if(view === 'song' && currentSong) setMusicPageTitle('song', currentSong.filename);
         else setMusicPageTitle(view);
         
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        if(view === 'home' || view === 'song' || view === 'dj-list') { const ns = document.getElementById('nav-home'); if(ns) ns.classList.add('active'); }
-        if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
-        if(view === 'notifications') renderNotifications();
+         document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+         if(view === 'home' || view === 'song' || view === 'dj-list') { const ns = document.getElementById('nav-home'); if(ns) ns.classList.add('active'); }
+         if(view === 'ranking') { const ns = document.getElementById('nav-ranking'); if(ns) ns.classList.add('active'); renderRanking(); }
+         if(view === 'more-songs') {
+             document.querySelectorAll('.top-genre-tab').forEach(tab => {
+                 if(tab.dataset.genreId === String(currentMoreFilterId || '')) tab.classList.add('active');
+             });
+         }
+         if(view === 'notifications') renderNotifications();
         updateMobileBottomNav(view);
 
         if(['home', 'ranking', 'more-songs', 'notifications'].includes(view)) localStorage.setItem('djLastView', view);
@@ -1128,9 +1216,9 @@
         return creatorUsers;
     }
 
-    function generateSongGridHtml(title, songs, filterId) {
-        const top9 = songs.slice(0, 9);
-        let html = `<div class="section-header"><h3>${title}</h3><span onclick="openMoreSongs('${title}', '${filterId}')">更多 ></span></div><div class="home-song-grid">`;
+     function generateSongGridHtml(title, songs, filterId) {
+         const top9 = songs.slice(0, 9);
+         let html = `<div class="section-header"><h3>${escapeHtml(title)}</h3><span onclick="openMoreSongs('${escapeAttrJs(title)}', '${escapeAttrJs(filterId)}')">更多 ></span></div><div class="home-song-grid">`;
         top9.forEach(s => {
             const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
             const isFav = userFavorites.includes(s.id);
@@ -1327,52 +1415,181 @@
         });
     }
 
-    // --- MORE SONGS PAGINATION ---
-    let currentMoreSongs = []; let currentMorePage = 1; const MORE_LIMIT = 50;
+     // --- MORE SONGS PAGINATION / GENRE DETAIL ---
+     let currentMoreSongs = []; let currentMorePage = 1; const MORE_LIMIT = 50;
 
-    function openMoreSongs(title, filterId) {
-        document.getElementById('moreSongsTitle').innerText = title;
-        if(filterId === 'ALL') currentMoreSongs = [...allSongs].filter(s => s.status === 'APPROVED').sort((a,b) => new Date(b.uploadTime) - new Date(a.uploadTime));
-        else currentMoreSongs = allSongs.filter(s => songHasGenre(s, filterId) && s.status === 'APPROVED');
-        currentMorePage = 1; renderMoreSongsPage(); switchView('more-songs'); setMusicPageTitle('more-songs', title);
-    }
+     function getSongCover(song) {
+         return (song && song.coverUrl) || globalSettings.defaultCoverUrl || DEFAULT_AUDIO_COVER;
+     }
 
-    function setMorePage(num) { currentMorePage = num; renderMoreSongsPage(); }
-    function changeMorePage(dir) { currentMorePage += dir; renderMoreSongsPage(); }
+     function getMoreBaseSongs(filterId) {
+         const approved = allSongs.filter(s => s.status === 'APPROVED');
+         if(filterId === 'FOLLOWING') {
+             if(!username || !Array.isArray(userFollowing) || !userFollowing.length) return [];
+             const followedKeys = userFollowing.map(name => String(name || '').toLowerCase());
+             return approved.filter(s => followedKeys.includes(String(s.uploader || '').toLowerCase()));
+         }
+         if(filterId === 'ALL') return approved;
+         return approved.filter(s => songHasGenre(s, filterId));
+     }
 
-    function renderMoreSongsPage() {
-        const listDiv = document.getElementById('moreSongsList'); listDiv.innerHTML = '';
-        const totalPages = Math.ceil(currentMoreSongs.length / MORE_LIMIT) || 1;
-        if(currentMorePage > totalPages) currentMorePage = totalPages;
-        const start = (currentMorePage - 1) * MORE_LIMIT; const paged = currentMoreSongs.slice(start, start + MORE_LIMIT);
+     function sortMoreSongs(items) {
+         const songs = [...items];
+         songs.sort((a, b) => {
+             if(currentMoreSort === 'downloads') return (parseInt(b.downloads) || 0) - (parseInt(a.downloads) || 0);
+             if(currentMoreSort === 'plays') return (parseInt(b.plays) || 0) - (parseInt(a.plays) || 0);
+             if(currentMoreSort === 'priceHigh') return (parseInt(b.price) || 0) - (parseInt(a.price) || 0);
+             return new Date(b.uploadTime || 0) - new Date(a.uploadTime || 0);
+         });
+         return songs;
+     }
 
-        paged.forEach(s => {
-            const cover = s.coverUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-            listDiv.innerHTML += `
-                <div class="list-song-row" onclick="openSong('${s.id}')">
-                    <div style="display:flex; align-items:center; gap:15px; width:70%;">
-                        <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; flex-shrink:0;">
-                        <div style="min-width:0;">
-                            <div class="truncate" style="font-weight:bold; font-size:15px;">${s.filename}</div>
-                            <div class="truncate" style="font-size:11px; color:var(--text-muted);">${uploaderInlineHtml(s.uploader || 'FULLKIK')}</div>
-                        </div>
-                    </div>
-                    <div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price||0} <span style="color:#666; margin-left:10px;">♡</span></div>
-                </div>
-            `;
-        });
+     function refreshMoreSongsData() {
+         currentMoreSongs = sortMoreSongs(getMoreBaseSongs(currentMoreFilterId));
+     }
 
-        const pagDiv = document.getElementById('moreSongsPagination');
-        let pagHtml = `<button class="p-btn" ${currentMorePage===1?'disabled':''} onclick="changeMorePage(-1)">« 上一页</button>`;
-        for(let i=1; i<=totalPages; i++) {
-            if (totalPages > 7) {
-                if (i === 1 || i === totalPages || (i >= currentMorePage - 1 && i <= currentMorePage + 1)) pagHtml += `<button class="p-btn ${i===currentMorePage?'active':''}" onclick="setMorePage(${i})">${i}</button>`;
-                else if (i === currentMorePage - 2 || i === currentMorePage + 2) pagHtml += `<span style="color:var(--text-muted);">...</span>`;
-            } else { pagHtml += `<button class="p-btn ${i===currentMorePage?'active':''}" onclick="setMorePage(${i})">${i}</button>`; }
-        }
-        pagHtml += `<button class="p-btn" ${currentMorePage===totalPages?'disabled':''} onclick="changeMorePage(1)">下一页 »</button>`;
-        pagDiv.innerHTML = pagHtml;
-    }
+     function openMoreSongs(title, filterId) {
+         currentMoreTitle = title || '歌曲推荐';
+         currentMoreFilterId = filterId || 'ALL';
+         currentMoreSort = 'latest';
+         currentMorePage = 1;
+         refreshMoreSongsData();
+         renderMoreChrome();
+         renderMoreSongsPage();
+         switchView('more-songs');
+         setMusicPageTitle('more-songs', currentMoreTitle);
+     }
+
+     function setMoreSort(sortKey) {
+         currentMoreSort = sortKey || 'latest';
+         currentMorePage = 1;
+         refreshMoreSongsData();
+         renderMoreChrome();
+         renderMoreSongsPage();
+     }
+
+     function setMoreLayout(layout) {
+         currentMoreLayout = layout === 'grid' ? 'grid' : 'list';
+         localStorage.setItem('fullkikMoreLayout', currentMoreLayout);
+         renderMoreChrome();
+         renderMoreSongsPage();
+     }
+
+     function openMoreQuickTab(filterId, title) {
+         openMoreSongs(title, filterId);
+     }
+
+     function getActiveGenreForMore() {
+         return allGenres.find(g => g.id === currentMoreFilterId && g.status !== 'DISABLED') || null;
+     }
+
+     function renderMoreChrome() {
+         const activeGenre = getActiveGenreForMore();
+         const hero = document.getElementById('moreGenreHero');
+         const titleBlock = document.getElementById('moreTitleBlock');
+         const quickTabs = document.getElementById('moreQuickTabs');
+         const titleEl = document.getElementById('moreSongsTitle');
+         const subEl = document.getElementById('moreSongsSub');
+         const heroTitle = document.getElementById('moreGenreTitle');
+         const heroCount = document.getElementById('moreGenreCount');
+         const gridBtn = document.getElementById('moreLayoutGridBtn');
+         const listBtn = document.getElementById('moreLayoutListBtn');
+
+         document.querySelectorAll('.more-sort-tab').forEach(btn => btn.classList.remove('active'));
+         const sortBtn = document.getElementById(`moreSort-${currentMoreSort}`);
+         if(sortBtn) sortBtn.classList.add('active');
+         if(gridBtn) gridBtn.classList.toggle('active', currentMoreLayout === 'grid');
+         if(listBtn) listBtn.classList.toggle('active', currentMoreLayout !== 'grid');
+
+         if(activeGenre) {
+             const genreCover = activeGenre.coverUrl || (currentMoreSongs.find(s => s.coverUrl) || {}).coverUrl || globalSettings.defaultCoverUrl || DEFAULT_AUDIO_COVER;
+             if(hero) {
+                 hero.style.display = 'flex';
+                 hero.style.backgroundImage = `url("${genreCover}")`;
+             }
+             if(titleBlock) titleBlock.style.display = 'none';
+             if(heroTitle) heroTitle.innerText = activeGenre.name;
+             if(heroCount) heroCount.innerText = `${currentMoreSongs.length} 首歌曲`;
+         } else {
+             if(hero) {
+                 hero.style.display = 'none';
+                 hero.style.backgroundImage = '';
+             }
+             if(titleBlock) titleBlock.style.display = 'block';
+             if(titleEl) titleEl.innerText = currentMoreFilterId === 'FOLLOWING' ? '你的关注' : currentMoreTitle;
+             if(subEl) subEl.innerText = currentMoreFilterId === 'FOLLOWING'
+                 ? `${currentMoreSongs.length} 首来自你关注的创作人`
+                 : `${currentMoreSongs.length} 首精选已上架音乐`;
+         }
+
+         if(quickTabs) {
+             const activeGenres = allGenres.filter(g => g.status !== 'DISABLED');
+             const tabs = [
+                 { id: 'ALL', title: '最新上架' },
+                 { id: 'FOLLOWING', title: '你的关注' },
+                 ...activeGenres.map(g => ({ id: g.id, title: g.name }))
+             ];
+             quickTabs.innerHTML = tabs.map(t => `
+                 <button class="more-quick-tab ${String(t.id) === String(currentMoreFilterId) ? 'active' : ''}" onclick="openMoreQuickTab('${escapeAttrJs(t.id)}', '${escapeAttrJs(t.title)}')">${escapeHtml(t.title)}</button>
+             `).join('');
+         }
+     }
+
+     function setMorePage(num) { currentMorePage = num; renderMoreSongsPage(); }
+     function changeMorePage(dir) { currentMorePage += dir; renderMoreSongsPage(); }
+
+     function renderMoreSongCard(song) {
+         const cover = getSongCover(song);
+         const title = escapeHtml(song.filename);
+         const uploader = uploaderInlineHtml(song.uploader || 'FULLKIK');
+         const price = parseInt(song.price) || 0;
+         const priceHtml = price > 0 ? `💎 ${price}` : '免费';
+         if(currentMoreLayout === 'grid') {
+             return `
+                 <div class="more-song-card-grid" onclick="openSong('${song.id}')">
+                     <div class="cover-wrap"><img src="${cover}" alt="${title}"></div>
+                     <div class="more-song-title truncate">${title}</div>
+                     <div class="more-song-sub truncate">${uploader}</div>
+                     <div class="more-song-price" style="margin-top:8px;">${priceHtml}</div>
+                 </div>`;
+         }
+         return `
+             <div class="more-song-card-list" onclick="openSong('${song.id}')">
+                 <img src="${cover}" alt="${title}">
+                 <div style="min-width:0;">
+                     <div class="more-song-title truncate">${title}</div>
+                     <div class="more-song-sub truncate">${uploader}</div>
+                 </div>
+                 <div class="more-song-price">${priceHtml}<span style="color:var(--text-muted); font-weight:900;">♡</span></div>
+             </div>`;
+     }
+
+     function renderMoreSongsPage() {
+         const listDiv = document.getElementById('moreSongsList');
+         if(!listDiv) return;
+         listDiv.className = `more-song-results ${currentMoreLayout === 'grid' ? 'grid-mode' : 'list-mode'}`;
+         const totalPages = Math.ceil(currentMoreSongs.length / MORE_LIMIT) || 1;
+         if(currentMorePage > totalPages) currentMorePage = totalPages;
+         if(currentMorePage < 1) currentMorePage = 1;
+         const start = (currentMorePage - 1) * MORE_LIMIT;
+         const paged = currentMoreSongs.slice(start, start + MORE_LIMIT);
+
+         listDiv.innerHTML = paged.length
+             ? paged.map(renderMoreSongCard).join('')
+             : `<div class="more-empty" style="${currentMoreLayout === 'grid' ? 'grid-column:1/-1;' : ''}">暂无歌曲</div>`;
+
+         const pagDiv = document.getElementById('moreSongsPagination');
+         if(!pagDiv) return;
+         let pagHtml = `<button class="p-btn" ${currentMorePage===1?'disabled':''} onclick="changeMorePage(-1)">« 上一页</button>`;
+         for(let i=1; i<=totalPages; i++) {
+             if (totalPages > 7) {
+                 if (i === 1 || i === totalPages || (i >= currentMorePage - 1 && i <= currentMorePage + 1)) pagHtml += `<button class="p-btn ${i===currentMorePage?'active':''}" onclick="setMorePage(${i})">${i}</button>`;
+                 else if (i === currentMorePage - 2 || i === currentMorePage + 2) pagHtml += `<span style="color:var(--text-muted);">...</span>`;
+             } else { pagHtml += `<button class="p-btn ${i===currentMorePage?'active':''}" onclick="setMorePage(${i})">${i}</button>`; }
+         }
+         pagHtml += `<button class="p-btn" ${currentMorePage===totalPages?'disabled':''} onclick="changeMorePage(1)">下一页 »</button>`;
+         pagDiv.innerHTML = pagHtml;
+     }
 
     function getSongPopularityScore(song) {
         const purchases = allUsers.reduce((sum, u) => sum + ((u.purchases || []).filter(p => p.songId === song.id).length), 0);
