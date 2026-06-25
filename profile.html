@@ -155,12 +155,15 @@
         .diamond-terms-note { color:var(--text-muted); font-size:12px; font-weight:500; }
         .diamond-terms-body { border-top:1px solid #321717; padding:0 20px 20px; color:#c3b7b7; white-space:pre-line; line-height:1.9; font-size:13px; }
 
-        /* --- HISTORY LISTS --- */
-        .hist-list { display: flex; flex-direction: column; gap: 10px; }
-        .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
-        .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+         /* --- HISTORY LISTS --- */
+         .hist-list { display: flex; flex-direction: column; gap: 10px; }
+         .hist-row { display: grid; grid-template-columns: 60px 1.5fr 1fr 1fr 1fr; background: #1a0f0f; border-radius: 12px; padding: 20px; align-items: center; border: 1px solid var(--border-color);}
+         .hist-icon { width: 40px; height: 40px; background: rgba(128,0,0,0.2); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+         .hist-main, .hist-field { min-width:0; }
+         .hist-title, .hist-value { font-weight:bold; }
+         .hist-label, .hist-sub { font-size:11px; color:var(--text-muted); }
 
-        .lib-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 100px; gap: 14px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
+         .lib-row { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto 100px; gap: 14px; padding: 16px; align-items: center; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 5px; border-radius: 12px;}
         .vip-own-song-row { grid-template-columns: 54px minmax(0,1fr) 100px 90px 110px 80px; }
         .vip-song-edit-btn { border:1px solid rgba(165,42,42,0.55); background:rgba(128,0,0,0.14); color:var(--accent-light); border-radius:9px; padding:8px 13px; cursor:pointer; font-weight:800; }
         .vip-song-edit-btn:hover { color:white; border-color:var(--accent-light); background:rgba(165,42,42,0.24); }
@@ -273,12 +276,22 @@
             .lib-cover { width:46px; height:46px; }
             .nav-tabs { gap: 15px; }
             .logo-container { font-size: 18px; }
-            .input-row { flex-direction: column; gap: 10px; }
-            .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
-            .topup-grid-large { grid-template-columns: 1fr 1fr; }
-            .hist-row { grid-template-columns: 50px 1fr; gap:10px;}
-            .hist-row > div:nth-child(n+3) { display: none; } 
-            .profile-banner { flex-direction:column; align-items:center; text-align:center; }
+             .input-row { flex-direction: column; gap: 10px; }
+             .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+             .topup-grid-large { grid-template-columns: 1fr 1fr; }
+             .hist-list { gap:14px; }
+             .hist-row { grid-template-columns: 52px minmax(0,1fr) minmax(0,1fr); gap:12px 12px; padding:16px; align-items:start; border-radius:18px; background:linear-gradient(135deg, rgba(32,8,8,0.96), rgba(18,5,5,0.98)); }
+             .hist-icon { width:44px; height:44px; border-radius:12px; grid-row:1 / span 3; }
+             .hist-main { grid-column:2 / 4; align-self:center; padding-top:2px; }
+             .hist-title { font-size:17px; line-height:1.25; }
+             .hist-sub { font-size:12px; margin-top:4px; }
+             .hist-field { border:1px solid rgba(165,42,42,0.18); background:rgba(128,0,0,0.12); border-radius:12px; padding:10px 11px; box-sizing:border-box; min-height:52px; }
+             .hist-detail { grid-column:2 / 4; }
+             .hist-date { grid-column:2; }
+             .hist-amount { grid-column:3; text-align:right; }
+             .hist-value { font-size:14px; line-height:1.18; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+             .hist-label { font-size:10px; margin-top:5px; }
+             .profile-banner { flex-direction:column; align-items:center; text-align:center; }
             .following-panel { padding:20px 14px; }
             .following-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
             .global-player { padding: 10px; flex-direction: column; gap: 10px; height:auto; }
@@ -1460,9 +1473,14 @@
     }
     function seekAudio(val) { if(coreAudio.dataset.previewLocked === 'true' && val >= PROFILE_PREVIEW_LIMIT_SECONDS) val = PROFILE_PREVIEW_LIMIT_SECONDS - 0.1; coreAudio.currentTime = val; }
 
-    // --- HISTORY UI ---
-    function renderHistory(filter) {
-        document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
+     // --- HISTORY UI ---
+     function formatHistoryDate(value) {
+         const d = new Date(value);
+         return isNaN(d.getTime()) ? '-' : d.toISOString().split('T')[0];
+     }
+
+     function renderHistory(filter) {
+         document.querySelectorAll('#view-history .vip-tab').forEach(t => t.classList.remove('active'));
         if(filter==='ALL') document.getElementById('histTabALL').classList.add('active');
         if(filter==='BUY') document.getElementById('histTabBUY').classList.add('active');
         if(filter==='TOPUP') document.getElementById('histTabTOPUP').classList.add('active');
@@ -1475,26 +1493,27 @@
         combined.sort((a,b) => new Date(b.date) - new Date(a.date));
         if(combined.length === 0) { listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">${dict[currentLang].emptyLib}</div>`; return; }
 
-        combined.forEach(item => {
-            if(item.type === 'topup') {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
-                        <div><div style="font-weight:bold;">钻石充值</div><div style="font-size:11px;color:var(--text-muted);">FULLKIK</div></div>
-                        <div><div style="font-weight:bold;">充值钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">充值日期</div></div>
-                        <div><div style="font-weight:bold;">${item.curr||'RMB'} ${item.price}</div><div style="font-size:11px;color:var(--text-muted);">消费金额</div></div>
-                    </div>`;
-            } else {
-                listDiv.innerHTML += `
-                    <div class="hist-row">
-                        <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
-                        <div style="min-width:0;"><div class="truncate" style="font-weight:bold;">${item.name}</div><div class="truncate" style="font-size:11px;color:var(--text-muted);">上传者: ${item.uploader||'FULLKIK'}</div></div>
-                        <div><div style="font-weight:bold;">消费钻石</div><div style="font-size:11px;color:var(--text-muted);">消费详情</div></div>
-                        <div><div style="font-weight:bold;">${new Date(item.date).toISOString().split('T')[0]}</div><div style="font-size:11px;color:var(--text-muted);">消费日期</div></div>
-                        <div><div style="font-weight:bold;color:var(--danger);">-💎 ${item.amt}</div><div style="font-size:11px;color:var(--text-muted);">消耗</div></div>
-                    </div>`;
-            }
+         combined.forEach(item => {
+             const dateText = formatHistoryDate(item.date);
+             if(item.type === 'topup') {
+                 listDiv.innerHTML += `
+                     <div class="hist-row">
+                         <div class="hist-icon"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--accent-light);"><path d="M12 2l-5.5 9h11zM12 22l-5.5-9h11z"/></svg></div>
+                         <div class="hist-main"><div class="hist-title">钻石充值</div><div class="hist-sub">FULLKIK</div></div>
+                         <div class="hist-field hist-detail"><div class="hist-value">充值钻石</div><div class="hist-label">消费详情</div></div>
+                         <div class="hist-field hist-date"><div class="hist-value">${dateText}</div><div class="hist-label">充值日期</div></div>
+                         <div class="hist-field hist-amount"><div class="hist-value">${item.curr||'RMB'} ${item.price}</div><div class="hist-label">消费金额</div></div>
+                     </div>`;
+             } else {
+                 listDiv.innerHTML += `
+                     <div class="hist-row">
+                         <div class="hist-icon" style="background:rgba(255,69,58,0.2);"><svg viewBox="0 0 24 24" style="width:20px;fill:var(--danger);"><path d="M8 5v14l11-7z"/></svg></div>
+                         <div class="hist-main"><div class="hist-title truncate">${item.name}</div><div class="hist-sub truncate">上传者: ${item.uploader||'FULLKIK'}</div></div>
+                         <div class="hist-field hist-detail"><div class="hist-value">消费钻石</div><div class="hist-label">消费详情</div></div>
+                         <div class="hist-field hist-date"><div class="hist-value">${dateText}</div><div class="hist-label">消费日期</div></div>
+                         <div class="hist-field hist-amount"><div class="hist-value" style="color:var(--danger);">-💎 ${item.amt}</div><div class="hist-label">消耗</div></div>
+                     </div>`;
+             }
         });
     }
 
