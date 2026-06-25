@@ -279,18 +279,20 @@
              .input-row { flex-direction: column; gap: 10px; }
              .vip-stats-row { grid-template-columns: 1fr 1fr; gap: 15px; }
              .topup-grid-large { grid-template-columns: 1fr 1fr; }
-             .hist-list { gap:14px; }
-             .hist-row { grid-template-columns: 52px minmax(0,1fr) minmax(0,1fr); gap:12px 12px; padding:16px; align-items:start; border-radius:18px; background:linear-gradient(135deg, rgba(32,8,8,0.96), rgba(18,5,5,0.98)); }
-             .hist-icon { width:44px; height:44px; border-radius:12px; grid-row:1 / span 3; }
-             .hist-main { grid-column:2 / 4; align-self:center; padding-top:2px; }
-             .hist-title { font-size:17px; line-height:1.25; }
-             .hist-sub { font-size:12px; margin-top:4px; }
-             .hist-field { border:1px solid rgba(165,42,42,0.18); background:rgba(128,0,0,0.12); border-radius:12px; padding:10px 11px; box-sizing:border-box; min-height:52px; }
-             .hist-detail { grid-column:2 / 4; }
-             .hist-date { grid-column:2; }
-             .hist-amount { grid-column:3; text-align:right; }
-             .hist-value { font-size:14px; line-height:1.18; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-             .hist-label { font-size:10px; margin-top:5px; }
+             .hist-list { gap:10px; }
+             .hist-row { grid-template-columns: 36px minmax(82px,1.2fr) minmax(54px,.72fr) minmax(68px,.9fr) minmax(50px,.68fr); gap:7px; padding:12px 10px; align-items:center; border-radius:15px; background:linear-gradient(135deg, rgba(32,8,8,0.96), rgba(18,5,5,0.98)); }
+             .hist-icon { width:34px; height:34px; border-radius:9px; grid-row:auto; }
+             .hist-icon svg { width:16px !important; }
+             .hist-main { grid-column:auto; align-self:center; padding-top:0; }
+             .hist-title { font-size:13px; line-height:1.18; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+             .hist-sub { font-size:9px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+             .hist-field { border:none; background:transparent; border-radius:0; padding:0; box-sizing:border-box; min-height:0; }
+             .hist-detail { grid-column:auto; }
+             .hist-date { grid-column:auto; }
+             .hist-amount { grid-column:auto; text-align:right; }
+             .hist-value { font-size:11px; line-height:1.16; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+             .hist-amount .hist-value { font-size:12px; }
+             .hist-label { font-size:8px; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
              .profile-banner { flex-direction:column; align-items:center; text-align:center; }
             .following-panel { padding:20px 14px; }
             .following-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
