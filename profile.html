@@ -1046,18 +1046,29 @@
         const rows = Array.isArray(globalSettings.topupPackages) ? globalSettings.topupPackages : fallbackTopupPackages;
         return rows.filter(p => p.enabled !== false).sort((a,b) => (parseInt(a.sort) || 0) - (parseInt(b.sort) || 0));
     }
-    function setCurrency(curr) {
-        currentCurrency = curr;
-        ['RMB','MYR','USD'].forEach(code => document.getElementById(`btnCurr${code}`)?.classList.toggle('active', curr === code));
-        visiblePaymentMethods = curr === 'RMB'
+    function getConfiguredPaymentMethods(curr) {
+        const fallback = curr === 'RMB'
             ? ['支付宝转账', '微信扫码', '银联支付']
             : curr === 'MYR'
                 ? ['FPX 网上银行', "Touch 'n Go", 'GrabPay', 'Boost']
                 : ['USDT (TRC20/ERC20)'];
+        if(!Array.isArray(globalSettings.paymentMethods)) return fallback;
+        return globalSettings.paymentMethods
+            .filter(method => method && method.enabled !== false && String(method.currency || '').toUpperCase() === curr)
+            .sort((a,b) => (parseInt(a.sort) || 0) - (parseInt(b.sort) || 0))
+            .map(method => String(method.name || method.code || '').trim())
+            .filter(Boolean);
+    }
+    function setCurrency(curr) {
+        currentCurrency = curr;
+        ['RMB','MYR','USD'].forEach(code => document.getElementById(`btnCurr${code}`)?.classList.toggle('active', curr === code));
+        visiblePaymentMethods = getConfiguredPaymentMethods(curr);
         currentPaymentMethod = visiblePaymentMethods[0];
-        document.getElementById('payMethodList').innerHTML = visiblePaymentMethods.map((method, index) =>
-            `<button class="pay-btn ${index === 0 ? 'active' : ''}" onclick="selectPaymentMethod(${index}, this)">${method}</button>`
-        ).join('');
+        document.getElementById('payMethodList').innerHTML = visiblePaymentMethods.length
+            ? visiblePaymentMethods.map((method, index) =>
+                `<button class="pay-btn ${index === 0 ? 'active' : ''}" onclick="selectPaymentMethod(${index}, this)">${method}</button>`
+            ).join('')
+            : `<div style="grid-column:1/-1; color:var(--text-muted); padding:14px; border:1px solid var(--border-color); border-radius:12px;">暂无可用支付方式</div>`;
         renderPaymentHint();
         renderTopupPacks();
     }
@@ -1071,6 +1082,10 @@
     function renderPaymentHint() {
         const hint = document.getElementById('topupPaymentHint');
         if(!hint) return;
+        if(!currentPaymentMethod) {
+            hint.innerText = '当前币种暂无可用支付方式，请稍后再试。';
+            return;
+        }
         hint.innerText = currentCurrency === 'USD'
             ? '实际支付的 USDT 金额按后台设置的 USD 汇率折算，以支付平台收银台显示为准。'
             : `已选择：${currentPaymentMethod}`;
@@ -1133,6 +1148,8 @@
         updateTopupTotal();
     }
     async function executeRealTopup() {
+        if(globalSettings.topupEnabled === false) return showToast("充值通道暂时关闭", true);
+        if(!currentPaymentMethod) return showToast("请选择可用支付方式", true);
         showGlobalLoader("正在处理订单...");
         const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: baseTopupAmt, price: baseTopupPrice, currency: currentCurrency, paymentMethod: currentPaymentMethod, couponCode: appliedCoupon?.code || '' }) });
         if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; const couponInput = document.getElementById('topupCouponInput'); if(couponInput) couponInput.value = ''; resetTopupCoupon(); hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { const msg = await res.text(); hideGlobalLoader(); showToast(msg || "Top up failed", true); }
