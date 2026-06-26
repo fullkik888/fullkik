@@ -38,6 +38,13 @@
         .badge-pending { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--danger); color: white; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: none;}
         .nav-count-badge { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--danger); color: white; font-size: 10px; font-weight: 900; display: none; align-items: center; justify-content: center; box-shadow: 0 0 0 5px rgba(255,69,58,0.12); }
         .nav-group-badge { margin-left:auto; box-shadow:0 0 0 4px rgba(255,69,58,0.1); }
+        .admin-user-footer { margin-top:auto; padding:16px 18px; border-top:1px solid var(--border-color); background:rgba(0,0,0,0.16); display:flex; align-items:center; gap:12px; }
+        .admin-user-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(145deg, #5f1117, #a52a2a); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; flex-shrink:0; }
+        .admin-user-meta { min-width:0; flex:1; }
+        .admin-user-name { color:white; font-weight:900; font-size:14px; line-height:1.2; }
+        .admin-user-sub { color:var(--text-muted); font-size:11px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .admin-logout-btn { border:1px solid var(--border-color); background:rgba(255,255,255,0.03); color:var(--text-main); border-radius:7px; padding:8px 10px; cursor:pointer; font-weight:900; font-size:12px; }
+        .admin-logout-btn:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.28); }
         .mobile-song-toolbar { display:none; }
         .mobile-nav-overlay { display:none; }
 
@@ -142,6 +149,7 @@
         .grid-coupons { grid-template-columns: 1.1fr 1.6fr 120px 100px 110px 100px 150px 110px; min-width:1180px; }
         .grid-otp { grid-template-columns: 150px 140px 90px 110px 120px 1.8fr 90px 80px 100px 1.2fr 120px; min-width:1420px; }
         .grid-topup-packages { grid-template-columns: 1.2fr 100px 100px 100px 100px 120px 80px 90px 140px; min-width:1200px; }
+        .grid-payment-methods { grid-template-columns: 70px 1.35fr 1.25fr 90px 110px 120px 130px 80px 90px 190px; min-width:1320px; }
         .grid-withdraw-pending { grid-template-columns: 1.3fr 100px 80px 160px 160px; min-width:820px; }
         .grid-withdraw-done { grid-template-columns: 1.3fr 100px 80px 120px 160px; min-width:820px; }
         .grid-finance { grid-template-columns:1.4fr 1fr 90px 90px 130px 90px; min-width:900px; }
@@ -176,6 +184,19 @@
         .coupon-form-grid { display:grid; grid-template-columns:1.1fr 1.1fr 150px 120px; gap:14px; padding:22px; align-items:end; }
         .coupon-form-grid.second { grid-template-columns:1fr 1fr 1fr 1fr; padding-top:0; }
         .package-form-grid { display:grid; grid-template-columns:1.2fr repeat(5, 1fr) auto; gap:14px; padding:22px; align-items:end; }
+        .payment-status-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:22px; }
+        .payment-status-card { border:1px solid #4a2020; border-radius:14px; background:linear-gradient(135deg, rgba(61,10,12,0.82), rgba(19,8,8,0.98)); padding:24px; display:flex; align-items:center; justify-content:space-between; gap:18px; }
+        .payment-status-card.enabled { border-color:rgba(52,199,89,0.35); box-shadow:inset 0 0 0 1px rgba(52,199,89,0.08); }
+        .payment-status-card.disabled { border-color:rgba(255,69,58,0.45); }
+        .payment-status-dot { display:inline-flex; width:10px; height:10px; border-radius:50%; background:var(--danger); box-shadow:0 0 0 5px rgba(255,69,58,0.12); margin-right:8px; }
+        .payment-status-card.enabled .payment-status-dot { background:var(--success); box-shadow:0 0 0 5px rgba(52,199,89,0.12); }
+        .payment-form-grid { display:grid; grid-template-columns:1.2fr 1.15fr 120px 140px 120px 90px 90px 80px auto; gap:14px; padding:22px; align-items:end; }
+        .payment-inline-field { width:100%; box-sizing:border-box; padding:9px 10px; border:1px solid var(--border-color); border-radius:7px; background:#0b0505; color:white; outline:none; }
+        .payment-inline-field:focus { border-color:var(--accent-light); }
+        .payment-table-actions { display:flex; align-items:center; justify-content:flex-end; gap:10px; }
+        .method-status-pill { display:inline-flex; align-items:center; justify-content:center; min-width:58px; border:1px solid rgba(52,199,89,0.45); color:var(--success); border-radius:7px; padding:5px 8px; font-size:12px; font-weight:900; }
+        .method-status-pill.off { color:var(--text-muted); border-color:rgba(255,255,255,0.12); background:rgba(0,0,0,0.18); }
+        .payment-confirm-detail { margin-top:12px; padding:12px; border:1px solid #4a2020; border-radius:9px; background:rgba(128,0,0,0.12); color:var(--text-muted); line-height:1.6; }
         .otp-status { display:inline-flex; align-items:center; justify-content:center; min-width:56px; border:1px solid var(--border-color); border-radius:8px; padding:5px 8px; font-weight:900; font-size:12px; }
         .otp-status.active, .otp-status.verified, .otp-status.used { color:var(--success); border-color:rgba(52,199,89,0.45); }
         .otp-status.expired { color:var(--danger); border-color:rgba(255,69,58,0.45); }
@@ -213,12 +234,14 @@
         .permission-guide-item span { color:var(--text-muted); font-size:12px; line-height:1.5; }
         .staff-list { display:flex; flex-direction:column; gap:20px; }
         .staff-card { border:1px solid var(--border-color); border-radius:14px; background:var(--card-bg); padding:26px 30px; }
+        .staff-card.main-admin { border-color:rgba(165,42,42,0.65); box-shadow:inset 0 0 0 1px rgba(128,0,0,0.24); background:linear-gradient(135deg, rgba(65,10,12,0.88), rgba(20,8,8,0.98)); }
         .staff-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding-bottom:20px; border-bottom:1px solid var(--border-color); }
         .staff-identity { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
         .staff-username { color:white; font-size:18px; font-weight:900; cursor:pointer; }
         .staff-username:hover { color:#cf5b5b; }
         .staff-badge { border:1px solid #2c5f92; color:#69aaf0; border-radius:5px; padding:4px 9px; font-size:11px; font-weight:900; }
         .staff-badge.maintainer, .staff-badge.active { border-color:rgba(52,199,89,0.5); color:var(--success); }
+        .staff-badge.main { border-color:rgba(165,42,42,0.8); color:#ff9b9b; background:rgba(128,0,0,0.22); }
         .staff-password-reveal { color:#ffcc00; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; min-width:110px; }
         .staff-permissions { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:12px; padding-top:20px; }
         .permission-toggle { border:1px solid var(--border-color); border-radius:9px; padding:13px 15px; color:var(--text-muted); background:rgba(255,255,255,0.02); display:flex; align-items:center; gap:9px; cursor:pointer; font-size:13px; }
@@ -440,6 +463,7 @@
             body { flex-direction: column; }
             .sidebar { width: 100%; height: 60px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border-color); overflow-x: auto;}
             .sidebar-header { display: none; }
+            .admin-user-footer { display:none; }
             .nav-section { display: flex; margin: 0; }
             .nav-title { display: none; }
             .nav-section.collapsible { flex:0 0 auto; }
@@ -579,8 +603,8 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
-            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid { grid-template-columns:1fr; align-items:stretch; }
-            .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow, .ip-form-grid { grid-template-columns:1fr; }
+            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid, .payment-form-grid { grid-template-columns:1fr; align-items:stretch; }
+            .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow, .ip-form-grid, .payment-status-grid { grid-template-columns:1fr; }
             .staff-permission-guide, .staff-permissions { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
             .finance-card-grid, .finance-two-grid { grid-template-columns:1fr; }
@@ -708,7 +732,7 @@
             <button class="nav-item" onclick="switchView('transactions', '交易记录')" id="nav-transactions">◇ 交易记录</button>
             <button class="nav-item" onclick="switchView('orders', '充值订单')" id="nav-orders">$ 充值订单</button>
             <button class="nav-item" onclick="switchView('topup-packages', '财务 / 充值套餐')" id="nav-topup-packages">▤ 充值套餐</button>
-            <button class="nav-item" onclick="switchView('wip', '支付方式')" id="nav-wip-pay">▤ 支付方式</button>
+            <button class="nav-item" onclick="switchView('payment-methods', '财务 / 支付方式')" id="nav-payment-methods">▤ 支付方式</button>
             <button class="nav-item" onclick="switchView('coupons', '财务 / 优惠码')" id="nav-coupons">★ 优惠码</button>
             <button class="nav-item" onclick="switchView('withdrawals', '财务 / 提现审批')" id="nav-withdrawals">↗ 提现审批 <span class="nav-count-badge" id="nav-withdrawals-pending-count">0</span></button>
         </div>
@@ -722,6 +746,14 @@
             <button class="nav-item" onclick="switchView('otp-history', '运营 / OTP 历史')" id="nav-otp-history">■ OTP 历史</button>
             <button class="nav-item" onclick="switchView('wip', '邮件测试')" id="nav-wip-email">■ 邮件测试</button>
         </div>
+    </div>
+    <div class="admin-user-footer">
+        <div class="admin-user-avatar" id="adminFooterAvatar">F</div>
+        <div class="admin-user-meta">
+            <div class="admin-user-name" id="adminFooterName">FULLKIKADMIN</div>
+            <div class="admin-user-sub" id="adminFooterSub">main</div>
+        </div>
+        <button class="admin-logout-btn" onclick="adminFooterLogout()">退出</button>
     </div>
 </div>
 
@@ -1489,6 +1521,45 @@
         </div>
     </div>
 
+    <div id="view-payment-methods" class="view-section">
+        <div class="dash-header">
+            <div><h2>支付方式</h2><p>控制 /topup-page 显示的支付通道与全局充值开关</p></div>
+        </div>
+        <div class="payment-status-grid">
+            <div class="payment-status-card" id="topupStatusCard">
+                <div>
+                    <div style="color:var(--text-muted); font-size:12px; font-weight:900; margin-bottom:12px;"><span class="payment-status-dot"></span>全局充值通道</div>
+                    <div style="font-size:24px; font-weight:900;" id="topupStatusTitle">充值通道开启中</div>
+                    <p style="color:var(--text-muted); margin:10px 0 0; line-height:1.6;">关闭后，所有用户的充值中心会停止接受充值；已完成订单不受影响。</p>
+                </div>
+                <button class="btn-primary" id="topupStatusBtn" onclick="requestPaymentConfirm('toggleTopup')" style="background:#650d12; border:1px solid #8f2027;">关闭充值通道</button>
+            </div>
+            <div class="payment-status-card" id="usdtWithdrawStatusCard">
+                <div>
+                    <div style="color:var(--text-muted); font-size:12px; font-weight:900; margin-bottom:12px;"><span class="payment-status-dot"></span>Coin2Pay USDT 提现（创作者）</div>
+                    <div style="font-size:24px; font-weight:900;" id="usdtWithdrawStatusTitle">USDT 提现暂未开放</div>
+                    <p style="color:var(--text-muted); margin:10px 0 0; line-height:1.6;">关闭时，VIP 创作者只能选择银行打款；开启后可显示 USDT 提交按钮。</p>
+                </div>
+                <button class="btn-primary" id="usdtWithdrawStatusBtn" onclick="requestPaymentConfirm('toggleUsdtWithdraw')" style="background:#650d12; border:1px solid #8f2027;">开放 USDT 提现</button>
+            </div>
+        </div>
+        <div class="glass-panel">
+            <div class="panel-header">添加支付方式 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">代号用于后台识别；名称显示在充值页。</span></div>
+            <div class="payment-form-grid">
+                <div><label class="settings-label">代号 *</label><input class="input-text" id="payCodeInput" placeholder="MAYIPAY_ALIPAY" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">名称 *</label><input class="input-text" id="payNameInput" placeholder="支付宝" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">货币</label><select class="select-box" id="payCurrencyInput" style="width:100%;"><option value="RMB">RMB</option><option value="MYR">RM (MYR)</option><option value="USD">USDT</option></select></div>
+                <div><label class="settings-label">网关</label><input class="input-text" id="payGatewayInput" placeholder="mayipay" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">通道号</label><input class="input-text" id="payChannelInput" placeholder="668" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">最低</label><input class="input-text" type="number" id="payMinInput" min="0" placeholder="0" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">最高</label><input class="input-text" type="number" id="payMaxInput" min="0" placeholder="0" style="width:100%; box-sizing:border-box;"></div>
+                <div><label class="settings-label">排序</label><input class="input-text" type="number" id="paySortInput" value="0" style="width:100%; box-sizing:border-box;"></div>
+                <button class="btn-primary" onclick="createPaymentMethod()">+ 创建支付方式</button>
+            </div>
+        </div>
+        <div id="paymentMethodsList"></div>
+    </div>
+
     <div id="view-withdrawals" class="view-section">
         <div class="dash-header"><h2>提现审批</h2><p>共 <span id="withdrawPendingCount">0</span> 条待审 · <span id="withdrawProcessingCount">0</span> 条处理中</p></div>
         <div class="flow-card">
@@ -1672,7 +1743,7 @@
         <div class="dash-header"><h2 style="margin-bottom:10px;">交易记录</h2><p>歌曲购买流水</p></div>
         <div class="glass-panel">
             <div class="filter-bar" style="justify-content:space-between;">
-                <div class="filter-group" style="flex:none; width:300px;"><input type="text" id="transSearchInput" class="input-text" placeholder="搜索 买家邮箱 / 用户名 / VIP 创作者" oninput="loadTransactions()"></div>
+                <div class="filter-group" style="flex:none; width:420px;"><input type="text" id="transSearchInput" class="input-text" placeholder="搜索歌曲 / 用户名 / 邮箱 / 创作者 / 日期 2026-06-25" oninput="loadTransactions()"></div>
                 <button class="btn-primary" style="background:transparent; border:1px solid var(--danger); color:var(--danger);" onclick="clearAllTransactions()">Clear All</button>
             </div>
             <div class="table-container"><div class="table-inner">
@@ -1729,6 +1800,45 @@
     <div class="modal-box">
         <div class="modal-content"><h3 style="margin:0 0 12px; color:var(--danger);">删除员工账号</h3><p id="deleteStaffText" style="color:var(--text-muted); margin:0;">确定删除吗？</p></div>
         <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:var(--danger);" onclick="confirmDeleteStaff()">确认删除</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="mainAdminModal">
+    <div class="modal-box" style="max-width:620px;">
+        <div class="modal-content">
+            <h2 style="margin:0 0 8px;">FULLKIKADMIN · main</h2>
+            <p style="margin:0 0 18px; color:var(--text-muted); line-height:1.6;">固定主管理员，拥有全部权限；不是员工账号，不能删除。</p>
+            <div class="staff-modal-grid">
+                <div><label class="settings-label">Gmail / 邮箱</label><input class="modal-input" id="mainAdminEmailInput" placeholder="可留空"></div>
+                <div><label class="settings-label">电话</label><input class="modal-input" id="mainAdminPhoneInput" placeholder="可留空"></div>
+                <div><label class="settings-label">密码</label><input class="modal-input" id="mainAdminPasswordInput" placeholder="Aaaa1111"></div>
+            </div>
+            <div style="color:var(--text-muted); font-size:12px; line-height:1.6;">密码点击用户名也会显示 5 秒；建议首次进入后改掉默认密码。</div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:#d45b5b; background:#210b0b;" onclick="saveMainAdminProfile(false)">保存</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="firstAdminLoginModal">
+    <div class="modal-box" style="max-width:660px;">
+        <div class="modal-content">
+            <h2 style="margin:0 0 8px;">欢迎来到FULLKIK ADMIN</h2>
+            <p style="margin:0 0 18px; color:var(--text-muted); line-height:1.7;">这是 FULLKIKADMIN 第一次进入后台。请确认资料并建议更改默认密码。</p>
+            <div class="staff-modal-grid">
+                <div><label class="settings-label">Gmail / 邮箱</label><input class="modal-input" id="firstAdminEmailInput" placeholder="可留空"></div>
+                <div><label class="settings-label">电话</label><input class="modal-input" id="firstAdminPhoneInput" placeholder="可留空"></div>
+                <div><label class="settings-label">新密码</label><input class="modal-input" id="firstAdminPasswordInput" placeholder="默认 Aaaa1111"></div>
+            </div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="skipFirstAdminLogin()">保留默认</button><button class="modal-btn" style="color:#d45b5b; background:#210b0b;" onclick="saveFirstAdminLogin()">保存并进入</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="paymentConfirmModal">
+    <div class="modal-box" style="max-width:520px;">
+        <div class="modal-content">
+            <h3 id="paymentConfirmTitle" style="margin:0 0 10px; color:#ff9b9b;">确认操作</h3>
+            <p id="paymentConfirmText" style="margin:0; color:var(--text-muted); line-height:1.7;"></p>
+            <div id="paymentConfirmDetail" class="payment-confirm-detail"></div>
+        </div>
+        <div class="modal-actions"><button class="modal-btn cancel" onclick="closeModals()">取消</button><button class="modal-btn" style="color:#d45b5b; background:#210b0b;" onclick="confirmPaymentAction()">确认</button></div>
     </div>
 </div>
 
@@ -1817,6 +1927,7 @@
     let currentContestId = '', currentContestTab = 'config';
     let pendingDeleteStaffId = '';
     let currentRefundOrderId = '';
+    let pendingPaymentAction = null;
     let selectedSongIds = new Set();
 
     const STAFF_PERMISSION_DEFS = [
@@ -1915,7 +2026,7 @@
         if(['activity'].includes(viewId)) return 'activity';
         if(['users','user-detail','staff'].includes(viewId)) return 'users';
         if(['referrals','promotions','downloads'].includes(viewId)) return 'promotion';
-        if(['reconcile','transactions','orders','topup-packages','coupons','withdrawals'].includes(viewId)) return 'finance';
+        if(['reconcile','transactions','orders','topup-packages','payment-methods','coupons','withdrawals'].includes(viewId)) return 'finance';
         if(['system-settings','adminlogs','otp-history'].includes(viewId)) return 'system';
         return '';
     }
@@ -1988,6 +2099,7 @@
         if(viewId === 'promotions') renderPromotionActivity();
         if(viewId === 'coupons') loadCoupons();
         if(viewId === 'topup-packages') renderTopupPackagesManager();
+        if(viewId === 'payment-methods') renderPaymentMethodsManager();
         if(viewId === 'transactions') loadTransactions();
         if(viewId === 'orders') loadOrders();
         if(viewId === 'downloads') loadDlMonitor();
@@ -2013,6 +2125,100 @@
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
+    function getMainAdminSettings() {
+        return {
+            username: 'FULLKIKADMIN',
+            email: '',
+            phone: '',
+            password: 'Aaaa1111',
+            firstLoginRequired: true,
+            ...(globalSettings.fullkikAdmin || {})
+        };
+    }
+    function updateAdminFooter() {
+        const mainAdmin = getMainAdminSettings();
+        const displayName = localStorage.getItem('fkAdminUsername') || mainAdmin.username || 'FULLKIKADMIN';
+        const displaySub = mainAdmin.email || mainAdmin.phone || 'main';
+        const nameNode = document.getElementById('adminFooterName');
+        const subNode = document.getElementById('adminFooterSub');
+        const avatarNode = document.getElementById('adminFooterAvatar');
+        if(nameNode) nameNode.innerText = displayName;
+        if(subNode) subNode.innerText = displaySub;
+        if(avatarNode) avatarNode.innerText = (displayName || 'F').charAt(0).toUpperCase();
+    }
+    function adminFooterLogout() {
+        localStorage.removeItem('fkAdminUsername');
+        showToast('已退出本机后台身份');
+        updateAdminFooter();
+    }
+    function maybeShowFirstAdminLogin() {
+        const mainAdmin = getMainAdminSettings();
+        updateAdminFooter();
+        if(mainAdmin.firstLoginRequired === false) return;
+        const emailInput = document.getElementById('firstAdminEmailInput');
+        const phoneInput = document.getElementById('firstAdminPhoneInput');
+        const passwordInput = document.getElementById('firstAdminPasswordInput');
+        if(emailInput) emailInput.value = mainAdmin.email || '';
+        if(phoneInput) phoneInput.value = mainAdmin.phone || '';
+        if(passwordInput) passwordInput.value = mainAdmin.password || 'Aaaa1111';
+        setTimeout(() => {
+            const modal = document.getElementById('firstAdminLoginModal');
+            if(modal) modal.style.display = 'flex';
+        }, 1450);
+    }
+    function openMainAdminModal() {
+        const mainAdmin = getMainAdminSettings();
+        document.getElementById('mainAdminEmailInput').value = mainAdmin.email || '';
+        document.getElementById('mainAdminPhoneInput').value = mainAdmin.phone || '';
+        document.getElementById('mainAdminPasswordInput').value = mainAdmin.password || 'Aaaa1111';
+        document.getElementById('mainAdminModal').style.display = 'flex';
+    }
+    async function persistMainAdminProfile(payload, message = 'FULLKIKADMIN 已保存') {
+        showGlobalLoader('保存主管理员...');
+        const res = await fetch(`${API_URL}/admin/staff/FULLKIKADMIN/profile`, {
+            method:'PUT',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        const saved = await res.json();
+        globalSettings.fullkikAdmin = { ...getMainAdminSettings(), ...saved, password: payload.password || getMainAdminSettings().password || 'Aaaa1111' };
+        localStorage.setItem('fkAdminUsername', 'FULLKIKADMIN');
+        updateAdminFooter();
+        closeModals();
+        showToast(message);
+        if(document.getElementById('view-staff')?.classList.contains('active')) loadStaff();
+    }
+    function saveMainAdminProfile(markFirstLoginDone = false) {
+        const payload = {
+            email: document.getElementById('mainAdminEmailInput').value.trim(),
+            phone: document.getElementById('mainAdminPhoneInput').value.trim(),
+            password: document.getElementById('mainAdminPasswordInput').value.trim() || 'Aaaa1111',
+            firstLoginRequired: markFirstLoginDone ? false : getMainAdminSettings().firstLoginRequired
+        };
+        if(payload.password.length < 6) return showToast('密码至少 6 位', true);
+        persistMainAdminProfile(payload);
+    }
+    function saveFirstAdminLogin() {
+        const payload = {
+            email: document.getElementById('firstAdminEmailInput').value.trim(),
+            phone: document.getElementById('firstAdminPhoneInput').value.trim(),
+            password: document.getElementById('firstAdminPasswordInput').value.trim() || 'Aaaa1111',
+            firstLoginRequired: false
+        };
+        if(payload.password.length < 6) return showToast('密码至少 6 位', true);
+        persistMainAdminProfile(payload, '欢迎来到 FULLKIK ADMIN');
+    }
+    function skipFirstAdminLogin() {
+        const mainAdmin = getMainAdminSettings();
+        persistMainAdminProfile({
+            email: mainAdmin.email || '',
+            phone: mainAdmin.phone || '',
+            password: mainAdmin.password || 'Aaaa1111',
+            firstLoginRequired: false
+        }, '已保留默认主管理员资料');
+    }
 
     // --- INITIALIZATION ---
     async function loadInitial() { 
@@ -2035,6 +2241,8 @@
                 renderSystemSettings();
                 renderDefaultCover();
                 renderHomePoster();
+                updateAdminFooter();
+                maybeShowFirstAdminLogin();
             }
             allUsers = await (await fetch(`${API_URL}/all-users`)).json(); allSongs = await (await fetch(`${API_URL}/songs`)).json(); allGenres = await (await fetch(`${API_URL}/genres`)).json(); allReports = await (await fetch(`${API_URL}/reports`)).json();
             try {
@@ -3171,6 +3379,219 @@
         await persistTopupSettings("套餐已删除");
     }
 
+    const PAYMENT_CURRENCY_ORDER = ['RMB', 'MYR', 'USD'];
+    function defaultPaymentMethodsClient() {
+        return [
+            { id:'PM_RMB_ALIPAY', code:'MAYIPAY_ALIPAY', name:'支付宝转账', currency:'RMB', gateway:'mayipay', channel:'ALIPAY', minAmount:100, maxAmount:1000, sort:10, enabled:true },
+            { id:'PM_RMB_WECHAT', code:'MAYIPAY_WECHAT', name:'微信支付', currency:'RMB', gateway:'mayipay', channel:'WECHAT', minAmount:100, maxAmount:1000, sort:20, enabled:true },
+            { id:'PM_RMB_UNIONPAY', code:'MAYIPAY_UNIONPAY', name:'银联支付', currency:'RMB', gateway:'mayipay', channel:'UNIONPAY', minAmount:100, maxAmount:1000, sort:30, enabled:true },
+            { id:'PM_MYR_FPX', code:'SUPERPAY_FPX', name:'FPX 网上银行', currency:'MYR', gateway:'superpay', channel:'FPX', minAmount:10, maxAmount:50000, sort:110, enabled:true },
+            { id:'PM_MYR_TNG', code:'SUPERPAY_TNG', name:"Touch 'n Go", currency:'MYR', gateway:'superpay', channel:'TNG_MY', minAmount:5, maxAmount:9999, sort:120, enabled:true },
+            { id:'PM_MYR_GRABPAY', code:'SUPERPAY_GRABPAY', name:'GrabPay', currency:'MYR', gateway:'superpay', channel:'GRABPAY', minAmount:5, maxAmount:9999, sort:130, enabled:true },
+            { id:'PM_MYR_BOOST', code:'SUPERPAY_BOOST', name:'Boost', currency:'MYR', gateway:'superpay', channel:'BOOST_MY', minAmount:5, maxAmount:9999, sort:140, enabled:true },
+            { id:'PM_USD_USDT', code:'COIN2PAY_USDT', name:'USDT (TRC20/ERC20)', currency:'USD', gateway:'coin2pay', channel:'USDT', minAmount:1, maxAmount:200000, sort:210, enabled:true }
+        ];
+    }
+    function paymentDomId(id) { return String(id || '').replace(/[^a-zA-Z0-9_-]/g, '_'); }
+    function normalizePaymentCurrencyClient(value) {
+        const currency = String(value || '').toUpperCase();
+        if(currency === 'RM') return 'MYR';
+        if(currency === 'USDT') return 'USD';
+        return PAYMENT_CURRENCY_ORDER.includes(currency) ? currency : 'RMB';
+    }
+    function paymentCurrencyLabel(currency) {
+        return currency === 'MYR' ? 'MYR' : currency === 'USD' ? 'USDT' : 'RMB';
+    }
+    function getPaymentMethods() {
+        const rows = Array.isArray(globalSettings.paymentMethods) ? globalSettings.paymentMethods : defaultPaymentMethodsClient();
+        return rows.map((method, index) => ({
+            id: String(method.id || method.code || `PM_${index}`).trim(),
+            code: String(method.code || method.id || `PAY_${index + 1}`).trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_'),
+            name: String(method.name || method.label || method.code || '').trim(),
+            currency: normalizePaymentCurrencyClient(method.currency),
+            gateway: String(method.gateway || '').trim(),
+            channel: String(method.channel || '').trim(),
+            minAmount: Math.max(parseFloat(method.minAmount) || 0, 0),
+            maxAmount: Math.max(parseFloat(method.maxAmount) || 0, 0),
+            sort: parseInt(method.sort) || (index + 1) * 10,
+            enabled: method.enabled !== false
+        })).filter(method => method.id && method.code && method.name).sort((a,b) => {
+            const groupDelta = PAYMENT_CURRENCY_ORDER.indexOf(a.currency) - PAYMENT_CURRENCY_ORDER.indexOf(b.currency);
+            return groupDelta || ((parseInt(a.sort) || 0) - (parseInt(b.sort) || 0));
+        });
+    }
+    function paymentLimitLabel(method) {
+        const min = Number(method.minAmount || 0);
+        const max = Number(method.maxAmount || 0);
+        if(!min && !max) return '—';
+        const prefix = method.currency === 'USD' ? 'USDT' : method.currency === 'MYR' ? 'RM' : '¥';
+        if(min && max) return `${prefix}${min}–${prefix}${max}`;
+        if(min) return `≥ ${prefix}${min}`;
+        return `≤ ${prefix}${max}`;
+    }
+    function renderPaymentMethodsManager() {
+        if(!Array.isArray(globalSettings.paymentMethods)) {
+            globalSettings.paymentMethods = defaultPaymentMethodsClient();
+        }
+        const topupEnabled = globalSettings.topupEnabled !== false;
+        const usdtEnabled = globalSettings.usdtWithdrawEnabled === true;
+        const topupCard = document.getElementById('topupStatusCard');
+        const usdtCard = document.getElementById('usdtWithdrawStatusCard');
+        topupCard?.classList.toggle('enabled', topupEnabled);
+        topupCard?.classList.toggle('disabled', !topupEnabled);
+        usdtCard?.classList.toggle('enabled', usdtEnabled);
+        usdtCard?.classList.toggle('disabled', !usdtEnabled);
+        document.getElementById('topupStatusTitle').innerText = topupEnabled ? '充值通道开启中' : '充值通道已关闭';
+        document.getElementById('topupStatusBtn').innerText = topupEnabled ? '关闭充值通道' : '开启充值通道';
+        document.getElementById('usdtWithdrawStatusTitle').innerText = usdtEnabled ? 'USDT 提现已开放' : 'USDT 提现暂未开放';
+        document.getElementById('usdtWithdrawStatusBtn').innerText = usdtEnabled ? '关闭 USDT 提现' : '开放 USDT 提现';
+
+        const list = document.getElementById('paymentMethodsList');
+        const rows = getPaymentMethods();
+        list.innerHTML = PAYMENT_CURRENCY_ORDER.map(currency => {
+            const group = rows.filter(method => method.currency === currency);
+            const groupHtml = group.length ? group.map((method, index) => {
+                const domId = paymentDomId(method.id);
+                return `
+                <div class="data-row grid-payment-methods">
+                    <div style="color:var(--text-muted);">#${String(index + 1).padStart(3, '0')}</div>
+                    <div><input class="payment-inline-field" id="pay-code-${domId}" value="${escapeHtml(method.code)}"></div>
+                    <div><input class="payment-inline-field" id="pay-name-${domId}" value="${escapeHtml(method.name)}"></div>
+                    <div><select class="payment-inline-field" id="pay-currency-${domId}">
+                        ${PAYMENT_CURRENCY_ORDER.map(cur => `<option value="${cur}" ${method.currency === cur ? 'selected' : ''}>${paymentCurrencyLabel(cur)}</option>`).join('')}
+                    </select></div>
+                    <div><input class="payment-inline-field" id="pay-gateway-${domId}" value="${escapeHtml(method.gateway)}" placeholder="(未启用)"></div>
+                    <div><input class="payment-inline-field" id="pay-channel-${domId}" value="${escapeHtml(method.channel)}" placeholder="通道号"></div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;"><input class="payment-inline-field" type="number" id="pay-min-${domId}" value="${method.minAmount || 0}" title="最低"><input class="payment-inline-field" type="number" id="pay-max-${domId}" value="${method.maxAmount || 0}" title="最高"></div>
+                    <div><input class="payment-inline-field" type="number" id="pay-sort-${domId}" value="${method.sort || 0}"></div>
+                    <div><span class="method-status-pill ${method.enabled === false ? 'off' : ''}">${method.enabled === false ? '已停用' : '启用'}</span></div>
+                    <div class="payment-table-actions">
+                        <button class="btn-text-action" onclick="savePaymentMethod('${escapeHtml(method.id)}')">保存</button>
+                        <button class="btn-text-action" onclick="requestPaymentConfirm('toggleMethod', '${escapeHtml(method.id)}')">${method.enabled === false ? '启用' : '停用'}</button>
+                        <button class="btn-text-action danger" onclick="requestPaymentConfirm('deleteMethod', '${escapeHtml(method.id)}')">删除</button>
+                    </div>
+                </div>`;
+            }).join('') : `<div style="padding:34px; color:var(--text-muted); text-align:center;">暂无 ${paymentCurrencyLabel(currency)} 支付方式</div>`;
+            return `
+            <div class="glass-panel">
+                <div class="panel-header">
+                    <div>${paymentCurrencyLabel(currency)} <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">共 ${group.length} 个</span></div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-text-action" onclick="requestPaymentConfirm('enableCurrency', '${currency}')">启用全部</button>
+                        <button class="btn-text-action danger" onclick="requestPaymentConfirm('disableCurrency', '${currency}')">停用全部</button>
+                    </div>
+                </div>
+                <div class="table-container"><div class="table-inner">
+                    <div class="header-row grid-payment-methods"><div>ID</div><div>代号</div><div>名称</div><div>货币</div><div>网关</div><div>通道号</div><div>限额</div><div>排序</div><div>状态</div><div style="text-align:right;">操作</div></div>
+                    ${groupHtml}
+                </div></div>
+            </div>`;
+        }).join('');
+    }
+    async function persistPaymentMethods(message = '支付方式已保存') {
+        showGlobalLoader(message);
+        const payload = {
+            topupEnabled: globalSettings.topupEnabled !== false,
+            usdtWithdrawEnabled: globalSettings.usdtWithdrawEnabled === true,
+            paymentMethods: getPaymentMethods()
+        };
+        const res = await fetch(`${API_URL}/settings`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(!res.ok) {
+            hideGlobalLoader();
+            return showToast(await res.text(), true);
+        }
+        globalSettings = await (await fetch(`${API_URL}/settings`)).json();
+        renderPaymentMethodsManager();
+        hideGlobalLoader();
+        showToast(message);
+    }
+    async function createPaymentMethod() {
+        const code = document.getElementById('payCodeInput').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+        const name = document.getElementById('payNameInput').value.trim();
+        if(!code || !name) return showToast('请填写代号与名称', true);
+        const rows = getPaymentMethods();
+        if(rows.some(method => method.code === code)) return showToast('代号已存在', true);
+        const method = {
+            id: 'PM_' + Date.now(),
+            code,
+            name,
+            currency: normalizePaymentCurrencyClient(document.getElementById('payCurrencyInput').value),
+            gateway: document.getElementById('payGatewayInput').value.trim(),
+            channel: document.getElementById('payChannelInput').value.trim(),
+            minAmount: parseFloat(document.getElementById('payMinInput').value) || 0,
+            maxAmount: parseFloat(document.getElementById('payMaxInput').value) || 0,
+            sort: parseInt(document.getElementById('paySortInput').value) || (rows.length + 1) * 10,
+            enabled: true
+        };
+        globalSettings.paymentMethods = [...rows, method];
+        ['payCodeInput','payNameInput','payGatewayInput','payChannelInput','payMinInput','payMaxInput'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('paySortInput').value = '0';
+        await persistPaymentMethods('支付方式已创建');
+    }
+    async function savePaymentMethod(id) {
+        const domId = paymentDomId(id);
+        const rows = getPaymentMethods().map(method => {
+            if(method.id !== id) return method;
+            return {
+                ...method,
+                code: document.getElementById(`pay-code-${domId}`).value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_') || method.code,
+                name: document.getElementById(`pay-name-${domId}`).value.trim() || method.name,
+                currency: normalizePaymentCurrencyClient(document.getElementById(`pay-currency-${domId}`).value),
+                gateway: document.getElementById(`pay-gateway-${domId}`).value.trim(),
+                channel: document.getElementById(`pay-channel-${domId}`).value.trim(),
+                minAmount: parseFloat(document.getElementById(`pay-min-${domId}`).value) || 0,
+                maxAmount: parseFloat(document.getElementById(`pay-max-${domId}`).value) || 0,
+                sort: parseInt(document.getElementById(`pay-sort-${domId}`).value) || 0
+            };
+        });
+        const duplicateCode = rows.find((method, index) => rows.findIndex(item => item.code === method.code) !== index);
+        if(duplicateCode) return showToast(`代号重复：${duplicateCode.code}`, true);
+        globalSettings.paymentMethods = rows;
+        await persistPaymentMethods('支付方式已保存');
+    }
+    function requestPaymentConfirm(type, id = '') {
+        const rows = getPaymentMethods();
+        const method = rows.find(item => item.id === id);
+        pendingPaymentAction = { type, id };
+        const titles = {
+            toggleTopup: globalSettings.topupEnabled === false ? '开启充值通道' : '关闭充值通道',
+            toggleUsdtWithdraw: globalSettings.usdtWithdrawEnabled === true ? '关闭 USDT 提现' : '开放 USDT 提现',
+            toggleMethod: method?.enabled === false ? '启用支付方式' : '停用支付方式',
+            deleteMethod: '删除支付方式',
+            enableCurrency: `启用全部 ${paymentCurrencyLabel(id)}`,
+            disableCurrency: `停用全部 ${paymentCurrencyLabel(id)}`
+        };
+        const detail = method
+            ? `${method.name} · ${method.code}<br>货币：${paymentCurrencyLabel(method.currency)} · 限额：${paymentLimitLabel(method)}`
+            : (id ? `目标：${paymentCurrencyLabel(id)}` : '全局设置会立即生效');
+        const textMap = {
+            toggleTopup: globalSettings.topupEnabled === false ? '开启后用户可重新在充值中心提交订单。' : '关闭后所有用户将不能提交新充值订单。',
+            toggleUsdtWithdraw: globalSettings.usdtWithdrawEnabled === true ? '关闭后创作者不能选择 USDT 提现。' : '开启后创作者可看到 USDT 提现入口。',
+            toggleMethod: method?.enabled === false ? '启用后，该方式会重新显示在充值中心。' : '停用后，该方式会从充值中心隐藏。',
+            deleteMethod: '删除后该支付方式不会再出现在列表；已有订单记录不会删除。',
+            enableCurrency: '该币种下所有支付方式都会启用。',
+            disableCurrency: '该币种下所有支付方式都会停用，用户不能选择它们。'
+        };
+        document.getElementById('paymentConfirmTitle').innerText = titles[type] || '确认操作';
+        document.getElementById('paymentConfirmText').innerText = textMap[type] || '确认执行此操作吗？';
+        document.getElementById('paymentConfirmDetail').innerHTML = detail;
+        document.getElementById('paymentConfirmModal').style.display = 'flex';
+    }
+    async function confirmPaymentAction() {
+        if(!pendingPaymentAction) return;
+        const { type, id } = pendingPaymentAction;
+        const rows = getPaymentMethods();
+        if(type === 'toggleTopup') globalSettings.topupEnabled = globalSettings.topupEnabled === false;
+        if(type === 'toggleUsdtWithdraw') globalSettings.usdtWithdrawEnabled = globalSettings.usdtWithdrawEnabled !== true;
+        if(type === 'toggleMethod') globalSettings.paymentMethods = rows.map(method => method.id === id ? { ...method, enabled: method.enabled === false } : method);
+        if(type === 'deleteMethod') globalSettings.paymentMethods = rows.filter(method => method.id !== id);
+        if(type === 'enableCurrency') globalSettings.paymentMethods = rows.map(method => method.currency === id ? { ...method, enabled: true } : method);
+        if(type === 'disableCurrency') globalSettings.paymentMethods = rows.map(method => method.currency === id ? { ...method, enabled: false } : method);
+        pendingPaymentAction = null;
+        closeModals();
+        await persistPaymentMethods('支付方式状态已更新');
+    }
+
     async function loadOtpHistory() {
         showContentLoader();
         try {
@@ -3812,7 +4233,7 @@
         showContentLoader();
         const res = await fetch(`${API_URL}/admin/staff`);
         allStaff = res.ok ? await res.json() : [];
-        document.getElementById('staffCount').innerText = allStaff.length;
+        document.getElementById('staffCount').innerText = allStaff.filter(staff => !(staff.main || staff.id === 'FULLKIKADMIN')).length;
         renderStaffList();
         hideContentLoader();
     }
@@ -3822,8 +4243,12 @@
         if(!list) return;
         list.innerHTML = allStaff.map(staff => {
             const permissions = Array.isArray(staff.permissions) ? staff.permissions : [];
+            const isMainAdmin = staff.main || staff.id === 'FULLKIKADMIN';
             const isAdmin = staff.role === 'ADMIN';
-            const permissionHtml = isAdmin
+            const permissionHtml = isMainAdmin
+                ? `<div style="margin-top:20px; border-left:4px solid #a52a2a; border-radius:6px; background:rgba(128,0,0,0.12); padding:18px 22px; color:var(--text-muted); line-height:1.7;">FULLKIKADMIN 是固定 main 账号，拥有全部权限；它不是员工账号，不能删除，也不会占用员工人数。</div>
+                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="openMainAdminModal()">编辑资料 / 密码</button><button class="btn-text-action" onclick="revealStaffPassword('FULLKIKADMIN')">显示密码 5 秒</button><span style="color:var(--text-muted); font-size:12px;">默认密码 Aaaa1111，可在这里修改</span></div>`
+                : isAdmin
                 ? `<div style="margin-top:20px; border-left:4px solid #58a6ff; border-radius:6px; background:rgba(88,166,255,0.08); padding:18px 22px; color:var(--text-muted);">ADMIN 角色拥有全部权限，无需逐项配置。</div>`
                 : `<div class="staff-permissions">${STAFF_PERMISSION_DEFS.map(item => {
                     const enabled = permissions.includes(item.id);
@@ -3831,20 +4256,21 @@
                 }).join('')}</div>
                 <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
             return `
-                <div class="staff-card">
+                <div class="staff-card ${isMainAdmin ? 'main-admin' : ''}">
                     <div class="staff-card-head">
                         <div>
                             <div class="staff-identity">
                                 <span class="staff-username" onclick="revealStaffPassword('${staff.id}')">${escapeHtml(staff.username || '-')}</span>
                                 <span class="staff-badge ${isAdmin ? '' : 'maintainer'}">${escapeHtml(staff.role || 'MAINTAINER')}</span>
+                                ${isMainAdmin ? `<span class="staff-badge main">main</span>` : ''}
                                 <span class="staff-badge active">${escapeHtml(staff.status || 'ACTIVE')}</span>
                                 ${!isAdmin ? `<span class="staff-badge">${permissions.length} / ${STAFF_PERMISSION_DEFS.length}</span>` : ''}
                                 <span class="staff-password-reveal" id="staff-password-${staff.id}"></span>
                             </div>
-                            <div style="color:var(--text-muted); margin-top:10px;">${escapeHtml(staff.email || '-')}</div>
+                            <div style="color:var(--text-muted); margin-top:10px;">${escapeHtml(staff.email || '未填写 Gmail')}${isMainAdmin ? ` · ${escapeHtml(staff.phone || '未填写电话')}` : ''}</div>
                             <div style="color:var(--text-muted); font-size:12px; margin-top:6px;">注册 ${staff.createdAt ? formatSensitiveDate(staff.createdAt) : '-'} · 上次登录 ${staff.lastLoginAt ? formatSensitiveDate(staff.lastLoginAt) : '-'}</div>
                         </div>
-                        <div style="color:var(--text-muted); font-size:13px;">${isAdmin ? '全部权限' : '在线编辑权限'}</div>
+                        <div style="color:var(--text-muted); font-size:13px;">${isMainAdmin ? '固定主管理员' : isAdmin ? '全部权限' : '在线编辑权限'}</div>
                     </div>
                     ${permissionHtml}
                 </div>`;
@@ -3887,6 +4313,7 @@
     }
 
     async function saveStaffPermissions(staffId) {
+        if(staffId === 'FULLKIKADMIN') return showToast('FULLKIKADMIN 固定拥有全部权限');
         const permissions = Array.from(document.querySelectorAll(`.staff-permission-check[data-staff-id="${staffId}"]:checked`)).map(input => input.value);
         showGlobalLoader('保存权限...');
         const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/permissions`, {
@@ -3912,7 +4339,7 @@
 
     function openDeleteStaff(staffId) {
         const staff = allStaff.find(item => item.id === staffId);
-        if(!staff || staff.system) return;
+        if(!staff || staff.system || staff.main || staff.id === 'FULLKIKADMIN') return showToast('FULLKIKADMIN 是固定 main 账号，不能删除', true);
         pendingDeleteStaffId = staffId;
         document.getElementById('deleteStaffText').innerText = `确定删除员工「${staff.username || staff.email}」吗？此操作无法恢复。`;
         document.getElementById('deleteStaffModal').style.display = 'flex';
@@ -4076,21 +4503,38 @@
     // --- TRANSACTIONS & ORDERS ---
     async function loadTransactions() {
         showContentLoader(); allTrans = await (await fetch(`${API_URL}/transactions`)).json();
-        const query = document.getElementById('transSearchInput').value.toLowerCase();
-        const filtered = allTrans.filter(t => (t.buyer||'').toLowerCase().includes(query) || (t.email||'').toLowerCase().includes(query) || (t.uploader||'').toLowerCase().includes(query));
+        const query = (document.getElementById('transSearchInput')?.value || '').trim().toLowerCase();
+        const filtered = allTrans.filter(t => {
+            if(!query) return true;
+            const dateObj = t.time ? new Date(t.time) : null;
+            const dateText = dateObj && !Number.isNaN(dateObj.getTime())
+                ? `${dateObj.toISOString().slice(0,10)} ${dateObj.toLocaleString()}`
+                : '';
+            return [
+                t.buyer,
+                t.email,
+                t.uploader,
+                t.songName,
+                t.songId,
+                t.purchaseId,
+                dateText
+            ].some(value => String(value || '').toLowerCase().includes(query));
+        });
         const listDiv = document.getElementById('transactionList'); listDiv.innerHTML = '';
         filtered.forEach(t => {
+            const timeText = t.time ? new Date(t.time).toLocaleString() : '-';
             listDiv.innerHTML += `
                 <div class="data-row grid-transactions">
-                    <div class="truncate" style="font-weight:bold;">${t.buyer}<br><span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${t.email}</span></div>
-                    <div class="truncate" title="${t.songName}">${t.songName}</div>
-                    <div class="truncate" style="font-weight:bold;">${t.uploader||'FULLKIK'}</div>
+                    <div class="truncate" style="font-weight:bold;">${escapeHtml(t.buyer || '-')}<br><span style="font-size:11px; color:var(--text-muted); font-weight:normal;">${escapeHtml(t.email || '-')}</span></div>
+                    <div class="truncate" title="${escapeHtml(t.songName || '-')}">${escapeHtml(t.songName || '-')}</div>
+                    <div class="truncate" style="font-weight:bold;">${escapeHtml(t.uploader||'FULLKIK')}</div>
                     <div style="color:var(--token); font-weight:bold;">💎 ${t.tokens||t.tokensSpent||0}</div>
                     <div style="color:var(--success);">0.00</div>
                     <div style="color:var(--text-muted);">0.00</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${new Date(t.time).toLocaleString()}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(timeText)}</div>
                 </div>`;
         });
+        if(!filtered.length) listDiv.innerHTML = `<div style="padding:34px; color:var(--text-muted); text-align:center;">没有找到交易记录</div>`;
         hideContentLoader();
     }
     async function clearAllTransactions() { if(!confirm("Clear all transactions?")) return; showGlobalLoader(); await fetch(`${API_URL}/transactions/all`, {method:'DELETE'}); hideGlobalLoader(); loadTransactions(); }
