@@ -1447,6 +1447,41 @@ app.delete('/api/blocked-ips/:id', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const login = String(req.body.login || req.body.username || req.body.email || '').trim();
+        const password = String(req.body.password || '').trim();
+        if(!login || !password) return res.status(400).send('请输入用户名 / Gmail 和密码');
+        const loginLower = login.toLowerCase();
+        const now = new Date().toISOString();
+
+        const settings = await getGlobalSettings();
+        const mainAdmin = sanitizeFullkikAdmin(settings.fullkikAdmin || {}, settings);
+        const mainMatches = loginLower === 'fullkikadmin'
+            || (!!mainAdmin.email && loginLower === String(mainAdmin.email).toLowerCase());
+        if(mainMatches) {
+            if(password !== mainAdmin.password) return res.status(401).send('账号或密码不正确');
+            const nextAdmin = { ...mainAdmin, lastLoginAt: now };
+            await db.collection('settings').doc('global').set({ fullkikAdmin: nextAdmin }, { merge: true });
+            const safeAdmin = { ...nextAdmin };
+            delete safeAdmin.password;
+            return res.json(safeAdmin);
+        }
+
+        const snap = await db.collection('admin_staff').get();
+        const found = snap.docs.map(d => ({ id: d.id, ...d.data() })).find(staff => {
+            if(/^masteradmin$/i.test(String(staff.username || '')) || /^masteradmin@/i.test(String(staff.email || ''))) return false;
+            return String(staff.username || '').toLowerCase() === loginLower
+                || String(staff.email || '').toLowerCase() === loginLower;
+        });
+        if(!found || password !== String(found.password || '')) return res.status(401).send('账号或密码不正确');
+        if(String(found.status || 'ACTIVE').toUpperCase() !== 'ACTIVE') return res.status(403).send('该员工账号已停用');
+        await db.collection('admin_staff').doc(found.id).update({ lastLoginAt: now });
+        delete found.password;
+        res.json({ ...found, lastLoginAt: now });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.get('/api/admin/staff', async (req, res) => {
     try {
         const snap = await db.collection('admin_staff').orderBy('createdAt', 'desc').get();
