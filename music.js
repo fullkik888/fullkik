@@ -113,6 +113,33 @@ async function logEvent(type, message) {
     } catch(e) { console.error("Logging Error:", e); } 
 }
 
+const DEFAULT_PAYMENT_METHODS = [
+    { id: 'PM_RMB_ALIPAY', code: 'MAYIPAY_ALIPAY', name: '支付宝转账', currency: 'RMB', gateway: 'mayipay', channel: 'ALIPAY', minAmount: 100, maxAmount: 1000, sort: 10, enabled: true },
+    { id: 'PM_RMB_WECHAT', code: 'MAYIPAY_WECHAT', name: '微信支付', currency: 'RMB', gateway: 'mayipay', channel: 'WECHAT', minAmount: 100, maxAmount: 1000, sort: 20, enabled: true },
+    { id: 'PM_RMB_UNIONPAY', code: 'MAYIPAY_UNIONPAY', name: '银联支付', currency: 'RMB', gateway: 'mayipay', channel: 'UNIONPAY', minAmount: 100, maxAmount: 1000, sort: 30, enabled: true },
+    { id: 'PM_MYR_FPX', code: 'SUPERPAY_FPX', name: 'FPX 网上银行', currency: 'MYR', gateway: 'superpay', channel: 'FPX', minAmount: 10, maxAmount: 50000, sort: 110, enabled: true },
+    { id: 'PM_MYR_TNG', code: 'SUPERPAY_TNG', name: "Touch 'n Go", currency: 'MYR', gateway: 'superpay', channel: 'TNG_MY', minAmount: 5, maxAmount: 9999, sort: 120, enabled: true },
+    { id: 'PM_MYR_GRABPAY', code: 'SUPERPAY_GRABPAY', name: 'GrabPay', currency: 'MYR', gateway: 'superpay', channel: 'GRABPAY', minAmount: 5, maxAmount: 9999, sort: 130, enabled: true },
+    { id: 'PM_MYR_BOOST', code: 'SUPERPAY_BOOST', name: 'Boost', currency: 'MYR', gateway: 'superpay', channel: 'BOOST_MY', minAmount: 5, maxAmount: 9999, sort: 140, enabled: true },
+    { id: 'PM_USD_USDT', code: 'COIN2PAY_USDT', name: 'USDT (TRC20/ERC20)', currency: 'USD', gateway: 'coin2pay', channel: 'USDT', minAmount: 1, maxAmount: 200000, sort: 210, enabled: true }
+];
+
+const DEFAULT_FULLKIK_ADMIN = {
+    id: 'FULLKIKADMIN',
+    username: 'FULLKIKADMIN',
+    email: '',
+    phone: '',
+    password: 'Aaaa1111',
+    role: 'ADMIN',
+    status: 'ACTIVE',
+    label: 'main',
+    main: true,
+    system: true,
+    firstLoginRequired: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    lastLoginAt: ''
+};
+
 const DEFAULT_SETTINGS = {
     headerTitle: 'FULLKIK',
     heroTitle: 'FULLKIK音乐空间',
@@ -138,6 +165,10 @@ const DEFAULT_SETTINGS = {
     topupExchangeRate: 1.7,
     topupUsdRate: 0.23,
     diamondTerms: '1. 钻石充值即时到账，仅可用于本平台音乐购买、VIP 升级、创作人打赏。\n2. 钻石不可提现、不可转账、不可兑换现金或其他平台货币。\n3. 购买完成的歌曲可重复下载，下载链接为限时有效签名。\n4. 充值订单完成后不支持人工退款；若因系统故障未到账，请联系客服核实。\n5. VIP 创作人分成金额可通过提现页面申请提现，与用户钻石余额是不同账本。\n6. 平台保留对充值套餐、首充奖励、限时活动的最终解释权。\n7. 使用前请确保已年满 18 岁；若由家长 / 监护人为未成年人代充，请监督钱包使用。\n\n遇到问题请联系客服，或点击页面右下角悬浮按钮。',
+    topupEnabled: true,
+    usdtWithdrawEnabled: false,
+    paymentMethods: DEFAULT_PAYMENT_METHODS,
+    fullkikAdmin: DEFAULT_FULLKIK_ADMIN,
     topupPackages: [
         { id: 'PK500', label: '限时优惠', amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, sort: 10, enabled: true },
         { id: 'PK400', label: '限时优惠', amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, sort: 20, enabled: true },
@@ -154,6 +185,59 @@ async function getGlobalSettings() {
     if(!db) return { ...DEFAULT_SETTINGS };
     const doc = await db.collection('settings').doc('global').get();
     return doc.exists ? { ...DEFAULT_SETTINGS, ...doc.data() } : { ...DEFAULT_SETTINGS };
+}
+
+function normalizePaymentCurrency(value) {
+    const currency = String(value || '').toUpperCase();
+    if(currency === 'RM') return 'MYR';
+    if(currency === 'USDT') return 'USD';
+    return ['RMB', 'MYR', 'USD'].includes(currency) ? currency : 'RMB';
+}
+
+function sanitizePaymentMethods(rows) {
+    const source = Array.isArray(rows) ? rows : DEFAULT_PAYMENT_METHODS;
+    const seen = new Set();
+    return source.slice(0, 200).map((method, index) => {
+        const baseCode = String(method.code || method.id || `PAY_${index + 1}`).trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_') || `PAY_${index + 1}`;
+        const code = seen.has(baseCode) ? `${baseCode}_${index + 1}` : baseCode;
+        seen.add(code);
+        return {
+            id: String(method.id || code || `PM_${Date.now()}_${index}`).trim(),
+            code,
+            name: String(method.name || method.label || code).trim().slice(0, 80) || code,
+            currency: normalizePaymentCurrency(method.currency),
+            gateway: String(method.gateway || '').trim().slice(0, 40),
+            channel: String(method.channel || '').trim().slice(0, 40),
+            minAmount: Math.max(parseFloat(method.minAmount) || 0, 0),
+            maxAmount: Math.max(parseFloat(method.maxAmount) || 0, 0),
+            sort: parseInt(method.sort) || (index + 1) * 10,
+            enabled: method.enabled !== false,
+            updatedAt: method.updatedAt || new Date().toISOString()
+        };
+    }).filter(method => method.code && method.name);
+}
+
+function sanitizeFullkikAdmin(raw = {}, current = {}) {
+    const existing = { ...DEFAULT_FULLKIK_ADMIN, ...(current.fullkikAdmin || {}) };
+    const nextPassword = raw.password !== undefined
+        ? String(raw.password || existing.password || DEFAULT_FULLKIK_ADMIN.password).trim()
+        : String(existing.password || DEFAULT_FULLKIK_ADMIN.password).trim();
+    return {
+        ...existing,
+        id: 'FULLKIKADMIN',
+        username: 'FULLKIKADMIN',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        label: 'main',
+        main: true,
+        system: true,
+        permissions: STAFF_PERMISSIONS,
+        email: String(raw.email !== undefined ? raw.email : existing.email || '').trim().slice(0, 120),
+        phone: String(raw.phone !== undefined ? raw.phone : existing.phone || '').trim().slice(0, 60),
+        password: nextPassword.length >= 6 ? nextPassword.slice(0, 100) : DEFAULT_FULLKIK_ADMIN.password,
+        firstLoginRequired: raw.firstLoginRequired !== undefined ? !!raw.firstLoginRequired : existing.firstLoginRequired !== false,
+        updatedAt: new Date().toISOString()
+    };
 }
 
 async function logAdminAction(message, meta = {}) {
@@ -968,15 +1052,25 @@ app.delete('/api/coupons/:code', async (req, res) => {
 
 app.post('/api/users/:username/topup', async (req, res) => {
     try {
+        const settings = await getGlobalSettings();
+        if(settings.topupEnabled === false) return res.status(403).send('充值通道暂时关闭');
         const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
         const user = doc.data();
         const allowedCurrencies = ['RMB', 'MYR', 'USD'];
         const currency = allowedCurrencies.includes(String(req.body.currency || '').toUpperCase())
             ? String(req.body.currency).toUpperCase()
             : 'RMB';
+        const configuredMethods = sanitizePaymentMethods(settings.paymentMethods);
+        const activeMethods = configuredMethods.filter(method => method.enabled !== false && method.currency === currency);
+        if(!activeMethods.length) {
+            return res.status(400).send('该币种暂无可用支付方式');
+        }
         const paymentMethod = String(req.body.paymentMethod || (
             currency === 'MYR' ? 'FPX 网上银行' : currency === 'USD' ? 'USDT (TRC20/ERC20)' : '支付宝转账'
         )).trim().slice(0, 80);
+        if(activeMethods.length && !activeMethods.some(method => method.name === paymentMethod || method.code === paymentMethod)) {
+            return res.status(400).send('此支付方式已停用，请重新选择');
+        }
         let topupAmount = parseInt(req.body.amount) || 0;
         let finalPrice = Math.max(parseFloat(req.body.price) || 0, 0);
         let couponMeta = null;
@@ -993,7 +1087,6 @@ app.post('/api/users/:username/topup', async (req, res) => {
                 bonusDiamonds: validation.bonusDiamonds,
                 description: validation.description
             };
-            const settings = await getGlobalSettings();
             const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).map(c => {
                 if(normalizeCouponCode(c.code) !== couponCode) return c;
                 const usedBy = Array.isArray(c.usedBy) ? c.usedBy : [];
@@ -1361,8 +1454,11 @@ app.get('/api/admin/staff', async (req, res) => {
             const data = d.data();
             delete data.password;
             return { id: d.id, ...data };
-        });
-        res.json(staff);
+        }).filter(item => !/^masteradmin$/i.test(String(item.username || '')) && !/^masteradmin@/i.test(String(item.email || '')));
+        const settings = await getGlobalSettings();
+        const mainAdmin = sanitizeFullkikAdmin(settings.fullkikAdmin || {}, settings);
+        delete mainAdmin.password;
+        res.json([mainAdmin, ...staff]);
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1399,6 +1495,9 @@ app.post('/api/admin/staff', async (req, res) => {
 
 app.put('/api/admin/staff/:id/permissions', async (req, res) => {
     try {
+        if(req.params.id === 'FULLKIKADMIN') {
+            return res.json({ permissions: STAFF_PERMISSIONS, fixed: true });
+        }
         const permissions = Array.isArray(req.body.permissions)
             ? req.body.permissions.filter(p => STAFF_PERMISSIONS.includes(p))
             : [];
@@ -1408,8 +1507,30 @@ app.put('/api/admin/staff/:id/permissions', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+app.put('/api/admin/staff/FULLKIKADMIN/profile', async (req, res) => {
+    try {
+        const settings = await getGlobalSettings();
+        const fullkikAdmin = sanitizeFullkikAdmin(req.body || {}, settings);
+        await db.collection('settings').doc('global').set({ fullkikAdmin }, { merge: true });
+        const safeAdmin = { ...fullkikAdmin };
+        delete safeAdmin.password;
+        await logAdminAction('Updated FULLKIKADMIN main profile', {
+            module: '用户',
+            action: '主管理员资料',
+            targetId: 'FULLKIKADMIN',
+            details: `email=${safeAdmin.email || '-'} phone=${safeAdmin.phone || '-'}`
+        });
+        res.json(safeAdmin);
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.get('/api/admin/staff/:id/password', async (req, res) => {
     try {
+        if(req.params.id === 'FULLKIKADMIN') {
+            const settings = await getGlobalSettings();
+            const mainAdmin = sanitizeFullkikAdmin(settings.fullkikAdmin || {}, settings);
+            return res.json({ password: mainAdmin.password || DEFAULT_FULLKIK_ADMIN.password });
+        }
         const doc = await db.collection('admin_staff').doc(req.params.id).get();
         if(!doc.exists) return res.status(404).send('Staff not found');
         res.json({ password: doc.data().password || '' });
@@ -1418,6 +1539,7 @@ app.get('/api/admin/staff/:id/password', async (req, res) => {
 
 app.delete('/api/admin/staff/:id', async (req, res) => {
     try {
+        if(req.params.id === 'FULLKIKADMIN') return res.status(400).send('FULLKIKADMIN is the fixed main account and cannot be deleted');
         const ref = db.collection('admin_staff').doc(req.params.id);
         const doc = await ref.get();
         if(!doc.exists) return res.status(404).send('Staff not found');
@@ -1971,8 +2093,21 @@ app.put('/api/settings', async (req, res) => {
             const rate = parseFloat(req.body.topupUsdRate);
             updates.topupUsdRate = Number.isFinite(rate) && rate > 0 ? Math.min(rate, 999) : DEFAULT_SETTINGS.topupUsdRate;
         }
+        if (req.body.topupEnabled !== undefined) {
+            updates.topupEnabled = !!req.body.topupEnabled;
+        }
+        if (req.body.usdtWithdrawEnabled !== undefined) {
+            updates.usdtWithdrawEnabled = !!req.body.usdtWithdrawEnabled;
+        }
         if (req.body.diamondTerms !== undefined) {
             updates.diamondTerms = String(req.body.diamondTerms || '').trim().slice(0, 5000) || DEFAULT_SETTINGS.diamondTerms;
+        }
+        if (req.body.paymentMethods !== undefined) {
+            updates.paymentMethods = sanitizePaymentMethods(req.body.paymentMethods);
+        }
+        if (req.body.fullkikAdmin !== undefined) {
+            const currentSettings = await getGlobalSettings();
+            updates.fullkikAdmin = sanitizeFullkikAdmin(req.body.fullkikAdmin, currentSettings);
         }
         if (req.body.topupPackages !== undefined) {
             const rows = Array.isArray(req.body.topupPackages) ? req.body.topupPackages : [];
@@ -2054,7 +2189,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'diamondTerms', 'topupPackages', 'referralConfig'].includes(k))) {
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'topupEnabled', 'usdtWithdrawEnabled', 'diamondTerms', 'topupPackages', 'paymentMethods', 'fullkikAdmin', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',
