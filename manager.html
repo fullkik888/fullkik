@@ -25,7 +25,11 @@
         .manager-login-btn:hover { filter:brightness(1.08); }
         .manager-login-btn:disabled { opacity:0.65; cursor:not-allowed; }
         .manager-login-error { min-height:18px; color:var(--danger); font-size:12px; font-weight:900; text-align:center; }
-        .manager-login-hint { color:var(--text-muted); font-size:12px; line-height:1.6; text-align:center; border-top:1px solid #321717; padding-top:16px; }
+        .manager-password-wrap { position:relative; }
+        .manager-password-wrap .manager-login-input { padding-right:54px; }
+        .manager-eye-btn { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:38px; height:38px; border:1px solid #3a1919; border-radius:12px; background:rgba(255,255,255,0.03); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        .manager-eye-btn:hover { color:white; border-color:var(--accent-light); background:rgba(128,0,0,0.22); }
+        .manager-eye-btn svg { width:18px; height:18px; fill:currentColor; }
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
@@ -677,11 +681,16 @@
         <form class="manager-login-form" onsubmit="submitManagerLogin(event)">
             <div>
                 <label class="manager-login-label">用户名 / Gmail</label>
-                <input class="manager-login-input" id="managerLoginId" autocomplete="username" placeholder="username / staff@example.com">
+                <input class="manager-login-input" id="managerLoginId" autocomplete="username" value="FULLKIKADMIN" placeholder="FULLKIKADMIN / staff@example.com">
             </div>
             <div>
                 <label class="manager-login-label">密码</label>
-                <input class="manager-login-input" id="managerLoginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
+                <div class="manager-password-wrap">
+                    <input class="manager-login-input" id="managerLoginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
+                    <button class="manager-eye-btn" type="button" onclick="toggleManagerPassword()" aria-label="显示 / 隐藏密码">
+                        <svg id="managerEyeIcon" viewBox="0 0 24 24"><path d="M12 5c-5.2 0-9.3 4.4-10.8 6.2a1.3 1.3 0 0 0 0 1.6C2.7 14.6 6.8 19 12 19s9.3-4.4 10.8-6.2a1.3 1.3 0 0 0 0-1.6C21.3 9.4 17.2 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.8a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="manager-login-error" id="managerLoginError"></div>
             <button class="manager-login-btn" id="managerLoginBtn" type="submit">登录后台</button>
@@ -2220,6 +2229,18 @@
         }
         if(wrap) wrap.style.display = 'flex';
         if(welcome) welcome.style.display = 'none';
+    }
+    function toggleManagerPassword() {
+        const input = document.getElementById('managerLoginPassword');
+        const icon = document.getElementById('managerEyeIcon');
+        if(!input) return;
+        const reveal = input.type === 'password';
+        input.type = reveal ? 'text' : 'password';
+        if(icon) {
+            icon.innerHTML = reveal
+                ? `<path d="M3.3 2 2 3.3l3 3C3.1 7.7 1.8 9.4 1.2 10.2a1.3 1.3 0 0 0 0 1.6C2.7 13.6 6.8 18 12 18c1.8 0 3.4-.5 4.8-1.2l3.9 3.9 1.3-1.3L3.3 2Zm6.2 7.6 1.4 1.4a2.2 2.2 0 0 0 2.1 2.1l1.4 1.4A4 4 0 0 1 9.5 9.6Zm2.5-3.6c5.2 0 9.3 4.4 10.8 6.2.2.3.2.9 0 1.2-.5.6-1.5 1.8-2.9 2.9l-2.2-2.2A4 4 0 0 0 12 8c-.7 0-1.3.2-1.9.5L8.5 6.9c1.1-.5 2.3-.9 3.5-.9Z"/>`
+                : `<path d="M12 5c-5.2 0-9.3 4.4-10.8 6.2a1.3 1.3 0 0 0 0 1.6C2.7 14.6 6.8 19 12 19s9.3-4.4 10.8-6.2a1.3 1.3 0 0 0 0-1.6C21.3 9.4 17.2 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.8a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z"/>`;
+        }
     }
     function enterManagerAfterLogin(account) {
         storeAdminSession(account);
