@@ -8,6 +8,24 @@
     <style>
         :root { --bg-dark: #120a0a; --bg-main: #0b0505; --card-bg: #1a0f0f; --border-color: #2a1515; --text-main: #f5f5f7; --text-muted: #a0a0a5; --accent: #800000; --accent-light: #a52a2a; --danger: #ff453a; --success: #34c759; --token: #00e5ff; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: var(--bg-main); color: var(--text-main); margin: 0; display: flex; height: 100vh; overflow: hidden; color-scheme: dark;}
+        body.manager-locked .sidebar, body.manager-locked .main-content, body.manager-locked .mobile-song-toolbar, body.manager-locked .mobile-nav-overlay, body.manager-locked #contentLoader, body.manager-locked #splashLoader { display:none !important; }
+        .manager-login-screen { position:fixed; inset:0; z-index:10000000; display:none; align-items:center; justify-content:center; padding:22px; box-sizing:border-box; background:
+            radial-gradient(circle at 50% 18%, rgba(165,42,42,0.22), transparent 35%),
+            linear-gradient(145deg, #0b0505 0%, #170707 50%, #070303 100%); }
+        body.manager-locked .manager-login-screen { display:flex; }
+        .manager-login-card { width:min(460px, 100%); border:1px solid #4a2020; border-radius:24px; background:linear-gradient(145deg, rgba(36,10,10,0.96), rgba(14,5,5,0.98)); box-shadow:0 30px 90px rgba(0,0,0,0.72); overflow:hidden; }
+        .manager-login-head { padding:34px 34px 16px; text-align:center; }
+        .manager-login-logo { font-size:30px; font-weight:950; letter-spacing:1.5px; color:white; }
+        .manager-login-sub { color:var(--text-muted); margin-top:8px; font-size:13px; line-height:1.6; }
+        .manager-login-form { padding:18px 34px 34px; display:flex; flex-direction:column; gap:14px; }
+        .manager-login-label { color:var(--text-muted); font-size:12px; font-weight:900; letter-spacing:0.3px; }
+        .manager-login-input { width:100%; box-sizing:border-box; padding:16px 18px; border-radius:14px; border:1px solid #3a1919; background:#070303; color:white; outline:none; font-size:15px; }
+        .manager-login-input:focus { border-color:var(--accent-light); box-shadow:0 0 0 4px rgba(165,42,42,0.12); }
+        .manager-login-btn { border:none; border-radius:14px; background:linear-gradient(135deg, #650d12, #a52a2a); color:white; min-height:54px; font-weight:950; font-size:15px; cursor:pointer; box-shadow:0 16px 36px rgba(128,0,0,0.22); }
+        .manager-login-btn:hover { filter:brightness(1.08); }
+        .manager-login-btn:disabled { opacity:0.65; cursor:not-allowed; }
+        .manager-login-error { min-height:18px; color:var(--danger); font-size:12px; font-weight:900; text-align:center; }
+        .manager-login-hint { color:var(--text-muted); font-size:12px; line-height:1.6; text-align:center; border-top:1px solid #321717; padding-top:16px; }
         
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
@@ -648,7 +666,29 @@
         }
     </style>
 </head>
-<body onclick="closeDropdowns(event)">
+<body class="manager-locked" onclick="closeDropdowns(event)">
+
+<div class="manager-login-screen" id="managerLoginScreen">
+    <div class="manager-login-card">
+        <div class="manager-login-head">
+            <div class="manager-login-logo">FULLKIK ADMIN</div>
+            <div class="manager-login-sub">员工权限账号登录 · 支持用户名 / Gmail<br>只有 FULLKIKADMIN 或「员工与权限」创建的账号可以进入后台。</div>
+        </div>
+        <form class="manager-login-form" onsubmit="submitManagerLogin(event)">
+            <div>
+                <label class="manager-login-label">用户名 / Gmail</label>
+                <input class="manager-login-input" id="managerLoginId" autocomplete="username" placeholder="FULLKIKADMIN / staff@example.com">
+            </div>
+            <div>
+                <label class="manager-login-label">密码</label>
+                <input class="manager-login-input" id="managerLoginPassword" type="password" autocomplete="current-password" placeholder="请输入密码">
+            </div>
+            <div class="manager-login-error" id="managerLoginError"></div>
+            <button class="manager-login-btn" id="managerLoginBtn" type="submit">登录后台</button>
+            <div class="manager-login-hint">FULLKIKADMIN 默认密码：Aaaa1111 · 登录后会显示加载动画和「欢迎回来」。</div>
+        </form>
+    </div>
+</div>
 
 <div id="splashLoader">
     <div class="splash-circle-wrap">
@@ -1928,6 +1968,7 @@
     let pendingDeleteStaffId = '';
     let currentRefundOrderId = '';
     let pendingPaymentAction = null;
+    let currentAdminSession = null;
     let selectedSongIds = new Set();
 
     const STAFF_PERMISSION_DEFS = [
@@ -2125,6 +2166,110 @@
 
     function publishChanges() { showGlobalLoader(); setTimeout(() => { hideGlobalLoader(); showToast("Changes Published!"); }, 800); }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
+    function readAdminSession() {
+        try {
+            const raw = localStorage.getItem('fkAdminSession');
+            const parsed = raw ? JSON.parse(raw) : null;
+            return parsed && parsed.username ? parsed : null;
+        } catch(e) {
+            localStorage.removeItem('fkAdminSession');
+            return null;
+        }
+    }
+    function storeAdminSession(account) {
+        currentAdminSession = {
+            id: account.id || account.username || '',
+            username: account.username || account.email || 'FULLKIKADMIN',
+            email: account.email || '',
+            phone: account.phone || '',
+            role: account.role || 'MAINTAINER',
+            permissions: Array.isArray(account.permissions) ? account.permissions : [],
+            main: !!account.main || account.id === 'FULLKIKADMIN' || account.username === 'FULLKIKADMIN',
+            loginAt: new Date().toISOString()
+        };
+        localStorage.setItem('fkAdminSession', JSON.stringify(currentAdminSession));
+        localStorage.setItem('fkAdminUsername', currentAdminSession.username);
+    }
+    function showManagerLogin() {
+        currentAdminSession = null;
+        document.body.classList.add('manager-locked');
+        document.getElementById('managerLoginScreen').style.display = '';
+        document.getElementById('managerLoginError').innerText = '';
+        document.getElementById('managerLoginBtn').disabled = false;
+        document.getElementById('managerLoginBtn').innerText = '登录后台';
+        const splash = document.getElementById('splashLoader');
+        if(splash) {
+            splash.style.display = 'none';
+            splash.style.opacity = 1;
+        }
+        setTimeout(() => document.getElementById('managerLoginId')?.focus(), 80);
+    }
+    function resetSplashLoaderForLogin() {
+        const splash = document.getElementById('splashLoader');
+        const circle = document.getElementById('initLoadCircle');
+        const text = document.getElementById('initLoadText');
+        const wrap = document.querySelector('.splash-circle-wrap');
+        const welcome = document.getElementById('welcomeText');
+        if(splash) {
+            splash.style.opacity = 1;
+            splash.style.display = 'flex';
+        }
+        if(circle) circle.style.strokeDashoffset = 283;
+        if(text) {
+            text.style.display = 'block';
+            text.innerText = '加载中 >.<';
+        }
+        if(wrap) wrap.style.display = 'flex';
+        if(welcome) welcome.style.display = 'none';
+    }
+    function enterManagerAfterLogin(account) {
+        storeAdminSession(account);
+        document.body.classList.remove('manager-locked');
+        document.getElementById('managerLoginScreen').style.display = 'none';
+        resetSplashLoaderForLogin();
+        loadInitial();
+    }
+    async function submitManagerLogin(event) {
+        if(event) event.preventDefault();
+        const login = document.getElementById('managerLoginId').value.trim();
+        const password = document.getElementById('managerLoginPassword').value.trim();
+        const error = document.getElementById('managerLoginError');
+        const btn = document.getElementById('managerLoginBtn');
+        error.innerText = '';
+        if(!login || !password) {
+            error.innerText = '请输入用户名 / Gmail 和密码';
+            return;
+        }
+        btn.disabled = true;
+        btn.innerText = '登录中...';
+        try {
+            const res = await fetch(`${API_URL}/admin/login`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ login, password })
+            });
+            if(!res.ok) throw new Error(await res.text());
+            const account = await res.json();
+            document.getElementById('managerLoginPassword').value = '';
+            enterManagerAfterLogin(account);
+        } catch(e) {
+            error.innerText = e.message || '登录失败';
+            btn.disabled = false;
+            btn.innerText = '登录后台';
+        }
+    }
+    function initManagerGate() {
+        const session = readAdminSession();
+        if(session) {
+            currentAdminSession = session;
+            document.body.classList.remove('manager-locked');
+            document.getElementById('managerLoginScreen').style.display = 'none';
+            resetSplashLoaderForLogin();
+            loadInitial();
+        } else {
+            showManagerLogin();
+        }
+    }
     function getMainAdminSettings() {
         return {
             username: 'FULLKIKADMIN',
@@ -2137,8 +2282,9 @@
     }
     function updateAdminFooter() {
         const mainAdmin = getMainAdminSettings();
-        const displayName = localStorage.getItem('fkAdminUsername') || mainAdmin.username || 'FULLKIKADMIN';
-        const displaySub = mainAdmin.email || mainAdmin.phone || 'main';
+        const session = currentAdminSession || readAdminSession();
+        const displayName = session?.username || mainAdmin.username || 'FULLKIKADMIN';
+        const displaySub = session?.email || session?.phone || (session?.main ? 'main' : session?.role || '员工权限');
         const nameNode = document.getElementById('adminFooterName');
         const subNode = document.getElementById('adminFooterSub');
         const avatarNode = document.getElementById('adminFooterAvatar');
@@ -2147,11 +2293,15 @@
         if(avatarNode) avatarNode.innerText = (displayName || 'F').charAt(0).toUpperCase();
     }
     function adminFooterLogout() {
+        closeModals();
+        localStorage.removeItem('fkAdminSession');
         localStorage.removeItem('fkAdminUsername');
-        showToast('已退出本机后台身份');
-        updateAdminFooter();
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        showManagerLogin();
     }
     function maybeShowFirstAdminLogin() {
+        const session = currentAdminSession || readAdminSession();
+        if(!(session?.main || session?.id === 'FULLKIKADMIN' || session?.username === 'FULLKIKADMIN')) return;
         const mainAdmin = getMainAdminSettings();
         updateAdminFooter();
         if(mainAdmin.firstLoginRequired === false) return;
@@ -2184,7 +2334,7 @@
         if(!res.ok) return showToast(await res.text(), true);
         const saved = await res.json();
         globalSettings.fullkikAdmin = { ...getMainAdminSettings(), ...saved, password: payload.password || getMainAdminSettings().password || 'Aaaa1111' };
-        localStorage.setItem('fkAdminUsername', 'FULLKIKADMIN');
+        storeAdminSession({ ...currentAdminSession, ...saved, username:'FULLKIKADMIN', id:'FULLKIKADMIN', main:true, permissions: STAFF_PERMISSION_DEFS.map(item => item.id) });
         updateAdminFooter();
         closeModals();
         showToast(message);
@@ -5666,7 +5816,7 @@
     async function loadLogs(type) { showContentLoader(); const data = await (await fetch(`${API_URL}/logs/${type}`)).json(); const listDiv = document.getElementById(type === 'register' ? 'dataList' : 'logsList'); listDiv.innerHTML = ''; data.forEach(log => { listDiv.innerHTML += `<div class="data-row grid-logs"><div>-</div><div>${log.message}</div><div style="color:var(--text-muted); font-size:12px;">${new Date(log.timestamp).toLocaleString()}</div></div>`; }); hideContentLoader(); }
     async function clearLogs(type, isAll) { showGlobalLoader(); await fetch(`${API_URL}/logs/${type}/all`, { method: 'DELETE' }); hideGlobalLoader(); loadLogs(type); showToast("Logs cleared."); }
 
-    document.addEventListener("DOMContentLoaded", () => { loadInitial(); });
+    document.addEventListener("DOMContentLoaded", () => { initManagerGate(); });
 </script>
 </body>
 </html>
