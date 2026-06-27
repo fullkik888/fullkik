@@ -343,6 +343,18 @@
             .mobile-bottom-nav .nav-ico { font-size:22px; line-height:1; }
         }
     </style>
+    <script>
+        (function() {
+            const f12RedirectUrl = 'https://shopee.com.my/';
+            window.addEventListener('keydown', function(event) {
+                if(event.key === 'F12' || event.code === 'F12' || event.keyCode === 123) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    window.location.href = f12RedirectUrl;
+                }
+            }, true);
+        })();
+    </script>
 </head>
 <body onclick="closeDropdowns(event)">
 
