@@ -84,6 +84,18 @@
             .follow-btn { min-height: 38px; }
         }
     </style>
+    <script>
+        (function() {
+            const f12RedirectUrl = 'https://shopee.com.my/';
+            window.addEventListener('keydown', function(event) {
+                if(event.key === 'F12' || event.code === 'F12' || event.keyCode === 123) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    window.location.href = f12RedirectUrl;
+                }
+            }, true);
+        })();
+    </script>
 </head>
 <body onclick="closeDropdowns(event)">
 
@@ -296,7 +308,7 @@
                             <img src="${cover}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">
                             <div style="min-width:0;">
                                 <div class="truncate" style="font-weight:bold; font-size:15px; color:white;">${s.filename}</div>
-                                <div class="truncate" style="font-size:11px; color:var(--text-muted);">${s.credit || s.uploader}</div>
+                                <div class="truncate" style="font-size:11px; color:var(--text-muted);">${s.uploader}</div>
                             </div>
                         </div>
                         <div style="color:var(--token); font-weight:bold; white-space:nowrap;">💎 ${s.price||0} <span style="color:#666; margin-left:10px;">♡</span></div>
