@@ -107,6 +107,51 @@ app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.h
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
+app.post('/api/admin/share-link', async (req, res) => {
+    try {
+        const target = getTemporaryShareTarget(req.body.type);
+        if(!target) return res.status(400).send('无效分享类型');
+        const token = crypto.randomBytes(18).toString('hex');
+        const now = Date.now();
+        const payload = {
+            token,
+            type: target.type,
+            targetPath: target.path,
+            label: target.label,
+            createdAt: new Date(now).toISOString(),
+            expiresAt: new Date(now + TEMP_SHARE_LINK_TTL_MS).toISOString(),
+            createdIp: getClientIp(req)
+        };
+        await saveTemporaryShareLink(payload);
+        res.json({
+            url: `${getPublicBaseUrl(req)}/share/${target.type}/${token}`,
+            expiresAt: payload.expiresAt,
+            ttlSeconds: Math.floor(TEMP_SHARE_LINK_TTL_MS / 1000)
+        });
+    } catch(e) {
+        console.error('Create share link error:', e);
+        res.status(500).send('创建分享链接失败');
+    }
+});
+
+app.get('/share/:type/:token', async (req, res) => {
+    try {
+        const target = getTemporaryShareTarget(req.params.type);
+        const token = String(req.params.token || '').trim();
+        if(!target || !token) return sendExpiredSharePage(res);
+        const link = await readTemporaryShareLink(token);
+        const expiresAt = link?.expiresAt ? new Date(link.expiresAt).getTime() : 0;
+        if(!link || link.type !== target.type || !expiresAt || Date.now() > expiresAt) {
+            if(link) await deleteTemporaryShareLink(token);
+            return sendExpiredSharePage(res);
+        }
+        res.redirect(302, link.targetPath || target.path);
+    } catch(e) {
+        console.error('Open share link error:', e);
+        sendExpiredSharePage(res);
+    }
+});
+
 async function logEvent(type, message) { 
     try { 
         if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
@@ -458,6 +503,74 @@ function getClientIp(req) {
     return String(forwarded || req.ip || req.socket?.remoteAddress || '')
         .replace(/^::ffff:/, '')
         .trim() || '-';
+}
+
+const TEMP_SHARE_LINK_TTL_MS = 5 * 60 * 1000;
+const memoryShareLinks = new Map();
+
+function getPublicBaseUrl(req) {
+    const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
+    const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim();
+    return `${proto || 'https'}://${host}`;
+}
+
+function getTemporaryShareTarget(type) {
+    const cleanType = String(type || '').trim().toLowerCase();
+    if(cleanType === 'music') return { type: 'music', path: '/fullkik/main.page', label: 'FULLKIK主页' };
+    if(cleanType === 'register') return { type: 'register', path: '/fullkik/register', label: '用户注册' };
+    return null;
+}
+
+async function saveTemporaryShareLink(payload) {
+    if(db) {
+        await db.collection('share_links').doc(payload.token).set(payload);
+    } else {
+        memoryShareLinks.set(payload.token, payload);
+    }
+}
+
+async function readTemporaryShareLink(token) {
+    if(db) {
+        const doc = await db.collection('share_links').doc(token).get();
+        return doc.exists ? { token: doc.id, ...doc.data() } : null;
+    }
+    return memoryShareLinks.get(token) || null;
+}
+
+async function deleteTemporaryShareLink(token) {
+    try {
+        if(db) await db.collection('share_links').doc(token).delete();
+        else memoryShareLinks.delete(token);
+    } catch(e) {
+        console.error('Share link cleanup error:', e.message);
+    }
+}
+
+function sendExpiredSharePage(res) {
+    res.status(410).send(`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>链接已失效 - FULLKIK</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at top, #2b0707 0%, #0b0505 46%, #030202 100%); color:#fff; font-family:Arial, "Microsoft YaHei", sans-serif; padding:24px; }
+        .card { width:min(460px, 100%); padding:34px 28px; border-radius:24px; border:1px solid rgba(255,70,70,.28); background:rgba(35,8,8,.88); box-shadow:0 30px 80px rgba(0,0,0,.55); text-align:center; }
+        h1 { margin:0 0 12px; font-size:30px; }
+        p { margin:0 0 24px; color:#cdb7b7; line-height:1.7; }
+        a { display:inline-flex; align-items:center; justify-content:center; min-height:46px; padding:0 22px; border-radius:999px; background:linear-gradient(135deg, #7a0000, #c32222); color:white; text-decoration:none; font-weight:900; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>链接已失效</h1>
+        <p>这个分享链接只可使用 5 分钟。请回到后台重新复制一个最新链接。</p>
+        <a href="/fullkik/main.page">返回 FULLKIK</a>
+    </div>
+</body>
+</html>`);
 }
 
 async function isIpBlocked(ip) {
