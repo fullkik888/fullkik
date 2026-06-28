@@ -118,6 +118,13 @@
         .dashboard-quick-actions button { border:1px solid var(--border-color); color:var(--text-main); background:rgba(255,255,255,0.02); padding:10px 16px; border-radius:7px; cursor:pointer; font-weight:800; }
         .dashboard-quick-actions button.primary { background:var(--accent-light); color:white; border-color:var(--accent-light); }
         .dashboard-quick-actions button:hover { border-color:var(--accent-light); }
+        .dashboard-share-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.08); }
+        .dashboard-share-card { display:flex; align-items:center; gap:9px; min-width:260px; flex:1; padding:10px; border:1px solid rgba(147, 28, 28, 0.48); border-radius:12px; background:linear-gradient(135deg, rgba(70, 8, 8, 0.72), rgba(20, 3, 3, 0.92)); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02); }
+        .dashboard-share-copy { min-width:58px; border:1px solid rgba(255,86,86,0.38); color:#ffd0d0; background:rgba(120,0,0,0.35); padding:9px 12px; border-radius:10px; cursor:pointer; font-weight:900; }
+        .dashboard-share-copy:hover { background:rgba(150,0,0,0.55); border-color:#ff5b5b; }
+        .dashboard-share-open { flex:1; border:1px solid rgba(255,255,255,0.1); color:#fff; background:linear-gradient(135deg, #6b0000, #b71919); padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:950; letter-spacing:.2px; }
+        .dashboard-share-open:hover { filter:brightness(1.12); }
+        .dashboard-share-note { width:100%; padding:0 2px 0 70px; color:var(--text-muted); font-size:11px; line-height:1.5; }
         .dashboard-two-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
         .dashboard-table-grid { display:grid; grid-template-columns:1.2fr 1fr 100px 110px; min-width:720px; }
         .dashboard-user-grid { display:grid; grid-template-columns:1.2fr 1.8fr 100px 100px 150px; min-width:820px; }
@@ -616,6 +623,8 @@
             .dash-header h2 { font-size:22px; line-height:1.2; }
             .stat-grid { grid-template-columns: repeat(2, 1fr); }
             .dashboard-mini-grid, .dashboard-two-grid { grid-template-columns:1fr; }
+            .dashboard-share-card { min-width:100%; }
+            .dashboard-share-note { padding-left:0; }
             .stat-card { padding:18px; }
             .stat-val { font-size:28px; }
             .ops-grid { grid-template-columns: repeat(3, 1fr); }
@@ -863,6 +872,18 @@
                 <button onclick="switchView('songs', '歌曲管理 / 管理歌曲')">♪ 查看全部歌曲</button>
                 <button onclick="switchView('users', '用户管理')">◉ 用户管理</button>
                 <button onclick="switchView('homepage', '首页内容')">⌂ 首页内容</button>
+            </div>
+            <div class="dashboard-share-row">
+                <div class="dashboard-share-card">
+                    <button type="button" class="dashboard-share-copy" onclick="copyTimedShareLink('music')">复制</button>
+                    <button type="button" class="dashboard-share-open" onclick="openPermanentPage('music')">FULLKIK主页</button>
+                    <div class="dashboard-share-note" id="shareMusicExpireText">复制按钮会生成 5 分钟临时链接；主页按钮直接打开，不会过期。</div>
+                </div>
+                <div class="dashboard-share-card">
+                    <button type="button" class="dashboard-share-copy" onclick="copyTimedShareLink('register')">复制</button>
+                    <button type="button" class="dashboard-share-open" onclick="openPermanentPage('register')">用户注册</button>
+                    <div class="dashboard-share-note" id="shareRegisterExpireText">复制按钮会生成 5 分钟临时链接；注册按钮直接打开，不会过期。</div>
+                </div>
             </div>
         </div>
         <div class="ops-panel">
@@ -2044,6 +2065,56 @@
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className='toast'; if(isError) t.classList.add('shake'); t.innerText = msg; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.classList.remove('shake');}, 4000); }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+    function getPermanentPagePath(type) {
+        return type === 'register' ? '/fullkik/register' : '/fullkik/main.page';
+    }
+    function getShareLabel(type) {
+        return type === 'register' ? '用户注册' : 'FULLKIK主页';
+    }
+    function openPermanentPage(type) {
+        window.open(getPermanentPagePath(type), '_blank', 'noopener');
+    }
+    function fallbackCopyText(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return ok;
+    }
+    async function writeClipboardText(text) {
+        if(navigator.clipboard?.writeText && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+        if(!fallbackCopyText(text)) throw new Error('复制失败，请手动复制链接');
+    }
+    async function copyTimedShareLink(type) {
+        const label = getShareLabel(type);
+        const noteId = type === 'register' ? 'shareRegisterExpireText' : 'shareMusicExpireText';
+        const note = document.getElementById(noteId);
+        try {
+            const res = await fetch(`${API_URL}/admin/share-link`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ type })
+            });
+            if(!res.ok) throw new Error(await res.text());
+            const data = await res.json();
+            await writeClipboardText(data.url);
+            const expireText = data.expiresAt ? new Date(data.expiresAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '5 分钟后';
+            if(note) note.innerText = `已复制最新临时链接 · ${expireText} 失效`;
+            showToast(`${label} 5分钟链接已复制`);
+        } catch(e) {
+            if(note) note.innerText = `${label} 链接复制失败，请重试`;
+            showToast(e.message || '复制失败', true);
+        }
+    }
     function closeDropdowns(event) {
         if(event?.target?.id === 'mobileNavOverlay') closeMobileNavMenu();
     }
