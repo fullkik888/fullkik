@@ -100,13 +100,13 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', redirectWithQuery('/fullkik/main.page'));
 app.get('/fullkik/main.page', async (req, res) => {
-    if(await shouldBlockCleanSharePage(req, 'music')) return sendExpiredSharePage(res);
+    if(await shouldBlockCleanSharePage(req, res, 'music')) return sendExpiredSharePage(res);
     res.sendFile(path.join(__dirname, 'music.html'));
 });
 app.get('/fullkik/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/fullkik/manager.page', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/fullkik/register', async (req, res) => {
-    if(await shouldBlockCleanSharePage(req, 'register')) return sendExpiredSharePage(res);
+    if(await shouldBlockCleanSharePage(req, res, 'register')) return sendExpiredSharePage(res);
     res.sendFile(path.join(__dirname, 'register.html'));
 });
 app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
@@ -149,6 +149,7 @@ app.get('/share/:type/:token', async (req, res) => {
             if(link) await deleteTemporaryShareLink(token);
             return sendExpiredSharePage(res);
         }
+        setCleanShareSession(req, res);
         res.redirect(302, link.targetPath || target.path);
     } catch(e) {
         console.error('Open share link error:', e);
@@ -571,14 +572,46 @@ function isManagerOpenBypass(req) {
     return String(req.query?.fk_manager_open || '') === '1';
 }
 
-async function shouldBlockCleanSharePage(req, type) {
+function parseRequestCookies(req) {
+    return String(req.headers.cookie || '').split(';').reduce((cookies, part) => {
+        const index = part.indexOf('=');
+        if(index === -1) return cookies;
+        const key = part.slice(0, index).trim();
+        const value = part.slice(index + 1).trim();
+        if(key) cookies[key] = decodeURIComponent(value);
+        return cookies;
+    }, {});
+}
+
+function requestIsHttps(req) {
+    return String(req.headers['x-forwarded-proto'] || req.protocol || '').split(',')[0].trim() === 'https';
+}
+
+function hasCleanShareSession(req) {
+    return parseRequestCookies(req).fk_share_session === 'inside';
+}
+
+function setCleanShareSession(req, res) {
+    res.cookie('fk_share_session', 'inside', {
+        httpOnly: true,
+        sameSite: 'Lax',
+        secure: requestIsHttps(req),
+        path: '/fullkik'
+    });
+}
+
+async function shouldBlockCleanSharePage(req, res, type) {
     try {
         if(isManagerOpenBypass(req)) return false;
+        if(hasCleanShareSession(req)) return false;
         const target = getTemporaryShareTarget(type);
         if(!target) return false;
         const activeWindow = await readCleanShareWindow(target.type);
         const expiresAt = activeWindow?.expiresAt ? new Date(activeWindow.expiresAt).getTime() : 0;
-        if(activeWindow?.type === target.type && expiresAt && Date.now() <= expiresAt) return false;
+        if(activeWindow?.type === target.type && expiresAt && Date.now() <= expiresAt) {
+            setCleanShareSession(req, res);
+            return false;
+        }
         return true;
     } catch(e) {
         console.error('Clean share window check error:', e.message);
