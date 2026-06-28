@@ -2071,14 +2071,15 @@
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className='toast'; if(isError) t.classList.add('shake'); t.innerText = msg; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.classList.remove('shake');}, 4000); }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'splashLoader') m.style.display = 'none'; }); }
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
-    function getPermanentPagePath(type) {
-        return type === 'register' ? '/fullkik/register' : '/fullkik/main.page';
+    function getPermanentPagePath(type, withManagerBypass = false) {
+        const path = type === 'register' ? '/fullkik/register' : '/fullkik/main.page';
+        return withManagerBypass ? `${path}?fk_manager_open=1` : path;
     }
     function getShareLabel(type) {
         return type === 'register' ? 'FULLKIK注册' : 'FULLKIK主页';
     }
     function openPermanentPage(type) {
-        window.open(getPermanentPagePath(type), '_blank', 'noopener');
+        window.open(getPermanentPagePath(type, true), '_blank', 'noopener');
     }
     function fallbackCopyText(text) {
         const textarea = document.createElement('textarea');
