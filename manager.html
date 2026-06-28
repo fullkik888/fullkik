@@ -862,12 +862,12 @@
             <div class="dashboard-share-card">
                 <button type="button" class="dashboard-share-copy" onclick="copyTimedShareLink('music')">复制</button>
                 <button type="button" class="dashboard-share-open" onclick="openPermanentPage('music')">FULLKIK主页</button>
-                <div class="dashboard-share-note" id="shareMusicExpireText">复制生成 5 分钟链接；主页按钮直开不失效。</div>
+                <div class="dashboard-share-note" id="shareMusicExpireText">复制生成 5 分钟入口；进入后可继续浏览。</div>
             </div>
             <div class="dashboard-share-card">
                 <button type="button" class="dashboard-share-copy" onclick="copyTimedShareLink('register')">复制</button>
                 <button type="button" class="dashboard-share-open" onclick="openPermanentPage('register')">FULLKIK注册</button>
-                <div class="dashboard-share-note" id="shareRegisterExpireText">复制生成 5 分钟链接；注册按钮直开不失效。</div>
+                <div class="dashboard-share-note" id="shareRegisterExpireText">复制生成 5 分钟入口；进入后可继续浏览。</div>
             </div>
         </div>
         <div class="dash-header"><h2>总览</h2><p id="dash-date">平台数据 · Loading...</p></div>
@@ -2115,8 +2115,8 @@
             const data = await res.json();
             await writeClipboardText(data.url);
             const expireText = data.expiresAt ? new Date(data.expiresAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }) : '5 分钟后';
-            if(note) note.innerText = `已复制最新临时链接 · ${expireText} 失效`;
-            showToast(`${label} 5分钟链接已复制`);
+            if(note) note.innerText = `已复制干净链接 · ${expireText} 前可进入，进入后可继续浏览`;
+            showToast(`${label} 5分钟入口已复制`);
         } catch(e) {
             if(note) note.innerText = `${label} 链接复制失败，请重试`;
             showToast(e.message || '复制失败', true);
