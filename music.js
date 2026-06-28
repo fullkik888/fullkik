@@ -99,10 +99,16 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 // ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get('/', redirectWithQuery('/fullkik/main.page'));
-app.get('/fullkik/main.page', (req, res) => { res.sendFile(path.join(__dirname, 'music.html')); });
+app.get('/fullkik/main.page', async (req, res) => {
+    if(await shouldBlockCleanSharePage(req, 'music')) return sendExpiredSharePage(res);
+    res.sendFile(path.join(__dirname, 'music.html'));
+});
 app.get('/fullkik/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/fullkik/manager.page', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
-app.get('/fullkik/register', (req, res) => { res.sendFile(path.join(__dirname, 'register.html')); });
+app.get('/fullkik/register', async (req, res) => {
+    if(await shouldBlockCleanSharePage(req, 'register')) return sendExpiredSharePage(res);
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
 app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
@@ -111,10 +117,8 @@ app.post('/api/admin/share-link', async (req, res) => {
     try {
         const target = getTemporaryShareTarget(req.body.type);
         if(!target) return res.status(400).send('无效分享类型');
-        const token = crypto.randomBytes(18).toString('hex');
         const now = Date.now();
         const payload = {
-            token,
             type: target.type,
             targetPath: target.path,
             label: target.label,
@@ -122,9 +126,9 @@ app.post('/api/admin/share-link', async (req, res) => {
             expiresAt: new Date(now + TEMP_SHARE_LINK_TTL_MS).toISOString(),
             createdIp: getClientIp(req)
         };
-        await saveTemporaryShareLink(payload);
+        await saveCleanShareWindow(payload);
         res.json({
-            url: `${getPublicBaseUrl(req)}/share/${target.type}/${token}`,
+            url: `${getPublicBaseUrl(req)}${target.path}`,
             expiresAt: payload.expiresAt,
             ttlSeconds: Math.floor(TEMP_SHARE_LINK_TTL_MS / 1000)
         });
@@ -507,6 +511,7 @@ function getClientIp(req) {
 
 const TEMP_SHARE_LINK_TTL_MS = 5 * 60 * 1000;
 const memoryShareLinks = new Map();
+const memoryCleanShareWindows = new Map();
 
 function getPublicBaseUrl(req) {
     const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'http').split(',')[0].trim();
@@ -546,6 +551,41 @@ async function deleteTemporaryShareLink(token) {
     }
 }
 
+async function saveCleanShareWindow(payload) {
+    if(db) {
+        await db.collection('share_windows').doc(payload.type).set(payload);
+    } else {
+        memoryCleanShareWindows.set(payload.type, payload);
+    }
+}
+
+async function readCleanShareWindow(type) {
+    if(db) {
+        const doc = await db.collection('share_windows').doc(type).get();
+        return doc.exists ? doc.data() : null;
+    }
+    return memoryCleanShareWindows.get(type) || null;
+}
+
+function isManagerOpenBypass(req) {
+    return String(req.query?.fk_manager_open || '') === '1';
+}
+
+async function shouldBlockCleanSharePage(req, type) {
+    try {
+        if(isManagerOpenBypass(req)) return false;
+        const target = getTemporaryShareTarget(type);
+        if(!target) return false;
+        const activeWindow = await readCleanShareWindow(target.type);
+        const expiresAt = activeWindow?.expiresAt ? new Date(activeWindow.expiresAt).getTime() : 0;
+        if(activeWindow?.type === target.type && expiresAt && Date.now() <= expiresAt) return false;
+        return true;
+    } catch(e) {
+        console.error('Clean share window check error:', e.message);
+        return true;
+    }
+}
+
 function sendExpiredSharePage(res) {
     res.status(410).send(`<!DOCTYPE html>
 <html lang="zh-CN">
@@ -567,7 +607,7 @@ function sendExpiredSharePage(res) {
     <div class="card">
         <h1>链接已失效</h1>
         <p>这个分享链接只可使用 5 分钟。请回到后台重新复制一个最新链接。</p>
-        <a href="/fullkik/main.page">返回 FULLKIK</a>
+        <a href="javascript:history.back()">返回上一页</a>
     </div>
 </body>
 </html>`);
