@@ -16,6 +16,7 @@ const admin = require('firebase-admin');
 const cloudinary = require('cloudinary').v2;
 const { Readable } = require('stream');
 const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -1631,6 +1632,63 @@ app.delete('/api/blocked-ips/:id', async (req, res) => {
         await logAdminAction(`Unblocked IP ${doc.data().ip}`, { module: '内容', action: '解除 IP 拉黑', targetId: doc.data().ip });
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
+});
+
+function getSmtpConfig() {
+    return {
+        host: String(process.env.SMTP_HOST || '').trim(),
+        port: parseInt(process.env.SMTP_PORT || '587') || 587,
+        user: String(process.env.SMTP_USER || '').trim(),
+        pass: String(process.env.SMTP_PASS || '').trim(),
+        from: String(process.env.SMTP_FROM || process.env.SMTP_USER || '').trim()
+    };
+}
+
+app.get('/api/admin/email-config', (req, res) => {
+    const cfg = getSmtpConfig();
+    res.json({
+        host: cfg.host,
+        port: cfg.port,
+        user: cfg.user,
+        passSet: !!cfg.pass,
+        passLength: cfg.pass.length,
+        from: cfg.from
+    });
+});
+
+app.post('/api/admin/test-email', async (req, res) => {
+    try {
+        const to = String(req.body.to || '').trim();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return res.status(400).send('收件人邮箱格式不正确');
+        const cfg = getSmtpConfig();
+        if(!cfg.host || !cfg.port || !cfg.user || !cfg.pass || !cfg.from) {
+            return res.status(400).send('SMTP 未完整设置，请检查 SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM');
+        }
+        const transporter = nodemailer.createTransport({
+            host: cfg.host,
+            port: cfg.port,
+            secure: cfg.port === 465,
+            auth: { user: cfg.user, pass: cfg.pass }
+        });
+        await transporter.sendMail({
+            from: cfg.from,
+            to,
+            subject: 'FULLKIK SMTP Test',
+            text: `FULLKIK SMTP 测试成功。\n时间：${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Kuala_Lumpur' })}`,
+            html: `
+                <div style="font-family:Arial,'Microsoft YaHei',sans-serif;background:#120606;color:#fff;padding:24px;border-radius:14px;">
+                    <h2 style="margin:0 0 10px;">FULLKIK SMTP 测试成功</h2>
+                    <p style="color:#d8c4c4;">如果你收到这封邮件，代表后台 SMTP 发信功能正常。</p>
+                    <p style="color:#a99595;font-size:13px;">时间：${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Kuala_Lumpur' })}</p>
+                </div>
+            `
+        });
+        await logAdminAction(`Sent SMTP test email to ${to}`, { module: '系统', action: '邮件测试', targetId: to, details: `SMTP_HOST=${cfg.host}` });
+        res.send('测试邮件已发送，请检查收件箱 / 垃圾邮件。');
+    } catch(e) {
+        console.error('SMTP test email error:', e);
+        res.status(500).send(`测试邮件发送失败：${e.message}`);
+    }
 });
 
 app.post('/api/admin/login', async (req, res) => {
