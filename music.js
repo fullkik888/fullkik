@@ -601,10 +601,27 @@ function setCleanShareSession(req, res) {
     });
 }
 
+async function isPermanentInviteRegisterRequest(req) {
+    try {
+        if(String(req.query?.invite || '') !== '1') return false;
+        const ref = normalizeReferralCode(req.query?.ref || req.query?.inviteRef || '');
+        if(!ref || !db) return false;
+        const doc = await db.collection('users').doc(ref).get();
+        return doc.exists;
+    } catch(e) {
+        console.error('Permanent invite check error:', e.message);
+        return false;
+    }
+}
+
 async function shouldBlockCleanSharePage(req, res, type) {
     try {
         if(isManagerOpenBypass(req)) return false;
         if(hasCleanShareSession(req)) return false;
+        if(type === 'register' && await isPermanentInviteRegisterRequest(req)) {
+            setCleanShareSession(req, res);
+            return false;
+        }
         const target = getTemporaryShareTarget(type);
         if(!target) return false;
         const activeWindow = await readCleanShareWindow(target.type);
