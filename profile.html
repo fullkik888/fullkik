@@ -25,6 +25,8 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .btn-upgrade-top { background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn-upgrade-top:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(128,0,0,0.4); }
+        .invite-friend-pill { display:flex; align-items:center; justify-content:center; min-height:32px; padding:0 13px; border-radius:20px; border:1px solid rgba(165,42,42,0.5); background:linear-gradient(135deg, rgba(55,8,8,0.98), rgba(120,18,18,0.92)); color:white; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:0 8px 20px rgba(80,0,0,0.22); transition:0.2s; }
+        .invite-friend-pill:hover { transform:translateY(-1px); border-color:var(--accent-light); box-shadow:0 12px 24px rgba(128,0,0,0.35); }
         .top-token-pill { display:flex; align-items:center; gap:7px; min-height:32px; padding:0 13px; border-radius:20px; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:var(--token); font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; }
         .top-token-pill:hover { border-color:var(--accent-light); color:white; }
 
@@ -225,6 +227,14 @@
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
+        .invite-modal-box { max-width:430px; text-align:left; padding:28px; box-sizing:border-box; position:relative; overflow:visible; background:linear-gradient(145deg, rgba(36,10,10,0.98), rgba(16,4,4,0.98)); border-color:rgba(165,42,42,0.55); }
+        .invite-modal-box h2 { margin:0 34px 10px 0; font-size:24px; line-height:1.2; }
+        .invite-modal-box p { margin:0 0 18px; color:var(--text-muted); font-size:13px; line-height:1.6; }
+        .invite-close { position:absolute; top:18px; right:18px; width:32px; height:32px; border:1px solid rgba(255,255,255,0.08); border-radius:50%; background:rgba(255,255,255,0.04); color:white; cursor:pointer; font-size:20px; line-height:1; }
+        .invite-link-row { display:grid; grid-template-columns:minmax(0, 1fr) 46px; gap:10px; align-items:center; }
+        .invite-link-text { min-height:44px; display:flex; align-items:center; padding:0 14px; border-radius:14px; background:rgba(10,0,0,0.72); border:1px solid rgba(165,42,42,0.45); color:white; font-size:12px; font-family:monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; user-select:all; }
+        .invite-copy-btn { height:44px; border:none; border-radius:14px; background:linear-gradient(135deg, #4b0808, #9f1d1d); color:white; font-size:20px; cursor:pointer; font-weight:900; }
+        .invite-copy-btn:hover { filter:brightness(1.08); }
         .playlist-create-box { max-width:520px; border-radius:28px; background:rgba(28,16,16,0.98); }
         .playlist-apple-head { text-align:left; margin-bottom:18px; }
         .playlist-apple-head h3 { margin:0 0 6px; font-size:24px; font-weight:900; }
@@ -266,7 +276,8 @@
         @media (max-width: 768px) {
             .header-top { padding: 12px 14px; gap:10px; flex-wrap:wrap; align-items:flex-start; }
             .header-right { margin-left:auto; gap:8px; }
-            .top-token-pill, .btn-upgrade-top { min-height:32px; padding:0 11px; font-size:12px; }
+            .top-token-pill, .btn-upgrade-top, .invite-friend-pill { min-height:32px; padding:0 10px; font-size:12px; }
+            .invite-modal-box { padding:24px 18px; max-width:calc(100vw - 34px); }
             .profile-dropdown { top:92px; right:14px; }
             .container { padding:132px 14px 112px; }
             .lib-row { grid-template-columns: 42px minmax(0,1fr); padding:12px; gap:10px;}
@@ -358,6 +369,7 @@
         <div class="lang-toggle" onclick="toggleLang()" id="langBtn">EN / CN</div>
     </div>
     <div class="header-right">
+        <button type="button" class="invite-friend-pill" id="inviteFriendBtn" onclick="openInviteFriendModal()">邀请好友</button>
         <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
         <button class="top-token-pill" onclick="switchView('topup')">💎 <span id="headerTokenDisplay">0</span></button>
         
@@ -678,6 +690,18 @@
 
 <input type="file" id="pfpUploadInput" accept="image/*" style="display:none;" onchange="handlePfpSelect(event)">
 
+<div class="modal-overlay" id="inviteFriendModal">
+    <div class="modal-box invite-modal-box">
+        <button class="invite-close" onclick="closeInviteFriendModal()">×</button>
+        <h2>邀请好友使用永久链接</h2>
+        <p>复制后发给朋友，朋友可以永久打开注册页面。只有这个邀请链接是永久的，普通主页链接仍然按 5 分钟规则。</p>
+        <div class="invite-link-row">
+            <div class="invite-link-text" id="inviteFriendLinkText"></div>
+            <button type="button" class="invite-copy-btn" onclick="copyInviteFriendLink()" aria-label="复制邀请链接">⧉</button>
+        </div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="cropModal">
     <div class="modal-box" style="max-width:400px;">
         <div class="modal-content" style="text-align:center;">
@@ -812,6 +836,50 @@
     function showGlobalLoader(txt = "正在处理...") { document.getElementById('gLoadText').innerText = txt; document.getElementById('globalLoader').style.display = 'flex'; }
     function hideGlobalLoader() { document.getElementById('globalLoader').style.display = 'none'; }
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
+    function getInviteFriendLink() {
+        if(!username) return '';
+        return `${window.location.origin}/fullkik/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
+    }
+    function openInviteFriendModal() {
+        if(!username) {
+            showToast('请先登录 / 注册后再邀请好友', true);
+            setTimeout(() => { window.location.href = '/fullkik/register'; }, 600);
+            return;
+        }
+        const link = getInviteFriendLink();
+        const text = document.getElementById('inviteFriendLinkText');
+        const modal = document.getElementById('inviteFriendModal');
+        if(text) text.innerText = link;
+        if(modal) modal.style.display = 'flex';
+    }
+    function closeInviteFriendModal() {
+        const modal = document.getElementById('inviteFriendModal');
+        if(modal) modal.style.display = 'none';
+    }
+    function fallbackCopyText(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return ok;
+    }
+    async function copyInviteFriendLink() {
+        const link = getInviteFriendLink();
+        if(!link) return showToast('请先登录 / 注册后再邀请好友', true);
+        try {
+            if(navigator.clipboard?.writeText && window.isSecureContext) await navigator.clipboard.writeText(link);
+            else if(!fallbackCopyText(link)) throw new Error('copy failed');
+            showToast('邀请链接已复制');
+        } catch(e) {
+            showToast('复制失败，请手动复制链接', true);
+        }
+    }
     function showInfo(purchaseId, dateStr, cost) { document.getElementById('infoId').innerText = purchaseId || "N/A"; document.getElementById('infoDate').innerText = dateStr ? new Date(dateStr).toLocaleString() : "N/A"; document.getElementById('infoCost').innerText = cost || "0"; document.getElementById('infoModal').style.display = 'flex'; }
     function getDefaultCommissionStatement() {
         return '• 提钻最低额度为 1 钻石，提钻将收取 10% 的服务手续费。\n• 提钻申请后请联系 Gmail：fullkick@gmail.com，邮件内容请附上你的签名 / 联系方式。\n• 系统将进行 1-3 天审核处理。';
