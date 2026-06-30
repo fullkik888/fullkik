@@ -26,6 +26,8 @@
         .profile-pic { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #1c1c1e; }
         .vip-center-pill { display:flex; align-items:center; justify-content:center; min-height:38px; padding:0 16px; border-radius:20px; background:linear-gradient(135deg, rgba(128,0,0,0.9), rgba(165,42,42,0.9)); color:white; text-decoration:none; font-size:13px; font-weight:800; border:1px solid rgba(255,255,255,0.12); white-space:nowrap; box-shadow:0 8px 20px rgba(128,0,0,0.25); }
         .vip-center-pill:hover { transform: translateY(-1px); box-shadow:0 10px 24px rgba(128,0,0,0.38); }
+        .invite-friend-pill { display:flex; align-items:center; justify-content:center; min-height:38px; padding:0 14px; border-radius:20px; border:1px solid rgba(165,42,42,0.5); background:linear-gradient(135deg, rgba(55,8,8,0.98), rgba(120,18,18,0.92)); color:white; font-size:13px; font-weight:900; cursor:pointer; white-space:nowrap; box-shadow:0 8px 20px rgba(80,0,0,0.25); transition:0.2s; }
+        .invite-friend-pill:hover { transform:translateY(-1px); border-color:var(--accent-light); box-shadow:0 12px 24px rgba(128,0,0,0.35); }
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
         .mail-button { position:relative; min-width:38px; height:38px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; }
@@ -252,6 +254,14 @@
         .modal-btn { flex: 1; padding: 16px; border: none; background: transparent; font-size: 16px; cursor: pointer; color: #fff; font-weight: 600; transition: 0.2s;}
         .modal-btn:hover { background: rgba(255,255,255,0.05); }
         .modal-btn.cancel { border-right: 1px solid var(--border-color); color: var(--text-muted); font-weight: 400;}
+        .invite-modal-box { max-width:430px; text-align:left; padding:28px; box-sizing:border-box; position:relative; overflow:visible; background:linear-gradient(145deg, rgba(36,10,10,0.98), rgba(16,4,4,0.98)); border-color:rgba(165,42,42,0.55); }
+        .invite-modal-box h2 { margin:0 34px 10px 0; font-size:24px; line-height:1.2; }
+        .invite-modal-box p { margin:0 0 18px; color:var(--text-muted); font-size:13px; line-height:1.6; }
+        .invite-close { position:absolute; top:18px; right:18px; width:32px; height:32px; border:1px solid rgba(255,255,255,0.08); border-radius:50%; background:rgba(255,255,255,0.04); color:white; cursor:pointer; font-size:20px; line-height:1; }
+        .invite-link-row { display:grid; grid-template-columns:minmax(0, 1fr) 46px; gap:10px; align-items:center; }
+        .invite-link-text { min-height:44px; display:flex; align-items:center; padding:0 14px; border-radius:14px; background:rgba(10,0,0,0.72); border:1px solid rgba(165,42,42,0.45); color:white; font-size:12px; font-family:monospace; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; user-select:all; }
+        .invite-copy-btn { height:44px; border:none; border-radius:14px; background:linear-gradient(135deg, #4b0808, #9f1d1d); color:white; font-size:20px; cursor:pointer; font-weight:900; }
+        .invite-copy-btn:hover { filter:brightness(1.08); }
         .report-modal-box { max-width:560px; text-align:left; border:1px solid var(--accent-light); background:linear-gradient(145deg, rgba(36,10,10,0.98), rgba(18,5,5,0.98)); border-radius:28px; overflow:visible; padding:42px 48px; box-sizing:border-box; position:relative; box-shadow:0 24px 80px rgba(80,0,0,0.55); }
         .report-close { position:absolute; top:24px; right:24px; width:34px; height:34px; border:none; background:transparent; color:var(--text-muted); font-size:32px; line-height:1; cursor:pointer; }
         .report-close:hover { color:white; }
@@ -296,11 +306,12 @@
             .header-top { padding: 10px 12px; gap: 8px; flex-wrap: nowrap; align-items:center; }
             .nav-tabs { display:none; }
             .header-right { width:auto; justify-content:flex-end; gap: 6px; margin-left:auto; }
-            .header-right > div { gap: 8px !important; max-width: 100%; }
-            .mail-button { min-width:40px; height:40px; font-size:16px; }
-            .vip-center-pill, .token-pill { min-height: 40px; padding: 0 12px; font-size: 12px; }
-            .profile-trigger { padding: 5px; min-width:40px; min-height:40px; }
-            .profile-pic { width: 34px; height: 34px; }
+            .header-right > div { gap: 5px !important; max-width: 100%; }
+            .mail-button { min-width:36px; height:36px; font-size:15px; }
+            .vip-center-pill, .invite-friend-pill, .token-pill { min-height: 36px; padding: 0 7px; font-size: 11px; }
+            .invite-modal-box { padding:24px 18px; max-width:calc(100vw - 34px); }
+            .profile-trigger { padding: 4px; min-width:36px; min-height:36px; }
+            .profile-pic { width: 30px; height: 30px; }
             .container { padding: 86px 14px 34px; }
             .hero h1 { font-size: 28px; line-height: 1.18; }
             .hero p { line-height: 1.5; }
@@ -380,6 +391,7 @@
     </div>
     <div class="header-right">
         <div style="position:relative; display:flex; align-items:center; gap:10px;">
+            <button type="button" class="invite-friend-pill" id="inviteFriendBtn" onclick="openInviteFriendModal()">邀请好友</button>
             <a href="/fullkik/profile.page?view=vip" class="vip-center-pill" id="vipCenterTopBtn">VIP 中心</a>
             <button class="mail-button" id="mailBtn" onclick="openNotificationsView(event)" aria-label="通知">✉<span class="mail-badge" id="mailBadge">0</span></button>
             <a href="/fullkik/profile.page?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
@@ -543,6 +555,17 @@
         <button class="report-submit" onclick="submitSongReport()">提交举报</button>
     </div>
 </div>
+<div class="modal-overlay" id="inviteFriendModal">
+    <div class="modal-box invite-modal-box">
+        <button class="invite-close" onclick="closeInviteFriendModal()">×</button>
+        <h2>邀请好友使用永久链接</h2>
+        <p>复制后发给朋友，朋友可以永久打开注册页面。只有这个邀请链接是永久的，普通主页链接仍然按 5 分钟规则。</p>
+        <div class="invite-link-row">
+            <div class="invite-link-text" id="inviteFriendLinkText"></div>
+            <button type="button" class="invite-copy-btn" onclick="copyInviteFriendLink()" aria-label="复制邀请链接">⧉</button>
+        </div>
+    </div>
+</div>
 <a class="whatsapp-float" id="supportWhatsappBtn" href="#" target="_blank" rel="noopener" aria-label="客服"><span class="support-chat-icon">💬</span><span>客服</span></a>
 <div class="poster-overlay" id="homePosterOverlay"><div class="poster-box"><button class="poster-close" onclick="closeHomePoster()">×</button><img id="homePosterImage" src="" alt="海报"></div></div>
 
@@ -593,6 +616,50 @@
     }
 
     function showToast(msg, isError = false) { const t = document.getElementById('toast'); t.className = 'toast'; if(isError) t.style.borderColor = 'var(--danger)'; t.innerHTML = `<span style="color:${isError ? 'white' : 'var(--accent)'}; font-weight:bold;">${isError ? '!' : '✓'}</span> ${msg}`; t.classList.add('show'); setTimeout(() => {t.classList.remove('show'); t.style.borderColor = 'var(--border-color)';}, 3500); }
+    function getInviteFriendLink() {
+        if(!username) return '';
+        return `${window.location.origin}/fullkik/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
+    }
+    function openInviteFriendModal() {
+        if(!username) {
+            showToast('请先登录 / 注册后再邀请好友', true);
+            setTimeout(() => { window.location.href = '/fullkik/register'; }, 600);
+            return;
+        }
+        const link = getInviteFriendLink();
+        const text = document.getElementById('inviteFriendLinkText');
+        const modal = document.getElementById('inviteFriendModal');
+        if(text) text.innerText = link;
+        if(modal) modal.style.display = 'flex';
+    }
+    function closeInviteFriendModal() {
+        const modal = document.getElementById('inviteFriendModal');
+        if(modal) modal.style.display = 'none';
+    }
+    function fallbackCopyText(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return ok;
+    }
+    async function copyInviteFriendLink() {
+        const link = getInviteFriendLink();
+        if(!link) return showToast('请先登录 / 注册后再邀请好友', true);
+        try {
+            if(navigator.clipboard?.writeText && window.isSecureContext) await navigator.clipboard.writeText(link);
+            else if(!fallbackCopyText(link)) throw new Error('copy failed');
+            showToast('邀请链接已复制');
+        } catch(e) {
+            showToast('复制失败，请手动复制链接', true);
+        }
+    }
     function formatBytes(bytes) { if (!bytes) return '0 B'; const k = 1024, sizes = ['B', 'KB', 'MB', 'GB'], i = Math.floor(Math.log(bytes) / Math.log(k)); return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]; }
     function formatTime(sec) { if(isNaN(sec)) return "0:00"; const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return `${m}:${s < 10 ? '0'+s : s}`; }
 
@@ -904,6 +971,7 @@
             if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
             const mailBtn = document.getElementById('mailBtn'); if(mailBtn) mailBtn.style.display = 'none';
             const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/fullkik/register';
+            const inviteBtn = document.getElementById('inviteFriendBtn'); if(inviteBtn) inviteBtn.style.display = 'none';
         }
 
         try {
