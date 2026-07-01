@@ -65,6 +65,91 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     });
 }
 
+// ==========================================
+// READ-QUOTA PROTECTION CACHE
+// ==========================================
+const CACHE_TTL = {
+    SETTINGS: 2 * 60 * 1000,
+    SONGS: 3 * 60 * 1000,
+    STREAM_SONG: 60 * 1000,
+    GENRES: 5 * 60 * 1000,
+    USERS: 60 * 1000,
+    ADMIN_LISTS: 60 * 1000,
+    FINANCE: 10 * 60 * 1000,
+    SECURITY_LISTS: 5 * 60 * 1000,
+    LOGS: 60 * 1000
+};
+const responseCache = new Map();
+
+function cloneCacheValue(value) {
+    if(value === undefined || value === null) return value;
+    return JSON.parse(JSON.stringify(value));
+}
+
+function getCachedValue(key) {
+    const hit = responseCache.get(key);
+    if(!hit) return null;
+    if(hit.expiresAt <= Date.now()) {
+        responseCache.delete(key);
+        return null;
+    }
+    return cloneCacheValue(hit.value);
+}
+
+function setCachedValue(key, value, ttlMs) {
+    responseCache.set(key, {
+        value: cloneCacheValue(value),
+        expiresAt: Date.now() + Math.max(parseInt(ttlMs) || 0, 1000)
+    });
+    return cloneCacheValue(value);
+}
+
+async function getOrSetCache(key, ttlMs, loader) {
+    const cached = getCachedValue(key);
+    if(cached !== null) return cached;
+    const value = await loader();
+    return setCachedValue(key, value, ttlMs);
+}
+
+async function sendCachedJson(req, res, key, ttlMs, loader) {
+    if(String(req.query?.fresh || '') === '1') responseCache.delete(key);
+    const cached = getCachedValue(key);
+    if(cached !== null) {
+        res.set('X-FULLKIK-Cache', 'HIT');
+        return res.json(cached);
+    }
+    const value = await loader();
+    setCachedValue(key, value, ttlMs);
+    res.set('X-FULLKIK-Cache', 'MISS');
+    return res.json(value);
+}
+
+function invalidateCacheKey(key) {
+    responseCache.delete(key);
+}
+
+function invalidateCachePrefix(prefix) {
+    for(const key of responseCache.keys()) {
+        if(String(key).startsWith(prefix)) responseCache.delete(key);
+    }
+}
+
+function invalidateSettingsCache() { invalidateCacheKey('settings:global'); }
+function invalidateSongCaches() { invalidateCachePrefix('songs:'); invalidateCachePrefix('song:'); invalidateCachePrefix('finance:'); }
+function invalidateGenreCaches() { invalidateCachePrefix('genres:'); invalidateSettingsCache(); }
+function invalidateUserCaches(username = '') {
+    invalidateCachePrefix('users:');
+    invalidateCachePrefix('withdrawals:');
+    if(username) invalidateCachePrefix(`user:${String(username).toLowerCase()}:`);
+}
+function invalidateFinanceCaches() {
+    invalidateCachePrefix('orders:');
+    invalidateCachePrefix('transactions:');
+    invalidateCachePrefix('withdrawals:');
+    invalidateCachePrefix('finance:');
+    invalidateCachePrefix('users:');
+}
+
 /**
  * Multer Memory Storage Configuration
  * Efficiently pipelines file uploads directly to Cloudinary without saving locally.
@@ -161,6 +246,7 @@ app.get('/share/:type/:token', async (req, res) => {
 async function logEvent(type, message) { 
     try { 
         if(db) await db.collection('logs').add({ type, message, timestamp: new Date().toISOString() }); 
+        invalidateCachePrefix(`logs:${type}`);
     } catch(e) { console.error("Logging Error:", e); } 
 }
 
@@ -233,9 +319,12 @@ const DEFAULT_SETTINGS = {
 };
 
 async function getGlobalSettings() {
+    const cached = getCachedValue('settings:global');
+    if(cached) return cached;
     if(!db) return { ...DEFAULT_SETTINGS };
     const doc = await db.collection('settings').doc('global').get();
-    return doc.exists ? { ...DEFAULT_SETTINGS, ...doc.data() } : { ...DEFAULT_SETTINGS };
+    const settings = doc.exists ? { ...DEFAULT_SETTINGS, ...doc.data() } : { ...DEFAULT_SETTINGS };
+    return setCachedValue('settings:global', settings, CACHE_TTL.SETTINGS);
 }
 
 function normalizePaymentCurrency(value) {
@@ -304,6 +393,7 @@ async function logAdminAction(message, meta = {}) {
             adminEmail: meta.adminEmail || 'admin@fullkik.local',
             timestamp: new Date().toISOString()
         });
+        invalidateCachePrefix('logs:admin');
     } catch(e) {
         console.error("Logging Error:", e);
     }
@@ -330,6 +420,7 @@ async function addUserNotification(username, notification) {
         const notifications = doc.data().notifications || [];
         notifications.unshift(notification);
         await ref.update({ notifications: notifications.slice(0, 100) });
+        invalidateUserCaches(username);
     } catch(e) {
         console.error('Notification Error:', e.message);
     }
@@ -491,8 +582,10 @@ async function collectWithdrawals() {
 async function containsSensitiveWord(text) {
     try {
         if (!text) return false;
-        const snap = await db.collection('sensitive_words').get();
-        const sensitiveWords = snap.docs.map(d => d.data().word.toLowerCase());
+        const sensitiveWords = await getOrSetCache('sensitive_words:list', CACHE_TTL.SECURITY_LISTS, async () => {
+            const snap = await db.collection('sensitive_words').get();
+            return snap.docs.map(d => d.data().word.toLowerCase());
+        });
         const lowerText = text.toLowerCase();
         for (let word of sensitiveWords) {
             if (lowerText.includes(word)) return true;
@@ -666,8 +759,11 @@ function sendExpiredSharePage(res) {
 
 async function isIpBlocked(ip) {
     if(!db || !ip || ip === '-') return false;
-    const snap = await db.collection('blocked_ips').where('ip', '==', ip).limit(1).get();
-    return !snap.empty;
+    const blockedIps = await getOrSetCache('blocked_ips:list', CACHE_TTL.SECURITY_LISTS, async () => {
+        const snap = await db.collection('blocked_ips').get();
+        return snap.docs.map(d => String(d.data().ip || '').trim()).filter(Boolean);
+    });
+    return blockedIps.includes(String(ip || '').trim().replace(/^::ffff:/, ''));
 }
 
 const STAFF_PERMISSIONS = [
@@ -718,13 +814,16 @@ app.get('/api/stream/:songId', async (req, res) => {
             `);
         }
 
-        const songDoc = await db.collection('songs').doc(req.params.songId).get();
-        if (!songDoc.exists) return res.status(404).send('Song not found');
+        const cachedSong = await getOrSetCache(`song:${req.params.songId}`, CACHE_TTL.STREAM_SONG, async () => {
+            const songDoc = await db.collection('songs').doc(req.params.songId).get();
+            return songDoc.exists ? { exists: true, data: songDoc.data() } : { exists: false, data: null };
+        });
+        if (!cachedSong.exists) return res.status(404).send('Song not found');
         
         const fetchHeaders = {}; 
         if (req.headers.range) fetchHeaders.Range = req.headers.range;
         
-        const response = await fetch(songDoc.data().filepath, { headers: fetchHeaders });
+        const response = await fetch(cachedSong.data.filepath, { headers: fetchHeaders });
         if (!response.ok) throw new Error('Cloudinary fetch failed');
 
         const contentType = response.headers.get('content-type'); 
@@ -938,6 +1037,8 @@ app.post('/api/register', async (req, res) => {
         }
 
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
+        invalidateUserCaches(username);
+        invalidateSettingsCache();
         res.json({ success: true, username });
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -964,6 +1065,7 @@ app.post('/api/login', async (req, res) => {
                 ...((userData.loginHistory || []).filter(Boolean))
             ].slice(0, 20);
             await uDoc.ref.update({ loginHistory });
+            invalidateUserCaches(userData.username || contact);
             res.json({ success: true, username: userData.username }); 
         }
         else res.status(400).send('Invalid credentials.');
@@ -974,34 +1076,44 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/api/users/:username', async (req, res) => {
     try {
-        const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
-        if (doc.exists) {
-            if(doc.data().status === 'BANNED') return res.status(404).send('Banned');
+        await sendCachedJson(req, res, `user:${req.params.username.toLowerCase()}:profile`, 10 * 1000, async () => {
+            const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
+            if (!doc.exists) {
+                const err = new Error('User not found');
+                err.status = 404;
+                throw err;
+            }
+            if(doc.data().status === 'BANNED') {
+                const err = new Error('Banned');
+                err.status = 404;
+                throw err;
+            }
             let data = doc.data(); 
             delete data.password;
             if(!data.playlists) data.playlists = [];
             if(!data.notifications) data.notifications = [];
             if(!data.withdrawals) data.withdrawals = [];
             if(!data.loginHistory) data.loginHistory = [];
-            res.json(data);
-        } else res.status(404).send('User not found');
+            return data;
+        });
     } catch (e) {
-        res.status(500).send(e.message);
+        res.status(e.status || 500).send(e.message);
     }
 });
 
 app.get('/api/all-users', async (req, res) => { 
     try { 
-        const users = (await db.collection('users').get()).docs.map(d => {
-            let data = d.data(); 
-            delete data.password; 
-            if(!data.playlists) data.playlists = [];
-            if(!data.notifications) data.notifications = [];
-            if(!data.withdrawals) data.withdrawals = [];
-            if(!data.loginHistory) data.loginHistory = [];
-            return data;
+        await sendCachedJson(req, res, 'users:all', CACHE_TTL.USERS, async () => {
+            return (await db.collection('users').get()).docs.map(d => {
+                let data = d.data(); 
+                delete data.password; 
+                if(!data.playlists) data.playlists = [];
+                if(!data.notifications) data.notifications = [];
+                if(!data.withdrawals) data.withdrawals = [];
+                if(!data.loginHistory) data.loginHistory = [];
+                return data;
+            });
         });
-        res.json(users); 
     } catch (e) { 
         res.status(500).json([]); 
     }
@@ -1022,6 +1134,8 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         const data = doc.data(); data.username = req.body.newUsername; 
         await db.collection('users').doc(newId).set(data); 
         await oldRef.delete();
+        invalidateUserCaches(oldId);
+        invalidateUserCaches(newId);
         res.json({ success: true, username: req.body.newUsername });
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -1051,6 +1165,8 @@ app.post('/api/users/:username/follow', async (req, res) => {
         }
 
         await userRef.update({ following }); await targetRef.update({ followers });
+        invalidateUserCaches(req.params.username);
+        invalidateUserCaches(targetUser);
         res.json({ success: true, following });
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -1077,6 +1193,7 @@ app.post('/api/users/:username/playlists', async (req, res) => {
         
         playlists.push(newPlaylist);
         await userRef.update({ playlists });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, playlists });
     } catch (e) {
         res.status(500).send(e.message);
@@ -1097,6 +1214,7 @@ app.put('/api/users/:username/playlists/:playlistId', async (req, res) => {
         if(req.body.songs !== undefined) playlists[index].songs = req.body.songs;
 
         await userRef.update({ playlists });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, playlists });
     } catch (e) {
         res.status(500).send(e.message);
@@ -1113,6 +1231,7 @@ app.delete('/api/users/:username/playlists/:playlistId', async (req, res) => {
         playlists = playlists.filter(p => p.id !== req.params.playlistId);
 
         await userRef.update({ playlists });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, playlists });
     } catch (e) {
         res.status(500).send(e.message);
@@ -1134,16 +1253,23 @@ app.post('/api/users/:username/favorites', async (req, res) => {
         else favs.push(songId);
         
         await userRef.update({ favorites: favs });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, favorites: favs });
     } catch (e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/users/:username/notifications', async (req, res) => {
     try {
-        const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
-        if(!doc.exists) return res.status(404).send('User not found');
-        res.json((doc.data().notifications || []).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)));
-    } catch(e) { res.status(500).json([]); }
+        await sendCachedJson(req, res, `user:${req.params.username.toLowerCase()}:notifications`, 10 * 1000, async () => {
+            const doc = await db.collection('users').doc(req.params.username.toLowerCase()).get();
+            if(!doc.exists) {
+                const err = new Error('User not found');
+                err.status = 404;
+                throw err;
+            }
+            return (doc.data().notifications || []).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        });
+    } catch(e) { res.status(e.status || 500).json([]); }
 });
 
 app.put('/api/users/:username/notifications/read', async (req, res) => {
@@ -1153,23 +1279,30 @@ app.put('/api/users/:username/notifications/read', async (req, res) => {
         if(!doc.exists) return res.status(404).send('User not found');
         const notifications = (doc.data().notifications || []).map(n => ({ ...n, read: true }));
         await ref.update({ notifications });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, notifications });
     } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/users/:username/withdrawals', async (req, res) => {
     try {
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send('User not found');
-        const earnings = await calculateUserEarnings(req.params.username);
-        res.json({
-            totalEarned: earnings.total,
-            locked: earnings.locked,
-            balance: earnings.balance,
-            withdrawals: earnings.withdrawals.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+        await sendCachedJson(req, res, `withdrawals:user:${req.params.username.toLowerCase()}`, 30 * 1000, async () => {
+            const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+            const doc = await userRef.get();
+            if(!doc.exists) {
+                const err = new Error('User not found');
+                err.status = 404;
+                throw err;
+            }
+            const earnings = await calculateUserEarnings(req.params.username);
+            return {
+                totalEarned: earnings.total,
+                locked: earnings.locked,
+                balance: earnings.balance,
+                withdrawals: earnings.withdrawals.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+            };
         });
-    } catch(e) { res.status(500).send(e.message); }
+    } catch(e) { res.status(e.status || 500).send(e.message); }
 });
 
 app.post('/api/users/:username/withdrawals', async (req, res) => {
@@ -1197,6 +1330,7 @@ app.post('/api/users/:username/withdrawals', async (req, res) => {
         withdrawals.unshift(record);
         await userRef.update({ withdrawals });
         await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 钻石，等待审核`, { amount }));
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1239,6 +1373,7 @@ app.post('/api/coupons', async (req, res) => {
         };
         await db.collection('settings').doc('global').set({ coupons: [coupon, ...coupons].slice(0, 200) }, { merge: true });
         await logAdminAction(`Created coupon ${code}`, { module: '财务', action: '创建优惠码', targetId: code, details: JSON.stringify(coupon) });
+        invalidateSettingsCache();
         res.json(coupon);
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1250,6 +1385,7 @@ app.delete('/api/coupons/:code', async (req, res) => {
         const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).filter(c => normalizeCouponCode(c.code) !== code);
         await db.collection('settings').doc('global').set({ coupons }, { merge: true });
         await logAdminAction(`Deleted coupon ${code}`, { module: '财务', action: '删除优惠码', targetId: code, details: 'Delete coupon' });
+        invalidateSettingsCache();
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1297,6 +1433,7 @@ app.post('/api/users/:username/topup', async (req, res) => {
                 return { ...c, usedBy: [{ username: req.params.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
             });
             await db.collection('settings').doc('global').set({ coupons }, { merge: true });
+            invalidateSettingsCache();
         }
         const newTokens = (user.tokens || 0) + topupAmount; 
         const topups = user.topups || [];
@@ -1318,6 +1455,8 @@ app.post('/api/users/:username/topup', async (req, res) => {
             status: 'COMPLETED', time: new Date().toISOString()
         });
 
+        invalidateUserCaches(req.params.username);
+        invalidateFinanceCaches();
         res.json({ tokens: newTokens, topups: topups });
     } catch (e) { res.status(500).send(e.message); }
 });
@@ -1358,6 +1497,9 @@ app.post('/api/users/:username/purchase', async (req, res) => {
                 tokens: price, time: new Date().toISOString()
             });
 
+            invalidateUserCaches(req.params.username);
+            invalidateUserCaches(song.uploader);
+            invalidateCachePrefix('transactions:');
             res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
         } else res.status(400).send('Insufficient tokens');
     } catch (e) { res.status(500).send(e.message); }
@@ -1368,6 +1510,7 @@ app.put('/api/users/:username/update-purchases-order', async (req, res) => {
         const newOrder = req.body.purchases;
         if(!newOrder || !Array.isArray(newOrder)) return res.status(400).send("Invalid format");
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ purchases: newOrder });
+        invalidateUserCaches(req.params.username);
         res.json({ success: true, purchases: newOrder });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1387,6 +1530,7 @@ app.put('/api/admin/users/:username/role', async (req, res) => {
         };
         if(requestedRole === 'VIP' || requestedRole === 'PRODUCER') roleUpdates.vipActivatedAt = new Date().toISOString();
         await db.collection('users').doc(req.params.username.toLowerCase()).update(roleUpdates);
+        invalidateUserCaches(req.params.username);
         await logAdminAction(`Updated role for ${req.params.username} to ${requestedRole}`, {
             module: '用户',
             action: '设置角色',
@@ -1404,6 +1548,7 @@ app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
         const amt = parseInt(req.body.amount) || 0;
         const newTokens = (doc.data().tokens || 0) + amt;
         await userRef.update({ tokens: newTokens });
+        invalidateUserCaches(req.params.username);
         await logAdminAction(`Adjusted tokens for ${req.params.username} by ${amt > 0 ? '+'+amt : amt}. Reason: ${req.body.reason}`, {
             module: '用户',
             action: '调整钻石',
@@ -1417,6 +1562,7 @@ app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
 app.put('/api/admin/users/:username/force-password', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
+        invalidateUserCaches(req.params.username);
         await logAdminAction(`Forced password reset for ${req.params.username}`, {
             module: '用户',
             action: '重置密码',
@@ -1430,6 +1576,7 @@ app.put('/api/admin/users/:username/force-password', async (req, res) => {
 app.put('/api/admin/users/:username/ban', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'BANNED', banReason: req.body.reason });
+        invalidateUserCaches(req.params.username);
         await logAdminAction(`Banned user <span style="color:var(--danger)">${req.params.username}</span>. Reason: ${req.body.reason}`, {
             module: '用户',
             action: '封禁用户',
@@ -1443,6 +1590,7 @@ app.put('/api/admin/users/:username/ban', async (req, res) => {
 app.put('/api/admin/users/:username/unban', async (req, res) => {
     try {
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ status: 'ACTIVE', banReason: '' });
+        invalidateUserCaches(req.params.username);
         await logAdminAction(`Unbanned user <span style="color:var(--success)">${req.params.username}</span>.`, {
             module: '用户',
             action: '解封用户',
@@ -1478,6 +1626,8 @@ async function deleteUserAccount(req, res) {
         }
 
         await userRef.delete(); 
+        invalidateUserCaches(deletedUsername);
+        invalidateSongCaches();
         await logAdminAction(`Deleted user account: <span style="color:var(--danger);">${deletedUsername}</span>`, {
             module: '用户',
             action: '删除用户',
@@ -1528,6 +1678,8 @@ app.put('/api/admin/users/:username/profile', async (req, res) => {
             await userRef.update(updates);
         }
 
+        invalidateUserCaches(updates.username);
+        if(newId !== oldId) invalidateUserCaches(oldId);
         if(changes.length) {
             await logAdminAction(`Adjusted user profile for ${updates.username}`, {
                 module: '用户',
@@ -1551,6 +1703,7 @@ app.put('/api/users/:username/vip', async (req, res) => {
         }
 
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true, vipActivatedAt: new Date().toISOString() });
+        invalidateUserCaches(req.params.username);
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1561,6 +1714,7 @@ app.put('/api/users/:username/settings', async (req, res) => {
         if(req.body.wechat !== undefined) updates.wechat = req.body.wechat;
         if(req.body.wechatPublic !== undefined) updates.wechatPublic = req.body.wechatPublic;
         await db.collection('users').doc(req.params.username.toLowerCase()).update(updates);
+        invalidateUserCaches(req.params.username);
         res.send('Settings Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1572,6 +1726,7 @@ app.put('/api/users/:username/update-password', async (req, res) => {
         const doc = await userRef.get();
         if (doc.data().password !== oldPassword) return res.status(400).send('Incorrect current password');
         await userRef.update({ password: newPassword });
+        invalidateUserCaches(req.params.username);
         res.send('Password updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1579,7 +1734,9 @@ app.put('/api/users/:username/update-password', async (req, res) => {
 app.post('/api/users/:username/profile-pic', async (req, res) => {
     try {
         const url = await uploadToCloudinaryBase64(req.body.imageBase64, 'dj_profiles');
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ profilePic: url }); res.json({ profilePic: url });
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ profilePic: url });
+        invalidateUserCaches(req.params.username);
+        res.json({ profilePic: url });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -1588,8 +1745,10 @@ app.post('/api/users/:username/profile-pic', async (req, res) => {
 // ==========================================
 app.get('/api/sensitive-words', async (req, res) => {
     try {
-        const snap = await db.collection('sensitive_words').orderBy('timestamp', 'desc').get();
-        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        await sendCachedJson(req, res, 'sensitive_words:admin', CACHE_TTL.SECURITY_LISTS, async () => {
+            const snap = await db.collection('sensitive_words').orderBy('timestamp', 'desc').get();
+            return snap.docs.map(d => ({id: d.id, ...d.data()}));
+        });
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1602,6 +1761,7 @@ app.post('/api/sensitive-words', async (req, res) => {
 
         const newWord = { word, status: 'ACTIVE', timestamp: new Date().toISOString() };
         const docRef = await db.collection('sensitive_words').add(newWord);
+        invalidateCachePrefix('sensitive_words:');
         res.json({ id: docRef.id, ...newWord });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1609,14 +1769,17 @@ app.post('/api/sensitive-words', async (req, res) => {
 app.delete('/api/sensitive-words/:id', async (req, res) => {
     try {
         await db.collection('sensitive_words').doc(req.params.id).delete();
+        invalidateCachePrefix('sensitive_words:');
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/blocked-ips', async (req, res) => {
     try {
-        const snap = await db.collection('blocked_ips').orderBy('timestamp', 'desc').get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        await sendCachedJson(req, res, 'blocked_ips:admin', CACHE_TTL.SECURITY_LISTS, async () => {
+            const snap = await db.collection('blocked_ips').orderBy('timestamp', 'desc').get();
+            return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        });
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1636,6 +1799,7 @@ app.post('/api/blocked-ips', async (req, res) => {
         };
         const ref = await db.collection('blocked_ips').add(row);
         await logAdminAction(`Blocked IP ${ip}`, { module: '内容', action: 'IP 拉黑', targetId: ip, details: note || 'No note' });
+        invalidateCachePrefix('blocked_ips:');
         res.json({ id: ref.id, ...row });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1647,6 +1811,7 @@ app.delete('/api/blocked-ips/:id', async (req, res) => {
         if(!doc.exists) return res.status(404).send('IP not found');
         await ref.delete();
         await logAdminAction(`Unblocked IP ${doc.data().ip}`, { module: '内容', action: '解除 IP 拉黑', targetId: doc.data().ip });
+        invalidateCachePrefix('blocked_ips:');
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1724,6 +1889,8 @@ app.post('/api/admin/login', async (req, res) => {
             if(password !== mainAdmin.password) return res.status(401).send('账号或密码不正确');
             const nextAdmin = { ...mainAdmin, lastLoginAt: now };
             await db.collection('settings').doc('global').set({ fullkikAdmin: nextAdmin }, { merge: true });
+            invalidateSettingsCache();
+            invalidateCachePrefix('admin_staff:');
             const safeAdmin = { ...nextAdmin };
             delete safeAdmin.password;
             return res.json(safeAdmin);
@@ -1738,6 +1905,7 @@ app.post('/api/admin/login', async (req, res) => {
         if(!found || password !== String(found.password || '')) return res.status(401).send('账号或密码不正确');
         if(String(found.status || 'ACTIVE').toUpperCase() !== 'ACTIVE') return res.status(403).send('该员工账号已停用');
         await db.collection('admin_staff').doc(found.id).update({ lastLoginAt: now });
+        invalidateCachePrefix('admin_staff:');
         delete found.password;
         res.json({ ...found, lastLoginAt: now });
     } catch(e) { res.status(500).send(e.message); }
@@ -1745,16 +1913,18 @@ app.post('/api/admin/login', async (req, res) => {
 
 app.get('/api/admin/staff', async (req, res) => {
     try {
-        const snap = await db.collection('admin_staff').orderBy('createdAt', 'desc').get();
-        const staff = snap.docs.map(d => {
-            const data = d.data();
-            delete data.password;
-            return { id: d.id, ...data };
-        }).filter(item => !/^masteradmin$/i.test(String(item.username || '')) && !/^masteradmin@/i.test(String(item.email || '')));
-        const settings = await getGlobalSettings();
-        const mainAdmin = sanitizeFullkikAdmin(settings.fullkikAdmin || {}, settings);
-        delete mainAdmin.password;
-        res.json([mainAdmin, ...staff]);
+        await sendCachedJson(req, res, 'admin_staff:list', CACHE_TTL.ADMIN_LISTS, async () => {
+            const snap = await db.collection('admin_staff').orderBy('createdAt', 'desc').get();
+            const staff = snap.docs.map(d => {
+                const data = d.data();
+                delete data.password;
+                return { id: d.id, ...data };
+            }).filter(item => !/^masteradmin$/i.test(String(item.username || '')) && !/^masteradmin@/i.test(String(item.email || '')));
+            const settings = await getGlobalSettings();
+            const mainAdmin = sanitizeFullkikAdmin(settings.fullkikAdmin || {}, settings);
+            delete mainAdmin.password;
+            return [mainAdmin, ...staff];
+        });
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1785,6 +1955,7 @@ app.post('/api/admin/staff', async (req, res) => {
         };
         const ref = await db.collection('admin_staff').add(row);
         await logAdminAction(`Created staff ${row.username}`, { module: '用户', action: '新建员工账号', targetId: ref.id, details: `${row.email} | ${permissions.length} permissions` });
+        invalidateCachePrefix('admin_staff:');
         res.json({ id: ref.id, ...row });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1799,6 +1970,7 @@ app.put('/api/admin/staff/:id/permissions', async (req, res) => {
             : [];
         await db.collection('admin_staff').doc(req.params.id).update({ permissions, updatedAt: new Date().toISOString() });
         await logAdminAction(`Updated staff permissions ${req.params.id}`, { module: '用户', action: '保存员工权限', targetId: req.params.id, details: permissions.join(', ') });
+        invalidateCachePrefix('admin_staff:');
         res.json({ permissions });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1808,6 +1980,8 @@ app.put('/api/admin/staff/FULLKIKADMIN/profile', async (req, res) => {
         const settings = await getGlobalSettings();
         const fullkikAdmin = sanitizeFullkikAdmin(req.body || {}, settings);
         await db.collection('settings').doc('global').set({ fullkikAdmin }, { merge: true });
+        invalidateSettingsCache();
+        invalidateCachePrefix('admin_staff:');
         const safeAdmin = { ...fullkikAdmin };
         delete safeAdmin.password;
         await logAdminAction('Updated FULLKIKADMIN main profile', {
@@ -1841,14 +2015,17 @@ app.delete('/api/admin/staff/:id', async (req, res) => {
         if(!doc.exists) return res.status(404).send('Staff not found');
         await ref.delete();
         await logAdminAction(`Deleted staff ${doc.data().username || req.params.id}`, { module: '用户', action: '删除员工账号', targetId: req.params.id });
+        invalidateCachePrefix('admin_staff:');
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/reports', async (req, res) => {
     try {
-        const snap = await db.collection('reports').orderBy('timestamp', 'desc').get();
-        res.json(snap.docs.map(d => ({id: d.id, ...d.data()})));
+        await sendCachedJson(req, res, 'reports:all', CACHE_TTL.ADMIN_LISTS, async () => {
+            const snap = await db.collection('reports').orderBy('timestamp', 'desc').get();
+            return snap.docs.map(d => ({id: d.id, ...d.data()}));
+        });
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -1867,6 +2044,7 @@ app.post('/api/reports', async (req, res) => {
             timestamp: new Date().toISOString()
         };
         const docRef = await db.collection('reports').add(newReport);
+        invalidateCachePrefix('reports:');
         res.json({ id: docRef.id, ...newReport });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1874,6 +2052,7 @@ app.post('/api/reports', async (req, res) => {
 app.put('/api/reports/:id/dismiss', async (req, res) => {
     try {
         await db.collection('reports').doc(req.params.id).delete();
+        invalidateCachePrefix('reports:');
         res.send('Dismissed and deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1895,13 +2074,19 @@ app.put('/api/reports/:id/unlist', async (req, res) => {
                 details: `Report unlisted: ${reportDoc.data().songName || songId}`
             });
         }
+        invalidateCachePrefix('reports:');
+        invalidateSongCaches();
         res.send('Unlisted and report deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
 
 // --- ADMIN TRANSACTIONS & ORDERS ---
 app.get('/api/orders', async (req, res) => {
-    try { res.json((await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+    try {
+        await sendCachedJson(req, res, 'orders:all', CACHE_TTL.ADMIN_LISTS, async () => {
+            return (await db.collection('orders').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}));
+        });
+    } catch(e) { res.json([]); }
 });
 app.post('/api/orders/:id/refund', async (req, res) => {
     try {
@@ -1955,13 +2140,15 @@ app.post('/api/orders/:id/refund', async (req, res) => {
             details: `Refund reason: ${reason} | Amount: -${Number(order.price || 0)} ${order.currency || ''} | Diamonds: -${Number(order.amount || 0)}`
         });
 
+        invalidateUserCaches(username);
+        invalidateFinanceCaches();
         res.json({ success: true, status: 'REFUNDED', refundedAt, reason, userTokens: newTokens });
     } catch(e) {
         res.status(500).send(e.message);
     }
 });
 app.delete('/api/orders/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+    try { const b = db.batch(); (await db.collection('orders').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); invalidateFinanceCaches(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
 function malaysiaDateKey(value) {
@@ -1978,6 +2165,12 @@ function malaysiaDateKey(value) {
 app.get('/api/admin/finance/daily', async (req, res) => {
     try {
         const days = Math.min(Math.max(parseInt(req.query.days, 10) || 3, 1), 31);
+        const cacheKey = `finance:daily:${days}`;
+        const cached = getCachedValue(cacheKey);
+        if(cached) {
+            res.set('X-FULLKIK-Cache', 'HIT');
+            return res.json(cached);
+        }
         const keys = Array.from({ length: days }, (_, index) => malaysiaDateKey(new Date(Date.now() - index * 86400000)));
         const base = Object.fromEntries(keys.map(key => [key, {
             date: key,
@@ -2031,17 +2224,24 @@ app.get('/api/admin/finance/daily', async (req, res) => {
             base[key].spentDiamonds += Number(transaction.tokens || transaction.tokensSpent || 0);
         });
 
-        res.json(keys.map(key => base[key]));
+        const result = keys.map(key => base[key]);
+        setCachedValue(cacheKey, result, CACHE_TTL.FINANCE);
+        res.set('X-FULLKIK-Cache', 'MISS');
+        res.json(result);
     } catch(e) {
         res.status(500).send(e.message);
     }
 });
 
 app.get('/api/transactions', async (req, res) => {
-    try { res.json((await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}))); } catch(e) { res.json([]); }
+    try {
+        await sendCachedJson(req, res, 'transactions:all', CACHE_TTL.ADMIN_LISTS, async () => {
+            return (await db.collection('transactions').orderBy('time', 'desc').get()).docs.map(d => ({id: d.id, ...d.data()}));
+        });
+    } catch(e) { res.json([]); }
 });
 app.delete('/api/transactions/all', async (req, res) => {
-    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
+    try { const b = db.batch(); (await db.collection('transactions').get()).docs.forEach(d => b.delete(d.ref)); await b.commit(); invalidateFinanceCaches(); res.send('ok'); } catch(e) { res.status(500).send(e.message); }
 });
 
 app.delete('/api/finance/reconcile', async (req, res) => {
@@ -2064,12 +2264,15 @@ app.delete('/api/finance/reconcile', async (req, res) => {
             targetId: 'finance',
             details: `Deleted orders and transactions: ${deleted}`
         });
+        invalidateFinanceCaches();
         res.json({ success: true, deleted });
     } catch(e) { res.status(500).send(e.message); }
 });
 
 app.get('/api/withdrawals', async (req, res) => {
-    try { res.json(await collectWithdrawals()); } catch(e) { res.status(500).json([]); }
+    try {
+        await sendCachedJson(req, res, 'withdrawals:all', CACHE_TTL.ADMIN_LISTS, async () => collectWithdrawals());
+    } catch(e) { res.status(500).json([]); }
 });
 
 app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
@@ -2113,6 +2316,8 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
             targetId: req.params.withdrawalId,
             details: `${user.username || req.params.username} | ${withdrawals[index].amount} | ${nextStatus}`
         });
+        invalidateUserCaches(user.username || req.params.username);
+        invalidateFinanceCaches();
         res.json({ success: true, withdrawal: withdrawals[index] });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -2121,13 +2326,19 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
 // 8. GENRES AND SONGS
 // ==========================================
 app.get('/api/genres', async (req, res) => {
-    try { res.json((await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }))); } catch(e) { res.status(500).json([]); }
+    try {
+        await sendCachedJson(req, res, 'genres:all', CACHE_TTL.GENRES, async () => {
+            return (await db.collection('genres').orderBy('sequence').get()).docs.map(d => ({ id: d.id, ...d.data() }));
+        });
+    } catch(e) { res.status(500).json([]); }
 });
 app.post('/api/genres', async (req, res) => {
     try {
         let coverUrl = req.body.coverBase64 ? await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_genres') : '';
         const newGenre = { name: req.body.name, coverUrl, status: 'ACTIVE', sequence: (await db.collection('genres').get()).size + 1 };
-        const docRef = await db.collection('genres').add(newGenre); res.json({ id: docRef.id, ...newGenre });
+        const docRef = await db.collection('genres').add(newGenre);
+        invalidateGenreCaches();
+        res.json({ id: docRef.id, ...newGenre });
     } catch(e) { res.status(500).send(e.message); }
 });
 app.put('/api/genres/:id', async (req, res) => {
@@ -2137,18 +2348,24 @@ app.put('/api/genres/:id', async (req, res) => {
         if(req.body.status) updates.status = req.body.status;
         if(req.body.sequence !== undefined) updates.sequence = parseInt(req.body.sequence);
         if(req.body.coverBase64) updates.coverUrl = await uploadToCloudinaryBase64(req.body.coverBase64, 'dj_genres');
-        await db.collection('genres').doc(req.params.id).update(updates); res.send('Updated');
+        await db.collection('genres').doc(req.params.id).update(updates);
+        invalidateGenreCaches();
+        res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
 app.put('/api/genres/reorder', async (req, res) => {
     try {
-        const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+        const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('genres').doc(id), { sequence: index + 1 }); }); await batch.commit(); invalidateGenreCaches(); res.send('Reordered');
     } catch(e) { res.status(500).send(e.message); }
 });
-app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); res.send('Deleted'); });
+app.delete('/api/genres/:id', async (req, res) => { await db.collection('genres').doc(req.params.id).delete(); invalidateGenreCaches(); res.send('Deleted'); });
 
 app.get('/api/songs', async (req, res) => {
-    try { res.json((await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }))); } catch(e) { res.status(500).json([]); }
+    try {
+        await sendCachedJson(req, res, 'songs:all', CACHE_TTL.SONGS, async () => {
+            return (await db.collection('songs').orderBy('sequence').get()).docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        });
+    } catch(e) { res.status(500).json([]); }
 });
 
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
@@ -2216,6 +2433,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     if(newSong.status === 'APPROVED') {
         await notifyFollowersOfSong(docRef.id, newSong);
     }
+    invalidateSongCaches();
     return { id: docRef.id, ...newSong };
 }
 
@@ -2245,6 +2463,7 @@ app.put('/api/users/:username/songs/:id', async (req, res) => {
             return res.status(400).send('歌曲资料包含敏感词');
         }
         await songRef.update({ filename, price, updatedAt: new Date().toISOString() });
+        invalidateSongCaches();
         res.json({ id: doc.id, ...song, filename, price });
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -2260,6 +2479,7 @@ app.delete('/api/users/:username/songs/:id', async (req, res) => {
         }
         if(song.status !== 'APPROVED') return res.status(400).send('Only published songs can be deleted here');
         await songRef.delete();
+        invalidateSongCaches();
         res.send('Deleted');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -2319,12 +2539,13 @@ app.put('/api/songs/:id/settings', async (req, res) => {
             }
         }
 
+        invalidateSongCaches();
         res.send('Updated');
     } catch(e) { res.status(500).send(e.message); }
 });
 
 app.put('/api/songs/reorder', async (req, res) => {
-    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); res.send('Reordered');
+    const batch = db.batch(); req.body.orderedIds.forEach((id, index) => { batch.update(db.collection('songs').doc(id), { sequence: index + 1 }); }); await batch.commit(); invalidateSongCaches(); res.send('Reordered');
 });
 app.post('/api/songs/bulk-delete', async (req, res) => {
     try {
@@ -2342,12 +2563,13 @@ app.post('/api/songs/bulk-delete', async (req, res) => {
             targetId: ids.join(','),
             details: `Deleted song documents: ${ids.length}`
         });
+        invalidateSongCaches();
         res.json({ success: true, deleted: ids.length });
     } catch(e) {
         res.status(500).send(e.message);
     }
 });
-app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); res.send('Deleted'); });
+app.delete('/api/songs/:id', async (req, res) => { await db.collection('songs').doc(req.params.id).delete(); invalidateSongCaches(); res.send('Deleted'); });
 
 // --- SETTINGS & LOGS ---
 app.get('/api/settings', async (req, res) => {
@@ -2485,6 +2707,7 @@ app.put('/api/settings', async (req, res) => {
         }
 
         await db.collection('settings').doc('global').set(updates, { merge: true }); 
+        invalidateSettingsCache();
         if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'topupEnabled', 'usdtWithdrawEnabled', 'diamondTerms', 'topupPackages', 'paymentMethods', 'fullkikAdmin', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
@@ -2498,7 +2721,13 @@ app.put('/api/settings', async (req, res) => {
 });
 
 app.get('/api/logs/:type', async (req, res) => {
-    try { const snap = await db.collection('logs').where('type', '==', req.params.type).get(); res.json(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))); } catch(e) { res.json([]); }
+    try {
+        const type = String(req.params.type || '').trim();
+        await sendCachedJson(req, res, `logs:${type}`, CACHE_TTL.LOGS, async () => {
+            const snap = await db.collection('logs').where('type', '==', type).get();
+            return snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        });
+    } catch(e) { res.json([]); }
 });
 app.post('/api/logs/delete', async (req, res) => { const batch = db.batch(); req.body.ids.forEach(id => batch.delete(db.collection('logs').doc(id))); await batch.commit(); res.send('ok'); });
 app.delete('/api/logs/:type/all', async (req, res) => { const batch = db.batch(); (await db.collection('logs').where('type', '==', req.params.type).get()).docs.forEach(d => batch.delete(d.ref)); await batch.commit(); res.send('ok'); });
