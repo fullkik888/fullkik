@@ -220,6 +220,23 @@ app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.h
 app.get(['/fullkik/contest', '/fullkik/contest.page', '/fullkik/tournament', '/fullkik/activity'], (req, res) => {
     res.sendFile(path.join(__dirname, 'contest.html'));
 });
+
+// Short URL aliases — fullkik.com/manager.page instead of /fullkik/manager.page.
+// These are additive: the /fullkik/... routes still work, so no existing link breaks.
+app.get('/main.page', async (req, res) => {
+    if(await shouldBlockCleanSharePage(req, res, 'music')) return sendExpiredSharePage(res);
+    res.sendFile(path.join(__dirname, 'music.html'));
+});
+app.get('/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
+app.get(['/manager.page', '/manager'], (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
+app.get('/register', async (req, res) => {
+    if(await shouldBlockCleanSharePage(req, res, 'register')) return sendExpiredSharePage(res);
+    res.sendFile(path.join(__dirname, 'register.html'));
+});
+app.get('/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get(['/contest', '/contest.page', '/tournament', '/activity'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'contest.html'));
+});
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
