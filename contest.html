@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FULLKIK 大赛</title>
+    <style>
+        :root {
+            --bg: #080202;
+            --panel: #180707;
+            --panel-soft: #230909;
+            --line: #4a1d1d;
+            --text: #fff7f7;
+            --muted: #bba2a2;
+            --accent: #9c1010;
+            --accent2: #d42a2a;
+            --danger: #ff453a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background:
+                radial-gradient(circle at 50% -10%, rgba(146, 24, 24, 0.36), transparent 34%),
+                linear-gradient(180deg, #100404 0%, #220909 42%, #070202 100%);
+            color-scheme: dark;
+        }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            min-height: 74px;
+            padding: 14px max(22px, 6vw);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(7, 2, 2, 0.86);
+            backdrop-filter: blur(14px);
+        }
+        .brand {
+            color: white;
+            font-size: 28px;
+            font-weight: 950;
+            letter-spacing: 0.8px;
+            text-decoration: none;
+        }
+        .home-btn {
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: white;
+            border-radius: 999px;
+            padding: 10px 18px;
+            text-decoration: none;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .wrap {
+            width: min(1120px, calc(100% - 34px));
+            margin: 0 auto;
+            padding: 34px 0 70px;
+        }
+        .hero {
+            overflow: hidden;
+            border: 1px solid rgba(255, 83, 83, 0.24);
+            border-radius: 26px;
+            background: linear-gradient(145deg, rgba(55, 9, 9, 0.92), rgba(15, 4, 4, 0.96));
+            box-shadow: 0 30px 90px rgba(0,0,0,0.5);
+        }
+        .banner {
+            width: 100%;
+            min-height: 260px;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 58, 58, 0.22), transparent 26%),
+                linear-gradient(135deg, #340909, #100303);
+            display: flex;
+            align-items: flex-end;
+            padding: 38px;
+            position: relative;
+        }
+        .banner.has-image {
+            min-height: 320px;
+            background-size: cover;
+            background-position: center;
+        }
+        .banner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(8,2,2,0.86), rgba(8,2,2,0.24), rgba(8,2,2,0.64));
+        }
+        .banner-content {
+            position: relative;
+            z-index: 1;
+            max-width: 680px;
+        }
+        .eyebrow {
+            color: #ffb3b3;
+            font-weight: 950;
+            letter-spacing: 2px;
+            font-size: 13px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        h1 {
+            font-size: clamp(38px, 7vw, 72px);
+            line-height: 1.02;
+            margin: 0 0 12px;
+            letter-spacing: -1.4px;
+        }
+        .subtitle {
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.65;
+            margin: 0;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 390px;
+            gap: 24px;
+            padding: 24px;
+        }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: rgba(18, 5, 5, 0.82);
+            padding: 24px;
+        }
+        .poster {
+            width: 100%;
+            max-height: 520px;
+            object-fit: contain;
+            border-radius: 16px;
+            background: #090202;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: none;
+            margin-bottom: 18px;
+        }
+        .meta-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .meta {
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03);
+            border-radius: 14px;
+            padding: 14px;
+            color: var(--muted);
+            min-width: 0;
+        }
+        .meta strong {
+            display: block;
+            color: white;
+            margin-bottom: 5px;
+            font-size: 15px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .rules-title, .form-title {
+            margin: 0 0 14px;
+            font-size: 22px;
+            font-weight: 950;
+        }
+        .rules-text {
+            color: var(--muted);
+            white-space: pre-wrap;
+            line-height: 1.75;
+            margin: 0;
+        }
+        .input-label {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 900;
+            margin: 16px 0 8px;
+        }
+        .input {
+            width: 100%;
+            min-height: 52px;
+            border: 1px solid #4c1b1b;
+            border-radius: 14px;
+            background: #090202;
+            color: white;
+            padding: 0 16px;
+            outline: none;
+            font-size: 16px;
+        }
+        .input:focus {
+            border-color: var(--accent2);
+            box-shadow: 0 0 0 4px rgba(212,42,42,0.12);
+        }
+        .submit {
+            width: 100%;
+            border: none;
+            border-radius: 16px;
+            min-height: 56px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #710707, #c42626);
+            color: white;
+            font-size: 17px;
+            font-weight: 950;
+            cursor: pointer;
+            box-shadow: 0 18px 44px rgba(128,0,0,0.28);
+        }
+        .submit:disabled {
+            opacity: 0.68;
+            cursor: not-allowed;
+        }
+        .note {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .status {
+            min-height: 20px;
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .status.error { color: var(--danger); font-weight: 900; }
+        .dev-card {
+            display: none;
+            text-align: center;
+            padding: 54px 24px;
+        }
+        .dev-icon {
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 20px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6f0707, #c42a2a);
+            font-size: 34px;
+            box-shadow: 0 20px 50px rgba(128,0,0,0.35);
+        }
+        .dev-card h2 {
+            font-size: clamp(32px, 6vw, 54px);
+            margin: 0 0 12px;
+        }
+        .dev-card p {
+            color: var(--muted);
+            margin: 0 auto 24px;
+            max-width: 560px;
+            line-height: 1.7;
+        }
+        .empty {
+            width: min(520px, calc(100% - 34px));
+            margin: 80px auto;
+            padding: 34px;
+            border-radius: 24px;
+            border: 1px solid var(--line);
+            background: rgba(24,7,7,0.9);
+            text-align: center;
+        }
+        .empty h1 { font-size: 34px; margin-bottom: 10px; }
+        .empty p { color: var(--muted); line-height: 1.7; }
+        @media (max-width: 860px) {
+            .topbar { padding: 12px 16px; min-height: 64px; }
+            .brand { font-size: 23px; }
+            .wrap { width: calc(100% - 22px); padding-top: 18px; }
+            .banner, .banner.has-image { min-height: 230px; padding: 24px; border-radius: 0; }
+            .content-grid { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
+            .card { padding: 18px; border-radius: 18px; }
+            .meta-row { grid-template-columns: 1fr; }
+            .home-btn { padding: 9px 13px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a class="brand" href="/fullkik/main.page">FULLKIK</a>
+        <a class="home-btn" href="/fullkik/main.page">回到首页</a>
+    </div>
+
+    <main id="pageRoot">
+        <div class="empty">
+            <h1>加载大赛...</h1>
+            <p>正在读取活动资料。</p>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = '/api';
+        let currentActivity = null;
+
+        function esc(value) {
+            return String(value ?? '').replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+        }
+
+        function dateText(value) {
+            if(!value) return '-';
+            const d = new Date(value);
+            if(Number.isNaN(d.getTime())) return String(value);
+            return d.toLocaleString('zh-CN', { hour12: false });
+        }
+
+        function getActivityId() {
+            return new URLSearchParams(window.location.search).get('id') || '';
+        }
+
+        function findActivity(settings) {
+            const rows = Array.isArray(settings.contestActivities) ? settings.contestActivities : [];
+            const id = getActivityId();
+            if(id) return rows.find(a => String(a.id) === id) || null;
+            return rows.find(a => a.published && (a.bannerUrl || a.posterUrl)) || rows.find(a => a.published) || rows[0] || null;
+        }
+
+        function entryKey(activity) {
+            return `fullkikContestEntry_${activity?.id || 'default'}`;
+        }
+
+        function hasRegistered(activity) {
+            try {
+                const data = JSON.parse(localStorage.getItem(entryKey(activity)) || 'null');
+                return data && String(data.activityId) === String(activity.id);
+            } catch(e) {
+                return false;
+            }
+        }
+
+        function renderEmpty() {
+            document.getElementById('pageRoot').innerHTML = `
+                <div class="empty">
+                    <h1>暂无大赛活动</h1>
+                    <p>后台还没有创建活动，或活动资料暂时不可用。</p>
+                    <a class="home-btn" href="/fullkik/main.page">回到首页</a>
+                </div>`;
+        }
+
+        function renderDevelopment(activity, participant = null) {
+            const root = document.getElementById('pageRoot');
+            root.innerHTML = `
+                <div class="wrap">
+                    <section class="hero">
+                        <div class="dev-card" style="display:block;">
+                            <div class="dev-icon">🏆</div>
+                            <h2>此页正在开发</h2>
+                            <p>${participant ? `报名成功：${esc(participant.djName || participant.username || '')}。` : ''} 大赛页面正在准备中，之后会在这里显示参赛内容、榜单和活动详情。</p>
+                            <a class="home-btn" href="/fullkik/main.page">回到首页</a>
+                        </div>
+                    </section>
+                </div>`;
+        }
+
+        function renderActivity(activity) {
+            currentActivity = activity;
+            if(hasRegistered(activity)) return renderDevelopment(activity);
+            const bannerStyle = activity.bannerUrl ? `style="background-image:url('${esc(activity.bannerUrl)}')"` : '';
+            document.getElementById('pageRoot').innerHTML = `
+                <div class="wrap">
+                    <section class="hero">
+                        <div class="banner ${activity.bannerUrl ? 'has-image' : ''}" ${bannerStyle}>
+                            <div class="banner-content">
+                                <div class="eyebrow">FULLKIK 大赛</div>
+                                <h1>${esc(activity.title || 'FULLKIK 大赛')}</h1>
+                                <p class="subtitle">${esc(activity.subtitle || '填写 Gmail 和 DJ Name 即可报名。')}</p>
+                                <div class="meta-row">
+                                    <div class="meta"><strong>${esc(dateText(activity.startAt || activity.startTime))}</strong>开始时间</div>
+                                    <div class="meta"><strong>${esc(dateText(activity.endAt || activity.endTime))}</strong>结束时间</div>
+                                    <div class="meta"><strong>${esc((activity.participants || []).length)}</strong>已报名</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="content-grid">
+                            <div class="card">
+                                <img class="poster" id="contestPoster" src="${esc(activity.posterUrl || '')}" alt="大赛海报">
+                                <h2 class="rules-title">活动说明</h2>
+                                <p class="rules-text">${esc(activity.rules || '提交报名后即可进入大赛页面。当前大赛内容页面正在开发。')}</p>
+                            </div>
+                            <div class="card">
+                                <h2 class="form-title">大赛报名</h2>
+                                <label class="input-label" for="contestEmail">Gmail</label>
+                                <input class="input" id="contestEmail" type="email" inputmode="email" placeholder="your@gmail.com" autocomplete="email">
+                                <label class="input-label" for="contestDjName">DJ Name</label>
+                                <input class="input" id="contestDjName" type="text" placeholder="你的 DJ 名称" maxlength="80" autocomplete="nickname">
+                                <button class="submit" id="contestSubmitBtn" onclick="submitContestEntry()">提交报名</button>
+                                <div class="note">这不是 FULLKIK 用户注册页，只是当前活动的大赛报名。</div>
+                                <div class="status" id="contestStatus"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>`;
+            const poster = document.getElementById('contestPoster');
+            if(poster && activity.posterUrl) poster.style.display = 'block';
+        }
+
+        async function submitContestEntry() {
+            const btn = document.getElementById('contestSubmitBtn');
+            const status = document.getElementById('contestStatus');
+            const email = document.getElementById('contestEmail').value.trim();
+            const djName = document.getElementById('contestDjName').value.trim();
+            status.className = 'status';
+            status.textContent = '';
+            if(!email || !djName) {
+                status.className = 'status error';
+                status.textContent = '请填写 Gmail 和 DJ Name';
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = '提交中...';
+            try {
+                const res = await fetch(`${API_URL}/contest/${encodeURIComponent(currentActivity.id)}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, djName })
+                });
+                if(!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                localStorage.setItem(entryKey(currentActivity), JSON.stringify({
+                    activityId: currentActivity.id,
+                    email,
+                    djName,
+                    time: new Date().toISOString()
+                }));
+                renderDevelopment(currentActivity, data.participant || { email, djName });
+            } catch(e) {
+                status.className = 'status error';
+                status.textContent = e.message || '提交失败';
+                btn.disabled = false;
+                btn.textContent = '提交报名';
+            }
+        }
+
+        async function initContest() {
+            try {
+                const res = await fetch(`${API_URL}/settings`);
+                if(!res.ok) throw new Error('settings failed');
+                const settings = await res.json();
+                const activity = findActivity(settings);
+                if(!activity) return renderEmpty();
+                renderActivity(activity);
+            } catch(e) {
+                renderEmpty();
+            }
+        }
+
+        initContest();
+    </script>
+</body>
+</html>
