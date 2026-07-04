@@ -69,6 +69,10 @@
         .banners-container { display:flex; gap:10px; margin: 0 auto 20px auto; width:100%; max-width:800px; justify-content:center; overflow-x:auto; scrollbar-width:none;}
         .banners-container::-webkit-scrollbar { display:none; }
         .banners-container img { width:30%; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); flex-shrink:0;}
+        .banners-container.contest-mode { max-width:900px; overflow:hidden; }
+        .contest-banner-link { width:100%; border:none; padding:0; background:transparent; cursor:pointer; flex-shrink:0; display:block; }
+        .contest-banner-link img { width:100%; height:190px; object-fit:cover; border-radius:18px; border:1px solid rgba(255,75,75,0.28); box-shadow:0 20px 60px rgba(128,0,0,0.22); transition:0.2s; }
+        .contest-banner-link:hover img { transform:translateY(-2px); border-color:var(--accent-light); filter:brightness(1.08); }
 
         /* SEARCH UI */
         .search-wrapper { position: relative; max-width: 600px; margin: 0 auto; }
@@ -331,6 +335,8 @@
             .recommend-card img { width:56px; height:56px; }
             .search-wrapper { max-width: 90%; }
              .banners-container img { width: 250px; flex-shrink: 0;}
+             .banners-container.contest-mode { max-width:100%; }
+             .contest-banner-link img { width:100%; height:150px; border-radius:16px; }
              .dj-grid-large { grid-template-columns: 1fr 1fr; }
              .list-song-row { gap: 12px; padding: 12px; }
              .more-page-bar { align-items:flex-start; }
@@ -567,7 +573,7 @@
     </div>
 </div>
 <a class="whatsapp-float" id="supportWhatsappBtn" href="#" target="_blank" rel="noopener" aria-label="客服"><span class="support-chat-icon">💬</span><span>客服</span></a>
-<div class="poster-overlay" id="homePosterOverlay"><div class="poster-box"><button class="poster-close" onclick="closeHomePoster()">×</button><img id="homePosterImage" src="" alt="海报"></div></div>
+<div class="poster-overlay" id="homePosterOverlay"><div class="poster-box"><button class="poster-close" onclick="closeHomePoster()">×</button><img id="homePosterImage" src="" alt="海报" onclick="handleHomePosterClick(event)"></div></div>
 
 <script>
     const API_URL = '/api';
@@ -879,10 +885,11 @@
      let globalSettings = {};
      let currentFeaturedGenreId = null;
      let currentMoreFilterId = 'ALL';
-     let currentMoreTitle = '歌曲推荐';
-     let currentMoreSort = 'latest';
-     let currentMoreLayout = localStorage.getItem('fullkikMoreLayout') || 'list';
-     const DEFAULT_AUDIO_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
+	     let currentMoreTitle = '歌曲推荐';
+	     let currentMoreSort = 'latest';
+	     let currentMoreLayout = localStorage.getItem('fullkikMoreLayout') || 'list';
+	     let activeHomePosterContestId = '';
+	     const DEFAULT_AUDIO_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -933,25 +940,47 @@
         return digits ? `https://wa.me/${digits}` : '';
     }
 
-    function renderSupportWhatsapp() {
-        const btn = document.getElementById('supportWhatsappBtn');
-        if(!btn) return;
-        const url = buildWhatsappUrl(globalSettings.supportWhatsapp);
+	    function renderSupportWhatsapp() {
+	        const btn = document.getElementById('supportWhatsappBtn');
+	        if(!btn) return;
+	        const url = buildWhatsappUrl(globalSettings.supportWhatsapp);
         if(url) {
             btn.href = url;
             btn.style.display = 'flex';
         } else {
             btn.style.display = 'none';
-        }
-    }
+	        }
+	    }
 
-    function showHomePoster() {
-        const overlay = document.getElementById('homePosterOverlay');
-        const img = document.getElementById('homePosterImage');
-        if(!overlay || !img || !globalSettings.homePosterUrl) return;
-        img.src = globalSettings.homePosterUrl;
-        overlay.style.display = 'flex';
-    }
+	    function getActiveContestPromo() {
+	        const activities = Array.isArray(globalSettings.contestActivities) ? globalSettings.contestActivities : [];
+	        return activities.find(a => a && a.published && (a.bannerUrl || a.posterUrl))
+	            || activities.find(a => a && (a.bannerUrl || a.posterUrl))
+	            || null;
+	    }
+
+	    function openContestPage(activityId = '') {
+	        window.location.href = `/fullkik/contest${activityId ? `?id=${encodeURIComponent(activityId)}` : ''}`;
+	    }
+
+	    function handleHomePosterClick(event) {
+	        if(!activeHomePosterContestId) return;
+	        event.stopPropagation();
+	        closeHomePoster();
+	        openContestPage(activeHomePosterContestId);
+	    }
+
+	    function showHomePoster() {
+	        const overlay = document.getElementById('homePosterOverlay');
+	        const img = document.getElementById('homePosterImage');
+	        const promo = getActiveContestPromo();
+	        const posterUrl = (promo && promo.posterUrl) ? promo.posterUrl : globalSettings.homePosterUrl;
+	        activeHomePosterContestId = (promo && promo.posterUrl) ? promo.id : '';
+	        if(!overlay || !img || !posterUrl) return;
+	        img.src = posterUrl;
+	        img.style.cursor = activeHomePosterContestId ? 'pointer' : 'default';
+	        overlay.style.display = 'flex';
+	    }
 
     function closeHomePoster() {
         const overlay = document.getElementById('homePosterOverlay');
@@ -1094,11 +1123,12 @@
         if(view === 'more-songs') document.getElementById('mb-reco')?.classList.add('active');
     }
 
-    function showContestComingSoon() {
-        document.querySelectorAll('.mobile-bottom-nav button').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('mb-contest')?.classList.add('active');
-        showToast('活动还未计划');
-    }
+	    function showContestComingSoon() {
+	        document.querySelectorAll('.mobile-bottom-nav button').forEach(btn => btn.classList.remove('active'));
+	        document.getElementById('mb-contest')?.classList.add('active');
+	        const promo = getActiveContestPromo();
+	        openContestPage(promo?.id || '');
+	    }
 
     function openMobileRecommendations() {
         openMoreSongs('歌曲推荐', 'ALL');
@@ -1210,15 +1240,20 @@
     }
 
     // --- HOME RENDERING ---
-    function renderHome(users) {
-        const banners = globalSettings.banners || [];
-        const banDiv = document.getElementById('homeBanners');
-        if(banDiv) {
-            banDiv.innerHTML = '';
-            if(banners.some(b => b)) {
-                banners.forEach(b => { if(b) banDiv.innerHTML += `<img src="${b}">`; });
-            }
-        }
+	    function renderHome(users) {
+	        const banners = globalSettings.banners || [];
+	        const banDiv = document.getElementById('homeBanners');
+	        if(banDiv) {
+	            banDiv.innerHTML = '';
+	            banDiv.classList.remove('contest-mode');
+	            const promo = getActiveContestPromo();
+	            if(promo && promo.bannerUrl) {
+	                banDiv.classList.add('contest-mode');
+	                banDiv.innerHTML = `<button type="button" class="contest-banner-link" onclick="openContestPage('${escapeAttrJs(promo.id)}')"><img src="${escapeHtml(promo.bannerUrl)}" alt="${escapeHtml(promo.title || 'FULLKIK 大赛')}"></button>`;
+	            } else if(banners.some(b => b)) {
+	                banners.forEach(b => { if(b) banDiv.innerHTML += `<img src="${b}">`; });
+	            }
+	        }
 
         const container = document.getElementById('homeContentAreas');
         if(!container) return;
