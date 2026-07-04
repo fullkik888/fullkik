@@ -1208,7 +1208,8 @@ app.post('/api/auth/google', async (req, res) => {
             ].slice(0, 20);
             await uDoc.ref.update({ loginHistory, googleId: data.googleId || googleId, authProvider: data.authProvider || 'google' });
             invalidateUserCaches(data.username || uDoc.id);
-            return res.json({ success: true, username: data.username || uDoc.id, isNew: false });
+            const hasPassword = !!(data.password && String(data.password).length > 0);
+            return res.json({ success: true, username: data.username || uDoc.id, isNew: false, hasPassword });
         }
 
         // New account.
@@ -1229,9 +1230,46 @@ app.post('/api/auth/google', async (req, res) => {
         await db.collection('users').doc(username).set(userData);
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered via Google (${email})`);
         invalidateUserCaches(username);
-        res.json({ success: true, username, isNew: true });
+        res.json({ success: true, username, isNew: true, hasPassword: false });
     } catch (e) {
         res.status(400).send('Google 验证失败：' + e.message);
+    }
+});
+
+// After a first Google sign-in, let the user set a password ONCE.
+// Re-verifies the Google token (so it can't be spoofed) and only sets a
+// password when the account doesn't already have one.
+app.post('/api/auth/google/set-password', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        if (!GOOGLE_CLIENT_ID) return res.status(503).send('Google 登录未配置');
+        const { credential, password } = req.body;
+        if (!credential) return res.status(400).send('缺少 Google 凭证');
+        if (!password || String(password).length < 6) return res.status(400).send('密码至少 6 位 / min 6 chars');
+
+        const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
+        const p = ticket.getPayload();
+        if (!p || !p.email || !p.email_verified) return res.status(400).send('Google 邮箱未验证');
+        const email = String(p.email).toLowerCase();
+
+        let uDoc = null;
+        const byEmail = await db.collection('users').where('email', '==', email).limit(1).get();
+        if (!byEmail.empty) uDoc = byEmail.docs[0];
+        if (!uDoc) {
+            const byContact = await db.collection('users').where('contact', '==', email).limit(1).get();
+            if (!byContact.empty) uDoc = byContact.docs[0];
+        }
+        if (!uDoc) return res.status(404).send('账号不存在');
+        const data = uDoc.data();
+        // Already has a password → nothing to do (don't let it be overwritten here).
+        if (data.password && String(data.password).length > 0) {
+            return res.json({ success: true, username: data.username || uDoc.id, alreadySet: true });
+        }
+        await uDoc.ref.update({ password: String(password) });
+        invalidateUserCaches(data.username || uDoc.id);
+        res.json({ success: true, username: data.username || uDoc.id });
+    } catch (e) {
+        res.status(400).send('设置密码失败：' + e.message);
     }
 });
 

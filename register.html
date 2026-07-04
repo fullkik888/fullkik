@@ -110,6 +110,14 @@
         <div style="margin-top: 24px;"><span style="color: var(--text-muted); font-size: 14px;" data-i18n="hasAcc">Already have an account? </span><span class="toggle-link" onclick="switchView('loginView')" data-i18n="signinLnk">Sign in</span></div>
     </div>
 
+    <div id="googlePassView" class="view-section">
+        <h2>设置密码 / Set a Password</h2>
+        <p style="margin:0 0 24px;">Google 首次登录，请设置一个密码作为备用登录方式 / Set a password so you can also log in without Google.</p>
+        <div class="input-group password-wrap"><input type="password" id="gPass" placeholder="Password (min 6)"><button class="password-toggle" onclick="togglePassword('gPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <div class="input-group password-wrap"><input type="password" id="gPassConfirm" placeholder="Confirm Password"><button class="password-toggle" onclick="togglePassword('gPassConfirm')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <button class="btn-primary" onclick="submitGooglePassword()">设置并继续 / Set &amp; Continue</button>
+    </div>
+
     <div id="otpView" class="view-section">
         <h2>OTP 验证</h2><p>请输入验证码完成注册</p>
         <div class="otp-panel">
@@ -145,12 +153,33 @@
 
     // --- Google Sign-In (real "Sign in with Google") ---
     // Verifies with the backend, which finds-or-creates the FULLKIK account.
+    let pendingGoogleCredential = null;
     async function onGoogleCredential(response){
         try {
+            pendingGoogleCredential = response.credential;
             const res = await fetch(`${API_URL}/auth/google`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: response.credential }) });
-            if(res.ok){ const data = await res.json(); localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page'; }
+            if(res.ok){
+                const data = await res.json();
+                if(data.hasPassword){
+                    localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page';
+                } else {
+                    // First Google sign-in → must set a password once.
+                    switchView('googlePassView');
+                }
+            }
             else { showToast(await res.text(), true); }
         } catch(e){ showToast('Google 登录失败', true); }
+    }
+    async function submitGooglePassword(){
+        const p1 = document.getElementById('gPass').value, p2 = document.getElementById('gPassConfirm').value;
+        if(!p1 || p1.length < 6) return showToast('密码至少 6 位 / min 6 chars', true);
+        if(p1 !== p2) return showToast(dict[currentLang].errMatch, true);
+        if(!pendingGoogleCredential) return showToast('请重新用 Google 登录 / Please sign in with Google again', true);
+        try {
+            const res = await fetch(`${API_URL}/auth/google/set-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: pendingGoogleCredential, password: p1 }) });
+            if(res.ok){ const d = await res.json(); localStorage.setItem('djUsername', d.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page'; }
+            else { showToast(await res.text(), true); }
+        } catch(e){ showToast('设置密码失败', true); }
     }
     async function initGoogleSignIn(){
         if(window.__gsiInit) return;
