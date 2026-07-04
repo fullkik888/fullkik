@@ -2226,19 +2226,20 @@ app.post('/api/admin/staff', async (req, res) => {
         const permissions = Array.isArray(req.body.permissions)
             ? req.body.permissions.filter(p => STAFF_PERMISSIONS.includes(p))
             : [];
-        // Staff must have a username (for login) AND a REAL Gmail address.
+        // Username is required (used to log in). Gmail is OPTIONAL.
         if(!username) return res.status(400).send('请填写用户名 / Please enter a username');
-        if(!email) return res.status(400).send('请填写 Gmail / Please enter a Gmail');
-        if(!/^[^\s@]+@(gmail|googlemail)\.com$/.test(email)) return res.status(400).send('必须是真实 Gmail 地址（@gmail.com）/ Must be a real Gmail');
-        const dupEmail = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
-        if(!dupEmail.empty) return res.status(400).send('此 Gmail 已存在 / Gmail already exists');
+        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).send('邮箱格式不正确 / Invalid email');
         const dupUser = await db.collection('admin_staff').where('username', '==', username).limit(1).get();
         if(!dupUser.empty) return res.status(400).send('此用户名已存在 / Username already exists');
+        if(email) {
+            const dupEmail = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
+            if(!dupEmail.empty) return res.status(400).send('此邮箱已存在 / Email already exists');
+        }
         const password = generateStaffPassword();
         const now = new Date().toISOString();
         const row = {
             username,
-            email,
+            email: email || `staff-${Date.now().toString(36)}@fullkik.local`,
             password,
             role: 'MAINTAINER',
             status: 'ACTIVE',
@@ -2297,6 +2298,22 @@ app.get('/api/admin/staff/:id/password', async (req, res) => {
         const doc = await db.collection('admin_staff').doc(req.params.id).get();
         if(!doc.exists) return res.status(404).send('Staff not found');
         res.json({ password: doc.data().password || '' });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+// Edit a staff member's password after creation.
+app.put('/api/admin/staff/:id/password', async (req, res) => {
+    try {
+        const newPass = String(req.body.password || '').trim();
+        if(newPass.length < 6) return res.status(400).send('密码至少 6 位 / min 6 chars');
+        if(req.params.id === 'FULLKIKADMIN') return res.status(400).send('主管理员密码请在「编辑资料 / 密码」中修改');
+        const ref = db.collection('admin_staff').doc(req.params.id);
+        const doc = await ref.get();
+        if(!doc.exists) return res.status(404).send('Staff not found');
+        await ref.update({ password: newPass, updatedAt: new Date().toISOString() });
+        await logAdminAction(`Reset staff password ${doc.data().username || req.params.id}`, { module: '用户', action: '修改员工密码', targetId: req.params.id });
+        invalidateCachePrefix('admin_staff:');
+        res.json({ success: true });
     } catch(e) { res.status(500).send(e.message); }
 });
 

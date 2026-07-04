@@ -1928,9 +1928,9 @@
             <h2 style="margin:0 0 12px;">新建员工账号</h2>
             <p style="color:var(--text-muted); line-height:1.7; margin:0 0 22px;">员工角色为 <strong style="color:var(--success);">MAINTAINER</strong>，只能访问被勾选的权限页面。系统会生成临时密码。</p>
             <div class="staff-modal-grid">
-                <div><label class="settings-label">Gmail（必填 · 真实）</label><input class="modal-input" id="staffEmailInput" placeholder="name@gmail.com"></div>
-                <div><label class="settings-label">用户名（登录用）</label><input class="modal-input" id="staffUsernameInput" placeholder="staff_username"></div>
-                <div style="color:var(--text-muted); font-size:13px;">Gmail 与用户名都必填。Gmail 必须是真实的 @gmail.com。员工可用「用户名」或「Gmail」+ 密码登录。</div>
+                <div><label class="settings-label">用户名（必填 · 登录用）</label><input class="modal-input" id="staffUsernameInput" placeholder="staff_username"></div>
+                <div><label class="settings-label">Gmail（选填）</label><input class="modal-input" id="staffEmailInput" placeholder="name@gmail.com（可留空）"></div>
+                <div style="color:var(--text-muted); font-size:13px;">用户名必填，Gmail 选填。员工可用「用户名」或「Gmail」+ 密码登录。</div>
                 <div><label class="settings-label">初始权限</label><div class="staff-modal-permissions" id="createStaffPermissions"></div></div>
             </div>
         </div>
@@ -4691,7 +4691,7 @@
                     const enabled = permissions.includes(item.id);
                     return `<label class="permission-toggle ${enabled ? 'enabled' : ''}"><input type="checkbox" class="staff-permission-check" data-staff-id="${staff.id}" value="${item.id}" ${enabled ? 'checked' : ''} onchange="this.parentElement.classList.toggle('enabled', this.checked)"> ${item.label}</label>`;
                 }).join('')}</div>
-                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
+                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="btn-primary" style="background:#3a1f0d; border:1px solid #7a4a1f;" onclick="editStaffPassword('${staff.id}')">改密码</button><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
             return `
                 <div class="staff-card ${isMainAdmin ? 'main-admin' : ''}">
                     <div class="staff-card-head">
@@ -4730,8 +4730,7 @@
         const username = document.getElementById('staffUsernameInput').value.trim();
         const permissions = Array.from(document.querySelectorAll('.create-staff-permission:checked')).map(input => input.value);
         if(!username) return showToast('请填写用户名', true);
-        if(!email) return showToast('请填写 Gmail', true);
-        if(!/^[^\s@]+@(gmail|googlemail)\.com$/.test(email)) return showToast('必须是真实 Gmail 地址（@gmail.com）', true);
+        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showToast('邮箱格式不正确', true);
         showGlobalLoader('创建员工账号...');
         const res = await fetch(`${API_URL}/admin/staff`, {
             method:'POST',
@@ -4774,6 +4773,18 @@
         const data = await res.json();
         target.innerText = `密码: ${data.password}`;
         setTimeout(() => { target.innerText = ''; }, 5000);
+    }
+
+    async function editStaffPassword(staffId) {
+        const pw = prompt('输入新密码（至少 6 位）/ New password (min 6):');
+        if(pw === null) return;
+        const newPw = pw.trim();
+        if(newPw.length < 6) return showToast('密码至少 6 位', true);
+        showGlobalLoader('更新密码...');
+        const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/password`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: newPw }) });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        showToast('密码已更新');
     }
 
     function openDeleteStaff(staffId) {
