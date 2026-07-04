@@ -17,6 +17,7 @@ const cloudinary = require('cloudinary').v2;
 const { Readable } = require('stream');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { OAuth2Client } = require('google-auth-library');
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -59,11 +60,30 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
 }
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
-    cloudinary.config({ 
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-        api_key: process.env.CLOUDINARY_API_KEY, 
-        api_secret: process.env.CLOUDINARY_API_SECRET 
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
     });
+}
+
+// ==========================================
+// GOOGLE SIGN-IN + HITPAY PAYMENT CONFIG
+// (All secrets come from environment variables — never hard-coded.)
+// ==========================================
+const GOOGLE_CLIENT_ID = String(process.env.GOOGLE_CLIENT_ID || '').trim();
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+const HITPAY_API_URL = String(process.env.HITPAY_API_URL || 'https://api.hit-pay.com/v1').trim().replace(/\/+$/, '');
+const HITPAY_API_KEY = String(process.env.HITPAY_API_KEY || '').trim();
+const HITPAY_SALT = String(process.env.HITPAY_SALT || '').trim();
+
+// Absolute base URL for building HitPay redirect/webhook links.
+function getPublicBaseUrl(req) {
+    const configured = String(process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+    if (configured) return configured;
+    const proto = String(req.headers['x-forwarded-proto'] || req.protocol || 'https').split(',')[0];
+    return `${proto}://${req.get('host')}`;
 }
 
 // ==========================================
@@ -1131,8 +1151,87 @@ app.post('/api/login', async (req, res) => {
             res.json({ success: true, username: userData.username }); 
         }
         else res.status(400).send('Invalid credentials.');
-    } catch (e) { 
-        res.status(500).send(e.message); 
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
+// Public, non-secret config the frontend needs (e.g. the Google client id).
+app.get('/api/public-config', (req, res) => {
+    res.json({ googleClientId: GOOGLE_CLIENT_ID });
+});
+
+// ==========================================
+// GOOGLE SIGN-IN — real "Sign in with Google".
+// Verifies the Google ID token, then finds-or-creates a FULLKIK account.
+// Coexists with username/password login (admin & staff logins untouched).
+// ==========================================
+async function generateUniqueUsername(base) {
+    const clean = String(base || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20) || 'user';
+    let candidate = clean, n = 0;
+    while (n < 50) {
+        if (!(await db.collection('users').doc(candidate).get()).exists) return candidate;
+        n++; candidate = `${clean}${n}`;
+    }
+    return `${clean}${Date.now().toString(36)}`;
+}
+
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        if (!GOOGLE_CLIENT_ID) return res.status(503).send('Google 登录未配置：缺少 GOOGLE_CLIENT_ID');
+        const credential = req.body.credential || req.body.idToken;
+        if (!credential) return res.status(400).send('缺少 Google 凭证');
+
+        // Verify the ID token against Google (audience must be OUR client id).
+        const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
+        const p = ticket.getPayload();
+        if (!p || !p.email || !p.email_verified) return res.status(400).send('Google 邮箱未验证');
+        const email = String(p.email).toLowerCase();
+        const googleId = p.sub;
+
+        // Existing account by email/contact -> log in.
+        let uDoc = null;
+        const byEmail = await db.collection('users').where('email', '==', email).limit(1).get();
+        if (!byEmail.empty) uDoc = byEmail.docs[0];
+        if (!uDoc) {
+            const byContact = await db.collection('users').where('contact', '==', email).limit(1).get();
+            if (!byContact.empty) uDoc = byContact.docs[0];
+        }
+
+        if (uDoc) {
+            const data = uDoc.data();
+            if (data.status === 'BANNED') return res.status(403).send(`Account Banned: ${data.banReason || 'Violation of terms'}`);
+            const loginHistory = [
+                { time: new Date().toISOString(), ip: getClientIp(req), device: req.get('user-agent') || '-', via: 'google' },
+                ...((data.loginHistory || []).filter(Boolean))
+            ].slice(0, 20);
+            await uDoc.ref.update({ loginHistory, googleId: data.googleId || googleId, authProvider: data.authProvider || 'google' });
+            invalidateUserCaches(data.username || uDoc.id);
+            return res.json({ success: true, username: data.username || uDoc.id, isNew: false });
+        }
+
+        // New account.
+        const clientIp = getClientIp(req);
+        if (await isIpBlocked(clientIp)) return res.status(403).send('此 IP 已被拉黑，无法注册');
+        const username = await generateUniqueUsername(p.name || email.split('@')[0]);
+        const userData = {
+            username, contact: email, password: '',
+            email, phone: '-',
+            tokens: 0, profilePic: p.picture || '',
+            purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
+            notifications: [], withdrawals: [],
+            loginHistory: [{ time: new Date().toISOString(), ip: clientIp, device: req.get('user-agent') || '-', via: 'google' }],
+            referredBy: '', role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false,
+            status: 'ACTIVE', banReason: '', authProvider: 'google', googleId,
+            createdAt: new Date().toISOString()
+        };
+        await db.collection('users').doc(username).set(userData);
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered via Google (${email})`);
+        invalidateUserCaches(username);
+        res.json({ success: true, username, isNew: true });
+    } catch (e) {
+        res.status(400).send('Google 验证失败：' + e.message);
     }
 });
 
@@ -1452,75 +1551,167 @@ app.delete('/api/coupons/:code', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+// ==========================================
+// TOP-UP / PAYMENTS — REAL money via HitPay.
+// The old top-up INSTANTLY credited tokens with NO real payment (a simulation).
+// It is now disabled. Real flow: create a HitPay bill -> user pays (Touch 'n Go
+// eWallet / FPX / card) -> HitPay's HMAC-signed webhook credits tokens exactly
+// once. Diamonds are NEVER granted until money is confirmed received.
+// ==========================================
+
+// Credit tokens for a CONFIRMED, paid top-up. Writes the same records the
+// profile/history UI already expects (topups[], orders collection, notification).
+async function creditTopupTokens(username, { tokens, price, currency, method, coupon, orderId }) {
+    const userRef = db.collection('users').doc(String(username).toLowerCase());
+    const doc = await userRef.get();
+    if (!doc.exists) throw new Error('User not found: ' + username);
+    const user = doc.data();
+    const grantTokens = Math.max(parseInt(tokens) || 0, 0);
+    const newTokens = (user.tokens || 0) + grantTokens;
+    const topups = Array.isArray(user.topups) ? user.topups : [];
+    topups.push({ orderId, amount: grantTokens, price, originalPrice: price, currency, paymentMethod: method, coupon: coupon || null, status: 'COMPLETED', date: new Date().toISOString() });
+    await userRef.update({ tokens: newTokens, topups });
+    await addUserNotification(username, createNotification(
+        'topup',
+        `成功充值 - ${grantTokens}`,
+        `充值 ${currency} ${price}，获得 ${grantTokens} 钻石`,
+        { amount: grantTokens, price, currency, paymentMethod: method, coupon: coupon || null }
+    ));
+    await db.collection('orders').add({
+        user: username, email: user.email || '-',
+        orderId, amount: grantTokens, price, originalPrice: price, currency, coupon: coupon || null,
+        method, status: 'COMPLETED', time: new Date().toISOString()
+    });
+    invalidateUserCaches(username);
+    invalidateFinanceCaches();
+    return newTokens;
+}
+
+// DISABLED: legacy instant top-up (was a simulation — credited with no payment).
 app.post('/api/users/:username/topup', async (req, res) => {
+    res.status(410).json({ error: 'DIRECT_TOPUP_DISABLED', message: '此充值方式已停用，请使用真实支付。' });
+});
+
+// STEP 1 — create a real HitPay payment request. Resolves the package + coupon
+// SERVER-SIDE (never trusts the client on how many tokens a price buys), stores
+// a PENDING order, and returns the HitPay checkout URL to redirect the user to.
+app.post('/api/payment/hitpay/create', async (req, res) => {
     try {
+        if (!db) return res.status(500).send('DB disconnected');
+        if (!HITPAY_API_KEY) return res.status(503).send('支付未配置：缺少 HITPAY_API_KEY');
         const settings = await getGlobalSettings();
-        if(settings.topupEnabled === false) return res.status(403).send('充值通道暂时关闭');
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const doc = await userRef.get();
-        const user = doc.data();
-        const allowedCurrencies = ['RMB', 'MYR', 'USD'];
-        const currency = allowedCurrencies.includes(String(req.body.currency || '').toUpperCase())
-            ? String(req.body.currency).toUpperCase()
-            : 'RMB';
-        const configuredMethods = sanitizePaymentMethods(settings.paymentMethods);
-        const activeMethods = configuredMethods.filter(method => method.enabled !== false && method.currency === currency);
-        if(!activeMethods.length) {
-            return res.status(400).send('该币种暂无可用支付方式');
-        }
-        const paymentMethod = String(req.body.paymentMethod || (
-            currency === 'MYR' ? 'FPX 网上银行' : currency === 'USD' ? 'USDT (TRC20/ERC20)' : '支付宝转账'
-        )).trim().slice(0, 80);
-        if(activeMethods.length && !activeMethods.some(method => method.name === paymentMethod || method.code === paymentMethod)) {
-            return res.status(400).send('此支付方式已停用，请重新选择');
-        }
-        let topupAmount = parseInt(req.body.amount) || 0;
-        let finalPrice = Math.max(parseFloat(req.body.price) || 0, 0);
+        if (settings.topupEnabled === false) return res.status(403).send('充值通道暂时关闭');
+
+        const username = String(req.params.username || req.body.username || '').trim();
+        if (!username) return res.status(400).send('缺少用户名');
+        const userRef = db.collection('users').doc(username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('用户不存在');
+        const user = userDoc.data();
+        if (user.status === 'BANNED') return res.status(403).send('账号已被封禁');
+
+        // Resolve the package server-side by id — tamper-proof pricing.
+        const packages = Array.isArray(settings.topupPackages) ? settings.topupPackages : [];
+        const pkg = packages.find(p => String(p.id) === String(req.body.packageId) && p.enabled !== false);
+        if (!pkg) return res.status(400).send('套餐不存在或已停用');
+
+        const isFirstTopup = !(Array.isArray(user.topups) && user.topups.length > 0);
+        let tokens = (parseInt(pkg.amount) || 0) + (parseInt(pkg.bonus) || 0) + (isFirstTopup ? (parseInt(pkg.firstTopupBonus) || 0) : 0);
+        let price = Math.max(parseFloat(pkg.rmPrice) || 0, 0);   // HitPay charges in MYR
+        const currency = 'MYR';
+
+        // Apply coupon server-side if present (consumed later, on confirmed payment).
         let couponMeta = null;
         const couponCode = normalizeCouponCode(req.body.couponCode);
-        if(couponCode) {
-            const validation = await validateCouponForUser(req.params.username, couponCode, finalPrice, topupAmount);
-            if(!validation.ok) return res.status(400).send(validation.reason);
-            topupAmount = validation.finalAmount;
-            finalPrice = validation.finalPrice;
-            couponMeta = {
-                code: validation.code,
-                type: validation.type,
-                discount: validation.discount,
-                bonusDiamonds: validation.bonusDiamonds,
-                description: validation.description
-            };
+        if (couponCode) {
+            const validation = await validateCouponForUser(username, couponCode, price, tokens);
+            if (!validation.ok) return res.status(400).send(validation.reason);
+            tokens = validation.finalAmount;
+            price = validation.finalPrice;
+            couponMeta = { code: validation.code, type: validation.type, discount: validation.discount, bonusDiamonds: validation.bonusDiamonds, description: validation.description };
+        }
+        if (price < 1) return res.status(400).send('支付金额过低（最低 RM1）');
+
+        const reference = 'TP' + Date.now() + Math.random().toString(36).substring(2, 7).toUpperCase();
+        await db.collection('pending_orders').doc(reference).set({
+            reference, username, tokens, price, currency, packageId: pkg.id,
+            coupon: couponMeta, method: "Touch 'n Go / e-Wallet (HitPay)",
+            status: 'PENDING', createdAt: new Date().toISOString()
+        });
+
+        const base = getPublicBaseUrl(req);
+        const form = new URLSearchParams();
+        form.set('amount', price.toFixed(2));
+        form.set('currency', currency);
+        form.set('email', user.email && user.email !== '-' ? user.email : '');
+        form.set('name', user.username || username);
+        form.set('purpose', `FULLKIK 充值 ${tokens} 钻石`);
+        form.set('reference_number', reference);
+        form.set('redirect_url', `${base}/fullkik/profile.page?payment=success&pref=${reference}`);
+        form.set('webhook', `${base}/api/payment/hitpay/webhook`);
+
+        const hpRes = await fetch(`${HITPAY_API_URL}/payment-requests`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-BUSINESS-API-KEY': HITPAY_API_KEY, 'X-Requested-With': 'XMLHttpRequest' },
+            body: form.toString()
+        });
+        const hpData = await hpRes.json().catch(() => ({}));
+        if (!hpRes.ok || !hpData.url) {
+            await db.collection('pending_orders').doc(reference).update({ status: 'CREATE_FAILED', error: JSON.stringify(hpData).slice(0, 500) }).catch(() => {});
+            return res.status(502).send('创建支付失败：' + (hpData.message || ('HTTP ' + hpRes.status)));
+        }
+        await db.collection('pending_orders').doc(reference).update({ hitpayId: hpData.id || '', status: 'AWAITING_PAYMENT' }).catch(() => {});
+        res.json({ url: hpData.url, reference, tokens, price, currency });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// STEP 2 — HitPay calls this AFTER the customer pays. Verify the HMAC-SHA256
+// signature with our salt, then credit tokens EXACTLY ONCE (idempotent).
+app.post('/api/payment/hitpay/webhook', async (req, res) => {
+    try {
+        const payload = req.body || {};
+        const provided = String(payload.hmac || '');
+        // Rebuild signature: every field except `hmac`, keys sorted, concatenated
+        // as key+value, HMAC-SHA256 with the merchant salt.
+        const keys = Object.keys(payload).filter(k => k !== 'hmac').sort();
+        const baseString = keys.map(k => `${k}${payload[k]}`).join('');
+        const expected = crypto.createHmac('sha256', HITPAY_SALT).update(baseString).digest('hex');
+        if (!HITPAY_SALT || !provided || expected !== provided) {
+            return res.status(400).send('Invalid signature');
+        }
+        if (String(payload.status) !== 'completed') {
+            return res.status(200).send('ignored');   // ack non-completed events
+        }
+        const reference = String(payload.reference_number || '');
+        if (!reference) return res.status(200).send('no reference');
+        const pendingRef = db.collection('pending_orders').doc(reference);
+        const pendingDoc = await pendingRef.get();
+        if (!pendingDoc.exists) return res.status(200).send('unknown reference');
+        const pending = pendingDoc.data();
+        if (pending.status === 'COMPLETED') return res.status(200).send('already processed');   // idempotent
+
+        await creditTopupTokens(pending.username, {
+            tokens: pending.tokens, price: pending.price, currency: pending.currency,
+            method: pending.method, coupon: pending.coupon, orderId: reference
+        });
+
+        // Consume the coupon now that the payment is real.
+        if (pending.coupon && pending.coupon.code) {
+            const settings = await getGlobalSettings();
             const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).map(c => {
-                if(normalizeCouponCode(c.code) !== couponCode) return c;
+                if (normalizeCouponCode(c.code) !== normalizeCouponCode(pending.coupon.code)) return c;
                 const usedBy = Array.isArray(c.usedBy) ? c.usedBy : [];
-                return { ...c, usedBy: [{ username: req.params.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
+                return { ...c, usedBy: [{ username: pending.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
             });
             await db.collection('settings').doc('global').set({ coupons }, { merge: true });
             invalidateSettingsCache();
         }
-        const newTokens = (user.tokens || 0) + topupAmount; 
-        const topups = user.topups || [];
-        const orderId = 'TP' + Date.now() + Math.random().toString(36).substring(2,7).toUpperCase();
-        topups.push({ orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency, paymentMethod, coupon: couponMeta, status: 'COMPLETED', date: new Date().toISOString() });
-        
-        await userRef.update({ tokens: newTokens, topups: topups }); 
-        await addUserNotification(req.params.username, createNotification(
-            'topup',
-            `成功充值 - ${topupAmount}`,
-            `充值 ${currency} ${finalPrice}，获得 ${topupAmount} 钻石`,
-            { amount: topupAmount, price: finalPrice, currency, paymentMethod, coupon: couponMeta }
-        ));
-        
-        await db.collection('orders').add({
-            user: req.params.username, email: user.email || '-',
-            orderId: orderId, amount: topupAmount, price: finalPrice, originalPrice: req.body.price || 0, currency, coupon: couponMeta,
-            method: paymentMethod,
-            status: 'COMPLETED', time: new Date().toISOString()
-        });
 
-        invalidateUserCaches(req.params.username);
-        invalidateFinanceCaches();
-        res.json({ tokens: newTokens, topups: topups });
-    } catch (e) { res.status(500).send(e.message); }
+        await pendingRef.update({ status: 'COMPLETED', paidAt: new Date().toISOString(), hitpayPaymentId: payload.payment_id || '' });
+        res.status(200).send('ok');
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
 });
 
 app.post('/api/users/:username/purchase', async (req, res) => {

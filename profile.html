@@ -524,7 +524,7 @@
             <div style="color:var(--text-muted); font-size:14px;">总计 (Total)</div>
             <div style="font-size:24px; font-weight:bold;" id="topupTotalDisplay">¥0</div>
         </div>
-        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付 (Simulated)</button>
+        <button class="btn-submit" style="margin-top:20px;" onclick="executeRealTopup()">确认支付</button>
         <details class="diamond-terms" open>
             <summary>📋 钻石使用条款 <span class="diamond-terms-note">仅用于购买音乐 / VIP / 打赏 · 不可提现</span></summary>
             <div class="diamond-terms-body" id="diamondTermsDisplay"></div>
@@ -805,6 +805,18 @@
     const incomingReferralCode = profileUrlParams.get('ref');
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
     if(!username) window.location.href = incomingReferralCode ? `/fullkik/register?ref=${encodeURIComponent(incomingReferralCode)}` : '/fullkik/register';
+    // Returned from the HitPay checkout — tokens arrive via webhook, so just reassure + refresh.
+    (function handlePaymentReturn(){
+        const pay = profileUrlParams.get('payment');
+        if(!pay) return;
+        history.replaceState(null, '', window.location.pathname);
+        setTimeout(function(){
+            try {
+                if(pay === 'success') showToast('支付完成！钻石到账后会自动更新，请稍候刷新');
+                else showToast('支付未完成或已取消', true);
+            } catch(e){}
+        }, 900);
+    })();
     const skipProfileLoader = profileUrlParams.get('skipLoader') === '1';
 
     const dict = {
@@ -1105,7 +1117,7 @@
     let currentPaymentMethod = '支付宝转账';
     let visiblePaymentMethods = [];
     let currentTopupAmt = 500, currentTopupPrice = 850;
-    let baseTopupAmt = 500, baseTopupPrice = 850, appliedCoupon = null;
+    let baseTopupAmt = 500, baseTopupPrice = 850, appliedCoupon = null, currentPackageId = null;
     const fallbackTopupPackages = [ { amount: 500, bonus: 200, firstTopupBonus: 0, rmPrice: 500, label: '限时优惠', sort: 10 }, { amount: 400, bonus: 150, firstTopupBonus: 0, rmPrice: 400, label: '限时优惠', sort: 20 }, { amount: 300, bonus: 100, firstTopupBonus: 0, rmPrice: 300, label: '限时优惠', sort: 30 }, { amount: 200, bonus: 0, firstTopupBonus: 0, rmPrice: 200, label: '', sort: 40 }, { amount: 100, bonus: 0, firstTopupBonus: 0, rmPrice: 100, label: '', sort: 50 }, { amount: 50, bonus: 0, firstTopupBonus: 0, rmPrice: 50, label: '', sort: 60 } ];
     function getTopupRate() {
         const rate = parseFloat(globalSettings.topupExchangeRate);
@@ -1187,8 +1199,8 @@
             const bonus = (parseInt(pk.bonus) || 0) + (isFirstTopup ? (parseInt(pk.firstTopupBonus) || 0) : 0);
             const label = pk.label || (bonus > 0 ? '限时优惠' : '');
             const bonusStr = bonus > 0 ? `<div class="tag">${label || '优惠'}</div><div class="amt">💎 ${base} + ${bonus}</div>` : `<div class="amt" style="margin-top:25px;">💎 ${base}</div>`;
-            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${base}, ${bonus}, ${price}, this)">${bonusStr}<div class="prc">${sym}${price}</div>${isFirstTopup && (parseInt(pk.firstTopupBonus)||0) > 0 ? `<div style="font-size:10px; color:var(--accent-light); margin-top:4px;">首充 +${parseInt(pk.firstTopupBonus)||0}</div>` : ''}</div>`;
-            if(i === 0) selectTopup(base, bonus, price, grid.lastElementChild);
+            grid.innerHTML += `<div class="topup-pack ${i===0 ? 'active' : ''}" onclick="selectTopup(${base}, ${bonus}, ${price}, this, '${pk.id || ''}')">${bonusStr}<div class="prc">${sym}${price}</div>${isFirstTopup && (parseInt(pk.firstTopupBonus)||0) > 0 ? `<div style="font-size:10px; color:var(--accent-light); margin-top:4px;">首充 +${parseInt(pk.firstTopupBonus)||0}</div>` : ''}</div>`;
+            if(i === 0) selectTopup(base, bonus, price, grid.lastElementChild, pk.id);
         });
         if(!packs.length) grid.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); text-align:center; padding:30px;">暂无可用套餐</div>`;
     }
@@ -1201,12 +1213,13 @@
         const sym = currentCurrency === 'RMB' ? '¥' : currentCurrency === 'USD' ? '$' : 'RM';
         document.getElementById('topupTotalDisplay').innerText = `${sym}${currentTopupPrice}${currentCurrency === 'USD' ? '（USDT 支付）' : ''}`;
     }
-    function selectTopup(amt, bonus, price, el) {
+    function selectTopup(amt, bonus, price, el, packageId) {
         if(el) { document.querySelectorAll('.topup-pack').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
         baseTopupAmt = amt + bonus;
         baseTopupPrice = price;
         currentTopupAmt = baseTopupAmt;
         currentTopupPrice = baseTopupPrice;
+        if(packageId !== undefined && packageId !== null && packageId !== '') currentPackageId = packageId;
         resetTopupCoupon();
         updateTopupTotal();
     }
@@ -1229,10 +1242,25 @@
     }
     async function executeRealTopup() {
         if(globalSettings.topupEnabled === false) return showToast("充值通道暂时关闭", true);
-        if(!currentPaymentMethod) return showToast("请选择可用支付方式", true);
-        showGlobalLoader("正在处理订单...");
-        const res = await fetch(`${API_URL}/users/${username}/topup`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ amount: baseTopupAmt, price: baseTopupPrice, currency: currentCurrency, paymentMethod: currentPaymentMethod, couponCode: appliedCoupon?.code || '' }) });
-        if(res.ok) { const data = await res.json(); userTokens = data.tokens; userTopups = data.topups; document.getElementById('profileBannerTokens').innerText = userTokens; document.getElementById('headerTokenDisplay').innerText = userTokens; const couponInput = document.getElementById('topupCouponInput'); if(couponInput) couponInput.value = ''; resetTopupCoupon(); hideGlobalLoader(); showToast(`充值完成！`); switchView('history'); } else { const msg = await res.text(); hideGlobalLoader(); showToast(msg || "Top up failed", true); }
+        if(!currentPackageId) return showToast("请选择充值套餐", true);
+        // Real payment: create a HitPay bill server-side, then send the user to
+        // the secure HitPay checkout (Touch 'n Go eWallet / FPX / card). Tokens
+        // are credited only after HitPay confirms payment via webhook.
+        showGlobalLoader("正在跳转到安全支付...");
+        try {
+            const res = await fetch(`${API_URL}/payment/hitpay/create`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username, packageId: currentPackageId, couponCode: appliedCoupon?.code || '' })
+            });
+            if(!res.ok) { const msg = await res.text(); hideGlobalLoader(); return showToast(msg || "创建支付失败", true); }
+            const data = await res.json();
+            if(!data.url) { hideGlobalLoader(); return showToast("支付链接生成失败", true); }
+            window.location.href = data.url;   // -> HitPay hosted checkout
+        } catch(err) {
+            hideGlobalLoader();
+            showToast("支付服务暂时不可用，请稍后再试", true);
+        }
     }
 
     // --- PLAYLIST LIBRARY (WITH QUEUE ENGINE) ---

@@ -94,6 +94,8 @@
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
         <div style="margin-top: 20px;"><a href="/fullkik/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
+        <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
+        <div id="googleBtnLogin" style="display:flex; justify-content:center; min-height:44px;"></div>
     </div>
 
     <div id="registerView" class="view-section">
@@ -104,6 +106,8 @@
         <div class="input-group password-wrap"><input type="password" id="regConfirm" placeholder="Confirm Password" data-placeholder="confirmPH"><button class="password-toggle" onclick="togglePassword('regConfirm')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="register()" data-i18n="regBtn">Register</button>
         <div style="margin-top: 15px;"><span style="color: var(--text-muted); font-size: 14px;" data-i18n="hasAcc">Already have an account? </span><span class="toggle-link" onclick="switchView('loginView')" data-i18n="signinLnk">Sign in</span></div>
+        <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
+        <div id="googleBtnReg" style="display:flex; justify-content:center; min-height:44px;"></div>
     </div>
 
     <div id="otpView" class="view-section">
@@ -135,8 +139,33 @@
 
 <div class="copyright-footer">© 2026 FULLKIK</div>
 
+<script src="https://accounts.google.com/gsi/client" async defer onload="if(window.initGoogleSignIn)initGoogleSignIn()"></script>
 <script>
     const API_URL = '/api'; let currentResetToken = null;
+
+    // --- Google Sign-In (real "Sign in with Google") ---
+    // Verifies with the backend, which finds-or-creates the FULLKIK account.
+    async function onGoogleCredential(response){
+        try {
+            const res = await fetch(`${API_URL}/auth/google`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: response.credential }) });
+            if(res.ok){ const data = await res.json(); localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page'; }
+            else { showToast(await res.text(), true); }
+        } catch(e){ showToast('Google 登录失败', true); }
+    }
+    async function initGoogleSignIn(){
+        if(window.__gsiInit) return;
+        try {
+            const cfg = await (await fetch(`${API_URL}/public-config`)).json();
+            if(!cfg.googleClientId || !window.google || !window.google.accounts) return; // not configured yet
+            window.__gsiInit = true;
+            google.accounts.id.initialize({ client_id: cfg.googleClientId, callback: onGoogleCredential });
+            ['googleBtnLogin','googleBtnReg'].forEach(function(id){
+                const el = document.getElementById(id);
+                if(el) google.accounts.id.renderButton(el, { theme:'filled_black', size:'large', shape:'pill', text:'continue_with', width: 300 });
+            });
+        } catch(e){}
+    }
+    window.addEventListener('load', function(){ if(window.google && window.google.accounts) initGoogleSignIn(); });
     let pendingRegisterPayload = null, pendingOtpPhone = '', pendingOtpId = '';
     const referralCode = new URLSearchParams(window.location.search).get('ref') || localStorage.getItem('fullkikReferral') || '';
     if(referralCode) localStorage.setItem('fullkikReferral', referralCode);
