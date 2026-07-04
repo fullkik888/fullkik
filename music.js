@@ -38,6 +38,7 @@ app.get('/profile.html', redirectWithQuery('/fullkik/profile.page'));
 app.get('/manager.html', redirectWithQuery('/fullkik/manager.page'));
 app.get('/register.html', redirectWithQuery('/fullkik/register'));
 app.get('/vip.html', redirectWithQuery('/fullkik/vip'));
+app.get('/contest.html', redirectWithQuery('/fullkik/contest'));
 app.use(express.static(__dirname));
 
 let db, bucket;
@@ -196,6 +197,9 @@ app.get('/fullkik/register', async (req, res) => {
     res.sendFile(path.join(__dirname, 'register.html'));
 });
 app.get('/fullkik/vip', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
+app.get(['/fullkik/contest', '/fullkik/contest.page', '/fullkik/tournament', '/fullkik/activity'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'contest.html'));
+});
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
@@ -1042,6 +1046,64 @@ app.post('/api/register', async (req, res) => {
         res.json({ success: true, username });
     } catch (e) { 
         res.status(500).send(e.message); 
+    }
+});
+
+app.post('/api/contest/:id/register', async (req, res) => {
+    try {
+        if(!db) return res.status(500).send('DB disconnected');
+        const activityId = String(req.params.id || '').trim();
+        const email = String(req.body.email || req.body.gmail || '').trim().toLowerCase();
+        const djName = String(req.body.djName || req.body.djname || req.body.username || '').trim().slice(0, 80);
+        if(!activityId) return res.status(400).send('活动不存在');
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).send('请输入有效 Gmail');
+        if(!djName) return res.status(400).send('请输入 DJ Name');
+        if(await containsSensitiveWord(djName)) return res.status(400).send('DJ Name 包含敏感词');
+
+        const settingsRef = db.collection('settings').doc('global');
+        const settingsDoc = await settingsRef.get();
+        const settings = settingsDoc.exists ? { ...DEFAULT_SETTINGS, ...settingsDoc.data() } : { ...DEFAULT_SETTINGS };
+        const activities = Array.isArray(settings.contestActivities) ? settings.contestActivities : [];
+        const index = activities.findIndex(activity => String(activity.id || '') === activityId);
+        if(index === -1) return res.status(404).send('活动不存在');
+
+        const activity = { ...activities[index] };
+        const participants = Array.isArray(activity.participants) ? activity.participants : [];
+        const sameEntry = participants.find(p => {
+            const oldEmail = String(p.email || '').trim().toLowerCase();
+            const oldName = String(p.djName || p.username || '').trim().toLowerCase();
+            return oldEmail === email || oldName === djName.toLowerCase();
+        });
+        if(sameEntry) {
+            setCleanShareSession(req, res);
+            return res.json({ success: true, already: true, activityId, participant: sameEntry });
+        }
+
+        const participant = {
+            id: 'CP' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(),
+            email,
+            djName,
+            username: djName,
+            uploads: 0,
+            downloads: 0,
+            favorites: 0,
+            score: 0,
+            joinedAt: new Date().toISOString(),
+            ip: getClientIp(req)
+        };
+        activity.participants = [participant, ...participants].slice(0, 5000);
+        activity.logs = [
+            { action: '前台报名', admin: 'PUBLIC', detail: `${djName} <${email}>`, timestamp: new Date().toISOString() },
+            ...(Array.isArray(activity.logs) ? activity.logs : [])
+        ].slice(0, 80);
+        activities[index] = activity;
+        await settingsRef.set({ contestActivities: activities }, { merge: true });
+        invalidateSettingsCache();
+        setCleanShareSession(req, res);
+        res.json({ success: true, activityId, participant });
+    } catch(e) {
+        console.error('Contest Register Error:', e);
+        res.status(500).send('大赛报名失败');
     }
 });
 
@@ -2594,9 +2656,19 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.commissionStatement !== undefined) updates.commissionStatement = String(req.body.commissionStatement || '').trim() || DEFAULT_SETTINGS.commissionStatement;
         if (req.body.activity !== undefined) updates.activity = req.body.activity;
         if (req.body.contestActivities !== undefined) {
-            updates.contestActivities = Array.isArray(req.body.contestActivities)
-                ? req.body.contestActivities.slice(0, 50)
-                : [];
+            const rows = Array.isArray(req.body.contestActivities) ? req.body.contestActivities.slice(0, 50) : [];
+            const processedContestActivities = [];
+            for (const rawActivity of rows) {
+                const activity = { ...(rawActivity || {}) };
+                const bannerBase64 = activity.bannerBase64 || (String(activity.bannerUrl || '').startsWith('data:image') ? activity.bannerUrl : '');
+                const posterBase64 = activity.posterBase64 || (String(activity.posterUrl || '').startsWith('data:image') ? activity.posterUrl : '');
+                if(bannerBase64) activity.bannerUrl = await uploadToCloudinaryBase64(bannerBase64, 'contest_banners');
+                if(posterBase64) activity.posterUrl = await uploadToCloudinaryBase64(posterBase64, 'contest_posters');
+                delete activity.bannerBase64;
+                delete activity.posterBase64;
+                processedContestActivities.push(activity);
+            }
+            updates.contestActivities = processedContestActivities;
         }
         if (req.body.coupons !== undefined) {
             updates.coupons = Array.isArray(req.body.coupons)
