@@ -218,9 +218,11 @@
         .settings-inline-grid { display:grid; grid-template-columns:1fr 1fr 220px; gap:16px; align-items:end; }
         .toggle-line { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-weight:800; }
         .toggle-line input { width:18px; height:18px; accent-color:var(--accent-light); }
-        .log-detail-text { white-space:pre-wrap !important; overflow:visible !important; text-overflow:clip !important; line-height:1.55; color:var(--text-muted); word-break:break-word; }
-        .log-meta-line { margin-top:7px; display:flex; gap:8px; flex-wrap:wrap; }
-        .log-meta-chip { border:1px solid var(--border-color); background:rgba(0,0,0,0.24); border-radius:999px; padding:3px 8px; font-size:11px; color:var(--text-muted); }
+        .log-detail-text { white-space:nowrap !important; overflow:hidden !important; text-overflow:ellipsis !important; line-height:1.35; color:var(--text-muted); display:flex; align-items:center; gap:10px; min-width:0; }
+        .log-detail-main { color:var(--text-main); font-weight:800; min-width:0; flex:0 1 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .log-meta-line { margin-top:0; display:flex; align-items:center; gap:8px; flex:1 1 auto; min-width:0; overflow:hidden; flex-wrap:nowrap; }
+        .log-meta-chip { border:1px solid var(--border-color); background:rgba(0,0,0,0.24); border-radius:999px; padding:3px 8px; font-size:11px; color:var(--text-muted); white-space:nowrap; flex:0 0 auto; }
+        .log-msg-chip { flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
         .coupon-form-grid { display:grid; grid-template-columns:1.1fr 1.1fr 150px 120px; gap:14px; padding:22px; align-items:end; }
         .coupon-form-grid.second { grid-template-columns:1fr 1fr 1fr 1fr; padding-top:0; }
         .package-form-grid { display:grid; grid-template-columns:1.2fr repeat(5, 1fr) auto; gap:14px; padding:22px; align-items:end; }
@@ -448,6 +450,12 @@
         .contest-stat { border:1px solid var(--border-color); border-radius:12px; background:var(--card-bg); padding:20px; }
         .contest-stat strong { display:block; font-size:28px; color:white; margin-top:8px; }
         .contest-form-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+        .contest-media-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:24px; }
+        .contest-media-box { min-height:190px; border:1px dashed #5b2424; border-radius:14px; background:#090303; display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; color:var(--text-muted); text-align:center; transition:0.2s; }
+        .contest-media-box:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.16); color:white; }
+        .contest-media-box img { width:100%; height:100%; max-height:260px; object-fit:cover; display:block; }
+        .contest-media-box.poster img { object-fit:contain; background:#080202; }
+        .contest-media-hint { padding:18px; line-height:1.7; font-size:13px; }
         .contest-panel { display:none; }
         .contest-panel.active { display:block; }
         .contest-prize-row { display:grid; grid-template-columns:90px 1fr 160px 120px 36px; gap:12px; align-items:center; margin-bottom:10px; }
@@ -649,7 +657,7 @@
             .table-container { overflow-x:auto; -webkit-overflow-scrolling:touch; }
             .filter-bar, .log-toolbar { gap:10px; align-items:stretch; }
             .filter-group, .log-toolbar .input-text, .log-toolbar .select-box { min-width:150px; }
-            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid, .payment-form-grid { grid-template-columns:1fr; align-items:stretch; }
+            .home-title-panel, .contest-create-grid, .contest-form-grid, .contest-media-grid, .contest-stat-grid, .contest-prize-row, .contest-rank-row, .contest-log-row, .coupon-form-grid, .coupon-form-grid.second, .package-form-grid, .payment-form-grid { grid-template-columns:1fr; align-items:stretch; }
             .settings-inline-grid, .flow-steps, .finance-stat-grid, .finance-balance-flow, .ip-form-grid, .payment-status-grid { grid-template-columns:1fr; }
             .staff-permission-guide, .staff-permissions { grid-template-columns:1fr; }
             .finance-flow-arrow { transform:rotate(90deg); }
@@ -1299,7 +1307,7 @@
 
     <div id="view-activity" class="view-section">
         <div id="activityListPanel">
-            <div class="dash-header"><h2>活动列表</h2><p>上传竞赛类活动 · 可同时运行多个 · 公开大赛页面下次再接。</p></div>
+            <div class="dash-header"><h2>活动列表</h2><p>上传竞赛类活动 · 可同时运行多个 · Banner / Poster 可跳转公开大赛页。</p></div>
             <div class="glass-panel">
                 <div class="panel-header">新建活动 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">先填标题与时间窗口即可创建；奖品 / 规则在详情页完善。</span></div>
                 <div class="contest-create-grid">
@@ -1370,6 +1378,27 @@
                     </div>
                 </div>
                 <div class="glass-panel" style="margin-top:22px;">
+                    <div class="panel-header">前台大赛素材 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">Banner 会覆盖首页普通 Banner；Poster 会覆盖首页普通海报，两者都可点击进入大赛。</span></div>
+                    <div class="contest-media-grid">
+                        <div>
+                            <label class="settings-label">大赛 Banner</label>
+                            <div class="contest-media-box" id="contestBannerBox" onclick="document.getElementById('contestBannerInput').click()">
+                                <div class="contest-media-hint">点击上传 Banner<br>建议横图 / 海报横幅</div>
+                            </div>
+                            <input type="file" id="contestBannerInput" accept="image/*" style="display:none;" onchange="handleContestMediaUpload(event, 'banner')">
+                            <button class="btn-text-action danger" type="button" style="margin-top:10px;" onclick="removeContestMedia('banner')">移除 Banner</button>
+                        </div>
+                        <div>
+                            <label class="settings-label">大赛 Poster</label>
+                            <div class="contest-media-box poster" id="contestPosterBox" onclick="document.getElementById('contestPosterInput').click()">
+                                <div class="contest-media-hint">点击上传 Poster<br>会覆盖首页普通弹窗海报</div>
+                            </div>
+                            <input type="file" id="contestPosterInput" accept="image/*" style="display:none;" onchange="handleContestMediaUpload(event, 'poster')">
+                            <button class="btn-text-action danger" type="button" style="margin-top:10px;" onclick="removeContestMedia('poster')">移除 Poster</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel" style="margin-top:22px;">
                     <div class="panel-header">奖品阶梯 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">按行分配名次，修改会写入变更记录。</span></div>
                     <div style="padding:24px;" id="contestPrizeList"></div>
                     <div style="padding:0 24px 24px;"><button class="btn-text-action" onclick="addContestPrize()">+ 添加奖档</button></div>
@@ -1379,7 +1408,7 @@
 
             <div class="contest-panel" id="contestPanel-participants">
                 <div class="glass-panel">
-                    <div class="panel-header">参赛名单 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">当前为后台占位列表；公开大赛页下次接入。</span></div>
+                    <div class="panel-header">参赛名单 <span style="font-size:12px; color:var(--text-muted); font-weight:normal;">用户在公开大赛报名页提交 Gmail + DJ Name 后会出现在这里。</span></div>
                     <div id="contestParticipantList"></div>
                 </div>
             </div>
@@ -3473,9 +3502,10 @@
         activities[index].logs = [makeContestLog(activities[index].published ? '发布' : '下架', activities[index].published ? 'published - visible on public pages' : 'unpublished'), ...(activities[index].logs || [])].slice(0, 80);
         await saveContestActivities(activities, activities[index].published ? "活动已发布" : "活动已下架");
     }
-    function previewContestActivity() {
-        showToast("大赛前台页面下次接入");
-    }
+	    function previewContestActivity() {
+	        const activity = getCurrentContest();
+	        window.open(`/fullkik/contest${activity?.id ? `?id=${encodeURIComponent(activity.id)}` : ''}`, '_blank');
+	    }
     function openActivityModal() { const act = globalSettings.activity || { reward: 10 }; document.getElementById('actRewardInput').value = act.reward; document.getElementById('activityModal').style.display = 'flex'; }
     function renderPromotionActivity() {
         const act = globalSettings.activity || { enabled: false, reward: 10, count: 0, total: 0 };
@@ -4040,6 +4070,56 @@
         activity.logs = activity.logs.slice(0, 80);
     }
 
+    function renderContestMedia(activity = getCurrentContest()) {
+        const bannerBox = document.getElementById('contestBannerBox');
+        const posterBox = document.getElementById('contestPosterBox');
+        if(!activity) return;
+        const banner = activity.bannerUrl || '';
+        const poster = activity.posterUrl || '';
+        if(bannerBox) {
+            bannerBox.innerHTML = banner
+                ? `<img src="${escapeHtml(banner)}" alt="大赛 Banner">`
+                : `<div class="contest-media-hint">点击上传 Banner<br>建议横图 / 海报横幅</div>`;
+        }
+        if(posterBox) {
+            posterBox.innerHTML = poster
+                ? `<img src="${escapeHtml(poster)}" alt="大赛 Poster">`
+                : `<div class="contest-media-hint">点击上传 Poster<br>会覆盖首页普通弹窗海报</div>`;
+        }
+    }
+
+    function handleContestMediaUpload(event, type) {
+        const file = event.target.files && event.target.files[0];
+        const activity = getCurrentContest();
+        if(!file || !activity) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const value = ev.target.result;
+            if(type === 'banner') {
+                activity.bannerUrl = value;
+                activity.bannerBase64 = value;
+            } else {
+                activity.posterUrl = value;
+                activity.posterBase64 = value;
+            }
+            renderContestMedia(activity);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeContestMedia(type) {
+        const activity = getCurrentContest();
+        if(!activity) return;
+        if(type === 'banner') {
+            activity.bannerUrl = '';
+            activity.bannerBase64 = '';
+        } else {
+            activity.posterUrl = '';
+            activity.posterBase64 = '';
+        }
+        renderContestMedia(activity);
+    }
+
     function getContestStatus(activity) {
         if(!activity.published) return { text: '未发布', cls: 'draft' };
         const now = Date.now();
@@ -4111,6 +4191,8 @@
             endTime: endInput.value || '',
             resultTime: '',
             published: false,
+            bannerUrl: '',
+            posterUrl: '',
             rules: '',
             formUrl: '',
             category: '',
@@ -4193,6 +4275,7 @@
         document.getElementById('contestWeightUpload').value = activity.weights?.upload ?? activity.weights?.uploads ?? 1;
         document.getElementById('contestWeightDownload').value = activity.weights?.download ?? activity.weights?.downloads ?? 1;
         document.getElementById('contestWeightFavorite').value = activity.weights?.favorite ?? activity.weights?.favorites ?? 1;
+        renderContestMedia(activity);
         renderContestPrizes(activity);
         renderContestParticipants(participants);
         renderContestRanking(ranking, activity);
@@ -4307,6 +4390,8 @@
         activity.price = parseInt(document.getElementById('contestEditPrice').value) || 0;
         activity.categoryName = activity.category;
         activity.entryPrice = activity.price;
+        activity.bannerUrl = activity.bannerUrl || '';
+        activity.posterUrl = activity.posterUrl || '';
         activity.weights = {
             upload: parseInt(document.getElementById('contestWeightUpload').value) || 0,
             download: parseInt(document.getElementById('contestWeightDownload').value) || 0,
@@ -4324,13 +4409,14 @@
         const activity = getCurrentContest();
         if(!activity) return;
         activity.published = !activity.published;
-        addContestLog(activity, activity.published ? '发布' : '下架', activity.published ? 'published - 后台可见，前台大赛页下次接入' : 'unpublished');
+        addContestLog(activity, activity.published ? '发布' : '下架', activity.published ? 'published - 前台大赛页可见' : 'unpublished');
         await saveContestActivities(activity.published ? "活动已发布" : "活动已下架");
         renderContestDetail();
     }
 
     function previewContestActivity() {
-        showToast("大赛前台页面下次接入，本次先完成后台管理。");
+        const activity = getCurrentContest();
+        window.open(`/fullkik/contest${activity?.id ? `?id=${encodeURIComponent(activity.id)}` : ''}`, '_blank');
     }
 
     async function saveContestActivities(message = "活动已保存") {
@@ -4763,7 +4849,7 @@
                     }
                     if(val && typeof val === 'object') return `${key}: ${Object.keys(val).length} fields`;
                     return `${key}: ${val}`;
-                }).join('\n');
+                }).join(' · ');
             }
             return String(obj);
         };
@@ -4814,6 +4900,7 @@
             const targetId = log.targetId || '-';
             const details = formatLogDetails(log.details || log.message || '-');
             const rawMessage = String(log.message || '').replace(/<[^>]+>/g, '');
+            const detailsTitle = `${details} | ID: ${log.id || '-'} | type: ${log.type || 'admin'} | msg: ${rawMessage || '-'}`;
             listDiv.innerHTML += `
                 <div class="data-row grid-logs">
                     <div style="color:var(--text-muted); font-size:13px;">${formatLogTime(log.timestamp)}</div>
@@ -4821,12 +4908,12 @@
                     <div><span class="log-action-pill">${actionName}</span></div>
                     <div style="color:var(--text-muted);">${moduleName}</div>
                     <div style="font-weight:bold;">${targetId}</div>
-                    <div class="log-detail-text">
-                        <div style="color:var(--text-main); font-weight:700;">${escapeHtml(details)}</div>
+                    <div class="log-detail-text" title="${escapeHtml(detailsTitle)}">
+                        <div class="log-detail-main">${escapeHtml(details)}</div>
                         <div class="log-meta-line">
                             <span class="log-meta-chip">ID: ${escapeHtml(log.id || '-')}</span>
                             <span class="log-meta-chip">type: ${escapeHtml(log.type || 'admin')}</span>
-                            <span class="log-meta-chip">msg: ${escapeHtml(rawMessage || '-')}</span>
+                            <span class="log-meta-chip log-msg-chip">msg: ${escapeHtml(rawMessage || '-')}</span>
                         </div>
                     </div>
                 </div>`;
