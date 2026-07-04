@@ -1928,9 +1928,9 @@
             <h2 style="margin:0 0 12px;">新建员工账号</h2>
             <p style="color:var(--text-muted); line-height:1.7; margin:0 0 22px;">员工角色为 <strong style="color:var(--success);">MAINTAINER</strong>，只能访问被勾选的权限页面。系统会生成临时密码。</p>
             <div class="staff-modal-grid">
-                <div><label class="settings-label">邮箱</label><input class="modal-input" id="staffEmailInput" placeholder="staff@example.com"></div>
-                <div><label class="settings-label">显示名 / 用户名</label><input class="modal-input" id="staffUsernameInput" placeholder="张三"></div>
-                <div style="color:var(--text-muted); font-size:13px;">邮箱与显示名至少填一项。</div>
+                <div><label class="settings-label">Gmail（必填 · 真实）</label><input class="modal-input" id="staffEmailInput" placeholder="name@gmail.com"></div>
+                <div><label class="settings-label">用户名（登录用）</label><input class="modal-input" id="staffUsernameInput" placeholder="staff_username"></div>
+                <div style="color:var(--text-muted); font-size:13px;">Gmail 与用户名都必填。Gmail 必须是真实的 @gmail.com。员工可用「用户名」或「Gmail」+ 密码登录。</div>
                 <div><label class="settings-label">初始权限</label><div class="staff-modal-permissions" id="createStaffPermissions"></div></div>
             </div>
         </div>
@@ -4726,10 +4726,12 @@
     }
 
     async function createStaffAccount() {
-        const email = document.getElementById('staffEmailInput').value.trim();
+        const email = document.getElementById('staffEmailInput').value.trim().toLowerCase();
         const username = document.getElementById('staffUsernameInput').value.trim();
         const permissions = Array.from(document.querySelectorAll('.create-staff-permission:checked')).map(input => input.value);
-        if(!email && !username) return showToast('邮箱与显示名至少填写一项', true);
+        if(!username) return showToast('请填写用户名', true);
+        if(!email) return showToast('请填写 Gmail', true);
+        if(!/^[^\s@]+@(gmail|googlemail)\.com$/.test(email)) return showToast('必须是真实 Gmail 地址（@gmail.com）', true);
         showGlobalLoader('创建员工账号...');
         const res = await fetch(`${API_URL}/admin/staff`, {
             method:'POST',

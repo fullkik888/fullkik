@@ -2226,17 +2226,19 @@ app.post('/api/admin/staff', async (req, res) => {
         const permissions = Array.isArray(req.body.permissions)
             ? req.body.permissions.filter(p => STAFF_PERMISSIONS.includes(p))
             : [];
-        if(!email && !username) return res.status(400).send('邮箱与显示名至少填写一项');
-        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).send('邮箱格式不正确');
-        if(email) {
-            const duplicate = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
-            if(!duplicate.empty) return res.status(400).send('此邮箱已存在');
-        }
+        // Staff must have a username (for login) AND a REAL Gmail address.
+        if(!username) return res.status(400).send('请填写用户名 / Please enter a username');
+        if(!email) return res.status(400).send('请填写 Gmail / Please enter a Gmail');
+        if(!/^[^\s@]+@(gmail|googlemail)\.com$/.test(email)) return res.status(400).send('必须是真实 Gmail 地址（@gmail.com）/ Must be a real Gmail');
+        const dupEmail = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
+        if(!dupEmail.empty) return res.status(400).send('此 Gmail 已存在 / Gmail already exists');
+        const dupUser = await db.collection('admin_staff').where('username', '==', username).limit(1).get();
+        if(!dupUser.empty) return res.status(400).send('此用户名已存在 / Username already exists');
         const password = generateStaffPassword();
         const now = new Date().toISOString();
         const row = {
-            username: username || email.split('@')[0],
-            email: email || `staff-${Date.now().toString(36)}@fullkik.local`,
+            username,
+            email,
             password,
             role: 'MAINTAINER',
             status: 'ACTIVE',
