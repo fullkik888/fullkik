@@ -58,6 +58,11 @@
         .copyright-footer { position:fixed; bottom:16px; left:0; right:0; text-align:center; color:rgba(255,255,255,0.38); font-size:12px; z-index:5; }
 
         @media (max-width: 400px) { body { align-items:flex-start; padding-top:70px; } .auth-container { padding: 28px 20px; } h2 { font-size: 22px; } }
+
+        /* Google Sign-In button — clean dark, rounded, no white edge */
+        .gbtn-center { display:flex; justify-content:center; margin-top:6px; }
+        #googleBtnLogin, #googleBtnReg { border-radius:14px; overflow:hidden; line-height:0; box-shadow:0 4px 16px rgba(0,0,0,0.5); }
+        #googleBtnLogin > div, #googleBtnReg > div, #googleBtnLogin iframe, #googleBtnReg iframe { border-radius:14px !important; overflow:hidden !important; }
     </style>
     <script>
         (function() {
@@ -95,19 +100,14 @@
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
         <div style="margin-top: 20px;"><a href="/fullkik/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
         <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
-        <div id="googleBtnLogin" style="display:flex; justify-content:center; min-height:44px;"></div>
+        <div class="gbtn-center"><div id="googleBtnLogin"></div></div>
     </div>
 
     <div id="registerView" class="view-section">
-        <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2><p data-i18n="regSub">Setup your profile</p>
-        <div class="input-group"><input type="text" id="regContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
-        <div class="input-group"><input type="text" id="regUsername" placeholder="Choose a Username" data-placeholder="userPH"></div>
-        <div class="input-group password-wrap"><input type="password" id="regPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('regPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
-        <div class="input-group password-wrap"><input type="password" id="regConfirm" placeholder="Confirm Password" data-placeholder="confirmPH"><button class="password-toggle" onclick="togglePassword('regConfirm')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
-        <button class="btn-primary" onclick="register()" data-i18n="regBtn">Register</button>
-        <div style="margin-top: 15px;"><span style="color: var(--text-muted); font-size: 14px;" data-i18n="hasAcc">Already have an account? </span><span class="toggle-link" onclick="switchView('loginView')" data-i18n="signinLnk">Sign in</span></div>
-        <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
-        <div id="googleBtnReg" style="display:flex; justify-content:center; min-height:44px;"></div>
+        <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2>
+        <p style="margin:0 0 6px;">使用 Google 账户注册 / Sign up with Google</p>
+        <div class="gbtn-center" style="margin-top:30px;"><div id="googleBtnReg"></div></div>
+        <div style="margin-top: 24px;"><span style="color: var(--text-muted); font-size: 14px;" data-i18n="hasAcc">Already have an account? </span><span class="toggle-link" onclick="switchView('loginView')" data-i18n="signinLnk">Sign in</span></div>
     </div>
 
     <div id="otpView" class="view-section">
@@ -161,7 +161,7 @@
             google.accounts.id.initialize({ client_id: cfg.googleClientId, callback: onGoogleCredential });
             ['googleBtnLogin','googleBtnReg'].forEach(function(id){
                 const el = document.getElementById(id);
-                if(el) google.accounts.id.renderButton(el, { theme:'filled_black', size:'large', shape:'pill', text:'continue_with', width: 300 });
+                if(el) google.accounts.id.renderButton(el, { theme:'filled_black', size:'large', shape:'rectangular', text:'continue_with', logo_alignment:'center', width: 300 });
             });
         } catch(e){}
     }
