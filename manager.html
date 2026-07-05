@@ -4691,7 +4691,7 @@
                     const enabled = permissions.includes(item.id);
                     return `<label class="permission-toggle ${enabled ? 'enabled' : ''}"><input type="checkbox" class="staff-permission-check" data-staff-id="${staff.id}" value="${item.id}" ${enabled ? 'checked' : ''} onchange="this.parentElement.classList.toggle('enabled', this.checked)"> ${item.label}</label>`;
                 }).join('')}</div>
-                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="btn-primary" style="background:#3a1f0d; border:1px solid #7a4a1f;" onclick="editStaffPassword('${staff.id}')">改密码</button><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
+                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="saveStaffPermissions('${staff.id}')">保存权限</button><span style="color:var(--text-muted); font-size:12px;">勾选即生效 · 当前 ${permissions.length}/${STAFF_PERMISSION_DEFS.length}</span><button class="btn-primary" style="background:#3a1f0d; border:1px solid #7a4a1f;" onclick="editStaffPassword('${staff.id}')">改密码</button><button class="btn-primary" style="background:#0d2733; border:1px solid #1f5a7a;" onclick="editStaffEmail('${staff.id}')">改邮箱</button><button class="staff-danger" onclick="openDeleteStaff('${staff.id}')">删除</button></div>`;
             return `
                 <div class="staff-card ${isMainAdmin ? 'main-admin' : ''}">
                     <div class="staff-card-head">
@@ -4785,6 +4785,20 @@
         hideGlobalLoader();
         if(!res.ok) return showToast(await res.text(), true);
         showToast('密码已更新');
+    }
+
+    async function editStaffEmail(staffId) {
+        const current = (allStaff.find(s => s.id === staffId) || {}).email || '';
+        const prefill = current.endsWith('@fullkik.local') ? '' : current;
+        const em = prompt('输入新的 Gmail / 邮箱（留空可清除）/ New Gmail (blank to clear):', prefill);
+        if(em === null) return;
+        const email = em.trim();
+        showGlobalLoader('更新邮箱...');
+        const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/email`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+        hideGlobalLoader();
+        if(!res.ok) return showToast(await res.text(), true);
+        showToast('邮箱已更新');
+        loadStaff();
     }
 
     function openDeleteStaff(staffId) {

@@ -448,6 +448,13 @@
             <div class="input-col" style="margin-bottom:20px;"><label data-i18n="lblConfPw">再次输入新密码</label><input type="password" id="pwConfirm" class="input-field"><div class="error-msg" id="errPw"></div></div>
             <button class="btn-submit" onclick="submitPasswordChange()" data-i18n="btnPw">更新密码</button>
         </div>
+
+        <div class="form-section">
+            <h3>绑定 Google / Link Google</h3>
+            <p style="font-size:13px; color:var(--text-muted); margin:0 0 14px;">绑定真实 Gmail 后，可用 Google 一键登录。/ Link a verified Gmail to sign in with one tap.</p>
+            <div id="linkGoogleStatus" style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">未绑定 / Not linked</div>
+            <div id="linkGoogleBtnWrap" style="display:flex; justify-content:flex-start; border-radius:12px; overflow:hidden; width:max-content;"></div>
+        </div>
     </div>
 
     <div id="view-library" class="view-section">
@@ -793,6 +800,7 @@
 <div class="modal-overlay" id="profilePurchaseSuccess"><div class="modal-box" style="padding: 40px 20px; text-align:center;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent-light); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size:20px;">购买成功!</h2></div></div>
 
 
+<script src="https://accounts.google.com/gsi/client" async defer onload="if(window.initLinkGoogle)initLinkGoogle()"></script>
 <script>
     const API_URL = '/api';
     let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userTopups = [], userFavorites = [], userPlaylists = [];
@@ -801,6 +809,37 @@
     let currentProfileUserData = null;
     let withdrawalSummary = { totalEarned: 0, locked: 0, balance: 0, withdrawals: [] };
     const username = localStorage.getItem('djUsername');
+
+    // --- Link Google (attach a real, verified Gmail to this account) ---
+    async function onLinkGoogleCredential(response){
+        try {
+            showGlobalLoader('绑定 Google...');
+            const res = await fetch(`${API_URL}/users/${username}/link-google`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: response.credential }) });
+            hideGlobalLoader();
+            if(res.ok){ const d = await res.json(); showToast('Google 绑定成功 / Linked: ' + d.email); setLinkGoogleStatus(d.email); }
+            else { showToast(await res.text(), true); }
+        } catch(e){ hideGlobalLoader(); showToast('绑定失败', true); }
+    }
+    function setLinkGoogleStatus(email){
+        const s = document.getElementById('linkGoogleStatus');
+        const w = document.getElementById('linkGoogleBtnWrap');
+        if(email){ if(s) s.innerHTML = '✅ 已绑定 / Linked: <strong style="color:#fff;">' + email + '</strong>'; if(w) w.style.display = 'none'; }
+        else if(s){ s.innerText = '未绑定 / Not linked'; }
+    }
+    async function initLinkGoogle(){
+        if(window.__linkGsiInit || !username) return;
+        try {
+            const cfg = await (await fetch(`${API_URL}/public-config`)).json();
+            if(!cfg.googleClientId || !window.google || !window.google.accounts) return;
+            window.__linkGsiInit = true;
+            google.accounts.id.initialize({ client_id: cfg.googleClientId, callback: onLinkGoogleCredential });
+            const wrap = document.getElementById('linkGoogleBtnWrap');
+            if(wrap) google.accounts.id.renderButton(wrap, { theme:'filled_black', size:'large', shape:'rectangular', text:'continue_with', logo_alignment:'center', width: 240 });
+            try { const me = await (await fetch(`${API_URL}/users/${encodeURIComponent(username)}`)).json(); if(me && me.googleVerified && me.email) setLinkGoogleStatus(me.email); } catch(e){}
+        } catch(e){}
+    }
+    window.addEventListener('load', function(){ if(window.google && window.google.accounts) initLinkGoogle(); });
+
     const profileUrlParams = new URLSearchParams(window.location.search);
     const incomingReferralCode = profileUrlParams.get('ref');
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);

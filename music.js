@@ -1290,6 +1290,39 @@ app.post('/api/auth/google/set-password', async (req, res) => {
     }
 });
 
+// Link a REAL (Google-verified) Gmail to an existing user account.
+// The Google ID token proves the Gmail is genuine and the user's; we then attach
+// it — refusing if that Gmail is already linked to a different account.
+app.post('/api/users/:username/link-google', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        if (!GOOGLE_CLIENT_ID) return res.status(503).send('Google 登录未配置');
+        const credential = req.body.credential || req.body.idToken;
+        if (!credential) return res.status(400).send('缺少 Google 凭证');
+        const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: GOOGLE_CLIENT_ID });
+        const p = ticket.getPayload();
+        if (!p || !p.email || !p.email_verified) return res.status(400).send('Google 邮箱未验证');
+        const email = String(p.email).toLowerCase();
+        const googleId = p.sub;
+
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const userDoc = await userRef.get();
+        if (!userDoc.exists) return res.status(404).send('用户不存在');
+
+        // Refuse if this Gmail (or Google account) is already linked elsewhere.
+        const emailHits = await db.collection('users').where('email', '==', email).limit(5).get();
+        if (emailHits.docs.some(d => d.id !== userRef.id)) return res.status(400).send('此 Gmail 已绑定其他账号 / Gmail already linked to another account');
+        const gidHits = await db.collection('users').where('googleId', '==', googleId).limit(5).get();
+        if (gidHits.docs.some(d => d.id !== userRef.id)) return res.status(400).send('此 Google 账号已绑定其他账号 / Google account already linked elsewhere');
+
+        await userRef.update({ email, googleId, googleVerified: true, updatedAt: new Date().toISOString() });
+        invalidateUserCaches(req.params.username);
+        res.json({ success: true, email });
+    } catch (e) {
+        res.status(400).send('Google 绑定失败：' + e.message);
+    }
+});
+
 app.get('/api/users/:username', async (req, res) => {
     try {
         await sendCachedJson(req, res, `user:${req.params.username.toLowerCase()}:profile`, 10 * 1000, async () => {
@@ -2331,6 +2364,26 @@ app.put('/api/admin/staff/:id/password', async (req, res) => {
         await logAdminAction(`Reset staff password ${doc.data().username || req.params.id}`, { module: '用户', action: '修改员工密码', targetId: req.params.id });
         invalidateCachePrefix('admin_staff:');
         res.json({ success: true });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
+// Edit a staff member's Gmail/email after creation (optional; can be cleared).
+app.put('/api/admin/staff/:id/email', async (req, res) => {
+    try {
+        if(req.params.id === 'FULLKIKADMIN') return res.status(400).send('主管理员邮箱请在「编辑资料 / 密码」中修改');
+        const email = String(req.body.email || '').trim().toLowerCase();
+        if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).send('邮箱格式不正确 / Invalid email');
+        const ref = db.collection('admin_staff').doc(req.params.id);
+        const doc = await ref.get();
+        if(!doc.exists) return res.status(404).send('Staff not found');
+        if(email) {
+            const dup = await db.collection('admin_staff').where('email', '==', email).limit(1).get();
+            if(!dup.empty && dup.docs[0].id !== req.params.id) return res.status(400).send('此邮箱已存在 / Email already exists');
+        }
+        await ref.update({ email, updatedAt: new Date().toISOString() });
+        await logAdminAction(`Updated staff email ${doc.data().username || req.params.id}`, { module: '用户', action: '修改员工邮箱', targetId: req.params.id, details: email || '(cleared)' });
+        invalidateCachePrefix('admin_staff:');
+        res.json({ success: true, email });
     } catch(e) { res.status(500).send(e.message); }
 });
 
