@@ -5971,7 +5971,7 @@
             listDiv.innerHTML += `
                 <div class="data-row grid-users">
                     <div class="truncate" style="font-weight: 500;">${u.username}</div>
-                    <div class="truncate" style="color: var(--text-muted);">${u.email}</div>
+                    <div class="truncate" style="color: var(--text-muted);">${u.email || '-'} ${u.googleVerified ? '<span style="color:#34c759; font-size:11px; font-weight:700; white-space:nowrap;">✅ 已验证</span>' : '<span style="color:#ff9f43; font-size:11px; font-weight:700; white-space:nowrap;">⚠️ 未验证</span>'}</div>
                     <div>${roleBadge}</div>
                     <div style="color:var(--text-muted)">—</div>
                     <div style="font-weight: bold;"><span style="color:#00e5ff;">💎</span> ${u.tokens}</div>
@@ -5992,7 +5992,7 @@
         switchView('user-detail', uName);
         
         document.getElementById('det-u-name').innerText = currentEditUser.username;
-        document.getElementById('det-u-email').innerText = currentEditUser.email || '-';
+        document.getElementById('det-u-email').innerHTML = `${escapeHtml(currentEditUser.email || '-')} ${currentEditUser.googleVerified ? '<span style="color:#34c759; font-weight:700;">✅ Gmail 已验证 / Verified</span>' : '<span style="color:#ff9f43; font-weight:700;">⚠️ 未验证 / Not verified</span>'}`;
         document.getElementById('det-u-role').innerText = getUserRole(currentEditUser) === 'PRODUCER' ? 'Producer' : getUserRole(currentEditUser);
         document.getElementById('det-u-status').innerText = currentEditUser.status || 'ACTIVE';
         document.getElementById('det-u-status').style.color = currentEditUser.status === 'BANNED' ? 'var(--danger)' : 'var(--success)';

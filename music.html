@@ -455,7 +455,7 @@
     <div id="view-ranking" class="view-section">
         <div style="margin-bottom: 30px;">
             <h2 style="font-size:32px; font-weight:800; margin:0;" data-i18n="ranking">排行榜</h2>
-            <p style="color:var(--text-muted); margin-top:5px;">下载与购买量 Top 50 热播单曲</p>
+            <p style="color:var(--text-muted); margin-top:5px;" data-i18n="rankingSub">下载与购买量 Top 50 热播单曲</p>
         </div>
         <div class="ranking-list" id="rankingList"></div>
     </div>
@@ -535,11 +535,11 @@
 <div class="site-footer">© 2026 FULLKIK</div>
 
 <div class="mobile-bottom-nav" id="mobileBottomNav">
-    <button id="mb-home" onclick="switchView('home')"><span class="nav-ico">⌂</span><span>首页</span></button>
-    <button id="mb-reco" onclick="openMobileRecommendations()"><span class="nav-ico">♫</span><span>歌曲推荐</span></button>
-    <button id="mb-ranking" onclick="switchView('ranking')"><span class="nav-ico">▥</span><span>排行</span></button>
-    <button id="mb-contest" onclick="showContestComingSoon()"><span class="nav-ico">♕</span><span>大赛</span></button>
-    <button id="mb-profile" onclick="goProfile()"><span class="nav-ico">♙</span><span>我的</span></button>
+    <button id="mb-home" onclick="switchView('home')"><span class="nav-ico">⌂</span><span data-i18n="navHome">首页</span></button>
+    <button id="mb-reco" onclick="openMobileRecommendations()"><span class="nav-ico">♫</span><span data-i18n="navReco">歌曲推荐</span></button>
+    <button id="mb-ranking" onclick="switchView('ranking')"><span class="nav-ico">▥</span><span data-i18n="navRanking">排行</span></button>
+    <button id="mb-contest" onclick="showContestComingSoon()"><span class="nav-ico">♕</span><span data-i18n="navContest">大赛</span></button>
+    <button id="mb-profile" onclick="goProfile()"><span class="nav-ico">♙</span><span data-i18n="navProfile">我的</span></button>
 </div>
 
 <audio id="mainAudio" preload="metadata"></audio>
@@ -599,8 +599,8 @@
     }
     
     const dict = {
-        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", report: "Report" },
-        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有60秒", buyBtn: "购买", report: "举报" }
+        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", report: "Report", navHome: "Home", navReco: "Discover", navRanking: "Ranking", navContest: "Contest", navProfile: "Me", rankingSub: "Top 50 hottest tracks by downloads & purchases" },
+        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有60秒", buyBtn: "购买", report: "举报", navHome: "首页", navReco: "歌曲推荐", navRanking: "排行", navContest: "大赛", navProfile: "我的", rankingSub: "下载与购买量 Top 50 热播单曲" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
     let currentDjRoleFilter = 'PRODUCER';

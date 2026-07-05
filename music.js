@@ -2006,6 +2006,11 @@ app.put('/api/admin/users/:username/profile', async (req, res) => {
             wechat: req.body.wechat !== undefined ? String(req.body.wechat || '').trim() : (current.wechat || '')
         };
 
+        // A manually-edited Gmail is NOT Google-verified — reflect that honestly.
+        if((current.email || '') !== updates.email) {
+            updates.googleVerified = false;
+        }
+
         const changes = [];
         if((current.username || '') !== updates.username) changes.push(`username: ${current.username || '-'} -> ${updates.username}`);
         if((current.email || '') !== updates.email) changes.push(`gmail: ${current.email || '-'} -> ${updates.email || '-'}`);
