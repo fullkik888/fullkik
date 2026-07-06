@@ -615,6 +615,7 @@
             </div>
             <input type="file" id="vipFileInput" accept=".mp3,.wav" style="display:none;" onchange="handleVipAudioSelect(event)">
             <div id="vipFileCount" style="text-align:center; font-size:12px; color:var(--accent-light); margin-bottom:10px;"></div>
+            <button type="button" id="vipPreviewBtn" onclick="openVipPreviewPicker()" style="display:none; width:100%; margin-bottom:12px; padding:11px; border-radius:10px; border:1px solid #7c4dff; background:rgba(124,77,255,.14); color:#fff; font-weight:700; cursor:pointer;">🎧 设定试听片段 / Set preview<span id="vipPreviewLabel" style="color:var(--accent-light); font-weight:600; margin-left:6px;"></span></button>
             <div class="batch-upload-shell" id="vipBatchShell">
                 <div class="batch-upload-head">
                     <div><strong><span id="vipBatchCount">0</span> / 20 首</strong> <span id="vipBatchReady">0 首已就绪</span></div>
@@ -1902,6 +1903,16 @@
             </div>
         `).join('');
     }
+    let vipPreviewStart = 0;
+    function openVipPreviewPicker() {
+        const item = selectedVipFiles[0];
+        if(!item || !item.file) return showToast("请先选择歌曲文件", true);
+        PPPicker.open(item.file, vipPreviewStart, function(sec){
+            vipPreviewStart = sec;
+            const lbl = document.getElementById('vipPreviewLabel');
+            if(lbl) lbl.innerText = '· ' + Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+        });
+    }
     function handleVipAudioSelect(e) {
         const rawFiles = Array.from(e.target.files || []);
         const pickedFiles = rawFiles.filter(file => /\.(mp3|wav)$/i.test(file.name || ''));
@@ -1922,6 +1933,9 @@
             selectedVipFiles = [{ file, title: getFileTitle(file), price: defaultPrice, genreId: defaultGenre }];
             document.getElementById('vipFileCount').innerText = file.name;
             document.getElementById('vipTitleInput').value = getFileTitle(file);
+            vipPreviewStart = 0;
+            const vpb = document.getElementById('vipPreviewBtn'); if(vpb) vpb.style.display = 'block';
+            const vpl = document.getElementById('vipPreviewLabel'); if(vpl) vpl.innerText = '';
         }
         e.target.value = '';
     }
@@ -1933,6 +1947,8 @@
         const fileInput = document.getElementById('vipFileInput');
         currentVipUploadIsBatch = isBatch;
         selectedVipFiles = [];
+        vipPreviewStart = 0;
+        const vpb0 = document.getElementById('vipPreviewBtn'); if(vpb0) vpb0.style.display = 'none';
         if(isBatch) {
             fileInput.multiple = true;
             document.getElementById('vipUpTitle').innerText = dict[currentLang].btnUpBatch;
@@ -1964,7 +1980,7 @@
         if(!uploadItems.length || !uploadItems[0].file) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
         for(let i=0; i<uploadItems.length; i++) {
             const item = uploadItems[i];
-            const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING');
+            const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING'); if(!currentVipUploadIsBatch) fd.append('previewStart', vipPreviewStart || 0);
             if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
             const uploadRes = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
             if(!uploadRes.ok) {
@@ -1993,6 +2009,64 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => { init(); });
+</script>
+<!-- ===== Preview Picker (设定试听 60 秒) ===== -->
+<style>
+.ppk-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:100000;padding:16px;}
+.ppk-modal{width:min(920px,100%);background:#191c27;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:24px 26px;box-shadow:0 30px 80px rgba(0,0,0,.6);box-sizing:border-box;}
+.ppk-head{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:17px;margin-bottom:18px;}
+.ppk-x{background:none;border:none;color:#9aa3b2;font-size:20px;cursor:pointer;line-height:1;}
+.ppk-wave{position:relative;display:flex;align-items:center;gap:3px;height:140px;margin-bottom:8px;user-select:none;}
+.ppk-b{flex:1 1 0;min-width:2px;background:#cbd0da;border-radius:3px;opacity:.85;}
+.ppk-region{position:absolute;top:-6px;bottom:-6px;background:rgba(124,77,255,.36);border:3px solid #ffa726;border-radius:12px;cursor:grab;touch-action:none;}
+.ppk-region:active{cursor:grabbing;}
+.ppk-hint{color:#8b93a3;font-size:12px;margin:0 0 18px;}
+.ppk-row{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.ppk-play{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,#7c4dff,#6a3de8);color:#fff;font-size:15px;cursor:pointer;flex:none;}
+.ppk-time{color:#c9cdd6;font-size:13px;font-variant-numeric:tabular-nums;min-width:40px;text-align:center;}
+.ppk-scrub{flex:1;height:6px;background:#3a3f4c;border-radius:3px;cursor:pointer;position:relative;}
+.ppk-fill{height:100%;background:linear-gradient(90deg,#7c4dff,#ffa726);border-radius:3px;width:0%;}
+.ppk-actions{display:flex;gap:14px;align-items:center;}
+.ppk-confirm{background:linear-gradient(135deg,#7c4dff,#6a3de8);color:#fff;border:none;padding:12px 26px;border-radius:12px;font-weight:800;cursor:pointer;}
+.ppk-cancel{background:none;border:none;color:#9aa3b2;cursor:pointer;font-weight:600;font-size:14px;}
+</style>
+<div class="ppk-overlay" id="ppkOverlay">
+  <div class="ppk-modal">
+    <div class="ppk-head"><span>设定试听 60 秒 / Set 60s Preview</span><button class="ppk-x" onclick="PPPicker.close()">✕</button></div>
+    <div class="ppk-wave" id="ppkWave"><div class="ppk-region" id="ppkRegion"></div></div>
+    <div class="ppk-hint">拖动紫色区块选择试听片段 / Drag the purple block to pick the 60s preview.</div>
+    <div class="ppk-row">
+      <button class="ppk-play" id="ppkPlay" onclick="PPPicker.toggle()">▶</button>
+      <span class="ppk-time" id="ppkStart">0:00</span>
+      <div class="ppk-scrub" id="ppkScrub" onclick="PPPicker.scrub(event)"><div class="ppk-fill" id="ppkFill"></div></div>
+      <span class="ppk-time" id="ppkDur">0:00</span>
+    </div>
+    <div class="ppk-actions"><button class="ppk-confirm" onclick="PPPicker.confirm()">确定设置</button><button class="ppk-cancel" onclick="PPPicker.close()">取消</button></div>
+  </div>
+</div>
+<script>
+window.PPPicker=(function(){
+  var WIN=60,audio=null,url=null,dur=0,start=0,cb=null,playing=false,dragging=false,bound=false;
+  function $(id){return document.getElementById(id);}
+  function fmt(s){s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+  function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var frag=document.createDocumentFragment();for(var j=0;j<90;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
+  function layout(){var region=$('ppkRegion');if(!dur||dur<=WIN){region.style.left='0%';region.style.width='100%';return;}var wp=WIN/dur*100;var lp=start/dur*100;lp=Math.max(0,Math.min(100-wp,lp));region.style.left=lp+'%';region.style.width=wp+'%';}
+  function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion');
+    function move(e){if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
+    region.addEventListener('mousedown',function(){dragging=true;});region.addEventListener('touchstart',function(){dragging=true;},{passive:true});
+    window.addEventListener('mousemove',move);window.addEventListener('touchmove',move,{passive:false});
+    window.addEventListener('mouseup',function(){dragging=false;});window.addEventListener('touchend',function(){dragging=false;});}
+  function open(file,cur,onConfirm){cb=onConfirm;start=Math.max(0,parseInt(cur)||0);if(url){try{URL.revokeObjectURL(url);}catch(e){}}url=URL.createObjectURL(file);audio=new Audio();audio.preload='metadata';audio.src=url;dur=0;$('ppkOverlay').style.display='flex';bars();layout();$('ppkStart').innerText=fmt(start);$('ppkDur').innerText='…';$('ppkFill').style.width='0%';$('ppkPlay').innerText='▶';playing=false;
+    audio.onloadedmetadata=function(){dur=audio.duration||0;$('ppkDur').innerText=fmt(dur);if(dur<=WIN)start=0;layout();$('ppkStart').innerText=fmt(start);};
+    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';var end=(dur<=WIN?dur:start+WIN);if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';audio.currentTime=start;}};
+    audio.onended=function(){playing=false;$('ppkPlay').innerText='▶';};
+    drag();}
+  function toggle(){if(!audio)return;if(playing){audio.pause();playing=false;$('ppkPlay').innerText='▶';}else{if(audio.currentTime<start||audio.currentTime>=start+WIN)audio.currentTime=start;audio.play();playing=true;$('ppkPlay').innerText='⏸';}}
+  function scrub(e){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));audio.currentTime=p*dur;}
+  function close(){if(audio){try{audio.pause();}catch(e){}}playing=false;if($('ppkPlay'))$('ppkPlay').innerText='▶';$('ppkOverlay').style.display='none';}
+  function confirm(){if(cb)cb(start);close();}
+  return{open:open,toggle:toggle,scrub:scrub,close:close,confirm:confirm};
+})();
 </script>
 </body>
 </html>

@@ -1775,7 +1775,7 @@
             `;
         }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; audioEl.dataset.previewStart = String((currentSong && currentSong.previewStart) ? Math.max(0, parseInt(currentSong.previewStart)) : 0); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
         setSongVisualizerPlaying(false);
         renderSongRecommendations(false);
         switchView('song');
@@ -1784,8 +1784,8 @@
 
     // AUDIO LOGIC
     if(audioEl) {
-        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const displayDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerDur').innerText = formatTime(displayDur); document.getElementById('playerSeek').max = displayDur; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; if (!isP && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) { audioEl.pause(); audioEl.currentTime = PREVIEW_LIMIT_SECONDS; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } document.getElementById('playerCurr').innerText = formatTime(audioEl.currentTime); document.getElementById('playerSeek').value = audioEl.currentTime; const baseDur = (!isP && audioEl.duration > PREVIEW_LIMIT_SECONDS) ? PREVIEW_LIMIT_SECONDS : audioEl.duration; document.getElementById('playerProg').style.width = `${(audioEl.currentTime / baseDur) * 100}%`; });
+        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const winLen = isP ? audioEl.duration : Math.min(PREVIEW_LIMIT_SECONDS, Math.max(0, (audioEl.duration || 0) - ps)); if(!isP && ps > 0) { try { audioEl.currentTime = ps; } catch(e){} } document.getElementById('playerDur').innerText = formatTime(winLen); document.getElementById('playerSeek').max = winLen; });
+        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; if(!isP) { if(audioEl.currentTime < ps - 0.5) audioEl.currentTime = ps; if(audioEl.currentTime >= ps + PREVIEW_LIMIT_SECONDS) { audioEl.pause(); audioEl.currentTime = ps; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } } const rel = isP ? audioEl.currentTime : Math.max(0, audioEl.currentTime - ps); const winLen = isP ? audioEl.duration : Math.min(PREVIEW_LIMIT_SECONDS, Math.max(0.01, (audioEl.duration || 0) - ps)); document.getElementById('playerCurr').innerText = formatTime(rel); document.getElementById('playerSeek').value = rel; document.getElementById('playerProg').style.width = `${Math.max(0, Math.min(100, (rel / winLen) * 100))}%`; });
         audioEl.addEventListener('play', () => setSongVisualizerPlaying(true));
         audioEl.addEventListener('pause', () => setSongVisualizerPlaying(false));
         audioEl.addEventListener('ended', () => { setSongVisualizerPlaying(false); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
@@ -1793,7 +1793,7 @@
     async function togglePlayerAudio() {
         const btn = document.getElementById('playerPlayBtn');
         if(audioEl.paused) {
-            if(audioEl.dataset.purchased === "false" && audioEl.currentTime >= PREVIEW_LIMIT_SECONDS) audioEl.currentTime = 0;
+            if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; if(audioEl.currentTime < ps || audioEl.currentTime >= ps + PREVIEW_LIMIT_SECONDS) audioEl.currentTime = ps; }
             await prepareSongVisualizerAudio();
             try {
                 await audioEl.play();
@@ -1807,7 +1807,7 @@
             btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
         }
     }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false" && val >= PREVIEW_LIMIT_SECONDS) val = PREVIEW_LIMIT_SECONDS - 0.1; audioEl.currentTime = val; }
+    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; val = ps + Math.max(0, Math.min(PREVIEW_LIMIT_SECONDS - 0.1, parseFloat(val) || 0)); } audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
         if(!username) return window.location.href = '/fullkik/register'; 

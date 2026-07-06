@@ -2804,6 +2804,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const newSong = {
         filename: title, originalName, filepath: url, coverUrl: coverUrl, genreId: genreIds[0] || 'none', genreIds,
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
+        previewStart: Math.max(parseInt(reqBody.previewStart) || 0, 0),
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong);
