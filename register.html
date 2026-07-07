@@ -98,7 +98,7 @@
         <div class="input-group password-wrap"><input type="password" id="loginPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('loginPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
-        <div style="margin-top: 20px;"><a href="/fullkik/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
+        <div style="margin-top: 20px;"><a href="/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
         <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
         <div class="gbtn-center"><div id="googleBtnLogin"></div></div>
     </div>
@@ -161,7 +161,7 @@
             if(res.ok){
                 const data = await res.json();
                 if(data.hasPassword){
-                    localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page';
+                    localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page';
                 } else {
                     // First Google sign-in → must set a password once.
                     switchView('googlePassView');
@@ -177,7 +177,7 @@
         if(!pendingGoogleCredential) return showToast('请重新用 Google 登录 / Please sign in with Google again', true);
         try {
             const res = await fetch(`${API_URL}/auth/google/set-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: pendingGoogleCredential, password: p1 }) });
-            if(res.ok){ const d = await res.json(); localStorage.setItem('djUsername', d.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/fullkik/main.page'; }
+            if(res.ok){ const d = await res.json(); localStorage.setItem('djUsername', d.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page'; }
             else { showToast(await res.text(), true); }
         } catch(e){ showToast('设置密码失败', true); }
     }
@@ -228,7 +228,7 @@
         const contact = document.getElementById('loginContact').value, password = document.getElementById('loginPass').value;
         if(!contact || !password) return showToast(dict[currentLang].errFill, true);
         const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, password }) });
-        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/fullkik/main.page'; } 
+        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/main.page'; } 
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
@@ -238,7 +238,7 @@
             localStorage.setItem('djUsername', (await res.json()).username); 
             sessionStorage.setItem('fullkikShowWelcome', '1');
             document.getElementById('successModal').style.display = 'flex';
-            setTimeout(() => window.location.href = '/fullkik/main.page', 2000); 
+            setTimeout(() => window.location.href = '/main.page', 2000); 
         } else { showToast(await res.text(), true); }
     }
 

@@ -34,7 +34,7 @@ function redirectWithQuery(target) {
         res.redirect(302, target + query);
     };
 }
-app.get('/music.html', redirectWithQuery('/fullkik/main.page'));
+app.get('/music.html', redirectWithQuery('/main.page'));
 app.get('/profile.html', redirectWithQuery('/fullkik/profile.page'));
 app.get('/manager.html', redirectWithQuery('/fullkik/manager.page'));
 app.get('/register.html', redirectWithQuery('/fullkik/register'));
@@ -205,11 +205,8 @@ async function uploadToCloudinaryBase64(base64Str, folder) {
 // 2. HTML ROUTES & ANTI-THEFT STREAMING
 // ==========================================
 app.get('/health', (req, res) => res.status(200).send('OK'));
-app.get('/', redirectWithQuery('/fullkik/main.page'));
-app.get('/fullkik/main.page', async (req, res) => {
-    if(await shouldBlockCleanSharePage(req, res, 'music')) return sendExpiredSharePage(res);
-    res.sendFile(path.join(__dirname, 'music.html'));
-});
+app.get('/', redirectWithQuery('/main.page'));
+app.get('/fullkik/main.page', redirectWithQuery('/main.page'));
 app.get('/fullkik/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
 app.get('/fullkik/manager.page', (req, res) => { res.sendFile(path.join(__dirname, 'manager.html')); });
 app.get('/fullkik/register', async (req, res) => {
@@ -662,7 +659,7 @@ function getPublicBaseUrl(req) {
 
 function getTemporaryShareTarget(type) {
     const cleanType = String(type || '').trim().toLowerCase();
-    if(cleanType === 'music') return { type: 'music', path: '/fullkik/main.page', label: 'FULLKIK主页' };
+    if(cleanType === 'music') return { type: 'music', path: '/main.page', label: 'FULLKIK主页' };
     if(cleanType === 'register') return { type: 'register', path: '/fullkik/register', label: '用户注册' };
     return null;
 }
@@ -2216,7 +2213,7 @@ async function maybeSendVerifyReminder(userData, userRef) {
             <div style="font-family:Arial,'Microsoft YaHei',sans-serif;background:#120606;color:#fff;padding:24px;border-radius:14px;max-width:520px;">
                 <h2 style="margin:0 0 12px;">FULLKIK · 请绑定真实 Gmail</h2>
                 <p style="color:#d8c4c4;line-height:1.7;">你好 <strong style="color:#fff;">${uname}</strong>，你的账号还没有绑定已验证的真实 Gmail。绑定后可以用 Google 一键登录，账号也更安全。</p>
-                <p style="margin:20px 0;"><a href="${base}/fullkik/main.page" style="display:inline-block;background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;">前往个人中心绑定 Gmail →</a></p>
+                <p style="margin:20px 0;"><a href="${base}/main.page" style="display:inline-block;background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;">前往个人中心绑定 Gmail →</a></p>
                 <p style="color:#a99595;font-size:12px;">Please link a verified Gmail in your FULLKIK profile. This is a one-time reminder.</p>
             </div>`;
         const sent = await sendUserEmail(email, 'FULLKIK · 请绑定真实 Gmail / Verify your Gmail', html);
