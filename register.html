@@ -52,6 +52,21 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 10000; }
         .modal-box { background: rgba(30, 15, 15, 0.85); border-radius: 24px; text-align: center; border: 1px solid var(--border-color); padding: 40px 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.8); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .success-box { max-width:360px; width:calc(100% - 40px); padding:40px 30px 30px; }
+        .success-check { width:92px; height:92px; margin:0 auto 10px; position:relative; }
+        .success-check::before { content:''; position:absolute; inset:-12px; border-radius:50%; background:radial-gradient(circle, rgba(52,199,89,0.28), transparent 70%); animation:scGlow 2.4s ease-in-out infinite; }
+        .success-check svg { width:92px; height:92px; position:relative; }
+        .sc-circle { fill:none; stroke:#34c759; stroke-width:3; stroke-dasharray:151; stroke-dashoffset:151; animation:scCircle .5s cubic-bezier(.65,0,.45,1) forwards; }
+        .sc-check { fill:none; stroke:#34c759; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:40; stroke-dashoffset:40; animation:scCheck .35s cubic-bezier(.65,0,.45,1) .5s forwards; }
+        @keyframes scCircle { to { stroke-dashoffset:0; } }
+        @keyframes scCheck { to { stroke-dashoffset:0; } }
+        @keyframes scGlow { 0%,100% { opacity:.45; transform:scale(1); } 50% { opacity:.9; transform:scale(1.08); } }
+        .success-title { margin:6px 0 8px; font-size:25px; font-weight:800; letter-spacing:.5px; background:linear-gradient(90deg,#fff,#f0c9c0); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        .success-sub { color:var(--text-muted); font-size:14px; margin:0 0 24px; line-height:1.65; }
+        .success-sub strong { color:#fff; font-weight:800; }
+        .success-enter { margin-top:0; }
+        .success-count { color:var(--text-muted); font-size:12px; margin-top:14px; letter-spacing:.3px; }
+        @media (prefers-reduced-motion: reduce) { .sc-circle,.sc-check { animation:none; stroke-dashoffset:0; } .success-check::before { animation:none; } }
 
         .lang-toggle { position: absolute; top: 20px; right: 20px; font-size: 13px; font-weight: bold; cursor: pointer; padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 20px; color: var(--text-muted); transition: 0.2s; z-index: 100; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);}
         .lang-toggle:hover { color: white; border-color: white;}
@@ -84,9 +99,14 @@
 <div id="toast" class="toast"></div>
 
 <div class="modal-overlay" id="successModal">
-    <div class="modal-box">
-        <svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent-light); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-        <h2 style="margin:0; font-size: 22px; letter-spacing: 0.5px;" data-i18n="success">Successfully Registered</h2>
+    <div class="modal-box success-box">
+        <div class="success-check">
+            <svg viewBox="0 0 52 52"><circle class="sc-circle" cx="26" cy="26" r="24"/><path class="sc-check" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg>
+        </div>
+        <h2 class="success-title" data-i18n="success">注册成功</h2>
+        <p class="success-sub" id="successSub"></p>
+        <button type="button" class="btn-primary success-enter" onclick="goHomeNow()" data-i18n="enterHome">进入首页 →</button>
+        <div class="success-count" id="successCount"></div>
     </div>
 </div>
 
@@ -200,8 +220,8 @@
     if(referralCode) localStorage.setItem('fullkikReferral', referralCode);
     
     const dict = {
-        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "Successfully Registered", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
-        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功", errFill: "请填写所有字段", errMatch: "密码不匹配" }
+        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "You're In! 🎧", enterHome: "Enter FULLKIK →", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
+        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功 🎧", enterHome: "进入首页 →", errFill: "请填写所有字段", errMatch: "密码不匹配" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -232,13 +252,29 @@
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
+    function goHomeNow() { window.location.href = '/main.page'; }
+    let _successTimer = null;
+    function showRegisterSuccess(username) {
+        const nameSafe = String(username || 'DJ').replace(/[<>&"]/g, '');
+        const sub = document.getElementById('successSub');
+        if(sub) sub.innerHTML = (currentLang === 'cn')
+            ? `欢迎加入 FULLKIK，<strong>${nameSafe}</strong><br>你的专属 DJ 空间已经准备好`
+            : `Welcome to FULLKIK, <strong>${nameSafe}</strong><br>Your DJ space is ready`;
+        const modal = document.getElementById('successModal');
+        if(modal) modal.style.display = 'flex';
+        let n = 3;
+        const cd = document.getElementById('successCount');
+        const tick = () => { if(cd) cd.innerText = (currentLang === 'cn') ? `${n} 秒后自动进入…` : `Entering in ${n}s…`; };
+        tick();
+        if(_successTimer) clearInterval(_successTimer);
+        _successTimer = setInterval(() => { n--; if(n <= 0) { clearInterval(_successTimer); goHomeNow(); } else { tick(); } }, 1000);
+    }
     async function finishRegister(payload) {
         const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
         if(res.ok) { 
             localStorage.setItem('djUsername', (await res.json()).username); 
             sessionStorage.setItem('fullkikShowWelcome', '1');
-            document.getElementById('successModal').style.display = 'flex';
-            setTimeout(() => window.location.href = '/main.page', 2000); 
+            showRegisterSuccess(localStorage.getItem('djUsername')); 
         } else { showToast(await res.text(), true); }
     }
 
