@@ -245,19 +245,20 @@ app.post('/api/admin/share-link', async (req, res) => {
         const target = getTemporaryShareTarget(req.body.type);
         if(!target) return res.status(400).send('无效分享类型');
         const now = Date.now();
+        const token = crypto.randomBytes(16).toString('hex');
         const payload = {
+            token,
             type: target.type,
             targetPath: target.path,
             label: target.label,
+            permanent: true,
             createdAt: new Date(now).toISOString(),
-            expiresAt: new Date(now + TEMP_SHARE_LINK_TTL_MS).toISOString(),
             createdIp: getClientIp(req)
         };
-        await saveCleanShareWindow(payload);
+        await saveTemporaryShareLink(payload);
         res.json({
-            url: `${getPublicBaseUrl(req)}${target.path}`,
-            expiresAt: payload.expiresAt,
-            ttlSeconds: Math.floor(TEMP_SHARE_LINK_TTL_MS / 1000)
+            url: `${getPublicBaseUrl(req)}/share/${target.type}/${token}`,
+            permanent: true
         });
     } catch(e) {
         console.error('Create share link error:', e);
@@ -271,10 +272,13 @@ app.get('/share/:type/:token', async (req, res) => {
         const token = String(req.params.token || '').trim();
         if(!target || !token) return sendExpiredSharePage(res);
         const link = await readTemporaryShareLink(token);
-        const expiresAt = link?.expiresAt ? new Date(link.expiresAt).getTime() : 0;
-        if(!link || link.type !== target.type || !expiresAt || Date.now() > expiresAt) {
-            if(link) await deleteTemporaryShareLink(token);
-            return sendExpiredSharePage(res);
+        if(!link || link.type !== target.type) return sendExpiredSharePage(res);
+        if(!link.permanent) {
+            const expiresAt = link.expiresAt ? new Date(link.expiresAt).getTime() : 0;
+            if(!expiresAt || Date.now() > expiresAt) {
+                await deleteTemporaryShareLink(token);
+                return sendExpiredSharePage(res);
+            }
         }
         setCleanShareSession(req, res);
         res.redirect(302, link.targetPath || target.path);
@@ -731,16 +735,20 @@ function setCleanShareSession(req, res) {
         httpOnly: true,
         sameSite: 'Lax',
         secure: requestIsHttps(req),
-        path: '/fullkik'
+        path: '/',
+        maxAge: 180 * 24 * 60 * 60 * 1000
     });
 }
 
-async function isPermanentInviteRegisterRequest(req) {
+async function isPermanentInviteRequest(req) {
     try {
         if(String(req.query?.invite || '') !== '1') return false;
-        const ref = normalizeReferralCode(req.query?.ref || req.query?.inviteRef || '');
-        if(!ref || !db) return false;
-        const doc = await db.collection('users').doc(ref).get();
+        if(!db) return false;
+        const rawRef = String(req.query?.ref || req.query?.inviteRef || '').trim().replace(/^@/, '');
+        const ref = normalizeReferralCode(rawRef);
+        if(!ref) return false;
+        let doc = await db.collection('users').doc(ref).get();
+        if(!doc.exists && rawRef && rawRef !== ref) doc = await db.collection('users').doc(rawRef).get();
         return doc.exists;
     } catch(e) {
         console.error('Permanent invite check error:', e.message);
@@ -752,7 +760,7 @@ async function shouldBlockCleanSharePage(req, res, type) {
     try {
         if(isManagerOpenBypass(req)) return false;
         if(hasCleanShareSession(req)) return false;
-        if(type === 'register' && await isPermanentInviteRegisterRequest(req)) {
+        if(await isPermanentInviteRequest(req)) {
             setCleanShareSession(req, res);
             return false;
         }
@@ -790,8 +798,8 @@ function sendExpiredSharePage(res) {
 </head>
 <body>
     <div class="card">
-        <h1>链接已失效</h1>
-        <p>这个分享链接只可使用 5 分钟。请回到后台重新复制一个最新链接。</p>
+        <h1>链接无效</h1>
+        <p>这个分享链接无效或已被移除。请向管理员索取一个新的永久链接。</p>
         <a href="javascript:history.back()">返回上一页</a>
     </div>
 </body>
@@ -2805,6 +2813,7 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         filename: title, originalName, filepath: url, coverUrl: coverUrl, genreId: genreIds[0] || 'none', genreIds,
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
         previewStart: Math.max(parseInt(reqBody.previewStart) || 0, 0),
+        previewLen: Math.min(Math.max(parseInt(reqBody.previewLen) || 60, 10), 180),
         downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong);

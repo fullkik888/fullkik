@@ -599,8 +599,8 @@
     }
     
     const dict = {
-        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", report: "Report", navHome: "Home", navReco: "Discover", navRanking: "Ranking", navContest: "Contest", navProfile: "Me", rankingSub: "Top 50 hottest tracks by downloads & purchases" },
-        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "试听只有60秒", buyBtn: "购买", report: "举报", navHome: "首页", navReco: "歌曲推荐", navRanking: "排行", navContest: "大赛", navProfile: "我的", rankingSub: "下载与购买量 Top 50 热播单曲" }
+        en: { store: "Store", ranking: "Ranking", login: "Login", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", cancel: "Cancel", previewLimit: "Login to purchase · preview clip only.", buyBtn: "BUY", report: "Report", navHome: "Home", navReco: "Discover", navRanking: "Ranking", navContest: "Contest", navProfile: "Me", rankingSub: "Top 50 hottest tracks by downloads & purchases" },
+        cn: { store: "首页", ranking: "排行榜", login: "登录", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", cancel: "取消", previewLimit: "登录后购买 · 仅限试听片段", buyBtn: "购买", report: "举报", navHome: "首页", navReco: "歌曲推荐", navRanking: "排行", navContest: "大赛", navProfile: "我的", rankingSub: "下载与购买量 Top 50 热播单曲" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
     let currentDjRoleFilter = 'PRODUCER';
@@ -1775,7 +1775,7 @@
             `;
         }
 
-        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; audioEl.dataset.previewStart = String((currentSong && currentSong.previewStart) ? Math.max(0, parseInt(currentSong.previewStart)) : 0); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; audioEl.dataset.previewStart = String((currentSong && currentSong.previewStart) ? Math.max(0, parseInt(currentSong.previewStart)) : 0); audioEl.dataset.previewLen = String((currentSong && currentSong.previewLen) ? Math.max(5, parseInt(currentSong.previewLen)) : 60); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
         setSongVisualizerPlaying(false);
         renderSongRecommendations(false);
         switchView('song');
@@ -1784,8 +1784,8 @@
 
     // AUDIO LOGIC
     if(audioEl) {
-        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const winLen = isP ? audioEl.duration : Math.min(PREVIEW_LIMIT_SECONDS, Math.max(0, (audioEl.duration || 0) - ps)); if(!isP && ps > 0) { try { audioEl.currentTime = ps; } catch(e){} } document.getElementById('playerDur').innerText = formatTime(winLen); document.getElementById('playerSeek').max = winLen; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; if(!isP) { if(audioEl.currentTime < ps - 0.5) audioEl.currentTime = ps; if(audioEl.currentTime >= ps + PREVIEW_LIMIT_SECONDS) { audioEl.pause(); audioEl.currentTime = ps; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } } const rel = isP ? audioEl.currentTime : Math.max(0, audioEl.currentTime - ps); const winLen = isP ? audioEl.duration : Math.min(PREVIEW_LIMIT_SECONDS, Math.max(0.01, (audioEl.duration || 0) - ps)); document.getElementById('playerCurr').innerText = formatTime(rel); document.getElementById('playerSeek').value = rel; document.getElementById('playerProg').style.width = `${Math.max(0, Math.min(100, (rel / winLen) * 100))}%`; });
+        audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; const winLen = isP ? audioEl.duration : Math.min(pl, Math.max(0, (audioEl.duration || 0) - ps)); if(!isP && ps > 0) { try { audioEl.currentTime = ps; } catch(e){} } document.getElementById('playerDur').innerText = formatTime(winLen); document.getElementById('playerSeek').max = winLen; });
+        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; if(!isP) { if(audioEl.currentTime < ps - 0.5) audioEl.currentTime = ps; if(audioEl.currentTime >= ps + pl) { audioEl.pause(); audioEl.currentTime = ps; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } } const rel = isP ? audioEl.currentTime : Math.max(0, audioEl.currentTime - ps); const winLen = isP ? audioEl.duration : Math.min(pl, Math.max(0.01, (audioEl.duration || 0) - ps)); document.getElementById('playerCurr').innerText = formatTime(rel); document.getElementById('playerSeek').value = rel; document.getElementById('playerProg').style.width = `${Math.max(0, Math.min(100, (rel / winLen) * 100))}%`; });
         audioEl.addEventListener('play', () => setSongVisualizerPlaying(true));
         audioEl.addEventListener('pause', () => setSongVisualizerPlaying(false));
         audioEl.addEventListener('ended', () => { setSongVisualizerPlaying(false); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
@@ -1793,7 +1793,7 @@
     async function togglePlayerAudio() {
         const btn = document.getElementById('playerPlayBtn');
         if(audioEl.paused) {
-            if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; if(audioEl.currentTime < ps || audioEl.currentTime >= ps + PREVIEW_LIMIT_SECONDS) audioEl.currentTime = ps; }
+            if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; if(audioEl.currentTime < ps || audioEl.currentTime >= ps + pl) audioEl.currentTime = ps; }
             await prepareSongVisualizerAudio();
             try {
                 await audioEl.play();
@@ -1807,7 +1807,7 @@
             btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`;
         }
     }
-    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; val = ps + Math.max(0, Math.min(PREVIEW_LIMIT_SECONDS - 0.1, parseFloat(val) || 0)); } audioEl.currentTime = val; }
+    function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; val = ps + Math.max(0, Math.min(pl - 0.1, parseFloat(val) || 0)); } audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
         if(!username) return window.location.href = '/fullkik/register'; 

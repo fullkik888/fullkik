@@ -702,7 +702,7 @@
     <div class="modal-box invite-modal-box">
         <button class="invite-close" onclick="closeInviteFriendModal()">×</button>
         <h2>邀请好友使用永久链接</h2>
-        <p>复制后发给朋友，朋友可以永久打开注册页面。只有这个邀请链接是永久的，普通主页链接仍然按 5 分钟规则。</p>
+        <p>复制后发给朋友，链接永久有效，朋友可以随时打开注册页面。</p>
         <div class="invite-link-row">
             <div class="invite-link-text" id="inviteFriendLinkText"></div>
             <button type="button" class="invite-copy-btn" onclick="copyInviteFriendLink()" aria-label="复制邀请链接">⧉</button>
@@ -1904,13 +1904,17 @@
         `).join('');
     }
     let vipPreviewStart = 0;
+    let vipPreviewLen = 60;
+    let vipPreviewSet = false;
     function openVipPreviewPicker() {
         const item = selectedVipFiles[0];
         if(!item || !item.file) return showToast("请先选择歌曲文件", true);
-        PPPicker.open(item.file, vipPreviewStart, function(sec){
+        PPPicker.open(item.file, vipPreviewStart, vipPreviewLen, function(sec, len){
             vipPreviewStart = sec;
+            vipPreviewLen = len;
+            vipPreviewSet = true;
             const lbl = document.getElementById('vipPreviewLabel');
-            if(lbl) lbl.innerText = '· ' + Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0');
+            if(lbl) lbl.innerText = '· 试听 ' + Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0') + ' 起 · ' + len + '秒 ✓';
         });
     }
     function handleVipAudioSelect(e) {
@@ -1933,7 +1937,7 @@
             selectedVipFiles = [{ file, title: getFileTitle(file), price: defaultPrice, genreId: defaultGenre }];
             document.getElementById('vipFileCount').innerText = file.name;
             document.getElementById('vipTitleInput').value = getFileTitle(file);
-            vipPreviewStart = 0;
+            vipPreviewStart = 0; vipPreviewLen = 60; vipPreviewSet = false;
             const vpb = document.getElementById('vipPreviewBtn'); if(vpb) vpb.style.display = 'block';
             const vpl = document.getElementById('vipPreviewLabel'); if(vpl) vpl.innerText = '';
         }
@@ -1947,7 +1951,7 @@
         const fileInput = document.getElementById('vipFileInput');
         currentVipUploadIsBatch = isBatch;
         selectedVipFiles = [];
-        vipPreviewStart = 0;
+        vipPreviewStart = 0; vipPreviewLen = 60; vipPreviewSet = false;
         const vpb0 = document.getElementById('vipPreviewBtn'); if(vpb0) vpb0.style.display = 'none';
         if(isBatch) {
             fileInput.multiple = true;
@@ -1971,6 +1975,7 @@
             if(selectedVipFiles.length > 20) return errRow.innerText = "批量上传最多 20 首";
             if(selectedVipFiles.some(item => !item.title || !item.genreId)) return errRow.innerText = "每首歌都需要标题和分类";
         } else if(!titleBase) return errRow.innerText = "请输入歌曲标题 (Title is required)";
+        if(!currentVipUploadIsBatch && !vipPreviewSet) return errRow.innerText = "请先设定试听片段（选择长度并确定 / Set the preview first）";
 
         document.getElementById('vipUploadProgOverlay').style.display = 'flex';
         let p = 0; const bF = document.getElementById('vipUploadBarFill'); bF.style.width = '0%';
@@ -1980,7 +1985,7 @@
         if(!uploadItems.length || !uploadItems[0].file) { clearInterval(pInt); document.getElementById('vipUploadProgOverlay').style.display = 'none'; return errRow.innerText = "Please select file(s)."; }
         for(let i=0; i<uploadItems.length; i++) {
             const item = uploadItems[i];
-            const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING'); if(!currentVipUploadIsBatch) fd.append('previewStart', vipPreviewStart || 0);
+            const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING'); if(!currentVipUploadIsBatch) { fd.append('previewStart', vipPreviewStart || 0); fd.append('previewLen', vipPreviewLen || 60); }
             if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
             const uploadRes = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
             if(!uploadRes.ok) {
@@ -2023,6 +2028,12 @@
 .ppk-region::before,.ppk-region::after{content:'';position:absolute;top:50%;width:22px;height:22px;border-radius:50%;background:#c0466a;transform:translateY(-50%);box-shadow:0 2px 6px rgba(0,0,0,.45);}
 .ppk-region::before{left:-11px;}
 .ppk-region::after{right:-11px;}
+.ppk-lens{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.ppk-lens-label{color:#d8c3c8;font-size:13px;font-weight:600;}
+.ppk-lens-btns{display:inline-flex;gap:6px;padding:4px;border-radius:12px;background:rgba(255,255,255,.05);}
+.ppk-len{font:inherit;font-size:13px;font-weight:700;cursor:pointer;border:none;border-radius:9px;padding:7px 15px;color:#c99aa2;background:transparent;transition:background .15s,color .15s;}
+.ppk-len:hover{color:#fff;}
+.ppk-len.active{background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;}
 .ppk-hint{color:#b58a92;font-size:12px;margin:0 0 18px;}
 .ppk-row{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
 .ppk-play{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;font-size:15px;cursor:pointer;flex:none;}
@@ -2035,9 +2046,17 @@
 </style>
 <div class="ppk-overlay" id="ppkOverlay">
   <div class="ppk-modal">
-    <div class="ppk-head"><span>设定试听 60 秒 / Set 60s Preview</span><button class="ppk-x" onclick="PPPicker.close()">✕</button></div>
+    <div class="ppk-head"><span>设定试听片段 / Set Preview Clip</span><button class="ppk-x" onclick="PPPicker.close()">✕</button></div>
+    <div class="ppk-lens">
+      <span class="ppk-lens-label">试听长度 / Length</span>
+      <div class="ppk-lens-btns">
+        <button type="button" class="ppk-len" data-len="30" onclick="PPPicker.setLen(30)">30秒</button>
+        <button type="button" class="ppk-len active" data-len="60" onclick="PPPicker.setLen(60)">60秒</button>
+        <button type="button" class="ppk-len" data-len="90" onclick="PPPicker.setLen(90)">90秒</button>
+      </div>
+    </div>
     <div class="ppk-wave" id="ppkWave"><div class="ppk-region" id="ppkRegion"></div></div>
-    <div class="ppk-hint">拖动红色区块选择试听片段 / Drag the maroon block to pick the 60s preview.</div>
+    <div class="ppk-hint">拖动红色区块选择片段，点 ▶ 试听 / Drag the block, press ▶ to preview.</div>
     <div class="ppk-row">
       <button class="ppk-play" id="ppkPlay" onclick="PPPicker.toggle()">▶</button>
       <span class="ppk-time" id="ppkStart">0:00</span>
@@ -2053,22 +2072,26 @@ window.PPPicker=(function(){
   function $(id){return document.getElementById(id);}
   function fmt(s){s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
   function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var frag=document.createDocumentFragment();for(var j=0;j<90;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
+  function effWin(){return (!dur||dur<=WIN)?(dur||WIN):WIN;}
   function layout(){var region=$('ppkRegion');if(!dur||dur<=WIN){region.style.left='0%';region.style.width='100%';return;}var wp=WIN/dur*100;var lp=start/dur*100;lp=Math.max(0,Math.min(100-wp,lp));region.style.left=lp+'%';region.style.width=wp+'%';}
+  function clampStart(){if(!dur||dur<=WIN){start=0;}else{start=Math.max(0,Math.min(Math.round(dur-WIN),start));}}
+  function markLenBtns(){var btns=document.querySelectorAll('.ppk-len');for(var i=0;i<btns.length;i++){btns[i].classList.toggle('active',parseInt(btns[i].getAttribute('data-len'))===WIN);}}
+  function setLen(n){WIN=parseInt(n)||60;markLenBtns();clampStart();layout();$('ppkStart').innerText=fmt(start);if(audio){try{audio.currentTime=start;}catch(e){}$('ppkFill').style.width=(start/(dur||1)*100)+'%';}}
   function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion');
     function move(e){if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
     region.addEventListener('mousedown',function(){dragging=true;});region.addEventListener('touchstart',function(){dragging=true;},{passive:true});
     window.addEventListener('mousemove',move);window.addEventListener('touchmove',move,{passive:false});
     window.addEventListener('mouseup',function(){dragging=false;});window.addEventListener('touchend',function(){dragging=false;});}
-  function open(file,cur,onConfirm){cb=onConfirm;start=Math.max(0,parseInt(cur)||0);if(url){try{URL.revokeObjectURL(url);}catch(e){}}url=URL.createObjectURL(file);audio=new Audio();audio.preload='metadata';audio.src=url;dur=0;$('ppkOverlay').style.display='flex';bars();layout();$('ppkStart').innerText=fmt(start);$('ppkDur').innerText='…';$('ppkFill').style.width='0%';$('ppkPlay').innerText='▶';playing=false;
-    audio.onloadedmetadata=function(){dur=audio.duration||0;$('ppkDur').innerText=fmt(dur);if(dur<=WIN)start=0;layout();$('ppkStart').innerText=fmt(start);};
-    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';var end=(dur<=WIN?dur:start+WIN);if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';audio.currentTime=start;}};
+  function open(file,cur,curLen,onConfirm){cb=onConfirm;start=Math.max(0,parseInt(cur)||0);WIN=([30,60,90].indexOf(parseInt(curLen))>=0)?parseInt(curLen):60;if(url){try{URL.revokeObjectURL(url);}catch(e){}}url=URL.createObjectURL(file);audio=new Audio();audio.preload='metadata';audio.src=url;dur=0;$('ppkOverlay').style.display='flex';markLenBtns();bars();layout();$('ppkStart').innerText=fmt(start);$('ppkDur').innerText='…';$('ppkFill').style.width='0%';$('ppkPlay').innerText='▶';playing=false;
+    audio.onloadedmetadata=function(){dur=audio.duration||0;$('ppkDur').innerText=fmt(dur);clampStart();layout();$('ppkStart').innerText=fmt(start);};
+    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';var end=start+effWin();if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';audio.currentTime=start;}};
     audio.onended=function(){playing=false;$('ppkPlay').innerText='▶';};
     drag();}
-  function toggle(){if(!audio)return;if(playing){audio.pause();playing=false;$('ppkPlay').innerText='▶';}else{if(audio.currentTime<start||audio.currentTime>=start+WIN)audio.currentTime=start;audio.play();playing=true;$('ppkPlay').innerText='⏸';}}
+  function toggle(){if(!audio)return;if(playing){audio.pause();playing=false;$('ppkPlay').innerText='▶';}else{if(audio.currentTime<start||audio.currentTime>=start+effWin())audio.currentTime=start;audio.play();playing=true;$('ppkPlay').innerText='⏸';}}
   function scrub(e){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));audio.currentTime=p*dur;}
   function close(){if(audio){try{audio.pause();}catch(e){}}playing=false;if($('ppkPlay'))$('ppkPlay').innerText='▶';$('ppkOverlay').style.display='none';}
-  function confirm(){if(cb)cb(start);close();}
-  return{open:open,toggle:toggle,scrub:scrub,close:close,confirm:confirm};
+  function confirm(){if(cb)cb(start,WIN);close();}
+  return{open:open,setLen:setLen,toggle:toggle,scrub:scrub,close:close,confirm:confirm};
 })();
 </script>
 </body>
