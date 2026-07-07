@@ -70,6 +70,12 @@
         .banners-container::-webkit-scrollbar { display:none; }
         .banners-container img { width:30%; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); flex-shrink:0;}
         .banners-container.contest-mode { max-width:900px; overflow:hidden; }
+        .banners-container.marquee-on { overflow:hidden; max-width:min(100%, 1180px); justify-content:flex-start; }
+        .banners-container.marquee-on .banners-track { display:flex; width:max-content; animation: bannersMarquee 26s linear infinite; }
+        .banners-container.marquee-on:hover .banners-track { animation-play-state:paused; }
+        .banners-container.marquee-on .banners-track img { width:250px; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); margin-right:10px; flex-shrink:0; }
+        @keyframes bannersMarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .banners-container.marquee-on .banners-track { animation:none; } }
         .contest-banner-link { width:100%; border:none; padding:0; background:transparent; cursor:pointer; flex-shrink:0; display:block; }
         .contest-banner-link img { width:100%; height:190px; object-fit:cover; border-radius:18px; border:1px solid rgba(255,75,75,0.28); box-shadow:0 20px 60px rgba(128,0,0,0.22); transition:0.2s; }
         .contest-banner-link:hover img { transform:translateY(-2px); border-color:var(--accent-light); filter:brightness(1.08); }
@@ -1245,13 +1251,13 @@
 	        const banDiv = document.getElementById('homeBanners');
 	        if(banDiv) {
 	            banDiv.innerHTML = '';
-	            banDiv.classList.remove('contest-mode');
+	            banDiv.classList.remove('contest-mode'); banDiv.classList.remove('marquee-on');
 	            const promo = getActiveContestPromo();
 	            if(promo && promo.bannerUrl) {
 	                banDiv.classList.add('contest-mode');
 	                banDiv.innerHTML = `<button type="button" class="contest-banner-link" onclick="openContestPage('${escapeAttrJs(promo.id)}')"><img src="${escapeHtml(promo.bannerUrl)}" alt="${escapeHtml(promo.title || 'FULLKIK 大赛')}"></button>`;
 	            } else if(banners.some(b => b)) {
-	                banners.forEach(b => { if(b) banDiv.innerHTML += `<img src="${b}">`; });
+	                const imgs = banners.filter(b => b); if(globalSettings.bannersAutoScroll && imgs.length) { const per = imgs.map(b => `<img src="${b}">`).join(''); const k = Math.max(2, Math.ceil(1400 / (imgs.length * 260))); const oneRun = per.repeat(k); banDiv.classList.add('marquee-on'); banDiv.innerHTML = `<div class="banners-track">${oneRun}${oneRun}</div>`; } else { imgs.forEach(b => { banDiv.innerHTML += `<img src="${b}">`; }); }
 	            }
 	        }
 

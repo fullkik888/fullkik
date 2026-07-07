@@ -999,7 +999,9 @@
         </div>
         <div class="glass-panel" style="padding: 20px;">
             <div style="display:flex; gap: 20px; flex-wrap: wrap;" id="banner-slots"></div>
-            <button class="btn-primary" style="margin-top:20px; width:100%;" onclick="saveBanners()">发布 (Publish)</button>
+            <label class="toggle-line" style="margin-top:16px;"><input type="checkbox" id="bannersAutoScrollInput"> 横幅自动滚动（无缝循环）/ Auto-scroll banners</label>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">开启后，首页横幅会像公告一样无缝横向滚动；关闭则保持静止。</div>
+            <button class="btn-primary" style="margin-top:16px; width:100%;" onclick="saveBanners()">发布 (Publish)</button>
         </div>
         <div class="glass-panel" style="padding: 20px;">
             <div class="panel-header" style="padding:0 0 16px 0; border:none;">首页海报</div>
@@ -2621,6 +2623,7 @@
                 const commissionInput = document.getElementById('settingCommissionStatement');
                 if(commissionInput) commissionInput.value = globalSettings.commissionStatement || getDefaultCommissionStatement();
                 currentBanners = globalSettings.banners || ['', '', ''];
+                const basInput = document.getElementById('bannersAutoScrollInput'); if(basInput) basInput.checked = !!globalSettings.bannersAutoScroll;
                 hotProducerDraftIds = null;
                 renderSystemSettings();
                 renderDefaultCover();
@@ -3021,7 +3024,7 @@
     }
     function handleBannerUpload(e, index) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (ev) => { currentBanners[index] = ev.target.result; renderBanners(); }; reader.readAsDataURL(file); }
     function removeBanner(index) { currentBanners[index] = ''; renderBanners(); }
-    async function saveBanners() { showGlobalLoader("正在上传..."); const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ banners: currentBanners }) }); if(res.ok) { hideGlobalLoader(); showToast("Banners Saved!"); } }
+    async function saveBanners() { showGlobalLoader("正在上传..."); const basEl = document.getElementById('bannersAutoScrollInput'); const bannersAutoScroll = !!(basEl && basEl.checked); const res = await fetch(`${API_URL}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ banners: currentBanners, bannersAutoScroll }) }); if(res.ok) { globalSettings.bannersAutoScroll = bannersAutoScroll; hideGlobalLoader(); showToast("Banners Saved!"); } }
 
     function renderHomePoster() {
         const box = document.getElementById('posterPreviewBox');

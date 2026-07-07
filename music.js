@@ -330,6 +330,7 @@ const DEFAULT_SETTINGS = {
     bannerUrl: '',
     activity: {enabled: false, reward: 10, count: 0, total: 0},
     banners: [],
+    bannersAutoScroll: false,
     maxSongPrice: 200,
     supportWhatsapp: '',
     homePosterUrl: '',
@@ -1088,6 +1089,7 @@ app.post('/api/register', async (req, res) => {
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
         invalidateUserCaches(username);
         invalidateSettingsCache();
+        setCleanShareSession(req, res);
         res.json({ success: true, username });
     } catch (e) { 
         res.status(500).send(e.message); 
@@ -1173,7 +1175,9 @@ app.post('/api/login', async (req, res) => {
             ].slice(0, 20);
             await uDoc.ref.update({ loginHistory });
             invalidateUserCaches(userData.username || contact);
-            res.json({ success: true, username: userData.username }); 
+            setCleanShareSession(req, res);
+            maybeSendVerifyReminder(userData, uDoc.ref);
+            res.json({ success: true, username: userData.username });
         }
         else res.status(400).send('Invalid credentials.');
     } catch (e) {
@@ -1234,6 +1238,7 @@ app.post('/api/auth/google', async (req, res) => {
             await uDoc.ref.update({ loginHistory, googleId: data.googleId || googleId, authProvider: data.authProvider || 'google', email: data.email || email, googleVerified: true });
             invalidateUserCaches(data.username || uDoc.id);
             const hasPassword = !!(data.password && String(data.password).length > 0);
+            setCleanShareSession(req, res);
             return res.json({ success: true, username: data.username || uDoc.id, isNew: false, hasPassword });
         }
 
@@ -1255,6 +1260,7 @@ app.post('/api/auth/google', async (req, res) => {
         await db.collection('users').doc(username).set(userData);
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered via Google (${email})`);
         invalidateUserCaches(username);
+        setCleanShareSession(req, res);
         res.json({ success: true, username, isNew: true, hasPassword: false });
     } catch (e) {
         res.status(400).send('Google 验证失败：' + e.message);
@@ -2180,6 +2186,44 @@ function getSmtpConfig() {
     };
 }
 
+function getSmtpTransporter() {
+    const cfg = getSmtpConfig();
+    if(!cfg.host || !cfg.port || !cfg.user || !cfg.pass || !cfg.from) return null;
+    return {
+        from: cfg.from,
+        transporter: nodemailer.createTransport({ host: cfg.host, port: cfg.port, secure: cfg.port === 465, auth: { user: cfg.user, pass: cfg.pass } })
+    };
+}
+
+async function sendUserEmail(to, subject, html) {
+    const t = getSmtpTransporter();
+    if(!t) return false;
+    await t.transporter.sendMail({ from: t.from, to, subject, html });
+    return true;
+}
+
+// One-time email nudging an unverified user to link a real, verified Gmail.
+async function maybeSendVerifyReminder(userData, userRef) {
+    try {
+        if(!userData || !userRef) return;
+        if(userData.googleVerified) return;               // already verified
+        if(userData.verifyReminderSent) return;           // already nudged once
+        const email = String(userData.email || '').trim().toLowerCase();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;   // no real email on file
+        const uname = userData.username || '';
+        const base = String(process.env.PUBLIC_BASE_URL || 'https://fullkik.com').trim().replace(/\/+$/, '');
+        const html = `
+            <div style="font-family:Arial,'Microsoft YaHei',sans-serif;background:#120606;color:#fff;padding:24px;border-radius:14px;max-width:520px;">
+                <h2 style="margin:0 0 12px;">FULLKIK · 请绑定真实 Gmail</h2>
+                <p style="color:#d8c4c4;line-height:1.7;">你好 <strong style="color:#fff;">${uname}</strong>，你的账号还没有绑定已验证的真实 Gmail。绑定后可以用 Google 一键登录，账号也更安全。</p>
+                <p style="margin:20px 0;"><a href="${base}/fullkik/main.page" style="display:inline-block;background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;">前往个人中心绑定 Gmail →</a></p>
+                <p style="color:#a99595;font-size:12px;">Please link a verified Gmail in your FULLKIK profile. This is a one-time reminder.</p>
+            </div>`;
+        const sent = await sendUserEmail(email, 'FULLKIK · 请绑定真实 Gmail / Verify your Gmail', html);
+        if(sent) await userRef.update({ verifyReminderSent: true, verifyReminderSentAt: new Date().toISOString() });
+    } catch(e) { console.error('verify reminder email error:', e.message); }
+}
+
 app.get('/api/admin/email-config', (req, res) => {
     const cfg = getSmtpConfig();
     res.json({
@@ -3102,6 +3146,10 @@ app.put('/api/settings', async (req, res) => {
                 } else if(b) { processedBanners.push(b); }
             }
             updates.banners = processedBanners;
+        }
+
+        if (req.body.bannersAutoScroll !== undefined) {
+            updates.bannersAutoScroll = !!req.body.bannersAutoScroll;
         }
 
         if (req.body.homePosterBase64 !== undefined) {
