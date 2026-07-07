@@ -220,8 +220,8 @@ app.get(['/fullkik/contest', '/fullkik/contest.page', '/fullkik/tournament', '/f
 
 // Short URL aliases — fullkik.com/manager.page instead of /fullkik/manager.page.
 // These are additive: the /fullkik/... routes still work, so no existing link breaks.
-app.get('/main.page', async (req, res) => {
-    if(await shouldBlockCleanSharePage(req, res, 'music')) return sendExpiredSharePage(res);
+// Homepage is public — anyone can browse the store. Playback/purchase still require an account.
+app.get('/main.page', (req, res) => {
     res.sendFile(path.join(__dirname, 'music.html'));
 });
 app.get('/profile.page', (req, res) => { res.sendFile(path.join(__dirname, 'profile.html')); });
