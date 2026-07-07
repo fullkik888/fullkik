@@ -2364,6 +2364,19 @@ app.get('/api/admin/staff/:id/password', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+// Reveal a regular user's login password (admin only; passwords are stored as-is).
+app.get('/api/admin/users/:username/password', async (req, res) => {
+    try {
+        const raw = String(req.params.username || '').trim();
+        if(!raw) return res.status(400).send('Missing username');
+        let doc = await db.collection('users').doc(raw.toLowerCase()).get();
+        if(!doc.exists && raw !== raw.toLowerCase()) doc = await db.collection('users').doc(raw).get();
+        if(!doc.exists) return res.status(404).send('User not found');
+        const pw = doc.data().password || '';
+        res.json({ password: pw, hasPassword: !!(pw && String(pw).length > 0) });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 // Edit a staff member's password after creation.
 app.put('/api/admin/staff/:id/password', async (req, res) => {
     try {

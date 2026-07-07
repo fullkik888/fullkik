@@ -290,6 +290,9 @@
         .permission-toggle.enabled { border-color:rgba(165,42,42,0.72); background:rgba(128,0,0,0.2); color:white; }
         .permission-toggle input { accent-color:#a52a2a; width:17px; height:17px; }
         .staff-card-actions { display:flex; align-items:center; gap:14px; margin-top:20px; }
+        .pw-eye { background:rgba(255,255,255,0.06); border:1px solid var(--border-color); border-radius:8px; cursor:pointer; font-size:14px; line-height:1; padding:5px 9px; color:var(--text-muted); }
+        .pw-eye:hover { background:rgba(255,255,255,0.12); color:#fff; }
+        .pw-eye.on { background:rgba(128,0,0,0.35); border-color:#8f2027; color:#fff; }
         .staff-danger { margin-left:auto; border:1px solid rgba(255,69,58,0.45); background:rgba(255,69,58,0.08); color:var(--danger); border-radius:7px; padding:9px 15px; cursor:pointer; }
         .staff-modal-grid { display:grid; grid-template-columns:1fr; gap:16px; }
         .staff-modal-permissions { display:flex; flex-wrap:wrap; gap:10px; }
@@ -1757,6 +1760,7 @@
             <div class="u-stat-box"><div class="u-stat-lbl">充值 / 购买</div><div class="u-stat-val" id="det-u-counts">0 / 0</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">注册时间</div><div class="u-stat-val" id="det-u-date">N/A</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">微信号</div><div class="u-stat-val" id="det-u-wechat">-</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">登录密码</div><div class="u-stat-val" style="display:flex; align-items:center; gap:10px;"><span id="det-u-password" data-shown="0" style="font-family:ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:1px;">••••••••</span><button type="button" id="det-u-password-eye" class="pw-eye" title="显示 / 隐藏密码" onclick="toggleUserPassword()">👁</button></div></div>
         </div>
 
         <div class="glass-panel" style="padding:20px;">
@@ -4684,7 +4688,7 @@
             const isAdmin = staff.role === 'ADMIN';
             const permissionHtml = isMainAdmin
                 ? `<div style="margin-top:20px; border-left:4px solid #a52a2a; border-radius:6px; background:rgba(128,0,0,0.12); padding:18px 22px; color:var(--text-muted); line-height:1.7;">FULLKIKADMIN 是固定 main 账号，拥有全部权限；它不是员工账号，不能删除，也不会占用员工人数。</div>
-                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="openMainAdminModal()">编辑资料 / 密码</button><button class="btn-text-action" onclick="revealStaffPassword('FULLKIKADMIN')">显示密码 5 秒</button><span style="color:var(--text-muted); font-size:12px;">默认密码 Aaaa1111，可在这里修改</span></div>`
+                <div class="staff-card-actions"><button class="btn-primary" style="background:#650d12; border:1px solid #8f2027;" onclick="openMainAdminModal()">编辑资料 / 密码</button><button class="btn-text-action" onclick="revealStaffPassword('FULLKIKADMIN')">👁 显示 / 隐藏密码</button><span style="color:var(--text-muted); font-size:12px;">默认密码 Aaaa1111，可在这里修改</span></div>`
                 : isAdmin
                 ? `<div style="margin-top:20px; border-left:4px solid #58a6ff; border-radius:6px; background:rgba(88,166,255,0.08); padding:18px 22px; color:var(--text-muted);">ADMIN 角色拥有全部权限，无需逐项配置。</div>`
                 : `<div class="staff-permissions">${STAFF_PERMISSION_DEFS.map(item => {
@@ -4702,6 +4706,7 @@
                                 ${isMainAdmin ? `<span class="staff-badge main">main</span>` : ''}
                                 <span class="staff-badge active">${escapeHtml(staff.status || 'ACTIVE')}</span>
                                 ${!isAdmin ? `<span class="staff-badge">${permissions.length} / ${STAFF_PERMISSION_DEFS.length}</span>` : ''}
+                                <button type="button" class="pw-eye" id="staff-eye-${staff.id}" title="显示 / 隐藏密码" onclick="revealStaffPassword('${staff.id}')">👁</button>
                                 <span class="staff-password-reveal" id="staff-password-${staff.id}"></span>
                             </div>
                             <div style="color:var(--text-muted); margin-top:10px;">${escapeHtml(staff.email || '未填写 Gmail')}${isMainAdmin ? ` · ${escapeHtml(staff.phone || '未填写电话')}` : ''}</div>
@@ -4768,11 +4773,14 @@
     async function revealStaffPassword(staffId) {
         const target = document.getElementById(`staff-password-${staffId}`);
         if(!target) return;
+        const eye = document.getElementById(`staff-eye-${staffId}`);
+        if(target.dataset.shown === '1') { target.innerText = ''; target.dataset.shown = '0'; if(eye){ eye.innerText = '👁'; eye.classList.remove('on'); } return; }
         const res = await fetch(`${API_URL}/admin/staff/${encodeURIComponent(staffId)}/password`);
         if(!res.ok) return showToast(await res.text(), true);
         const data = await res.json();
-        target.innerText = `密码: ${data.password}`;
-        setTimeout(() => { target.innerText = ''; }, 5000);
+        target.innerText = `密码: ${data.password || '（未设置）'}`;
+        target.dataset.shown = '1';
+        if(eye){ eye.innerText = '🙈'; eye.classList.add('on'); }
     }
 
     async function editStaffPassword(staffId) {
@@ -6006,6 +6014,20 @@
         });
     }
 
+    async function toggleUserPassword() {
+        const span = document.getElementById('det-u-password');
+        const btn = document.getElementById('det-u-password-eye');
+        if(!span || !currentEditUser) return;
+        if(span.dataset.shown === '1') { span.innerText = '••••••••'; span.dataset.shown = '0'; if(btn){ btn.innerText = '👁'; btn.classList.remove('on'); } return; }
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${encodeURIComponent(currentEditUser.username)}/password`);
+            if(!res.ok) return showToast(await res.text(), true);
+            const data = await res.json();
+            span.innerText = data.hasPassword ? (data.password || '') : '（未设置 · Google 登录）';
+            span.dataset.shown = '1';
+            if(btn){ btn.innerText = '🙈'; btn.classList.add('on'); }
+        } catch(e) { showToast('读取密码失败', true); }
+    }
     function openUserDetail(uName) {
         currentEditUser = allUsers.find(u => u.username === uName);
         if(!currentEditUser) return;
@@ -6021,6 +6043,8 @@
         document.getElementById('det-u-counts').innerText = `${(currentEditUser.topups||[]).length} / ${(currentEditUser.purchases||[]).length}`;
         document.getElementById('det-u-date').innerText = currentEditUser.createdAt ? new Date(currentEditUser.createdAt).toISOString().split('T')[0] : 'N/A';
         document.getElementById('det-u-wechat').innerText = currentEditUser.wechat || '-';
+        const _pwSpan = document.getElementById('det-u-password'); if(_pwSpan) { _pwSpan.innerText = '••••••••'; _pwSpan.dataset.shown = '0'; }
+        const _pwEye = document.getElementById('det-u-password-eye'); if(_pwEye) { _pwEye.innerText = '👁'; _pwEye.classList.remove('on'); }
         document.getElementById('det-u-editname').value = currentEditUser.username;
         document.getElementById('det-u-editemail').value = currentEditUser.email || '';
         document.getElementById('det-u-editphone').value = currentEditUser.phone || '';
