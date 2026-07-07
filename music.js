@@ -1231,7 +1231,7 @@ app.post('/api/auth/google', async (req, res) => {
                 { time: new Date().toISOString(), ip: getClientIp(req), device: req.get('user-agent') || '-', via: 'google' },
                 ...((data.loginHistory || []).filter(Boolean))
             ].slice(0, 20);
-            await uDoc.ref.update({ loginHistory, googleId: data.googleId || googleId, authProvider: data.authProvider || 'google' });
+            await uDoc.ref.update({ loginHistory, googleId: data.googleId || googleId, authProvider: data.authProvider || 'google', email: data.email || email, googleVerified: true });
             invalidateUserCaches(data.username || uDoc.id);
             const hasPassword = !!(data.password && String(data.password).length > 0);
             return res.json({ success: true, username: data.username || uDoc.id, isNew: false, hasPassword });
@@ -1249,7 +1249,7 @@ app.post('/api/auth/google', async (req, res) => {
             notifications: [], withdrawals: [],
             loginHistory: [{ time: new Date().toISOString(), ip: clientIp, device: req.get('user-agent') || '-', via: 'google' }],
             referredBy: '', role: 'NORMAL', isVip: false, wechat: '', wechatPublic: false,
-            status: 'ACTIVE', banReason: '', authProvider: 'google', googleId,
+            status: 'ACTIVE', banReason: '', authProvider: 'google', googleId, googleVerified: true,
             createdAt: new Date().toISOString()
         };
         await db.collection('users').doc(username).set(userData);
