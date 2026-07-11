@@ -237,6 +237,47 @@ app.get(['/contest', '/contest.page', '/tournament', '/activity'], (req, res) =>
 app.get('/dj/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__dirname, 'vip.html')); });
 
+// ==========================================
+// ADMIN AUTH GATE
+// Sign a token when an admin logs in, then require it on EVERY /api/admin/* route.
+// Without this, admin endpoints (adjust-tokens, read-password, ban/delete, email
+// broadcast) are callable by anyone who knows the URL. Login stays public since
+// it's what mints the token.
+// Set ADMIN_SESSION_SECRET on Render so tokens survive restarts; otherwise a fresh
+// random secret is generated each boot (admins simply re-login after a deploy).
+// ==========================================
+const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const ADMIN_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+function signAdminToken(payload) {
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const sig = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(body).digest('base64url');
+    return body + '.' + sig;
+}
+function verifyAdminToken(token) {
+    if(!token || typeof token !== 'string' || !token.includes('.')) return null;
+    const [body, sig] = token.split('.');
+    if(!body || !sig) return null;
+    const expect = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(body).digest('base64url');
+    if(sig.length !== expect.length) return null;
+    try { if(!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expect))) return null; } catch(e) { return null; }
+    let payload; try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch(e) { return null; }
+    if(!payload || !payload.exp || Date.now() > payload.exp) return null;
+    return payload;
+}
+function requireAdmin(req, res, next) {
+    // Login must stay public — it's what issues the token.
+    const path = (req.originalUrl || req.url || '').split('?')[0];
+    if(path === '/api/admin/login') return next();
+    const header = req.headers['authorization'] || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.headers['x-admin-token'] || '';
+    const payload = verifyAdminToken(token);
+    if(!payload) return res.status(401).send('未授权 / Unauthorized — 请重新登录后台');
+    req.admin = payload;
+    next();
+}
+// Applies to all /api/admin/* routes defined below this line.
+app.use('/api/admin', requireAdmin);
+
 app.post('/api/admin/share-link', async (req, res) => {
     try {
         const target = getTemporaryShareTarget(req.body.type);
@@ -1869,6 +1910,8 @@ app.post('/api/users/:username/purchase', async (req, res) => {
                     `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 钻石`,
                     { songId: req.body.songId, buyer: req.params.username, amount: price }
                 ));
+                // Producer earns Purple Gems 1:1 with the Blue Gems spent on their song.
+                try { await db.collection('users').doc(String(song.uploader).toLowerCase()).update({ purpleGems: admin.firestore.FieldValue.increment(price) }); } catch(e) { console.error('purpleGems credit failed:', e.message); }
             }
 
             await db.collection('transactions').add({
@@ -2425,7 +2468,8 @@ app.post('/api/admin/login', async (req, res) => {
             invalidateCachePrefix('admin_staff:');
             const safeAdmin = { ...nextAdmin };
             delete safeAdmin.password;
-            return res.json(safeAdmin);
+            const adminToken = signAdminToken({ sub: 'FULLKIKADMIN', role: 'MAIN', main: true, iat: Date.now(), exp: Date.now() + ADMIN_TOKEN_TTL_MS });
+            return res.json({ ...safeAdmin, adminToken });
         }
 
         const snap = await db.collection('admin_staff').get();
@@ -2439,7 +2483,8 @@ app.post('/api/admin/login', async (req, res) => {
         await db.collection('admin_staff').doc(found.id).update({ lastLoginAt: now });
         invalidateCachePrefix('admin_staff:');
         delete found.password;
-        res.json({ ...found, lastLoginAt: now });
+        const adminToken = signAdminToken({ sub: found.id, role: found.role || 'STAFF', main: false, iat: Date.now(), exp: Date.now() + ADMIN_TOKEN_TTL_MS });
+        res.json({ ...found, lastLoginAt: now, adminToken });
     } catch(e) { res.status(500).send(e.message); }
 });
 

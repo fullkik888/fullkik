@@ -2121,6 +2121,28 @@
     let currentAdminSession = null;
     let selectedSongIds = new Set();
 
+    // Attach the admin token to every /api/admin/* request; bounce to login on 401.
+    (function(){
+        const _origFetch = window.fetch.bind(window);
+        window.fetch = function(input, init){
+            init = init || {};
+            let u = '';
+            try { u = (typeof input === 'string') ? input : (input && input.url) || ''; } catch(e) {}
+            const isAdmin = u.indexOf('/api/admin/') >= 0 && u.indexOf('/api/admin/login') < 0;
+            if(isAdmin){
+                const tok = localStorage.getItem('fkAdminToken');
+                if(tok){ const h = new Headers(init.headers || {}); h.set('Authorization', 'Bearer ' + tok); init.headers = h; }
+            }
+            return _origFetch(input, init).then(function(res){
+                if(isAdmin && res.status === 401){
+                    try { localStorage.removeItem('fkAdminToken'); localStorage.removeItem('fkAdminSession'); } catch(e) {}
+                    if(typeof showManagerLogin === 'function') showManagerLogin();
+                }
+                return res;
+            });
+        };
+    })();
+
     const STAFF_PERMISSION_DEFS = [
         { id:'upload_song', label:'上传歌曲', desc:'访问单首歌曲上传页面' },
         { id:'bulk_upload', label:'批量上传', desc:'访问批量上传页面' },
@@ -2543,6 +2565,7 @@
         };
         localStorage.setItem('fkAdminSession', JSON.stringify(currentAdminSession));
         localStorage.setItem('fkAdminUsername', currentAdminSession.username);
+        if(account.adminToken) localStorage.setItem('fkAdminToken', account.adminToken);
     }
     function showManagerLogin() {
         currentAdminSession = null;
@@ -2626,13 +2649,16 @@
     }
     function initManagerGate() {
         const session = readAdminSession();
-        if(session) {
+        const token = localStorage.getItem('fkAdminToken');
+        if(session && token) {
             currentAdminSession = session;
             document.body.classList.remove('manager-locked');
             document.getElementById('managerLoginScreen').style.display = 'none';
             resetSplashLoaderForLogin();
             loadInitial();
         } else {
+            // Old session without a token (or logged out) → force a fresh login.
+            if(session && !token) { localStorage.removeItem('fkAdminSession'); }
             showManagerLogin();
         }
     }
@@ -2662,6 +2688,7 @@
         closeModals();
         localStorage.removeItem('fkAdminSession');
         localStorage.removeItem('fkAdminUsername');
+        localStorage.removeItem('fkAdminToken');
         document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
         showManagerLogin();
     }

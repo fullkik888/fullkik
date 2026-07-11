@@ -30,6 +30,8 @@
         .invite-friend-pill:hover { transform:translateY(-1px); border-color:var(--accent-light); box-shadow:0 12px 24px rgba(128,0,0,0.35); }
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .purple-pill { display: flex; align-items: center; gap: 8px; background: rgba(168,85,247,0.12); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: #c084fc; border: 1px solid rgba(168,85,247,0.42); text-decoration:none; }
+        .purple-pill:hover { background: rgba(168,85,247,0.2); transform: scale(1.02); }
         .mail-button { position:relative; min-width:38px; height:38px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; }
         .mail-button:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.22); }
         .mail-badge { position:absolute; right:-5px; top:-5px; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:var(--danger); color:white; font-size:10px; font-weight:900; display:none; align-items:center; justify-content:center; box-shadow:0 0 0 4px rgba(255,69,58,0.12); }
@@ -318,7 +320,7 @@
             .header-right { width:auto; justify-content:flex-end; gap: 6px; margin-left:auto; }
             .header-right > div { gap: 5px !important; max-width: 100%; }
             .mail-button { min-width:36px; height:36px; font-size:15px; }
-            .vip-center-pill, .invite-friend-pill, .token-pill { min-height: 36px; padding: 0 7px; font-size: 11px; }
+            .vip-center-pill, .invite-friend-pill, .token-pill, .purple-pill { min-height: 36px; padding: 0 7px; font-size: 11px; }
             .invite-modal-box { padding:24px 18px; max-width:calc(100vw - 34px); }
             .profile-trigger { padding: 4px; min-width:36px; min-height:36px; }
             .profile-pic { width: 30px; height: 30px; }
@@ -424,6 +426,9 @@
             <button class="mail-button" id="mailBtn" onclick="openNotificationsView(event)" aria-label="通知">✉<span class="mail-badge" id="mailBadge">0</span></button>
             <a href="/fullkik/profile.page?view=topup&skipLoader=1" class="token-pill" id="tokenUI">
                 💎 <span id="tokenDisplay">0</span>
+            </a>
+            <a href="/fullkik/profile.page?view=vip&skipLoader=1" class="purple-pill" id="purpleGemUI" style="display:none;" title="创作收益 / Creator Gems">
+                🟣 <span id="purpleGemDisplay">0</span>
             </a>
             <button class="profile-trigger" id="profileBtn" onclick="toggleProfileDropdown(event)"></button>
             <div class="profile-dropdown" id="profileDropdown">
@@ -600,7 +605,7 @@
 <script>
     const API_URL = '/api';
     let allGenres = [], allSongs = [], allUsers = [], userPurchases = [], userFavorites = [], userNotifications = [], userFollowing = [];
-    let currentSong = null; let userTokens = 0, isUserVip = false;
+    let currentSong = null; let userTokens = 0, isUserVip = false, userPurpleGems = 0;
     const username = localStorage.getItem('djUsername');
     const audioEl = document.getElementById('mainAudio');
     const initialUrlParams = new URLSearchParams(window.location.search);
@@ -665,6 +670,20 @@
     window.addEventListener('online', () => netBanner('online', netOnlineMsg(), { autoHide: 2600 }));
     // Already offline when the page opens (no event fires in that case).
     if(navigator && navigator.onLine === false){ document.addEventListener('DOMContentLoaded', () => netBanner('offline', netOfflineMsg())); }
+
+    // Purple Gems = creator earnings. Chip shows ONLY for users who have published songs.
+    function updatePurpleGemUI() {
+        const el = document.getElementById('purpleGemUI');
+        if(!el) return;
+        const uname = String(username || '').toLowerCase();
+        const hasPublished = !!uname && Array.isArray(allSongs) && allSongs.some(s => String(s.uploader || '').toLowerCase() === uname);
+        if(hasPublished) {
+            const d = document.getElementById('purpleGemDisplay'); if(d) d.innerText = userPurpleGems || 0;
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    }
     function getInviteFriendLink() {
         if(!username) return '';
         return `${window.location.origin}/fullkik/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
@@ -1062,7 +1081,7 @@
             if(username) {
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
-                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; userFollowing = data.following || []; isUserVip = data.isVip || false;
+                    const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; userFollowing = data.following || []; isUserVip = data.isVip || false; userPurpleGems = data.purpleGems || 0;
                     if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens;
                     updateNotificationBadge();
                     
@@ -1078,7 +1097,8 @@
             
             injectTopBarGenres();
             renderHome(allUsers);
-            applyLang(); 
+            updatePurpleGemUI();
+            applyLang();
 
             netDataLoaded = true; clearTimeout(slowLoadTimer); hideNetBanner();
 
