@@ -1209,7 +1209,7 @@
             <div class="filter-bar">
                 <div class="filter-group"><label>邮箱 / 手机号</label><input class="input-text" id="otpPhoneFilter" placeholder="模糊匹配，例如 gmail 或 +60 12" oninput="renderOtpHistory()"></div>
                 <div class="filter-group"><label>类型</label><select class="select-box" id="otpTypeFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="register">register</option><option value="verify_existing">verify_existing</option></select></div>
-                <div class="filter-group"><label>渠道</label><select class="select-box" id="otpChannelFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="simulated">simulated</option><option value="telesms">telesms</option><option value="abosend">abosend</option></select></div>
+                <div class="filter-group"><label>渠道</label><select class="select-box" id="otpChannelFilter" onchange="renderOtpHistory()"><option value="ALL">全部</option><option value="email">email</option><option value="simulated">simulated</option><option value="telesms">telesms</option><option value="abosend">abosend</option></select></div>
                 <div class="filter-group"><label>从（日期）</label><input class="input-text" type="date" id="otpStartFilter" onchange="renderOtpHistory()"></div>
                 <div class="filter-group"><label>到（日期）</label><input class="input-text" type="date" id="otpEndFilter" onchange="renderOtpHistory()"></div>
                 <button class="btn-primary" onclick="renderOtpHistory()">筛选</button>

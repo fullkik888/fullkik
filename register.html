@@ -124,9 +124,14 @@
     </div>
 
     <div id="registerView" class="view-section">
-        <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2>
-        <p style="margin:0 0 6px;">使用 Google 账户注册 / Sign up with Google</p>
-        <div class="gbtn-center" style="margin-top:30px;"><div id="googleBtnReg"></div></div>
+        <h2 data-i18n="regTitle">注册账户</h2><p data-i18n="regSub">设置你的个人资料</p>
+        <div class="input-group"><input type="email" id="regContact" placeholder="Email 邮箱" data-placeholder="regContactPH" inputmode="email"></div>
+        <div class="input-group"><input type="text" id="regUsername" placeholder="Choose a Username" data-placeholder="userPH"></div>
+        <div class="input-group password-wrap"><input type="password" id="regPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('regPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <div class="input-group password-wrap"><input type="password" id="regConfirm" placeholder="Confirm Password" data-placeholder="confirmPH"><button class="password-toggle" onclick="togglePassword('regConfirm')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <button class="btn-primary" onclick="register()" data-i18n="regBtn">Register</button>
+        <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
+        <div class="gbtn-center"><div id="googleBtnReg"></div></div>
         <div style="margin-top: 24px;"><span style="color: var(--text-muted); font-size: 14px;" data-i18n="hasAcc">Already have an account? </span><span class="toggle-link" onclick="switchView('loginView')" data-i18n="signinLnk">Sign in</span></div>
     </div>
 
@@ -156,6 +161,7 @@
         <div class="input-group"><input class="otp-code-input" type="text" id="otpCodeInput" inputmode="numeric" maxlength="6" placeholder="000000"></div>
         <button class="btn-primary" onclick="verifyOtpAndRegister()">验证并注册</button>
         <div class="otp-tools"><span class="toggle-link" onclick="switchView('registerView')">返回修改</span><span class="toggle-link" onclick="resendRegisterOtp()">重新发送</span></div>
+        <div style="margin-top:14px; color:var(--text-muted); font-size:12px; line-height:1.55;">没收到验证码？请检查垃圾邮件文件夹。<br>Didn't get it? Check your spam / junk folder.</div>
     </div>
 
     <div id="forgotView" class="view-section">
@@ -234,8 +240,8 @@
     if(referralCode) localStorage.setItem('fullkikReferral', referralCode);
     
     const dict = {
-        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Username, Email or Phone", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "You're In! 🎧", enterHome: "Enter FULLKIK →", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
-        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "用户名、邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功 🎧", enterHome: "进入首页 →", errFill: "请填写所有字段", errMatch: "密码不匹配" }
+        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Username, Email or Phone", regContactPH: "Email", orSep: "OR", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "You're In! 🎧", enterHome: "Enter FULLKIK →", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
+        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "用户名、邮箱或手机号", regContactPH: "邮箱", orSep: "或 · OR", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功 🎧", enterHome: "进入首页 →", errFill: "请填写所有字段", errMatch: "密码不匹配" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -308,7 +314,7 @@
             pendingOtpId = data.otpId || '';
             document.getElementById('otpPhoneText').innerText = contact;
             document.getElementById('otpCodeInput').value = '';
-            document.getElementById('otpSimHint').innerText = data.otp ? `模拟验证码：${data.otp}（5 分钟有效）` : '验证码已发送，请查看手机。';
+            document.getElementById('otpSimHint').innerText = data.otp ? `模拟验证码：${data.otp}（5 分钟有效）` : (data.channel === 'email' ? '验证码已发送到你的邮箱，请查收（5 分钟有效）。/ Code sent to your email.' : '验证码已发送，请查看手机。');
             switchView('otpView');
             showToast("OTP 已发送");
         } catch(err) {
@@ -339,7 +345,7 @@
             }
             pendingOtpId = data.otpId || pendingOtpId;
             document.getElementById('otpCodeInput').value = '';
-            document.getElementById('otpSimHint').innerText = data.otp ? `模拟验证码：${data.otp}（5 分钟有效）` : '验证码已重新发送。';
+            document.getElementById('otpSimHint').innerText = data.otp ? `模拟验证码：${data.otp}（5 分钟有效）` : (data.channel === 'email' ? '验证码已重新发送到你的邮箱。/ Code re-sent to your email.' : '验证码已重新发送。');
             showToast("OTP 已重新发送");
         } catch(err) {
             showToast(err.message || "重新发送失败", true);

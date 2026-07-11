@@ -907,9 +907,15 @@ app.post('/api/otp/send', async (req, res) => {
         const code = String(Math.floor(100000 + Math.random() * 900000));
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
-        const channel = req.body.channel || 'simulated';
         const ip = clientIp;
         const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        // Real delivery: if the contact is an email and SMTP is configured, send it.
+        let channel = req.body.channel || 'simulated';
+        let delivered = false;
+        if (phone.includes('@')) {
+            delivered = await sendOtpCodeEmail(phone, code, type);
+            if (delivered) channel = 'email';
+        }
         const ref = await db.collection('otp_logs').add({
             phone,
             code,
@@ -922,9 +928,13 @@ app.post('/api/otp/send', async (req, res) => {
             msgid,
             timestamp: now.toISOString(),
             expiresAt,
-            consumed: false
+            consumed: false,
+            delivered
         });
-        res.json({ success: true, otpId: ref.id, otp: code, expiresAt, msgid, simulated: true });
+        // Only leak the code back to the browser when we could NOT actually deliver it.
+        const out = { success: true, otpId: ref.id, expiresAt, msgid, channel, simulated: !delivered };
+        if (!delivered) out.otp = code;
+        res.json(out);
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -967,15 +977,22 @@ app.post('/api/otp/resend/:id', async (req, res) => {
         req.body.type = data.type || 'register';
         req.body.channel = data.channel || 'simulated';
         req.body.userId = data.userId || '-';
+        const type = data.type || 'register';
         const code = String(Math.floor(100000 + Math.random() * 900000));
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
         const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
+        let channel = data.channel || 'simulated';
+        let delivered = false;
+        if (String(data.phone || '').includes('@')) {
+            delivered = await sendOtpCodeEmail(data.phone, code, type);
+            if (delivered) channel = 'email';
+        }
         const ref = await db.collection('otp_logs').add({
             phone: data.phone,
             code,
-            type: data.type || 'register',
-            channel: data.channel || 'simulated',
+            type,
+            channel,
             ip: data.ip || '-',
             userId: data.userId || '-',
             errors: 0,
@@ -984,9 +1001,12 @@ app.post('/api/otp/resend/:id', async (req, res) => {
             timestamp: now.toISOString(),
             expiresAt,
             consumed: false,
+            delivered,
             resentFrom: req.params.id
         });
-        res.json({ success: true, otpId: ref.id, otp: code, expiresAt, msgid, simulated: true });
+        const out = { success: true, otpId: ref.id, expiresAt, msgid, channel, simulated: !delivered };
+        if (!delivered) out.otp = code;
+        res.json(out);
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -2205,6 +2225,27 @@ async function sendUserEmail(to, subject, html) {
     if(!t) return false;
     await t.transporter.sendMail({ from: t.from, to, subject, html });
     return true;
+}
+
+// Emails a one-time verification code. Returns true ONLY if actually delivered
+// (SMTP configured + send succeeded); false lets the caller fall back to sim mode.
+async function sendOtpCodeEmail(to, code, type) {
+    const subject = 'FULLKIK 验证码 / Verification Code: ' + code;
+    const html = `
+    <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:460px; margin:0 auto; background:#140a0e; border:1px solid #3a2028; border-radius:16px; overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#7e1c38,#4a0f22); padding:22px 24px;">
+        <div style="color:#ffffff; font-weight:900; font-size:20px; letter-spacing:1px;">FULLKIK</div>
+        <div style="color:#f0c9c0; font-size:12px; margin-top:2px;">DJ Remix · Creator Space</div>
+      </div>
+      <div style="padding:26px 24px; color:#e8dcdf;">
+        <p style="margin:0; font-size:15px;">你的验证码 / Your verification code</p>
+        <div style="font-size:38px; font-weight:900; letter-spacing:10px; color:#ffffff; margin:16px 0; text-align:center;">${code}</div>
+        <p style="margin:0; color:#b79aa2; font-size:13px; line-height:1.6;">5 分钟内有效，请勿泄露给他人。<br>Valid for 5 minutes. Do not share this code with anyone.</p>
+      </div>
+      <div style="padding:14px 24px; border-top:1px solid #2a171d; color:#7a5c64; font-size:11px;">如果不是你本人操作，请忽略此邮件。 / If you didn't request this, please ignore this email.</div>
+    </div>`;
+    try { return await sendUserEmail(to, subject, html); }
+    catch(e) { console.error('OTP email failed:', e.message); return false; }
 }
 
 // One-time email nudging an unverified user to link a real, verified Gmail.
