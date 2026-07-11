@@ -98,6 +98,22 @@
 <div class="lang-toggle" onclick="toggleLang()">EN / CN</div>
 <div id="toast" class="toast"></div>
 
+<!-- Network / offline notification banner -->
+<div id="netBanner" class="net-banner"></div>
+<style>
+  .net-banner{ position:fixed; top:0; left:0; right:0; z-index:100000; transform:translateY(-115%);
+    transition:transform .35s cubic-bezier(.16,1,.3,1); padding:11px 16px; text-align:center;
+    font-size:13.5px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center;
+    gap:12px; box-shadow:0 6px 24px rgba(0,0,0,.45); line-height:1.4; }
+  .net-banner.show{ transform:translateY(0); }
+  .net-banner.offline, .net-banner.error{ background:linear-gradient(90deg,#7a1020,#a52a2a); }
+  .net-banner.slow{ background:linear-gradient(90deg,#8a5a12,#c9962f); color:#1c1200; }
+  .net-banner.online{ background:linear-gradient(90deg,#16833a,#34c759); }
+  .net-retry{ background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.55); color:#fff;
+    border-radius:8px; padding:4px 13px; font-size:12.5px; font-weight:800; cursor:pointer; flex:none; }
+  .net-retry:hover{ background:rgba(255,255,255,.34); }
+</style>
+
 <div class="modal-overlay" id="successModal">
     <div class="modal-box success-box">
         <div class="success-check">
@@ -258,6 +274,24 @@
         t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3500); 
     }
     function switchView(viewId) { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById(viewId).classList.add('active'); }
+
+    // ---- Network status notifications (offline / online) ----
+    const EN = () => currentLang === 'en';
+    function netOfflineMsg(){ return EN() ? '⚠ No internet connection — check your Wi‑Fi or data.' : '⚠ 网络连接已断开 — 请检查你的 Wi‑Fi 或数据网络。'; }
+    function netOnlineMsg(){ return EN() ? '✓ Back online.' : '✓ 网络已恢复。'; }
+    let _netHideTimer = null;
+    function netBanner(kind, msg, opts){
+        const b = document.getElementById('netBanner'); if(!b) return;
+        opts = opts || {};
+        b.className = 'net-banner show ' + kind;
+        b.innerHTML = `<span>${msg}</span>` + (opts.retry ? `<button class="net-retry" onclick="location.reload()">${EN() ? 'Retry' : '重试'}</button>` : '');
+        if(_netHideTimer){ clearTimeout(_netHideTimer); _netHideTimer = null; }
+        if(opts.autoHide){ _netHideTimer = setTimeout(hideNetBanner, opts.autoHide); }
+    }
+    function hideNetBanner(){ const b = document.getElementById('netBanner'); if(b) b.className = 'net-banner'; }
+    window.addEventListener('offline', () => netBanner('offline', netOfflineMsg()));
+    window.addEventListener('online', () => netBanner('online', netOnlineMsg(), { autoHide: 2600 }));
+    if(navigator && navigator.onLine === false){ document.addEventListener('DOMContentLoaded', () => netBanner('offline', netOfflineMsg())); }
     function togglePassword(id) {
         const input = document.getElementById(id);
         if(!input) return;

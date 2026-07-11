@@ -840,6 +840,7 @@
             <button class="nav-item" onclick="switchView('adminlogs', '操作日志')" id="nav-adminlogs">■ 操作日志</button>
             <button class="nav-item" onclick="switchView('otp-history', '运营 / OTP 历史')" id="nav-otp-history">■ OTP 历史</button>
             <button class="nav-item" onclick="switchView('email-test', '邮件测试')" id="nav-email-test">■ 邮件测试</button>
+            <button class="nav-item" onclick="switchView('email-broadcast', '群发邮件')" id="nav-email-broadcast">■ 群发邮件</button>
         </div>
     </div>
     <div class="admin-user-footer">
@@ -960,6 +961,36 @@
                 <button type="button" class="smtp-send-btn" id="smtpSendTestBtn" onclick="sendSmtpTestEmail()">发送测试邮件</button>
                 <div class="smtp-test-status" id="smtpTestStatus"></div>
             </div>
+        </div>
+    </div>
+
+    <div id="view-email-broadcast" class="view-section">
+        <div class="dash-header">
+            <h2>群发邮件 / Email Broadcast</h2>
+            <p>向用户发送邮件通知 · 可发给全部、所选、或单个用户。</p>
+        </div>
+        <div class="glass-panel smtp-panel">
+            <h3 style="margin:0 0 12px; font-size:18px;">① 收件人 / Recipients</h3>
+            <div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:14px;">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;"><input type="radio" name="bcTarget" value="selected" checked onchange="onBcTargetChange()"> 选择用户 / Selected</label>
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700;"><input type="radio" name="bcTarget" value="all" onchange="onBcTargetChange()"> 所有用户 / All users</label>
+            </div>
+            <div id="bcAllInfo" style="display:none; color:var(--text-muted); font-size:13px; padding:12px; border:1px solid var(--border-color); border-radius:10px; background:rgba(0,0,0,0.2);">将发送给所有拥有有效邮箱的用户（没有邮箱的会自动跳过）。</div>
+            <div id="bcSelectWrap">
+                <input type="text" id="bcUserSearch" class="input-text" placeholder="搜索用户名 / 邮箱…" oninput="renderBcUserList()" style="width:100%; box-sizing:border-box; margin-bottom:10px;">
+                <div style="display:flex; gap:12px; margin-bottom:10px;"><button type="button" class="btn-text-action" onclick="bcSelectAllVisible()">全选可见</button><button type="button" class="btn-text-action" onclick="bcClearSelection()">清空所选</button></div>
+                <div id="bcUserList" style="max-height:320px; overflow-y:auto; border:1px solid var(--border-color); border-radius:12px; padding:6px;"><div style="padding:24px; text-align:center; color:var(--text-muted);">加载用户中…</div></div>
+            </div>
+            <div style="margin-top:14px; font-weight:900; font-size:15px;">预计发送给 <span id="bcCount" style="color:var(--accent-light, #a52a2a);">0</span> 人</div>
+        </div>
+        <div class="glass-panel smtp-panel">
+            <h3 style="margin:0 0 12px; font-size:18px;">② 邮件内容 / Message</h3>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:900;">主题 Subject</label>
+            <input type="text" id="bcSubject" class="input-text" placeholder="例如：FULLKIK 新功能上线 🎧" style="width:100%; box-sizing:border-box; margin:6px 0 14px;">
+            <label style="font-size:12px; color:var(--text-muted); font-weight:900;">正文 Message（换行会保留）</label>
+            <textarea id="bcMessage" class="input-text" rows="8" placeholder="输入邮件内容…" style="width:100%; box-sizing:border-box; margin-top:6px; resize:vertical; font-family:inherit; line-height:1.6;"></textarea>
+            <button type="button" class="smtp-send-btn" id="bcSendBtn" onclick="sendBroadcast()" style="margin-top:16px;">发送邮件 / Send</button>
+            <div class="smtp-test-status" id="bcStatus"></div>
         </div>
     </div>
 
@@ -2247,6 +2278,104 @@
             if(button) { button.disabled = false; button.innerText = '发送测试邮件'; }
         }
     }
+
+    // ---- Email broadcast (群发邮件) ----
+    let bcSelected = new Set();
+    function bcEmailOf(u){
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(u && re.test(String(u.email||'').trim())) return String(u.email).trim();
+        if(u && re.test(String(u.contact||'').trim())) return String(u.contact).trim();
+        return '';
+    }
+    function bcCurrentTarget(){ return (document.querySelector('input[name="bcTarget"]:checked')||{}).value || 'selected'; }
+    async function loadBroadcast(){
+        if(!Array.isArray(allUsers) || !allUsers.length){
+            try { allUsers = await (await fetch(`${API_URL}/all-users`)).json(); } catch(e) { allUsers = []; }
+        }
+        bcSelected = new Set();
+        const sel = document.querySelector('input[name="bcTarget"][value="selected"]'); if(sel) sel.checked = true;
+        onBcTargetChange();
+        renderBcUserList();
+    }
+    function onBcTargetChange(){
+        const isAll = bcCurrentTarget() === 'all';
+        document.getElementById('bcAllInfo').style.display = isAll ? 'block' : 'none';
+        document.getElementById('bcSelectWrap').style.display = isAll ? 'none' : 'block';
+        updateBcCount();
+    }
+    function updateBcCount(){
+        const n = bcCurrentTarget() === 'all' ? (allUsers||[]).filter(u => bcEmailOf(u)).length : bcSelected.size;
+        const el = document.getElementById('bcCount'); if(el) el.textContent = n;
+    }
+    function renderBcUserList(){
+        const q = (document.getElementById('bcUserSearch').value||'').trim().toLowerCase();
+        const list = document.getElementById('bcUserList');
+        let users = (allUsers||[]).filter(u => {
+            const un = String(u.username||'').toLowerCase(), em = bcEmailOf(u).toLowerCase();
+            return !q || un.includes(q) || em.includes(q);
+        });
+        const CAP = 300, total = users.length; users = users.slice(0, CAP);
+        if(!users.length){ list.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);">没有匹配的用户</div>'; updateBcCount(); return; }
+        let html = users.map(u => {
+            const un = String(u.username||''), em = bcEmailOf(u);
+            const checked = bcSelected.has(un.toLowerCase()) ? 'checked' : '';
+            const dis = em ? '' : 'disabled';
+            const sub = em ? escapeHtml(em) : '<span style="color:var(--danger,#ff453a);">无邮箱 / no email</span>';
+            return `<label style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-bottom:1px solid var(--border-color); cursor:${em?'pointer':'not-allowed'}; opacity:${em?1:0.5};">
+                <input type="checkbox" value="${escapeHtml(un)}" ${checked} ${dis} onchange="bcToggleUser(this.value, this.checked)">
+                <div style="flex:1; min-width:0;"><div style="font-weight:700;">${escapeHtml(un)}</div><div style="font-size:12px; color:var(--text-muted); word-break:break-all;">${sub}</div></div>
+            </label>`;
+        }).join('');
+        if(total > CAP) html += `<div style="padding:12px; text-align:center; color:var(--text-muted); font-size:12px;">显示前 ${CAP} / ${total} 条，请用搜索缩小范围</div>`;
+        list.innerHTML = html;
+        updateBcCount();
+    }
+    function bcToggleUser(username, checked){
+        const u = String(username||'').toLowerCase();
+        if(checked) bcSelected.add(u); else bcSelected.delete(u);
+        updateBcCount();
+    }
+    function bcSelectAllVisible(){
+        const q = (document.getElementById('bcUserSearch').value||'').trim().toLowerCase();
+        (allUsers||[]).filter(u => {
+            const un = String(u.username||'').toLowerCase(), em = bcEmailOf(u).toLowerCase();
+            return bcEmailOf(u) && (!q || un.includes(q) || em.includes(q));
+        }).slice(0,300).forEach(u => bcSelected.add(String(u.username||'').toLowerCase()));
+        renderBcUserList();
+    }
+    function bcClearSelection(){ bcSelected = new Set(); renderBcUserList(); }
+    async function sendBroadcast(){
+        const subject = document.getElementById('bcSubject').value.trim();
+        const message = document.getElementById('bcMessage').value.trim();
+        const target = bcCurrentTarget();
+        const status = document.getElementById('bcStatus');
+        const btn = document.getElementById('bcSendBtn');
+        if(!subject) return showToast('请填写邮件主题', true);
+        if(!message) return showToast('请填写邮件内容', true);
+        const usernames = Array.from(bcSelected);
+        const count = target === 'all' ? (allUsers||[]).filter(u => bcEmailOf(u)).length : usernames.length;
+        if(target !== 'all' && !usernames.length) return showToast('请至少选择一个用户', true);
+        if(!count) return showToast('没有拥有有效邮箱的收件人', true);
+        if(!confirm(`确定发送给 ${count} 位用户？此操作会真实发送邮件。`)) return;
+        btn.disabled = true; btn.innerText = '发送中…'; if(status) status.innerText = '正在发送，请稍候…（用户较多时可能需要一点时间）';
+        try {
+            const res = await fetch(`${API_URL}/admin/email/broadcast`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ subject, message, target, usernames })
+            });
+            const text = await res.text();
+            if(!res.ok) throw new Error(text);
+            const d = JSON.parse(text);
+            const msg = `已发送 ${d.sent}/${d.total} 封` + (d.failedCount?`，失败 ${d.failedCount}`:'') + (d.skippedNoEmail?`，跳过无邮箱 ${d.skippedNoEmail}`:'');
+            if(status) status.innerText = msg;
+            showToast(msg);
+        } catch(e){
+            if(status) status.innerText = e.message || '发送失败';
+            showToast(e.message || '发送失败', true);
+        } finally {
+            btn.disabled = false; btn.innerText = '发送邮件 / Send';
+        }
+    }
     function closeDropdowns(event) {
         if(event?.target?.id === 'mobileNavOverlay') closeMobileNavMenu();
     }
@@ -2291,7 +2420,7 @@
         if(['users','user-detail','staff'].includes(viewId)) return 'users';
         if(['referrals','promotions','downloads'].includes(viewId)) return 'promotion';
         if(['reconcile','transactions','orders','topup-packages','payment-methods','coupons','withdrawals'].includes(viewId)) return 'finance';
-        if(['system-settings','adminlogs','otp-history','email-test'].includes(viewId)) return 'system';
+        if(['system-settings','adminlogs','otp-history','email-test','email-broadcast'].includes(viewId)) return 'system';
         return '';
     }
 
@@ -2370,6 +2499,7 @@
         if(viewId === 'adminlogs') loadAdminLogs();
         if(viewId === 'otp-history') loadOtpHistory();
         if(viewId === 'email-test') loadEmailTestConfig();
+        if(viewId === 'email-broadcast') loadBroadcast();
         if(viewId === 'reports') loadReports();
         if(viewId === 'sensitive') loadSensitiveWords();
         if(viewId === 'blocked-ips') loadBlockedIps();

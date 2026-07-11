@@ -2317,6 +2317,94 @@ app.post('/api/admin/test-email', async (req, res) => {
     }
 });
 
+// ---- Admin email broadcast: send a message to one / selected / all users ----
+function htmlEscape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+// A user's usable email: prefer .email, fall back to .contact if it's an email.
+function userEmailOf(data) {
+    const isEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
+    if (isEmail(data.email)) return String(data.email).trim().toLowerCase();
+    if (isEmail(data.contact)) return String(data.contact).trim().toLowerCase();
+    return null;
+}
+function renderBroadcastEmail(subject, message) {
+    const body = htmlEscape(message).replace(/\n/g, '<br>');
+    return `
+    <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:520px; margin:0 auto; background:#140a0e; border:1px solid #3a2028; border-radius:16px; overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#7e1c38,#4a0f22); padding:22px 24px;">
+        <div style="color:#ffffff; font-weight:900; font-size:20px; letter-spacing:1px;">FULLKIK</div>
+        <div style="color:#f0c9c0; font-size:12px; margin-top:2px;">DJ Remix · Creator Space</div>
+      </div>
+      <div style="padding:26px 24px; color:#e8dcdf;">
+        <h2 style="margin:0 0 14px; color:#ffffff; font-size:19px;">${htmlEscape(subject)}</h2>
+        <div style="font-size:14px; line-height:1.75; color:#d8c4c8;">${body}</div>
+      </div>
+      <div style="padding:14px 24px; border-top:1px solid #2a171d; color:#7a5c64; font-size:11px;">你收到此邮件是因为你是 FULLKIK 注册用户。 / You received this because you're a registered FULLKIK user.</div>
+    </div>`;
+}
+
+app.post('/api/admin/email/broadcast', async (req, res) => {
+    try {
+        if(!db) return res.status(500).send('DB disconnected');
+        const subject = String(req.body.subject || '').trim();
+        const message = String(req.body.message || '').trim();
+        const target = String(req.body.target || 'selected').trim();
+        const usernames = Array.isArray(req.body.usernames)
+            ? req.body.usernames.map(u => String(u || '').trim().toLowerCase()).filter(Boolean) : [];
+        if(!subject) return res.status(400).send('请填写邮件主题 / Subject required');
+        if(!message) return res.status(400).send('请填写邮件内容 / Message required');
+
+        const t = getSmtpTransporter();
+        if(!t) return res.status(400).send('SMTP 未完整设置，请先在 Render 配置 SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM');
+
+        // Resolve recipient docs.
+        let docs = [];
+        if(target === 'all') {
+            const snap = await db.collection('users').get();
+            docs = snap.docs;
+        } else {
+            if(!usernames.length) return res.status(400).send('请至少选择一个用户 / Select at least one user');
+            const reads = await Promise.all(usernames.map(u => db.collection('users').doc(u).get()));
+            docs = reads.filter(d => d.exists);
+        }
+
+        // Unique recipients that actually have an email.
+        const seen = new Set();
+        const recipients = [];
+        for(const d of docs) {
+            const data = d.data();
+            const email = userEmailOf(data);
+            if(!email || seen.has(email)) continue;
+            seen.add(email);
+            recipients.push({ username: data.username || d.id, email });
+        }
+        const skippedNoEmail = docs.length - recipients.length;
+        if(!recipients.length) return res.status(400).send('选中的用户没有有效邮箱 / No valid email addresses among the recipients');
+
+        const html = renderBroadcastEmail(subject, message);
+        let sent = 0; const failed = [];
+        // Sequential send keeps us under SMTP rate limits (e.g. Gmail ~500/day).
+        for(const r of recipients) {
+            try { await t.transporter.sendMail({ from: t.from, to: r.email, subject, html }); sent++; }
+            catch(e) { failed.push({ username: r.username, email: r.email, error: e.message }); }
+        }
+
+        await db.collection('email_broadcasts').add({
+            subject, message, target,
+            total: recipients.length, sent, failedCount: failed.length, skippedNoEmail,
+            sentBy: String(req.body.sentBy || 'admin'),
+            timestamp: new Date().toISOString()
+        }).catch(() => {});
+        await logAdminAction(`群发邮件 "${subject}" → ${sent}/${recipients.length} 已发送`, {
+            module: '系统', action: '群发邮件', targetId: target,
+            details: `sent=${sent} failed=${failed.length} skippedNoEmail=${skippedNoEmail}`
+        });
+
+        res.json({ success: true, total: recipients.length, sent, failedCount: failed.length, skippedNoEmail, failed: failed.slice(0, 20) });
+    } catch(e) { res.status(500).send(e.message); }
+});
+
 app.post('/api/admin/login', async (req, res) => {
     try {
         const login = String(req.body.login || req.body.username || req.body.email || '').trim();
