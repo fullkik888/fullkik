@@ -1154,10 +1154,18 @@ app.post('/api/contest/:id/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { contact, password } = req.body;
-        let uDoc = await db.collection('users').doc(contact.toLowerCase()).get();
-        if (!uDoc.exists) { 
-            const q = await db.collection('users').where('contact', '==', contact).get(); 
-            if(!q.empty) uDoc = q.docs[0]; 
+        if (!contact) return res.status(400).send('Invalid credentials.');
+        const key = String(contact).trim();
+        const lower = key.toLowerCase();
+        // Accept USERNAME (doc id, always lowercase), email, or phone — Google
+        // and password accounts both resolve, so a user can log in either way.
+        let uDoc = await db.collection('users').doc(lower).get();
+        if (!uDoc.exists) {
+            const lookups = [ ['username', lower], ['email', lower], ['contact', key], ['contact', lower], ['phone', key] ];
+            for (const [field, val] of lookups) {
+                const q = await db.collection('users').where(field, '==', val).limit(1).get();
+                if (!q.empty) { uDoc = q.docs[0]; break; }
+            }
         }
         if (!uDoc || !uDoc.exists) return res.status(400).send('Invalid credentials.');
         

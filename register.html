@@ -114,7 +114,7 @@
     <div class="brand-lockup"><div class="brand">FULLKIK</div><div class="tagline">DJ Remix · Creator Space</div></div>
     <div id="loginView" class="view-section active">
         <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2><p data-i18n="loginSub">进入专属DJ门户</p>
-        <div class="input-group"><input type="text" id="loginContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
+        <div class="input-group"><input type="text" id="loginContact" placeholder="Username, Email or Phone" data-placeholder="contactPH"></div>
         <div class="input-group password-wrap"><input type="password" id="loginPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('loginPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
@@ -132,7 +132,15 @@
 
     <div id="googlePassView" class="view-section">
         <h2>设置密码 / Set a Password</h2>
-        <p style="margin:0 0 24px;">Google 首次登录，请设置一个密码作为备用登录方式 / Set a password so you can also log in without Google.</p>
+        <p style="margin:0 0 14px;">Google 首次登录，请设置一个密码作为备用登录方式 / Set a password so you can also log in without Google.</p>
+        <div id="gUserWrap" style="margin:0 0 22px; padding:12px 14px; border:1px solid var(--border-color); border-radius:12px; background:rgba(168,50,79,0.10); text-align:left;">
+            <div style="color:var(--text-muted); font-size:12px; margin-bottom:4px;">你的用户名 / Your username</div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <b id="gUserName" style="font-size:17px; letter-spacing:0.3px; word-break:break-all;">-</b>
+                <button type="button" onclick="copyGUserName()" style="flex:none; background:none; border:1px solid var(--border-color); color:var(--text-muted); border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer;">复制 / Copy</button>
+            </div>
+            <div style="color:var(--text-muted); font-size:11.5px; margin-top:6px;">下次可用「用户名 + 密码」登录 / Next time log in with this username + password.</div>
+        </div>
         <div class="input-group password-wrap"><input type="password" id="gPass" placeholder="Password (min 6)"><button class="password-toggle" onclick="togglePassword('gPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <div class="input-group password-wrap"><input type="password" id="gPassConfirm" placeholder="Confirm Password"><button class="password-toggle" onclick="togglePassword('gPassConfirm')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="submitGooglePassword()">设置并继续 / Set &amp; Continue</button>
@@ -183,12 +191,18 @@
                 if(data.hasPassword){
                     localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page';
                 } else {
-                    // First Google sign-in → must set a password once.
+                    // First Google sign-in → show their username + set a password once.
+                    document.getElementById('gUserName').textContent = data.username || '-';
                     switchView('googlePassView');
                 }
             }
             else { showToast(await res.text(), true); }
         } catch(e){ showToast('Google 登录失败', true); }
+    }
+    function copyGUserName(){
+        const u = document.getElementById('gUserName').textContent || '';
+        if(!u || u === '-') return;
+        if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(function(){ showToast('已复制 / Copied: ' + u); }).catch(function(){}); }
     }
     async function submitGooglePassword(){
         const p1 = document.getElementById('gPass').value, p2 = document.getElementById('gPassConfirm').value;
@@ -220,8 +234,8 @@
     if(referralCode) localStorage.setItem('fullkikReferral', referralCode);
     
     const dict = {
-        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Email or Phone Number", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "You're In! 🎧", enterHome: "Enter FULLKIK →", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
-        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功 🎧", enterHome: "进入首页 →", errFill: "请填写所有字段", errMatch: "密码不匹配" }
+        en: { loginTitle: "Welcome to FULLKIK", loginSub: "Access your Personal DJ Portal", contactPH: "Username, Email or Phone", passPH: "Password", continueBtn: "Continue", forgotLnk: "Forgot password?", noAcc: "Don't have an account? ", signupLnk: "Sign up", guestLnk: "Continue as Guest ➔", regTitle: "Create Account", regSub: "Setup your profile", userPH: "Choose a Username", confirmPH: "Confirm Password", regBtn: "Register", hasAcc: "Already have an account? ", signinLnk: "Sign in", resetTitle: "Reset Password", resetSub: "We'll send a secure link to your contact.", sendLnk: "Send Link", backLnk: "Back to Sign in", newPassTitle: "New Password", newPassSub: "Enter your new credentials", newPassPH: "New Password", confirmNewPH: "Confirm New Password", resetBtn: "Reset & Login", success: "You're In! 🎧", enterHome: "Enter FULLKIK →", errFill: "Fill all fields", errMatch: "Passwords mismatch" },
+        cn: { loginTitle: "欢迎来到FULLKIK", loginSub: "进入专属DJ门户", contactPH: "用户名、邮箱或手机号", passPH: "密码", continueBtn: "继续", forgotLnk: "忘记密码？", noAcc: "没有账户？", signupLnk: "注册", guestLnk: "游客身份继续 ➔", regTitle: "注册账户", regSub: "设置你的个人资料", userPH: "选择用户名", confirmPH: "确认密码", regBtn: "注册", hasAcc: "已有账户？", signinLnk: "登录", resetTitle: "重置密码", resetSub: "我们将发送安全链接", sendLnk: "发送链接", backLnk: "返回登录", newPassTitle: "新密码", newPassSub: "输入新密码", newPassPH: "新密码", confirmNewPH: "确认新密码", resetBtn: "重置并登录", success: "注册成功 🎧", enterHome: "进入首页 →", errFill: "请填写所有字段", errMatch: "密码不匹配" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
