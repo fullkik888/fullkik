@@ -573,7 +573,7 @@
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl" data-i18n="vipStatUpLbl">上传歌曲数量</span></div>
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatFav">0</span><span class="vip-stat-lbl" data-i18n="vipStatFavLbl">歌曲被收藏次数</span></div>
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl" data-i18n="vipStatDlLbl">被下架次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" style="color:var(--token);">💎 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计钻石</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" style="color:#c084fc;">🟣 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计紫钻</span></div>
             <div style="text-align:right;"><button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); width:auto; padding:10px 20px;" onclick="switchView('withdraw')">↓ 提现</button></div>
         </div>
 
@@ -910,7 +910,7 @@
     const profileUrlParams = new URLSearchParams(window.location.search);
     const incomingReferralCode = profileUrlParams.get('ref');
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
-    if(!username) window.location.href = incomingReferralCode ? `/fullkik/register?ref=${encodeURIComponent(incomingReferralCode)}` : '/fullkik/register';
+    if(!username) window.location.href = incomingReferralCode ? `/register?ref=${encodeURIComponent(incomingReferralCode)}` : '/register';
     // Returned from the HitPay checkout — tokens arrive via webhook, so just reassure + refresh.
     (function handlePaymentReturn(){
         const pay = profileUrlParams.get('payment');
@@ -926,8 +926,8 @@
     const skipProfileLoader = profileUrlParams.get('skipLoader') === '1';
 
     const dict = {
-        en: { store: "Store", backHome: "Back Home", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Unlisted Songs", vipStatRevLbl: "Accumulated Diamonds", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Review", tabUnsub: "Draft", tabRej: "Declined", tabRem: "Unlisted", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
-        cn: { store: "首页", backHome: "回到首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有60秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "被下架次数", vipStatRevLbl: "累计钻石", vipSongTitle: "我的歌曲", tabApp: "发布", tabPen: "审核", tabUnsub: "未审核", tabRej: "驳回", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
+        en: { store: "Store", backHome: "Back Home", ranking: "Ranking", library: "My Uploads", pCenter: "Personal Center", pTopup: "Top Up Center", pHist: "Consumption", pBought: "Purchased Music", logout: "Logout", login: "Login", upVip: "Upgrade VIP", vipCenter: "VIP Center", heroSub: "Exclusive DJ Rhythms · Electro · Club Bangers", search: "Search songs...", back: "Back", balTitle: "Token Balance", close: "Close", topup: "Top Up", selectAmt: "Select Amount", cancel: "Cancel", successBuy: "Purchased Successfully!", buyDetails: "Purchase Details", save: "Save", emptyLib: "Library is empty.", previewLimit: "Login to purchase. Preview limited to 60s.", buyBtn: "BUY", editImg: "EDIT", vipUpgradeTitle: "Upgrade to VIP Creator", vipUpgradeSub: "Set a unique DJ username and WeChat to become a VIP creator and upload music.", lblDj: "DJ Username", phDj: "E.g. 12Private", lblWechat: "WeChat ID", phWechat: "Enter WeChat ID", lblWechatSub: "Buyers will contact you via WeChat.", btnVip: "Upgrade VIP", pwTitle: "Change Password", lblCurrPw: "Current Password", lblNewPw: "New Password", lblConfPw: "Confirm New Password", btnPw: "Update Password", reqFill: "Required", cropTitle: "Adjust Image", cropSub: "Drag image to center, use slider to zoom.", lblWechatConfig: "WeChat Contact Settings", lblWechatPub: "Display WeChat publicly (Buyers can contact you)", lblWechatPriv: "If disabled, only you can see this.", btnSaveWechat: "Save WeChat Settings", vipDataTitle: "Data Summary", vipStatUpLbl: "Uploaded Songs", vipStatFavLbl: "Favorites", vipStatDlLbl: "Unlisted Songs", vipStatRevLbl: "Purple Gems", vipSongTitle: "My Songs", tabApp: "Published", tabPen: "Review", tabUnsub: "Draft", tabRej: "Declined", tabRem: "Unlisted", btnUpSingle: "Upload Audio", btnUpBatch: "Batch Upload", report: "Report", submitReview: "Submit for Review" },
+        cn: { store: "首页", backHome: "回到首页", ranking: "排行榜", library: "我的音乐", pCenter: "个人中心", pTopup: "充值中心", pHist: "个人消费", pBought: "已购音乐", logout: "登出", login: "登录", upVip: "升级至VIP", vipCenter: "VIP 中心", heroSub: "专属DJ节奏空间 · 电音串烧 · 车载热播 · 精选原创作品", search: "搜索歌曲...", back: "返回", balTitle: "代币余额", close: "关闭", topup: "充值", selectAmt: "选择充值金额", cancel: "取消", successBuy: "购买成功!", buyDetails: "购买记录", save: "保存", emptyLib: "暂无记录。", previewLimit: "试听只有60秒", buyBtn: "购买", editImg: "编辑头像", vipUpgradeTitle: "升级为 VIP 创作者", vipUpgradeSub: "设置一个独特的 DJ 用户名并填写微信号即可成为 VIP 创作者，开始上传并销售您的音乐。", lblDj: "DJ 用户名", phDj: "例如: 12Private", lblWechat: "微信联系方式", phWechat: "请输入您的微信号", lblWechatSub: "购买者将通过微信联系您完成交易", btnVip: "升级VIP", pwTitle: "修改密码", lblCurrPw: "当前密码", lblNewPw: "新密码", lblConfPw: "再次输入新密码", btnPw: "更新密码", reqFill: "必须填写", cropTitle: "裁剪头像", cropSub: "拖动图片以居中，使用滑块缩放", lblWechatConfig: "微信联系设置", lblWechatPub: "公开显示微信号 (让买家可以联系您)", lblWechatPriv: "关闭后，微信号仅对您自己可见", btnSaveWechat: "保存微信设置", vipDataTitle: "数据总结", vipStatUpLbl: "上传歌曲数量", vipStatFavLbl: "歌曲被收藏次数", vipStatDlLbl: "被下架次数", vipStatRevLbl: "累计紫钻", vipSongTitle: "我的歌曲", tabApp: "发布", tabPen: "审核", tabUnsub: "未审核", tabRej: "驳回", tabRem: "已下架", btnUpSingle: "上传音乐", btnUpBatch: "批量上传", report: "举报", submitReview: "提交审核" }
     };
     let currentLang = localStorage.getItem('djLang') || 'cn';
 
@@ -959,7 +959,8 @@
     function updateProfilePurpleGem() {
         const uname = String(username || '').toLowerCase();
         const hasPublished = !!uname && Array.isArray(allSongs) && allSongs.some(s => String(s.uploader || '').toLowerCase() === uname);
-        const gems = (currentProfileUserData && currentProfileUserData.purpleGems) || 0;
+        // Purple Gems = cumulative earnings (same value as the VIP-center 累计紫钻 card).
+        const gems = hasPublished ? getCreatorMoneyStats().totalEarned : 0;
         const pill = document.getElementById('headerPurplePill');
         const wrap = document.getElementById('bannerPurpleWrap');
         const hd = document.getElementById('headerPurpleDisplay');
@@ -991,12 +992,12 @@
     if(navigator && navigator.onLine === false){ document.addEventListener('DOMContentLoaded', () => netBanner('offline', netOfflineMsg())); }
     function getInviteFriendLink() {
         if(!username) return '';
-        return `${window.location.origin}/fullkik/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
+        return `${window.location.origin}/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
     }
     function openInviteFriendModal() {
         if(!username) {
             showToast('请先登录 / 注册后再邀请好友', true);
-            setTimeout(() => { window.location.href = '/fullkik/register'; }, 600);
+            setTimeout(() => { window.location.href = '/register'; }, 600);
             return;
         }
         const link = getInviteFriendLink();
@@ -1098,7 +1099,7 @@
                     document.getElementById('configWechat').value = data.wechat || ''; document.getElementById('configWechatPub').checked = data.wechatPublic;
                     if(data.wechatPublic && data.wechat) { document.getElementById('profileWechatDisplay').style.display = 'flex'; document.getElementById('wechatIdText').innerText = data.wechat; }
                 }
-            } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.href = '/fullkik/register'; }
+            } else if(uRes.status === 404) { localStorage.removeItem('djUsername'); window.location.href = '/register'; }
             
             allGenres = await (await fetch(`${API_URL}/genres`)).json();
             allSongs = await (await fetch(`${API_URL}/songs`)).json();
@@ -1140,7 +1141,7 @@
         if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show');
         if(!e.target.closest('.playlist-card')) document.querySelectorAll('.manage-dropdown').forEach(menu => menu.classList.remove('show'));
     }
-    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/fullkik/register'; }
+    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/register'; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
     function getProfileAvatar(user) {
         return user.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E♪%3C/text%3E%3C/svg%3E";
@@ -1829,7 +1830,11 @@
         document.getElementById('vipStatUp').innerText = mySongs.length;
         document.getElementById('vipStatFav').innerText = stats.favoriteCount;
         document.getElementById('vipStatDl').innerText = stats.unlistedCount;
-        document.getElementById('vipStatRev').innerText = stats.totalEarned;
+        // Gate the same way the purple-gem pills do, so all four displays agree
+        // (0 when the creator currently has no published song, even if old sales persist).
+        const pgUname = String(username || '').toLowerCase();
+        const pgHasPublished = Array.isArray(allSongs) && allSongs.some(s => String(s.uploader || '').toLowerCase() === pgUname);
+        document.getElementById('vipStatRev').innerText = pgHasPublished ? stats.totalEarned : 0;
         ['APPROVED', 'PENDING', 'UNSUBMITTED', 'REJECTED', 'REMOVED'].forEach(status => {
             const count = mySongs.filter(s => getProfileSongStatus(s) === status).length;
             if(document.getElementById(`vipTab-${status}`)) document.getElementById(`vipTab-${status}`).innerText = `${getVipStatusLabel(status)} (${count})`;
@@ -1909,6 +1914,9 @@
         filtered.forEach(s => {
             const cover = s.coverUrl || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect width="100" height="100" fill="%231a0f0f"/%3E%3C/svg%3E';
             const canEdit = status === 'APPROVED';
+            const reasonHtml = (status === 'REJECTED')
+                ? `<div style="background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.32); border-radius:8px; padding:8px 12px; margin:-2px 0 12px; color:#ff7a72; font-size:12.5px; line-height:1.55;"><b>驳回原因 / Reason:</b> ${escapeHtmlProfile(s.rejectReason || '未符合规范 / Not specified')}</div>`
+                : '';
             listDiv.innerHTML += `
                 <div class="lib-row vip-own-song-row">
                     <img src="${cover}" class="lib-cover">
@@ -1917,7 +1925,7 @@
                     <div><div style="color:${status === 'APPROVED' ? 'var(--success)' : 'var(--text-muted)'}; font-size:12px;">${getVipStatusLabel(status)}</div></div>
                     <div style="color:var(--text-muted); font-size:12px;">${new Date(s.uploadTime).toISOString().split('T')[0]}</div>
                     <div>${canEdit ? `<button class="vip-song-edit-btn" onclick="openPublishedVipSongEdit('${s.id}')">编辑</button>` : ''}</div>
-                </div>`;
+                </div>${reasonHtml}`;
         });
     }
 
@@ -2179,27 +2187,34 @@
 </div>
 <script>
 window.PPPicker=(function(){
-  var WIN=60,audio=null,url=null,dur=0,start=0,cb=null,playing=false,dragging=false,bound=false;
+  var WIN=60,audio=null,url=null,dur=0,start=0,cb=null,playing=false,dragging=false,bound=false,scrubbing=false;
   function $(id){return document.getElementById(id);}
   function fmt(s){s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
-  function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var frag=document.createDocumentFragment();for(var j=0;j<90;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
+  function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var count=Math.max(28,Math.min(90,Math.floor((w.clientWidth||300)/6)));var frag=document.createDocumentFragment();for(var j=0;j<count;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
   function effWin(){return (!dur||dur<=WIN)?(dur||WIN):WIN;}
   function layout(){var region=$('ppkRegion');if(!dur||dur<=WIN){region.style.left='0%';region.style.width='100%';return;}var wp=WIN/dur*100;var lp=start/dur*100;lp=Math.max(0,Math.min(100-wp,lp));region.style.left=lp+'%';region.style.width=wp+'%';}
   function clampStart(){if(!dur||dur<=WIN){start=0;}else{start=Math.max(0,Math.min(Math.round(dur-WIN),start));}}
   function markLenBtns(){var btns=document.querySelectorAll('.ppk-len');for(var i=0;i<btns.length;i++){btns[i].classList.toggle('active',parseInt(btns[i].getAttribute('data-len'))===WIN);}}
   function setLen(n){WIN=parseInt(n)||60;markLenBtns();clampStart();layout();$('ppkStart').innerText=fmt(start);if(audio){try{audio.currentTime=start;}catch(e){}$('ppkFill').style.width=(start/(dur||1)*100)+'%';}}
-  function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion');
-    function move(e){if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
+  function cxOf(e){return e.touches?(e.touches[0]?e.touches[0].clientX:0):e.clientX;}
+  function scrubAt(cx){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(cx-r.left)/r.width));audio.currentTime=p*dur;$('ppkFill').style.width=(p*100)+'%';}
+  function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion'),sc=$('ppkScrub');
+    function move(e){
+      if(e.type==='mousemove'&&e.buttons===0){scrubbing=false;dragging=false;return;}
+      if(scrubbing){scrubAt(cxOf(e));if(e.cancelable&&e.type==='touchmove')e.preventDefault();return;}
+      if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=cxOf(e)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
     region.addEventListener('mousedown',function(){dragging=true;});region.addEventListener('touchstart',function(){dragging=true;},{passive:true});
+    sc.addEventListener('mousedown',function(e){scrubbing=true;scrubAt(cxOf(e));});
+    sc.addEventListener('touchstart',function(e){scrubbing=true;scrubAt(cxOf(e));},{passive:true});
     window.addEventListener('mousemove',move);window.addEventListener('touchmove',move,{passive:false});
-    window.addEventListener('mouseup',function(){dragging=false;});window.addEventListener('touchend',function(){dragging=false;});}
+    window.addEventListener('mouseup',function(){dragging=false;scrubbing=false;});window.addEventListener('touchend',function(){dragging=false;scrubbing=false;});}
   function open(file,cur,curLen,onConfirm){cb=onConfirm;start=Math.max(0,parseInt(cur)||0);WIN=([30,60,90].indexOf(parseInt(curLen))>=0)?parseInt(curLen):60;if(url){try{URL.revokeObjectURL(url);}catch(e){}}url=URL.createObjectURL(file);audio=new Audio();audio.preload='metadata';audio.src=url;dur=0;$('ppkOverlay').style.display='flex';markLenBtns();bars();layout();$('ppkStart').innerText=fmt(start);$('ppkDur').innerText='…';$('ppkFill').style.width='0%';$('ppkPlay').innerText='▶';playing=false;
     audio.onloadedmetadata=function(){dur=audio.duration||0;$('ppkDur').innerText=fmt(dur);clampStart();layout();$('ppkStart').innerText=fmt(start);};
-    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';var end=start+effWin();if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';audio.currentTime=start;}};
+    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';if(scrubbing)return;var end=start+effWin();if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';}};
     audio.onended=function(){playing=false;$('ppkPlay').innerText='▶';};
     drag();}
   function toggle(){if(!audio)return;if(playing){audio.pause();playing=false;$('ppkPlay').innerText='▶';}else{if(audio.currentTime<start||audio.currentTime>=start+effWin())audio.currentTime=start;audio.play();playing=true;$('ppkPlay').innerText='⏸';}}
-  function scrub(e){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));audio.currentTime=p*dur;}
+  function scrub(e){scrubAt(cxOf(e));}
   function close(){if(audio){try{audio.pause();}catch(e){}}playing=false;if($('ppkPlay'))$('ppkPlay').innerText='▶';$('ppkOverlay').style.display='none';}
   function confirm(){if(cb)cb(start,WIN);close();}
   return{open:open,setLen:setLen,toggle:toggle,scrub:scrub,close:close,confirm:confirm};

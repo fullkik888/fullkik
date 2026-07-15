@@ -678,7 +678,10 @@
         const uname = String(username || '').toLowerCase();
         const hasPublished = !!uname && Array.isArray(allSongs) && allSongs.some(s => String(s.uploader || '').toLowerCase() === uname);
         if(hasPublished) {
-            const d = document.getElementById('purpleGemDisplay'); if(d) d.innerText = userPurpleGems || 0;
+            // Purple Gems = cumulative earnings from every sale of this user's songs.
+            let gems = 0;
+            if(Array.isArray(allUsers)) gems = allUsers.reduce((sum, u) => sum + (u.purchases || []).reduce((inner, p) => inner + (String(p.uploader || '').toLowerCase() === uname ? (parseInt(p.tokensSpent) || 0) : 0), 0), 0);
+            const d = document.getElementById('purpleGemDisplay'); if(d) d.innerText = gems;
             el.style.display = '';
         } else {
             el.style.display = 'none';
@@ -686,12 +689,12 @@
     }
     function getInviteFriendLink() {
         if(!username) return '';
-        return `${window.location.origin}/fullkik/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
+        return `${window.location.origin}/register?ref=${encodeURIComponent(String(username).trim().toLowerCase())}&invite=1`;
     }
     function openInviteFriendModal() {
         if(!username) {
             showToast('请先登录 / 注册后再邀请好友', true);
-            setTimeout(() => { window.location.href = '/fullkik/register'; }, 600);
+            setTimeout(() => { window.location.href = '/register'; }, 600);
             return;
         }
         const link = getInviteFriendLink();
@@ -928,7 +931,7 @@
     }
 
     function toggleProfileDropdown(e) {
-        if(!username) return window.location.href = '/fullkik/register';
+        if(!username) return window.location.href = '/register';
         e.stopPropagation();
         const dropdown = document.getElementById('profileDropdown');
         if(dropdown) dropdown.classList.toggle('show');
@@ -937,11 +940,11 @@
     function logoutUser() {
         localStorage.removeItem('djUsername');
         localStorage.removeItem('djLastView');
-        window.location.href = '/fullkik/register';
+        window.location.href = '/register';
     }
 
     function goProfile() {
-        window.location.href = username ? '/fullkik/profile.page' : '/fullkik/register';
+        window.location.href = username ? '/fullkik/profile.page' : '/register';
     }
 
      let globalSettings = {};
@@ -1033,6 +1036,9 @@
 	    }
 
 	    function showHomePoster() {
+	        // Only once per browser session — so returning to the homepage from
+	        // VIP / profile / contest doesn't keep popping the poster.
+	        try { if(sessionStorage.getItem('fkPosterShown')) return; } catch(e) {}
 	        const overlay = document.getElementById('homePosterOverlay');
 	        const img = document.getElementById('homePosterImage');
 	        const promo = getActiveContestPromo();
@@ -1042,6 +1048,7 @@
 	        img.src = posterUrl;
 	        img.style.cursor = activeHomePosterContestId ? 'pointer' : 'default';
 	        overlay.style.display = 'flex';
+	        try { sessionStorage.setItem('fkPosterShown', '1'); } catch(e) {}
 	    }
 
     function closeHomePoster() {
@@ -1061,10 +1068,10 @@
         
         if(!username) { 
             const pb = document.getElementById('profileBtn');
-            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/fullkik/register'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
+            if(pb) pb.outerHTML = `<button class="btn-upgrade-top" onclick="window.location.href='/register'" id="profileBtnText" style="padding: 8px 20px; font-size: 14px;">${dict[currentLang].login}</button>`;
             if(document.getElementById('tokenUI')) document.getElementById('tokenUI').style.display = 'none'; 
             const mailBtn = document.getElementById('mailBtn'); if(mailBtn) mailBtn.style.display = 'none';
-            const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/fullkik/register';
+            const vipBtn = document.getElementById('vipCenterTopBtn'); if(vipBtn) vipBtn.href = '/register';
             const inviteBtn = document.getElementById('inviteFriendBtn'); if(inviteBtn) inviteBtn.style.display = 'none';
         }
 
@@ -1243,7 +1250,7 @@
 
     async function openNotificationsView(e) {
         if(e) e.stopPropagation();
-        if(!username) return window.location.href = '/fullkik/register';
+        if(!username) return window.location.href = '/register';
         switchView('notifications');
         try {
             await fetch(`${API_URL}/users/${username}/notifications/read`, { method:'PUT' });
@@ -1288,7 +1295,7 @@
 
     async function toggleFav(songId, event) {
         event.stopPropagation();
-        if(!username) return window.location.href = '/fullkik/register';
+        if(!username) return window.location.href = '/register';
         
         const isCurrentlyLiked = userFavorites.includes(songId);
         const btn1 = document.getElementById(`fav-btn-${songId}`);
@@ -1882,7 +1889,7 @@
     function seekPlayerAudio(val) { if(audioEl.dataset.purchased === "false") { const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; val = ps + Math.max(0, Math.min(pl - 0.1, parseFloat(val) || 0)); } audioEl.currentTime = val; }
 
     function promptPurchase(songId, songName, filepath, price) { 
-        if(!username) return window.location.href = '/fullkik/register'; 
+        if(!username) return window.location.href = '/register'; 
         if(price === 0) return executePurchase(songId, songName, filepath, 0); 
         if(userTokens < price) return showToast("Insufficient tokens!", true); 
         document.getElementById('purchaseContent').innerHTML = `<h3 style="margin:0 0 10px 0;">确认购买</h3><p style="color:var(--text-muted); margin:0; font-size:14px;">"${songName}"</p><div style="font-size:24px; font-weight:bold; color:var(--token); margin-top:15px;">${price} 💎</div>`; 

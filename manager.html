@@ -6390,27 +6390,34 @@
 </div>
 <script>
 window.PPPicker=(function(){
-  var WIN=60,audio=null,url=null,dur=0,start=0,cb=null,playing=false,dragging=false,bound=false;
+  var WIN=60,audio=null,url=null,dur=0,start=0,cb=null,playing=false,dragging=false,bound=false,scrubbing=false;
   function $(id){return document.getElementById(id);}
   function fmt(s){s=Math.max(0,Math.round(s||0));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
-  function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var frag=document.createDocumentFragment();for(var j=0;j<90;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
+  function bars(){var w=$('ppkWave');var old=w.querySelectorAll('.ppk-b');for(var i=0;i<old.length;i++)old[i].remove();var count=Math.max(28,Math.min(90,Math.floor((w.clientWidth||300)/6)));var frag=document.createDocumentFragment();for(var j=0;j<count;j++){var b=document.createElement('span');b.className='ppk-b';var h=15+Math.abs(Math.sin(j*0.6)+Math.sin(j*0.17))*40;b.style.height=Math.min(94,h)+'%';frag.appendChild(b);}w.insertBefore(frag,$('ppkRegion'));}
   function effWin(){return (!dur||dur<=WIN)?(dur||WIN):WIN;}
   function layout(){var region=$('ppkRegion');if(!dur||dur<=WIN){region.style.left='0%';region.style.width='100%';return;}var wp=WIN/dur*100;var lp=start/dur*100;lp=Math.max(0,Math.min(100-wp,lp));region.style.left=lp+'%';region.style.width=wp+'%';}
   function clampStart(){if(!dur||dur<=WIN){start=0;}else{start=Math.max(0,Math.min(Math.round(dur-WIN),start));}}
   function markLenBtns(){var btns=document.querySelectorAll('.ppk-len');for(var i=0;i<btns.length;i++){btns[i].classList.toggle('active',parseInt(btns[i].getAttribute('data-len'))===WIN);}}
   function setLen(n){WIN=parseInt(n)||60;markLenBtns();clampStart();layout();$('ppkStart').innerText=fmt(start);if(audio){try{audio.currentTime=start;}catch(e){}$('ppkFill').style.width=(start/(dur||1)*100)+'%';}}
-  function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion');
-    function move(e){if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
+  function cxOf(e){return e.touches?(e.touches[0]?e.touches[0].clientX:0):e.clientX;}
+  function scrubAt(cx){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(cx-r.left)/r.width));audio.currentTime=p*dur;$('ppkFill').style.width=(p*100)+'%';}
+  function drag(){if(bound)return;bound=true;var wave=$('ppkWave'),region=$('ppkRegion'),sc=$('ppkScrub');
+    function move(e){
+      if(e.type==='mousemove'&&e.buttons===0){scrubbing=false;dragging=false;return;}
+      if(scrubbing){scrubAt(cxOf(e));if(e.cancelable&&e.type==='touchmove')e.preventDefault();return;}
+      if(!dragging||!dur||dur<=WIN)return;var r=wave.getBoundingClientRect();var cx=cxOf(e)-r.left;var wf=WIN/dur;var lf=cx/r.width-wf/2;lf=Math.max(0,Math.min(1-wf,lf));start=Math.round(lf*dur);layout();$('ppkStart').innerText=fmt(start);if(e.cancelable&&e.type==='touchmove')e.preventDefault();}
     region.addEventListener('mousedown',function(){dragging=true;});region.addEventListener('touchstart',function(){dragging=true;},{passive:true});
+    sc.addEventListener('mousedown',function(e){scrubbing=true;scrubAt(cxOf(e));});
+    sc.addEventListener('touchstart',function(e){scrubbing=true;scrubAt(cxOf(e));},{passive:true});
     window.addEventListener('mousemove',move);window.addEventListener('touchmove',move,{passive:false});
-    window.addEventListener('mouseup',function(){dragging=false;});window.addEventListener('touchend',function(){dragging=false;});}
+    window.addEventListener('mouseup',function(){dragging=false;scrubbing=false;});window.addEventListener('touchend',function(){dragging=false;scrubbing=false;});}
   function open(file,cur,curLen,onConfirm){cb=onConfirm;start=Math.max(0,parseInt(cur)||0);WIN=([30,60,90].indexOf(parseInt(curLen))>=0)?parseInt(curLen):60;if(url){try{URL.revokeObjectURL(url);}catch(e){}}url=URL.createObjectURL(file);audio=new Audio();audio.preload='metadata';audio.src=url;dur=0;$('ppkOverlay').style.display='flex';markLenBtns();bars();layout();$('ppkStart').innerText=fmt(start);$('ppkDur').innerText='…';$('ppkFill').style.width='0%';$('ppkPlay').innerText='▶';playing=false;
     audio.onloadedmetadata=function(){dur=audio.duration||0;$('ppkDur').innerText=fmt(dur);clampStart();layout();$('ppkStart').innerText=fmt(start);};
-    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';var end=start+effWin();if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';audio.currentTime=start;}};
+    audio.ontimeupdate=function(){if(!dur)return;$('ppkFill').style.width=(audio.currentTime/dur*100)+'%';if(scrubbing)return;var end=start+effWin();if(audio.currentTime>=end){audio.pause();playing=false;$('ppkPlay').innerText='▶';}};
     audio.onended=function(){playing=false;$('ppkPlay').innerText='▶';};
     drag();}
   function toggle(){if(!audio)return;if(playing){audio.pause();playing=false;$('ppkPlay').innerText='▶';}else{if(audio.currentTime<start||audio.currentTime>=start+effWin())audio.currentTime=start;audio.play();playing=true;$('ppkPlay').innerText='⏸';}}
-  function scrub(e){if(!dur||!audio)return;var r=$('ppkScrub').getBoundingClientRect();var p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));audio.currentTime=p*dur;}
+  function scrub(e){scrubAt(cxOf(e));}
   function close(){if(audio){try{audio.pause();}catch(e){}}playing=false;if($('ppkPlay'))$('ppkPlay').innerText='▶';$('ppkOverlay').style.display='none';}
   function confirm(){if(cb)cb(start,WIN);close();}
   return{open:open,setLen:setLen,toggle:toggle,scrub:scrub,close:close,confirm:confirm};

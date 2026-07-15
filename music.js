@@ -37,7 +37,7 @@ function redirectWithQuery(target) {
 app.get('/music.html', redirectWithQuery('/main.page'));
 app.get('/profile.html', redirectWithQuery('/fullkik/profile.page'));
 app.get('/manager.html', redirectWithQuery('/fullkik/manager.page'));
-app.get('/register.html', redirectWithQuery('/fullkik/register'));
+app.get('/register.html', redirectWithQuery('/register'));
 app.get('/vip.html', redirectWithQuery('/fullkik/vip'));
 app.get('/contest.html', redirectWithQuery('/fullkik/contest'));
 app.use(express.static(__dirname));
@@ -701,7 +701,7 @@ function getPublicBaseUrl(req) {
 function getTemporaryShareTarget(type) {
     const cleanType = String(type || '').trim().toLowerCase();
     if(cleanType === 'music') return { type: 'music', path: '/main.page', label: 'FULLKIK主页' };
-    if(cleanType === 'register') return { type: 'register', path: '/fullkik/register', label: '用户注册' };
+    if(cleanType === 'register') return { type: 'register', path: '/register', label: '用户注册' };
     return null;
 }
 
@@ -3019,6 +3019,8 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const incomingUrl = String(reqBody.url || '').trim();
     const duplicateDoc = snapshot.docs.find(doc => {
         const song = doc.data();
+        // A REJECTED (驳回) song is not live — it must never block re-uploading the track.
+        if(String(song.status || '').toUpperCase() === 'REJECTED') return false;
         const existingTitle = normalizeSongName(song.filename);
         const existingOriginal = normalizeSongName(song.originalName || song.filename);
         const sameTitle = normalizedTitle && existingTitle === normalizedTitle;
