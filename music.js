@@ -171,6 +171,28 @@ function invalidateFinanceCaches() {
     invalidateCachePrefix('users:');
 }
 
+// --- Bank PII masking (never expose full account numbers on public/unauthenticated reads) ---
+function maskAccountNumber(num) {
+    const s = String(num || '');
+    if(!s) return '';
+    if(s.length <= 4) return '••' + s.slice(-2);
+    return '•••• ' + s.slice(-4);
+}
+function maskBankAccount(bank) {
+    if(!bank) return null;
+    return {
+        bankName: bank.bankName || '',
+        accountHolder: bank.accountHolder || '',
+        accountNumber: maskAccountNumber(bank.accountNumber),
+        masked: true
+    };
+}
+// Return a shallow copy of a withdrawal record with its embedded bankSnapshot masked.
+function maskWithdrawalRecord(w) {
+    if(w && w.bankSnapshot) return { ...w, bankSnapshot: maskBankAccount(w.bankSnapshot) };
+    return w;
+}
+
 /**
  * Multer Memory Storage Configuration
  * Efficiently pipelines file uploads directly to Cloudinary without saving locally.
@@ -249,7 +271,8 @@ app.get('/producer/:username/profile', (req, res) => { res.sendFile(path.join(__
 const ADMIN_SESSION_SECRET = process.env.ADMIN_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 const ADMIN_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 function signAdminToken(payload) {
-    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    // typ:'admin' domain-separates admin tokens from user tokens (never interchangeable).
+    const body = Buffer.from(JSON.stringify({ ...payload, typ: 'admin' })).toString('base64url');
     const sig = crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update(body).digest('base64url');
     return body + '.' + sig;
 }
@@ -262,6 +285,7 @@ function verifyAdminToken(token) {
     try { if(!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expect))) return null; } catch(e) { return null; }
     let payload; try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch(e) { return null; }
     if(!payload || !payload.exp || Date.now() > payload.exp) return null;
+    if(payload.typ !== 'admin') return null; // reject non-admin (e.g. user) tokens
     return payload;
 }
 function requireAdmin(req, res, next) {
@@ -277,6 +301,75 @@ function requireAdmin(req, res, next) {
 }
 // Applies to all /api/admin/* routes defined below this line.
 app.use('/api/admin', requireAdmin);
+
+// ==========================================
+// USER PASSWORD HASHING (built-in scrypt — no external dependency).
+// Format: s1$<saltHex>$<hashHex>. Legacy plaintext is auto-migrated on next login.
+// ==========================================
+function hashPassword(plain) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const derived = crypto.scryptSync(String(plain), salt, 32).toString('hex');
+    return `s1$${salt}$${derived}`;
+}
+function isHashedPassword(stored) {
+    // Strict full-shape match so a legacy plaintext password that merely starts with
+    // 's1$' is NOT misclassified as a hash (which would lock the user out).
+    return typeof stored === 'string' && /^s1\$[0-9a-f]{32}\$[0-9a-f]{64}$/.test(stored);
+}
+function verifyPassword(plain, stored) {
+    // Empty/blank plain or stored = "no password" → never authenticates (blocks the
+    // '' === '' bypass for Google-only accounts stored with password:'').
+    if(!plain || !stored) return false;
+    if(isHashedPassword(stored)) {
+        const parts = stored.split('$'); // ['s1', salt, hash]
+        if(parts.length !== 3) return false;
+        let derived;
+        try { derived = crypto.scryptSync(String(plain), parts[1], 32).toString('hex'); } catch(e) { return false; }
+        try { return crypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(parts[2], 'hex')); } catch(e) { return false; }
+    }
+    return String(stored) === String(plain); // legacy plaintext
+}
+
+// ==========================================
+// PER-USER SESSION TOKENS — so a user can only touch their OWN money endpoints
+// (bank account, withdrawals). Mirrors the admin token design.
+// ==========================================
+// Derive from the admin secret with a distinct label so the two keys are NEVER equal
+// (even if USER_SESSION_SECRET is unset). This alone blocks user↔admin token reuse.
+const USER_SESSION_SECRET = process.env.USER_SESSION_SECRET
+    || crypto.createHmac('sha256', ADMIN_SESSION_SECRET).update('fullkik-user-token-v1').digest('hex');
+const USER_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+function signUserToken(username) {
+    // typ:'user' domain-separates user tokens from admin tokens.
+    const payload = { sub: String(username || '').toLowerCase(), typ: 'user', iat: Date.now(), exp: Date.now() + USER_TOKEN_TTL_MS };
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+    const sig = crypto.createHmac('sha256', USER_SESSION_SECRET).update(body).digest('base64url');
+    return body + '.' + sig;
+}
+function verifyUserToken(token) {
+    if(!token || typeof token !== 'string' || !token.includes('.')) return null;
+    const [body, sig] = token.split('.');
+    if(!body || !sig) return null;
+    const expect = crypto.createHmac('sha256', USER_SESSION_SECRET).update(body).digest('base64url');
+    if(sig.length !== expect.length) return null;
+    try { if(!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expect))) return null; } catch(e) { return null; }
+    let payload; try { payload = JSON.parse(Buffer.from(body, 'base64url').toString()); } catch(e) { return null; }
+    if(!payload || !payload.exp || Date.now() > payload.exp) return null;
+    if(payload.typ !== 'user') return null; // reject non-user (e.g. admin) tokens
+    return payload;
+}
+// Middleware: caller's token must match the :username route param (owner-only).
+function requireOwner(req, res, next) {
+    const header = req.headers['authorization'] || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.headers['x-user-token'] || '';
+    const payload = verifyUserToken(token);
+    if(!payload) return res.status(401).json({ error: 'AUTH_REQUIRED', message: '请重新登录 / Please log in again' });
+    if(payload.sub !== String(req.params.username || '').toLowerCase()) {
+        return res.status(403).json({ error: 'FORBIDDEN', message: '无权操作此账户 / Not your account' });
+    }
+    req.authUser = payload.sub;
+    next();
+}
 
 app.post('/api/admin/share-link', async (req, res) => {
     try {
@@ -388,6 +481,7 @@ const DEFAULT_SETTINGS = {
     diamondTerms: '1. 钻石充值即时到账，仅可用于本平台音乐购买、VIP 升级、创作人打赏。\n2. 钻石不可提现、不可转账、不可兑换现金或其他平台货币。\n3. 购买完成的歌曲可重复下载，下载链接为限时有效签名。\n4. 充值订单完成后不支持人工退款；若因系统故障未到账，请联系客服核实。\n5. VIP 创作人分成金额可通过提现页面申请提现，与用户钻石余额是不同账本。\n6. 平台保留对充值套餐、首充奖励、限时活动的最终解释权。\n7. 使用前请确保已年满 18 岁；若由家长 / 监护人为未成年人代充，请监督钱包使用。\n\n遇到问题请联系客服，或点击页面右下角悬浮按钮。',
     topupEnabled: true,
     usdtWithdrawEnabled: false,
+    withdrawFeePercent: 10,
     paymentMethods: DEFAULT_PAYMENT_METHODS,
     fullkikAdmin: DEFAULT_FULLKIK_ADMIN,
     topupPackages: [
@@ -1090,9 +1184,9 @@ app.post('/api/register', async (req, res) => {
             }
         }
 
-        const userData = { 
-            username, contact, password, 
-            email: isEmail ? contact : '-', phone: isEmail ? '-' : contact, 
+        const userData = {
+            username, contact, password: hashPassword(password),
+            email: isEmail ? contact : '-', phone: isEmail ? '-' : contact,
             tokens: startTokens, profilePic: '', 
             purchases: [], topups: [], favorites: [], following: [], followers: [], playlists: [],
             notifications: [], withdrawals: [], loginHistory: [], referredBy: referredBy || '',
@@ -1148,9 +1242,9 @@ app.post('/api/register', async (req, res) => {
         invalidateUserCaches(username);
         invalidateSettingsCache();
         setCleanShareSession(req, res);
-        res.json({ success: true, username });
-    } catch (e) { 
-        res.status(500).send(e.message); 
+        res.json({ success: true, username, userToken: signUserToken(username) });
+    } catch (e) {
+        res.status(500).send(e.message);
     }
 });
 
@@ -1215,7 +1309,7 @@ app.post('/api/contest/:id/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { contact, password } = req.body;
-        if (!contact) return res.status(400).send('Invalid credentials.');
+        if (!contact || !password) return res.status(400).send('Invalid credentials.');
         const key = String(contact).trim();
         const lower = key.toLowerCase();
         // Accept USERNAME (doc id, always lowercase), email, or phone — Google
@@ -1231,7 +1325,7 @@ app.post('/api/login', async (req, res) => {
         if (!uDoc || !uDoc.exists) return res.status(400).send('Invalid credentials.');
         
         if (uDoc.data().status === 'BANNED') return res.status(403).send(`Account Banned: ${uDoc.data().banReason || 'Violation of terms'}`);
-        if (uDoc.data().password === password) {
+        if (verifyPassword(password, uDoc.data().password)) {
             const userData = uDoc.data();
             const ip = getClientIp(req);
             const device = req.get('user-agent') || '-';
@@ -1239,11 +1333,15 @@ app.post('/api/login', async (req, res) => {
                 { time: new Date().toISOString(), ip, device },
                 ...((userData.loginHistory || []).filter(Boolean))
             ].slice(0, 20);
-            await uDoc.ref.update({ loginHistory });
+            const updates = { loginHistory };
+            // Migrate a legacy plaintext password to a hash on the first successful login.
+            // Guard on a non-empty password so a blank credential is never hashed/entrenched.
+            if(password && !isHashedPassword(userData.password)) updates.password = hashPassword(password);
+            await uDoc.ref.update(updates);
             invalidateUserCaches(userData.username || contact);
             setCleanShareSession(req, res);
             maybeSendVerifyReminder(userData, uDoc.ref);
-            res.json({ success: true, username: userData.username });
+            res.json({ success: true, username: userData.username, userToken: signUserToken(userData.username || uDoc.id) });
         }
         else res.status(400).send('Invalid credentials.');
     } catch (e) {
@@ -1305,7 +1403,7 @@ app.post('/api/auth/google', async (req, res) => {
             invalidateUserCaches(data.username || uDoc.id);
             const hasPassword = !!(data.password && String(data.password).length > 0);
             setCleanShareSession(req, res);
-            return res.json({ success: true, username: data.username || uDoc.id, isNew: false, hasPassword });
+            return res.json({ success: true, username: data.username || uDoc.id, isNew: false, hasPassword, userToken: signUserToken(data.username || uDoc.id) });
         }
 
         // New account.
@@ -1327,7 +1425,7 @@ app.post('/api/auth/google', async (req, res) => {
         await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered via Google (${email})`);
         invalidateUserCaches(username);
         setCleanShareSession(req, res);
-        res.json({ success: true, username, isNew: true, hasPassword: false });
+        res.json({ success: true, username, isNew: true, hasPassword: false, userToken: signUserToken(username) });
     } catch (e) {
         res.status(400).send('Google 验证失败：' + e.message);
     }
@@ -1360,11 +1458,11 @@ app.post('/api/auth/google/set-password', async (req, res) => {
         const data = uDoc.data();
         // Already has a password → nothing to do (don't let it be overwritten here).
         if (data.password && String(data.password).length > 0) {
-            return res.json({ success: true, username: data.username || uDoc.id, alreadySet: true });
+            return res.json({ success: true, username: data.username || uDoc.id, alreadySet: true, userToken: signUserToken(data.username || uDoc.id) });
         }
-        await uDoc.ref.update({ password: String(password) });
+        await uDoc.ref.update({ password: hashPassword(String(password)) });
         invalidateUserCaches(data.username || uDoc.id);
-        res.json({ success: true, username: data.username || uDoc.id });
+        res.json({ success: true, username: data.username || uDoc.id, userToken: signUserToken(data.username || uDoc.id) });
     } catch (e) {
         res.status(400).send('设置密码失败：' + e.message);
     }
@@ -1417,11 +1515,13 @@ app.get('/api/users/:username', async (req, res) => {
                 err.status = 404;
                 throw err;
             }
-            let data = doc.data(); 
+            let data = doc.data();
             delete data.password;
+            if(data.bankAccount) data.bankAccount = maskBankAccount(data.bankAccount);
             if(!data.playlists) data.playlists = [];
             if(!data.notifications) data.notifications = [];
             if(!data.withdrawals) data.withdrawals = [];
+            data.withdrawals = data.withdrawals.map(maskWithdrawalRecord);
             if(!data.loginHistory) data.loginHistory = [];
             return data;
         });
@@ -1465,7 +1565,8 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         await oldRef.delete();
         invalidateUserCaches(oldId);
         invalidateUserCaches(newId);
-        res.json({ success: true, username: req.body.newUsername });
+        // Re-issue the user token for the NEW username so the owner gate keeps matching.
+        res.json({ success: true, username: req.body.newUsername, userToken: signUserToken(req.body.newUsername) });
     } catch (e) { 
         res.status(500).send(e.message); 
     }
@@ -1624,44 +1725,100 @@ app.get('/api/users/:username/withdrawals', async (req, res) => {
                 throw err;
             }
             const earnings = await calculateUserEarnings(req.params.username);
+            const settings = await getGlobalSettings();
+            const feePercent = Number.isFinite(Number(settings.withdrawFeePercent)) ? Number(settings.withdrawFeePercent) : 10;
             return {
                 totalEarned: earnings.total,
                 locked: earnings.locked,
                 balance: earnings.balance,
-                withdrawals: earnings.withdrawals.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+                feePercent,
+                bankAccount: maskBankAccount(doc.data().bankAccount),
+                withdrawals: earnings.withdrawals.map(maskWithdrawalRecord).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
             };
         });
     } catch(e) { res.status(e.status || 500).send(e.message); }
 });
 
-app.post('/api/users/:username/withdrawals', async (req, res) => {
+// Save / update a creator's bank account (required before they can withdraw).
+// requireOwner: only the logged-in owner can set their own payout bank.
+app.post('/api/users/:username/bank', requireOwner, async (req, res) => {
+    try {
+        const bankName = String(req.body.bankName || '').trim().slice(0, 80);
+        const accountHolder = String(req.body.accountHolder || '').trim().slice(0, 80);
+        const rawNumber = String(req.body.accountNumber || '').replace(/\s+/g, '').slice(0, 40);
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+        const existing = doc.data().bankAccount || null;
+        // Blank or masked number on an existing account = keep the stored number (lets DJ edit name/bank only).
+        let accountNumber = rawNumber;
+        if((!rawNumber || /[•*]/.test(rawNumber)) && existing && existing.accountNumber) {
+            accountNumber = existing.accountNumber;
+        }
+        if(!bankName || !accountHolder || !accountNumber) {
+            return res.status(400).json({ error: 'BANK_INCOMPLETE', message: '请填写银行名称、开户姓名和账号' });
+        }
+        if(!/^[0-9A-Za-z\-]{4,40}$/.test(accountNumber)) {
+            return res.status(400).json({ error: 'BANK_ACCOUNT_INVALID', message: '账号格式不正确（4-40 位数字/字母）' });
+        }
+        const bankAccount = { bankName, accountHolder, accountNumber, updatedAt: new Date().toISOString() };
+        await userRef.update({ bankAccount });
+        invalidateUserCaches(req.params.username);
+        // Return MASKED — the client keeps a masked copy in memory (full number lives only in the DB / admin view).
+        res.json({ success: true, bankAccount: maskBankAccount(bankAccount) });
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
+});
+
+// Round to 2 decimals (RM cents).
+function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+// requireOwner: only the logged-in owner can request a withdrawal from their account.
+app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
     try {
         const amount = parseInt(req.body.amount);
-        if(Number.isNaN(amount) || amount < 1) return res.status(400).send('Amount must be at least 1');
+        if(Number.isNaN(amount) || amount < 1) return res.status(400).json({ error: 'AMOUNT_MIN', message: '最少需要 1 紫钻' });
 
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send('User not found');
-
-        const earnings = await calculateUserEarnings(req.params.username);
-        if(amount > earnings.balance) return res.status(400).send('Amount exceeds available balance');
+        if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
 
         const user = doc.data();
+        // Bank account is REQUIRED before any withdrawal.
+        const bank = user.bankAccount;
+        if(!bank || !bank.bankName || !bank.accountNumber || !bank.accountHolder) {
+            return res.status(400).json({ error: 'BANK_REQUIRED', message: '请先绑定银行账户后再提现' });
+        }
+
+        const earnings = await calculateUserEarnings(req.params.username);
+        if(amount > earnings.balance) return res.status(400).json({ error: 'INSUFFICIENT_BALANCE', message: '超过可提现余额' });
+
+        const settings = await getGlobalSettings();
+        let feePercent = Number(settings.withdrawFeePercent);
+        if(!Number.isFinite(feePercent) || feePercent < 0 || feePercent > 100) feePercent = 10;
+        // 1 紫钻 = RM 1. Fee is deducted from the payout; DJ receives `net` RM.
+        const fee = round2(amount * feePercent / 100);
+        const net = round2(amount - fee);
+
         const withdrawals = user.withdrawals || [];
         const record = {
             id: 'WD' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase(),
-            amount,
+            amount,                 // gross 紫钻 deducted from balance
+            feePercent,
+            fee,                    // RM fee withheld
+            net,                    // RM the DJ actually receives
+            rate: 1,                // 1 紫钻 = RM 1
             currency: 'RM',
             status: 'PENDING',
+            bankSnapshot: { bankName: bank.bankName, accountHolder: bank.accountHolder, accountNumber: bank.accountNumber },
             createdAt: new Date().toISOString(),
             note: req.body.note || ''
         };
         withdrawals.unshift(record);
         await userRef.update({ withdrawals });
-        await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 钻石，等待审核`, { amount }));
+        await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 紫钻（手续费 ${feePercent}% = ${fee}，实收 RM ${net}），等待审核`, { amount, fee, net }));
         invalidateUserCaches(req.params.username);
         res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
-    } catch(e) { res.status(500).send(e.message); }
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
 });
 
 app.get('/api/coupons', async (req, res) => {
@@ -1907,7 +2064,7 @@ app.post('/api/users/:username/purchase', async (req, res) => {
                 await addUserNotification(song.uploader, createNotification(
                     'sale',
                     `歌曲售出 - ${song.filename}`,
-                    `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 钻石`,
+                    `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 紫钻`,
                     { songId: req.body.songId, buyer: req.params.username, amount: price }
                 ));
                 // Producer earns Purple Gems 1:1 with the Blue Gems spent on their song.
@@ -1984,7 +2141,7 @@ app.put('/api/admin/users/:username/adjust-tokens', async (req, res) => {
 
 app.put('/api/admin/users/:username/force-password', async (req, res) => {
     try {
-        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: req.body.newPassword });
+        await db.collection('users').doc(req.params.username.toLowerCase()).update({ password: hashPassword(String(req.body.newPassword || '')) });
         invalidateUserCaches(req.params.username);
         await logAdminAction(`Forced password reset for ${req.params.username}`, {
             module: '用户',
@@ -2150,10 +2307,11 @@ app.put('/api/users/:username/settings', async (req, res) => {
 app.put('/api/users/:username/update-password', async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
+        if(!newPassword || String(newPassword).length < 6) return res.status(400).send('新密码至少 6 位 / min 6 chars');
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
         const doc = await userRef.get();
-        if (doc.data().password !== oldPassword) return res.status(400).send('Incorrect current password');
-        await userRef.update({ password: newPassword });
+        if (!verifyPassword(oldPassword, doc.data().password)) return res.status(400).send('Incorrect current password');
+        await userRef.update({ password: hashPassword(String(newPassword)) });
         invalidateUserCaches(req.params.username);
         res.send('Password updated');
     } catch(e) { res.status(500).send(e.message); }
@@ -2587,7 +2745,9 @@ app.get('/api/admin/staff/:id/password', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
-// Reveal a regular user's login password (admin only; passwords are stored as-is).
+// Reveal a regular user's login password (admin only). Hashed passwords can NOT be
+// revealed (that's the point) — the admin gets an "encrypted" flag instead and can
+// use the force-reset feature if a user is locked out.
 app.get('/api/admin/users/:username/password', async (req, res) => {
     try {
         const raw = String(req.params.username || '').trim();
@@ -2596,7 +2756,11 @@ app.get('/api/admin/users/:username/password', async (req, res) => {
         if(!doc.exists && raw !== raw.toLowerCase()) doc = await db.collection('users').doc(raw).get();
         if(!doc.exists) return res.status(404).send('User not found');
         const pw = doc.data().password || '';
-        res.json({ password: pw, hasPassword: !!(pw && String(pw).length > 0) });
+        const hasPassword = !!(pw && String(pw).length > 0);
+        if(isHashedPassword(pw)) {
+            return res.json({ password: '', hasPassword: true, encrypted: true });
+        }
+        res.json({ password: pw, hasPassword, encrypted: false });
     } catch(e) { res.status(500).send(e.message); }
 });
 
@@ -2898,9 +3062,17 @@ app.delete('/api/finance/reconcile', async (req, res) => {
     } catch(e) { res.status(500).send(e.message); }
 });
 
+// Public/aggregate list — bank account numbers are MASKED here.
 app.get('/api/withdrawals', async (req, res) => {
     try {
-        await sendCachedJson(req, res, 'withdrawals:all', CACHE_TTL.ADMIN_LISTS, async () => collectWithdrawals());
+        await sendCachedJson(req, res, 'withdrawals:all:masked', CACHE_TTL.ADMIN_LISTS, async () => (await collectWithdrawals()).map(maskWithdrawalRecord));
+    } catch(e) { res.status(500).json([]); }
+});
+
+// Admin-only list with FULL bank details (needed to make the payout). Gated by requireAdmin on /api/admin/*.
+app.get('/api/admin/withdrawals', async (req, res) => {
+    try {
+        await sendCachedJson(req, res, 'withdrawals:all:full', CACHE_TTL.ADMIN_LISTS, async () => collectWithdrawals());
     } catch(e) { res.status(500).json([]); }
 });
 
@@ -2919,10 +3091,13 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
         const index = withdrawals.findIndex(w => w.id === req.params.withdrawalId);
         if(index === -1) return res.status(404).send('Withdrawal not found');
 
+        // Transfer reference / bank receipt no. — captured when marking COMPLETED so every payout is provable.
+        const payoutRef = String(req.body.payoutRef || '').trim().slice(0, 120);
         withdrawals[index] = {
             ...withdrawals[index],
             status: nextStatus,
             adminNote: req.body.adminNote || withdrawals[index].adminNote || '',
+            payoutRef: nextStatus === 'COMPLETED' ? (payoutRef || withdrawals[index].payoutRef || '') : (withdrawals[index].payoutRef || ''),
             updatedAt: new Date().toISOString(),
             completedAt: ['COMPLETED', 'REJECTED'].includes(nextStatus) ? new Date().toISOString() : withdrawals[index].completedAt || ''
         };
@@ -2936,8 +3111,8 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
         await addUserNotification(user.username || req.params.username, createNotification(
             'withdrawal',
             notificationTitle,
-            `提现 ${withdrawals[index].amount} 钻石状态更新为 ${nextStatus}${withdrawals[index].adminNote ? `：${withdrawals[index].adminNote}` : ''}`,
-            { withdrawalId: req.params.withdrawalId, status: nextStatus, amount: withdrawals[index].amount }
+            `提现 ${withdrawals[index].amount} 紫钻${withdrawals[index].net != null ? `（实收 RM ${withdrawals[index].net}）` : ''}状态更新为 ${nextStatus}${withdrawals[index].payoutRef ? `（转账凭证 / Ref: ${withdrawals[index].payoutRef}）` : ''}${withdrawals[index].adminNote ? `：${withdrawals[index].adminNote}` : ''}`,
+            { withdrawalId: req.params.withdrawalId, status: nextStatus, amount: withdrawals[index].amount, net: withdrawals[index].net, payoutRef: withdrawals[index].payoutRef }
         ));
         await logAdminAction(`Withdrawal ${nextStatus}: ${user.username || req.params.username}`, {
             module: '财务',
@@ -3260,6 +3435,10 @@ app.put('/api/settings', async (req, res) => {
         if (req.body.usdtWithdrawEnabled !== undefined) {
             updates.usdtWithdrawEnabled = !!req.body.usdtWithdrawEnabled;
         }
+        if (req.body.withdrawFeePercent !== undefined) {
+            const pct = Number(req.body.withdrawFeePercent);
+            updates.withdrawFeePercent = Number.isFinite(pct) && pct >= 0 && pct <= 100 ? pct : DEFAULT_SETTINGS.withdrawFeePercent;
+        }
         if (req.body.diamondTerms !== undefined) {
             updates.diamondTerms = String(req.body.diamondTerms || '').trim().slice(0, 5000) || DEFAULT_SETTINGS.diamondTerms;
         }
@@ -3353,9 +3532,11 @@ app.put('/api/settings', async (req, res) => {
             }
         }
 
-        await db.collection('settings').doc('global').set(updates, { merge: true }); 
+        await db.collection('settings').doc('global').set(updates, { merge: true });
         invalidateSettingsCache();
-        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'topupEnabled', 'usdtWithdrawEnabled', 'diamondTerms', 'topupPackages', 'paymentMethods', 'fullkikAdmin', 'referralConfig'].includes(k))) {
+        // Fee lives inside the cached withdrawals payload too — clear it so DJs see the new fee immediately.
+        if(updates.withdrawFeePercent !== undefined) invalidateCachePrefix('withdrawals:');
+        if(Object.keys(updates).some(k => ['maxSongPrice', 'supportWhatsapp', 'homePosterUrl', 'homeAnnouncement', 'uploadSuccessMessage', 'uploadSuccessDuration', 'defaultCoverUrl', 'featuredGenreIds', 'categoryDisplayGenreIds', 'topNavGenreIds', 'hotProducerIds', 'homeMainTitle', 'homeSubtitle', 'commissionStatement', 'contestActivities', 'coupons', 'topupExchangeRate', 'topupUsdRate', 'topupEnabled', 'usdtWithdrawEnabled', 'withdrawFeePercent', 'diamondTerms', 'topupPackages', 'paymentMethods', 'fullkikAdmin', 'referralConfig'].includes(k))) {
             await logAdminAction('Updated system settings', {
                 module: '系统',
                 action: '系统设置',

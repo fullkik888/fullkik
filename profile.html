@@ -606,16 +606,42 @@
             <div>• 提钻申请后请联系 Gmail：<strong style="color:white;">fullkick@gmail.com</strong>，邮件内容请附上你的签名 / 联系方式。</div>
             <div>• 系统将进行 1-3 天审核处理。</div>
         </div>
+        <div class="withdraw-card" id="bankCard">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px;">
+                <h3 style="margin:0;">🏦 银行账户 <span style="font-size:12px; font-weight:600; color:var(--text-muted);">· 提现前必须绑定</span></h3>
+                <span id="bankLinkedBadge" style="display:none; font-size:12px; font-weight:900; color:var(--success); border:1px solid var(--success); border-radius:8px; padding:4px 10px;">✓ 已绑定</span>
+            </div>
+            <div id="bankLinkedView" style="display:none;">
+                <div style="line-height:2; color:var(--text-muted);">
+                    <div>银行 / Bank：<strong style="color:white;" id="bankViewName">-</strong></div>
+                    <div>开户姓名 / Holder：<strong style="color:white;" id="bankViewHolder">-</strong></div>
+                    <div>账号 / Account：<strong style="color:white; font-family:ui-monospace,Menlo,monospace; letter-spacing:1px;" id="bankViewNumber">-</strong></div>
+                </div>
+                <button class="btn-text-action" style="margin-top:12px;" onclick="editBankAccount()">✎ 修改银行账户</button>
+            </div>
+            <div id="bankFormView">
+                <label class="input-label">银行名称 / Bank name</label>
+                <input type="text" id="bankNameInput" class="withdraw-input" maxlength="80" placeholder="例如：Maybank / CIMB / Public Bank">
+                <label class="input-label" style="display:block; margin-top:14px;">开户姓名 / Account holder（须与银行一致）</label>
+                <input type="text" id="bankHolderInput" class="withdraw-input" maxlength="80" placeholder="账户持有人全名">
+                <label class="input-label" style="display:block; margin-top:14px;">银行账号 / Account number</label>
+                <input type="text" id="bankNumberInput" class="withdraw-input" inputmode="latin" maxlength="40" placeholder="4-40 位数字 / 字母">
+                <button class="btn-submit" style="margin-top:18px;" onclick="saveBankAccount()">保存银行账户</button>
+                <div id="bankSaveMsg" style="font-weight:900; margin-top:10px;"></div>
+            </div>
+        </div>
         <div class="withdraw-card">
             <div class="withdraw-summary">
                 <div class="box"><div class="val" id="withdrawSongCount">0</div><div class="lbl">上传歌曲数量</div></div>
                 <div class="box"><div class="val" id="withdrawDownloadCount">0</div><div class="lbl">歌曲下载次数</div></div>
-                <div class="box"><div class="val">💎 <span id="withdrawTotalEarned">0</span></div><div class="lbl">累计利润</div></div>
+                <div class="box"><div class="val" style="color:#c084fc;">🟣 <span id="withdrawTotalEarned">0</span></div><div class="lbl">累计利润</div></div>
             </div>
-            <h3 style="margin:0 0 12px 0;">可提成余额 💎 <span id="withdrawBalance">0</span></h3>
+            <h3 style="margin:0 0 12px 0;">可提成余额 <span style="color:#c084fc;">🟣 <span id="withdrawBalance">0</span></span></h3>
             <label class="input-label">提成金额</label>
-            <input type="number" id="withdrawAmountInput" class="withdraw-input" min="1" placeholder="输入提成金额（钻石）">
-            <button class="btn-submit" style="margin-top:20px;" onclick="submitWithdrawal()">申请提钻</button>
+            <input type="number" id="withdrawAmountInput" class="withdraw-input" min="1" placeholder="输入提成金额（紫钻）" oninput="updateFeePreview()">
+            <div id="withdrawFeePreview" style="margin-top:12px; color:var(--text-muted); font-size:13px; line-height:1.8;"></div>
+            <div id="withdrawBankGate" style="display:none; margin-top:12px; color:#ffcc00; font-weight:800; font-size:13px;">⚠️ 请先在上方绑定银行账户后再提现</div>
+            <button class="btn-submit" id="withdrawSubmitBtn" style="margin-top:20px;" onclick="submitWithdrawal()">申请提钻</button>
             <div id="withdrawSubmitMsg" style="color:var(--accent-light); font-weight:900; margin-top:12px;"></div>
         </div>
         <div class="withdraw-card">
@@ -834,8 +860,26 @@
     let currentGenreId = null, currentSong = null; let userTokens = 0, isUserVip = false;
     let globalSettings = {};
     let currentProfileUserData = null;
-    let withdrawalSummary = { totalEarned: 0, locked: 0, balance: 0, withdrawals: [] };
+    let withdrawalSummary = { totalEarned: 0, locked: 0, balance: 0, withdrawals: [], feePercent: 10, bankAccount: null };
+    let bankEditing = false;
     const username = localStorage.getItem('djUsername');
+
+    // Per-user auth token for owner-only money endpoints (bank / withdrawals).
+    function authJsonHeaders() {
+        const tok = localStorage.getItem('fkUserToken') || '';
+        const h = { 'Content-Type': 'application/json' };
+        if(tok) h['Authorization'] = 'Bearer ' + tok;
+        return h;
+    }
+    // Returns true if the response was an auth failure (and handles the re-login redirect).
+    function handleAuthFailure(res) {
+        if(res && (res.status === 401 || res.status === 403)) {
+            showToast('登录已过期，请重新登录 / Please log in again', true);
+            setTimeout(function(){ window.location.href = '/register'; }, 1400);
+            return true;
+        }
+        return false;
+    }
 
     // --- Link Google (attach a real, verified Gmail to this account) ---
     async function onLinkGoogleCredential(response){
@@ -1141,7 +1185,7 @@
         if(d && d.classList.contains('show') && !e.target.closest('.profile-trigger')) d.classList.remove('show');
         if(!e.target.closest('.playlist-card')) document.querySelectorAll('.manage-dropdown').forEach(menu => menu.classList.remove('show'));
     }
-    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/register'; }
+    function logout() { localStorage.removeItem('djUsername'); localStorage.removeItem('fkUserToken'); localStorage.removeItem('djLastView'); localStorage.removeItem('fullkikProfileLastView'); window.location.href = '/register'; }
     function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { if(m.id !== 'globalLoader' && m.id !== 'profileLoader' && m.id !== 'vipUploadProgOverlay' && m.id !== 'vipUploadSuccessOverlay') m.style.display = 'none'; }); }
     function getProfileAvatar(user) {
         return user.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E♪%3C/text%3E%3C/svg%3E";
@@ -1193,7 +1237,13 @@
         if(!newName) return showToast("Name cannot be empty", true);
         showGlobalLoader();
         const res = await fetch(`${API_URL}/users/${username}/change-username`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({newUsername: newName}) });
-        if(res.ok) { localStorage.setItem('djUsername', newName); window.location.reload(); } else { hideGlobalLoader(); showToast("Name Taken or Error", true); }
+        if(res.ok) {
+            // Persist the refreshed token so the owner gate keeps matching the new name.
+            const d = await res.json().catch(() => ({}));
+            if(d.userToken) localStorage.setItem('fkUserToken', d.userToken);
+            localStorage.setItem('djUsername', newName);
+            window.location.reload();
+        } else { hideGlobalLoader(); showToast("Name Taken or Error", true); }
     }
 
     // --- CROPPER IMPLEMENTATION ---
@@ -1855,7 +1905,95 @@
         const input = document.getElementById('withdrawAmountInput');
         input.max = withdrawalSummary.balance || 0;
         input.value = '';
+        renderBankCard();
+        updateFeePreview();
         renderWithdrawList();
+    }
+
+    function getWithdrawFeePercent() {
+        const p = Number(withdrawalSummary.feePercent);
+        return (Number.isFinite(p) && p >= 0 && p <= 100) ? p : 10;
+    }
+    function round2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+
+    function isBankLinked() {
+        const b = withdrawalSummary.bankAccount;
+        return !!(b && b.bankName && b.accountNumber && b.accountHolder);
+    }
+
+    function renderBankCard() {
+        const linked = isBankLinked();
+        const showForm = !linked || bankEditing;
+        const b = withdrawalSummary.bankAccount || {};
+        document.getElementById('bankLinkedBadge').style.display = linked ? 'inline-block' : 'none';
+        document.getElementById('bankLinkedView').style.display = (linked && !bankEditing) ? 'block' : 'none';
+        document.getElementById('bankFormView').style.display = showForm ? 'block' : 'none';
+        if(linked) {
+            document.getElementById('bankViewName').innerText = b.bankName || '-';
+            document.getElementById('bankViewHolder').innerText = b.accountHolder || '-';
+            document.getElementById('bankViewNumber').innerText = b.accountNumber || '-';
+        }
+        if(showForm) {
+            document.getElementById('bankNameInput').value = b.bankName || '';
+            document.getElementById('bankHolderInput').value = b.accountHolder || '';
+            // Server only returns a masked number (•••• 1234) — never prefill that; require a fresh full entry when editing.
+            const numInput = document.getElementById('bankNumberInput');
+            numInput.value = (b.masked || /[•]/.test(b.accountNumber || '')) ? '' : (b.accountNumber || '');
+            numInput.placeholder = (linked && b.accountNumber) ? `当前 ${b.accountNumber}，如需修改请重新输入完整账号` : '4-40 位数字 / 字母';
+        }
+        // Gate the withdraw form on a linked bank account.
+        const gate = document.getElementById('withdrawBankGate');
+        const btn = document.getElementById('withdrawSubmitBtn');
+        if(gate) gate.style.display = linked ? 'none' : 'block';
+        if(btn) { btn.disabled = !linked; btn.style.opacity = linked ? '1' : '0.5'; btn.style.cursor = linked ? 'pointer' : 'not-allowed'; }
+    }
+
+    function editBankAccount() {
+        bankEditing = true;
+        renderBankCard();
+        document.getElementById('bankCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    async function saveBankAccount() {
+        const bankName = (document.getElementById('bankNameInput').value || '').trim();
+        const accountHolder = (document.getElementById('bankHolderInput').value || '').trim();
+        const accountNumber = (document.getElementById('bankNumberInput').value || '').replace(/\s+/g, '');
+        const msg = document.getElementById('bankSaveMsg');
+        if(!bankName || !accountHolder || !accountNumber) { msg.style.color = 'var(--danger)'; msg.innerText = '请填写银行名称、开户姓名和账号'; return; }
+        if(!/^[0-9A-Za-z\-]{4,40}$/.test(accountNumber)) { msg.style.color = 'var(--danger)'; msg.innerText = '账号格式不正确（4-40 位数字/字母）'; return; }
+        msg.style.color = 'var(--text-muted)'; msg.innerText = '保存中…';
+        try {
+            const res = await fetch(`${API_URL}/users/${username}/bank`, {
+                method: 'POST',
+                headers: authJsonHeaders(),
+                body: JSON.stringify({ bankName, accountHolder, accountNumber })
+            });
+            if(handleAuthFailure(res)) { msg.style.color = 'var(--danger)'; msg.innerText = '登录已过期，请重新登录'; return; }
+            const data = await res.json().catch(() => ({}));
+            if(res.ok) {
+                withdrawalSummary.bankAccount = data.bankAccount || { bankName, accountHolder, accountNumber };
+                bankEditing = false;
+                msg.style.color = 'var(--success)'; msg.innerText = '';
+                renderBankCard();
+                showToast('银行账户已保存 ✓');
+            } else {
+                msg.style.color = 'var(--danger)'; msg.innerText = data.message || '保存失败';
+            }
+        } catch(e) { msg.style.color = 'var(--danger)'; msg.innerText = '网络错误，请重试'; }
+    }
+
+    function updateFeePreview() {
+        const box = document.getElementById('withdrawFeePreview');
+        if(!box) return;
+        const feePercent = getWithdrawFeePercent();
+        const amount = parseInt(document.getElementById('withdrawAmountInput').value);
+        if(Number.isNaN(amount) || amount < 1) {
+            box.innerHTML = `1 紫钻 = RM 1 · 提现手续费 <strong style="color:#c084fc;">${feePercent}%</strong>，从提现金额中扣除。`;
+            return;
+        }
+        const fee = round2(amount * feePercent / 100);
+        const net = round2(amount - fee);
+        box.innerHTML = `提现 <strong style="color:#c084fc;">🟣 ${amount}</strong> · 手续费 ${feePercent}% = <strong>-${fee}</strong> · 实际到账 <strong style="color:var(--success);">RM ${net}</strong>`;
     }
 
     function getWithdrawalStatusLabel(status) {
@@ -1874,8 +2012,8 @@
         list.innerHTML = rows.map(w => `
             <div class="withdraw-row">
                 <div><strong>${w.id}</strong><div style="color:var(--text-muted); font-size:12px; margin-top:4px;">${w.createdAt ? new Date(w.createdAt).toLocaleString() : '-'}</div></div>
-                <div style="color:var(--token); font-weight:900;">💎 ${w.amount || 0}</div>
-                <div><span class="withdraw-status ${w.status || 'PENDING'}">${getWithdrawalStatusLabel(w.status)}</span></div>
+                <div><div style="color:#c084fc; font-weight:900;">🟣 ${w.amount || 0}</div>${w.net != null ? `<div style="color:var(--success); font-size:12px; margin-top:3px;">实收 RM ${w.net}</div>` : ''}</div>
+                <div><span class="withdraw-status ${w.status || 'PENDING'}">${getWithdrawalStatusLabel(w.status)}</span>${w.payoutRef ? `<div style="color:var(--success); font-size:11px; margin-top:4px;">✓ 已打款 Ref: ${escapeHtmlProfile(w.payoutRef)}</div>` : ''}</div>
                 <div style="color:var(--text-muted); font-size:12px;">${w.adminNote || '-'}</div>
             </div>
         `).join('');
@@ -1885,21 +2023,41 @@
         const input = document.getElementById('withdrawAmountInput');
         const amount = parseInt(input.value);
         const max = parseInt(withdrawalSummary.balance) || 0;
-        if(Number.isNaN(amount) || amount < 1) return showToast('最少需要 1 钻石', true);
+        if(!isBankLinked()) {
+            showToast('请先绑定银行账户', true);
+            document.getElementById('bankCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        if(Number.isNaN(amount) || amount < 1) return showToast('最少需要 1 紫钻', true);
         if(amount > max) return showToast('超过可提成余额', true);
+        const feePercent = getWithdrawFeePercent();
+        const fee = round2(amount * feePercent / 100);
+        const net = round2(amount - fee);
+        if(!confirm(`确认提现 🟣 ${amount} 紫钻？\n手续费 ${feePercent}% ≈ ${fee}\n预计到账：RM ${net}（以最终结算为准）\n\n打款至：${withdrawalSummary.bankAccount.bankName} · ${withdrawalSummary.bankAccount.accountNumber}`)) return;
         showGlobalLoader('提交提钻申请...');
         const res = await fetch(`${API_URL}/users/${username}/withdrawals`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: authJsonHeaders(),
             body: JSON.stringify({ amount })
         });
         hideGlobalLoader();
+        if(handleAuthFailure(res)) return;
         if(res.ok) {
-            document.getElementById('withdrawSubmitMsg').innerText = '已提交等待审核~';
+            // Use the server-recorded net (authoritative), not the client estimate.
+            const okData = await res.json().catch(() => null);
+            const serverNet = (okData && okData.withdrawal && okData.withdrawal.net != null) ? okData.withdrawal.net : net;
+            document.getElementById('withdrawSubmitMsg').innerText = `已提交等待审核~ 实际到账 RM ${serverNet}`;
             await renderWithdrawPage();
             showToast('已提交等待审核~');
         } else {
-            showToast(await res.text(), true);
+            const data = await res.json().catch(() => null);
+            const errMsg = (data && data.message) || '提交失败，请重试';
+            showToast(errMsg, true);
+            if(data && data.error === 'BANK_REQUIRED') {
+                withdrawalSummary.bankAccount = null;
+                renderBankCard();
+                document.getElementById('bankCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         }
     }
 

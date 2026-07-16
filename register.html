@@ -211,7 +211,7 @@
             if(res.ok){
                 const data = await res.json();
                 if(data.hasPassword){
-                    localStorage.setItem('djUsername', data.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page';
+                    saveUserSession(data); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page';
                 } else {
                     // First Google sign-in → show their username + set a password once.
                     document.getElementById('gUserName').textContent = data.username || '-';
@@ -233,7 +233,7 @@
         if(!pendingGoogleCredential) return showToast('请重新用 Google 登录 / Please sign in with Google again', true);
         try {
             const res = await fetch(`${API_URL}/auth/google/set-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: pendingGoogleCredential, password: p1 }) });
-            if(res.ok){ const d = await res.json(); localStorage.setItem('djUsername', d.username); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page'; }
+            if(res.ok){ saveUserSession(await res.json()); sessionStorage.setItem('fullkikShowWelcome','1'); window.location.href='/main.page'; }
             else { showToast(await res.text(), true); }
         } catch(e){ showToast('设置密码失败', true); }
     }
@@ -298,11 +298,19 @@
         input.type = input.type === 'password' ? 'text' : 'password';
     }
     
+    // Store the login session: username + per-user auth token (needed for bank/withdraw).
+    function saveUserSession(data) {
+        if(!data || !data.username) return data;
+        localStorage.setItem('djUsername', data.username);
+        if(data.userToken) localStorage.setItem('fkUserToken', data.userToken);
+        return data;
+    }
+
     async function login() {
         const contact = document.getElementById('loginContact').value, password = document.getElementById('loginPass').value;
         if(!contact || !password) return showToast(dict[currentLang].errFill, true);
         const res = await fetch(`${API_URL}/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact, password }) });
-        if(res.ok) { localStorage.setItem('djUsername', (await res.json()).username); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/main.page'; } 
+        if(res.ok) { saveUserSession(await res.json()); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/main.page'; }
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
     
@@ -325,10 +333,10 @@
     }
     async function finishRegister(payload) {
         const res = await fetch(`${API_URL}/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-        if(res.ok) { 
-            localStorage.setItem('djUsername', (await res.json()).username); 
+        if(res.ok) {
+            saveUserSession(await res.json());
             sessionStorage.setItem('fullkikShowWelcome', '1');
-            showRegisterSuccess(localStorage.getItem('djUsername')); 
+            showRegisterSuccess(localStorage.getItem('djUsername'));
         } else { showToast(await res.text(), true); }
     }
 

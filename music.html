@@ -939,6 +939,7 @@
 
     function logoutUser() {
         localStorage.removeItem('djUsername');
+        localStorage.removeItem('fkUserToken');
         localStorage.removeItem('djLastView');
         window.location.href = '/register';
     }

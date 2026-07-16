@@ -190,8 +190,8 @@
         .grid-otp { grid-template-columns: 150px 140px 90px 110px 120px 1.8fr 90px 80px 100px 1.2fr 120px; min-width:1420px; }
         .grid-topup-packages { grid-template-columns: 1.2fr 100px 100px 100px 100px 120px 80px 90px 140px; min-width:1200px; }
         .grid-payment-methods { grid-template-columns: 70px 1.35fr 1.25fr 90px 110px 120px 130px 80px 90px 190px; min-width:1320px; }
-        .grid-withdraw-pending { grid-template-columns: 1.3fr 100px 80px 160px 160px; min-width:820px; }
-        .grid-withdraw-done { grid-template-columns: 1.3fr 100px 80px 120px 160px; min-width:820px; }
+        .grid-withdraw-pending { grid-template-columns: 1.5fr 150px 70px 150px 170px; min-width:880px; }
+        .grid-withdraw-done { grid-template-columns: 1.5fr 150px 70px 120px 160px; min-width:860px; }
         .grid-finance { grid-template-columns:1.4fr 1fr 90px 90px 130px 90px; min-width:900px; }
         .bulk-song-toolbar { display:flex; align-items:center; gap:12px; padding:13px 20px; border-bottom:1px solid var(--border-color); background:rgba(255,255,255,0.015); }
         .bulk-song-toolbar label { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:13px; }
@@ -901,7 +901,7 @@
         <div class="dashboard-mini-grid">
             <div class="stat-card"><div class="stat-title">用户钱包余额</div><div class="stat-val" id="stat-wallet-balance">0 💎</div><div class="stat-sub" id="stat-wallet-holders">0 位持有者</div></div>
             <div class="stat-card"><div class="stat-title">歌曲销售总额</div><div class="stat-val" id="stat-total-rev">0 💎</div><div class="stat-sub" id="stat-sales-split">平台 / 创作者分成</div></div>
-            <div class="stat-card"><div class="stat-title">创作者可提现余额</div><div class="stat-val" id="stat-creator-available">0 💎</div><div class="stat-sub">分成减去已申请提现</div></div>
+            <div class="stat-card"><div class="stat-title">创作者可提现余额</div><div class="stat-val" id="stat-creator-available" style="color:#c084fc;">0 🟣</div><div class="stat-sub">分成减去已申请提现</div></div>
             <div class="stat-card"><div class="stat-title">VIP 已提现</div><div class="stat-val" id="stat-withdraw-completed">0 💎</div><div class="stat-sub">COMPLETED · 累计已发出</div></div>
         </div>
         <div class="glass-panel dashboard-quick">
@@ -1751,6 +1751,18 @@
 
     <div id="view-withdrawals" class="view-section">
         <div class="dash-header"><h2>提现审批</h2><p>共 <span id="withdrawPendingCount">0</span> 条待审 · <span id="withdrawProcessingCount">0</span> 条处理中</p></div>
+        <div class="glass-panel" style="padding:20px 22px; margin-bottom:18px; border:1px solid rgba(255,204,0,0.35); background:linear-gradient(135deg, rgba(60,45,0,0.35), rgba(30,20,0,0.25));">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <div style="font-size:12px; font-weight:900; color:#ffcc00; letter-spacing:0.5px;">💵 需备付款 / CASH TO KEEP ON HAND</div>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:6px; line-height:1.6;">待审 + 处理中的提现，需从你的账户实付的马币总额。<br>Real RM you must have available to cover all in-flight payouts.</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:34px; font-weight:900; color:#ffcc00;">RM <span id="withdrawFloatNeeded">0</span></div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-top:2px;"><span id="withdrawFloatCount">0</span> 笔待付</div>
+                </div>
+            </div>
+        </div>
         <div class="flow-card">
             <div class="flow-steps">
                 <div class="flow-step"><strong>待审</strong><div>VIP 提交后默认进入待审队列。</div></div>
@@ -1788,8 +1800,8 @@
             <div class="u-stat-box"><div class="u-stat-lbl">状态</div><div class="u-stat-val" id="det-u-status">ACTIVE</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">等级</div><div class="u-stat-val">—</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">钻石余额</div><div class="u-stat-val" style="color:var(--token);">💎 <span id="det-u-tokens">0</span></div></div>
-            <div class="u-stat-box"><div class="u-stat-lbl">累计收入</div><div class="u-stat-val" style="color:var(--token);">💎 0</div></div>
-            <div class="u-stat-box"><div class="u-stat-lbl">可提现</div><div class="u-stat-val" style="color:var(--token);">💎 0</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">累计收入</div><div class="u-stat-val" style="color:#c084fc;">🟣 0</div></div>
+            <div class="u-stat-box"><div class="u-stat-lbl">可提现</div><div class="u-stat-val" style="color:#c084fc;">🟣 0</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">充值 / 购买</div><div class="u-stat-val" id="det-u-counts">0 / 0</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">注册时间</div><div class="u-stat-val" id="det-u-date">N/A</div></div>
             <div class="u-stat-box"><div class="u-stat-lbl">微信号</div><div class="u-stat-val" id="det-u-wechat">-</div></div>
@@ -1890,7 +1902,7 @@
         <div class="finance-card-grid">
             <div class="finance-card primary"><div class="finance-title">充值入账（钻石）</div><div class="finance-value" id="finTopupTotal">0 💎</div><div class="finance-sub" id="finTopupSub">0 笔</div></div>
             <div class="finance-card"><div class="finance-title">歌曲销售（消耗钻石）</div><div class="finance-value" id="finSalesTotal">0 💎</div><div class="finance-sub" id="finSalesSub">0 笔</div></div>
-            <div class="finance-card" style="border-color:rgba(52,199,89,0.35);"><div class="finance-title">创作者分成</div><div class="finance-value" id="finCreatorTotal">0 💎</div><div class="finance-sub" id="finCreatorSub">平台分成 0</div></div>
+            <div class="finance-card" style="border-color:rgba(52,199,89,0.35);"><div class="finance-title">创作者分成</div><div class="finance-value" id="finCreatorTotal" style="color:#c084fc;">0 🟣</div><div class="finance-sub" id="finCreatorSub">平台分成 0</div></div>
             <div class="finance-card" style="border-color:rgba(255,204,0,0.35);"><div class="finance-title">提现支出（已完成）</div><div class="finance-value" id="finWithdrawTotal">0 💎</div><div class="finance-sub" id="finWithdrawSub">0 笔</div></div>
         </div>
 
@@ -1899,9 +1911,9 @@
             <div class="finance-balance-flow">
                 <div class="finance-card"><div class="finance-title">用户钱包余额</div><div class="finance-value" id="finWalletBalance">0 💎</div><div class="finance-sub">用户可消费</div></div>
                 <div class="finance-arrow">→</div>
-                <div class="finance-card"><div class="finance-title">创作者已分成</div><div class="finance-value" id="finCreatorAll">0 💎</div><div class="finance-sub">交易分成累计</div></div>
+                <div class="finance-card"><div class="finance-title">创作者已分成</div><div class="finance-value" id="finCreatorAll" style="color:#c084fc;">0 🟣</div><div class="finance-sub">交易分成累计</div></div>
                 <div class="finance-arrow">→</div>
-                <div class="finance-card"><div class="finance-title">创作者可提现</div><div class="finance-value" id="finCreatorAvailable">0 💎</div><div class="finance-sub">已分成 - 已申请提现</div></div>
+                <div class="finance-card"><div class="finance-title">创作者可提现</div><div class="finance-value" id="finCreatorAvailable" style="color:#c084fc;">0 🟣</div><div class="finance-sub">已分成 - 已申请提现</div></div>
                 <div class="finance-arrow">→</div>
                 <div class="finance-card"><div class="finance-title">已实际打款</div><div class="finance-value" id="finPaidOut">0 💎</div><div class="finance-sub">withdrawal COMPLETED</div></div>
             </div>
@@ -2993,7 +3005,8 @@
     async function loadWithdrawals() {
         showContentLoader();
         try {
-            allWithdrawals = await (await fetch(`${API_URL}/withdrawals`)).json();
+            // Admin-only endpoint returns FULL bank details (needed to make the payout). Requires admin token.
+            allWithdrawals = await (await fetch(`${API_URL}/admin/withdrawals`)).json();
         } catch(e) { allWithdrawals = []; }
         renderWithdrawals();
         hideContentLoader();
@@ -3002,6 +3015,19 @@
     function getWithdrawalStatusLabel(status) {
         const map = { PENDING: '待审', APPROVED: '已批准', PROCESSING: '处理中', COMPLETED: '已完成', REJECTED: '已拒绝' };
         return map[status] || status || '待审';
+    }
+
+    function renderBankSnapshot(w) {
+        const b = w.bankSnapshot;
+        if(b && (b.bankName || b.accountNumber)) {
+            return `<div style="font-size:11px;color:#c084fc;margin-top:5px;line-height:1.5;">🏦 ${escapeHtml(b.bankName || '-')} · <span style="font-family:ui-monospace,Menlo,monospace;">${escapeHtml(b.accountNumber || '-')}</span><br><span style="color:var(--text-muted);">户名：${escapeHtml(b.accountHolder || '-')}</span></div>`;
+        }
+        return `<div style="font-size:11px;color:var(--danger);margin-top:5px;">⚠️ 无银行信息（旧记录）</div>`;
+    }
+
+    function renderNetSub(w) {
+        if(w.net == null) return '';
+        return `<div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-top:4px;">手续费 ${w.feePercent != null ? w.feePercent + '% = ' : ''}${w.fee != null ? w.fee : '-'}<br><span style="color:#34c759;">实付 RM ${w.net}</span></div>`;
     }
 
     function renderWithdrawals() {
@@ -3013,11 +3039,17 @@
         document.getElementById('withdrawPendingCount').innerText = pending.filter(w => (w.status || 'PENDING') === 'PENDING').length;
         document.getElementById('withdrawProcessingCount').innerText = pending.filter(w => ['APPROVED', 'PROCESSING'].includes(w.status)).length;
         document.getElementById('withdrawDoneCount').innerText = done.length;
+        // #2 Float: real RM you must have on hand to cover every in-flight payout (net, not gross).
+        const floatNeeded = pending.reduce((sum, w) => sum + (w.net != null ? Number(w.net) : Number(w.amount) || 0), 0);
+        const floatEl = document.getElementById('withdrawFloatNeeded');
+        const floatCntEl = document.getElementById('withdrawFloatCount');
+        if(floatEl) floatEl.innerText = (Math.round(floatNeeded * 100) / 100).toLocaleString();
+        if(floatCntEl) floatCntEl.innerText = pending.length;
         updateApprovalBadges();
         pendingList.innerHTML = pending.map(w => `
             <div class="data-row grid-withdraw-pending">
-                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div></div>
-                <div style="color:var(--token); font-weight:900;">💎 ${w.amount || 0}</div>
+                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div>${renderBankSnapshot(w)}</div>
+                <div style="color:#c084fc; font-weight:900;">🟣 ${w.amount || 0}${renderNetSub(w)}</div>
                 <div>${w.currency || 'RM'}</div>
                 <div>${w.createdAt ? new Date(w.createdAt).toLocaleString() : '-'}</div>
                 <div style="display:flex; gap:8px; justify-content:flex-end;">
@@ -3031,10 +3063,10 @@
         if(!pending.length) pendingList.innerHTML = `<div style="padding:34px; text-align:center; color:var(--text-muted);">暂无待审提现</div>`;
         doneList.innerHTML = done.slice(0, 20).map(w => `
             <div class="data-row grid-withdraw-done">
-                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div></div>
-                <div style="color:var(--token); font-weight:900;">💎 ${w.amount || 0}</div>
+                <div><strong>${escapeHtml(w.username || '-')}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(w.email || '-')}</div>${renderBankSnapshot(w)}</div>
+                <div style="color:#c084fc; font-weight:900;">🟣 ${w.amount || 0}${renderNetSub(w)}</div>
                 <div>${w.currency || 'RM'}</div>
-                <div><span class="badge-status-pill ${w.status === 'REJECTED' ? 'status-rejected' : 'status-approved'}">${getWithdrawalStatusLabel(w.status)}</span></div>
+                <div><span class="badge-status-pill ${w.status === 'REJECTED' ? 'status-rejected' : 'status-approved'}">${getWithdrawalStatusLabel(w.status)}</span>${w.payoutRef ? `<div style="font-size:10px;color:#34c759;margin-top:4px;">Ref: ${escapeHtml(w.payoutRef)}</div>` : ''}</div>
                 <div>${(w.completedAt || w.updatedAt) ? new Date(w.completedAt || w.updatedAt).toLocaleString() : '-'}</div>
             </div>
         `).join('');
@@ -3046,11 +3078,19 @@
     async function updateWithdrawalStatus(username, id, status) {
         const adminNote = status === 'REJECTED' ? prompt('拒绝原因（会通知用户）', '未符合提现条件') : '';
         if(status === 'REJECTED' && adminNote === null) return;
+        // #4 On completion, capture the real bank/DuitNow transfer reference so the payout is provable.
+        let payoutRef = '';
+        if(status === 'COMPLETED') {
+            payoutRef = prompt('请输入转账凭证 / 银行参考号（会显示给用户，作为已打款证明）\nEnter the bank / DuitNow transfer reference:', '');
+            if(payoutRef === null) return;
+            payoutRef = String(payoutRef).trim();
+            if(!payoutRef && !confirm('未填写转账凭证，确定仍要标记为已完成吗？')) return;
+        }
         showGlobalLoader("更新提现状态...");
         const res = await fetch(`${API_URL}/withdrawals/${encodeURIComponent(username)}/${encodeURIComponent(id)}/status`, {
             method:'PUT',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ status, adminNote })
+            body: JSON.stringify({ status, adminNote, payoutRef })
         });
         if(res.ok) {
             await loadWithdrawals();
@@ -5355,7 +5395,7 @@
         if(!user) return showToast("找不到该用户", true);
         openUserDetail(user.username);
     }
-    function renderFinanceList(containerId, rows, emptyText) {
+    function renderFinanceList(containerId, rows, emptyText, purple) {
         const list = document.getElementById(containerId);
         if(!list) return;
         if(!rows.length) {
@@ -5365,7 +5405,7 @@
         list.innerHTML = rows.map(row => `
             <div class="data-row finance-row-grid">
                 <div><strong>${escapeHtml(row.key)}</strong><div style="font-size:12px;color:var(--text-muted);">${escapeHtml(row.email || '-')}</div></div>
-                <div style="color:var(--token); font-weight:900;">💎 ${row.amount.toLocaleString()}</div>
+                <div style="color:${purple ? '#c084fc' : 'var(--token)'}; font-weight:900;">${purple ? '🟣' : '💎'} ${row.amount.toLocaleString()}</div>
                 <div>${row.count}</div>
                 <div>${financeDetailButton(row.key)}</div>
             </div>
@@ -5400,7 +5440,7 @@
             financeSetText('finTopupSub', `${rangeOrders.length} 笔`);
             financeSetText('finSalesTotal', `${salesTotal.toLocaleString()} 💎`);
             financeSetText('finSalesSub', `${rangeTrans.length} 笔`);
-            financeSetText('finCreatorTotal', `${creatorTotal.toLocaleString()} 💎`);
+            financeSetText('finCreatorTotal', `${creatorTotal.toLocaleString()} 🟣`);
             financeSetText('finCreatorSub', `平台分成 ${platformTotal.toLocaleString()}`);
             financeSetText('finWithdrawTotal', `${completedWithdrawTotal.toLocaleString()} 💎`);
             financeSetText('finWithdrawSub', `${completedWithdrawals.length} 笔`);
@@ -5411,12 +5451,12 @@
             const lockedWithdrawals = allWithdrawals.filter(w => w.status !== 'REJECTED').reduce((sum, row) => sum + financeNumber(row.amount), 0);
             const paidOut = allWithdrawals.filter(w => w.status === 'COMPLETED').reduce((sum, row) => sum + financeNumber(row.amount), 0);
             financeSetText('finWalletBalance', `${walletBalance.toLocaleString()} 💎`);
-            financeSetText('finCreatorAll', `${creatorAll.toLocaleString()} 💎`);
-            financeSetText('finCreatorAvailable', `${Math.max(creatorAll - lockedWithdrawals, 0).toLocaleString()} 💎`);
+            financeSetText('finCreatorAll', `${creatorAll.toLocaleString()} 🟣`);
+            financeSetText('finCreatorAvailable', `${Math.max(creatorAll - lockedWithdrawals, 0).toLocaleString()} 🟣`);
             financeSetText('finPaidOut', `${paidOut.toLocaleString()} 💎`);
 
             renderFinanceList('financeTopupList', groupFinanceRows(rangeOrders, row => row.user, row => financeNumber(row.amount)), '暂无充值记录');
-            renderFinanceList('financeCreatorList', groupFinanceRows(creatorTransactions, row => row.uploader || 'FULLKIK', row => financeNumber(row.tokens || row.tokensSpent)), '暂无创作者分成');
+            renderFinanceList('financeCreatorList', groupFinanceRows(creatorTransactions, row => row.uploader || 'FULLKIK', row => financeNumber(row.tokens || row.tokensSpent)), '暂无创作者分成', true);
 
             const now = Date.now();
             const olderThan = (row, days) => {
@@ -5553,7 +5593,7 @@
         dashboardSetText('stat-sales-split', `平台 ${Math.max(totalRev - creatorTotal, 0).toLocaleString()} + 创作者 ${creatorTotal.toLocaleString()}`);
         dashboardSetText('stat-wallet-balance', `${walletBalance.toLocaleString()} 💎`);
         dashboardSetText('stat-wallet-holders', `${walletHolders} 位持有者`);
-        dashboardSetText('stat-creator-available', `${Math.max(creatorTotal - lockedWithdrawals, 0).toLocaleString()} 💎`);
+        dashboardSetText('stat-creator-available', `${Math.max(creatorTotal - lockedWithdrawals, 0).toLocaleString()} 🟣`);
         dashboardSetText('stat-withdraw-completed', `${completedWithdrawals.toLocaleString()} 💎`);
         dashboardSetText('stat-withdraw-pending', pendingWithdrawals);
         dashboardSetText('stat-withdraw-sub', pendingWithdrawals ? `${pendingWithdrawals} 条等待审核` : '暂无待审');
@@ -6183,7 +6223,7 @@
             const res = await fetch(`${API_URL}/admin/users/${encodeURIComponent(currentEditUser.username)}/password`);
             if(!res.ok) return showToast(await res.text(), true);
             const data = await res.json();
-            span.innerText = data.hasPassword ? (data.password || '') : '（未设置 · Google 登录）';
+            span.innerText = data.encrypted ? '🔒 已加密（不可查看，可用重置密码）' : (data.hasPassword ? (data.password || '') : '（未设置 · Google 登录）');
             span.dataset.shown = '1';
             if(btn){ btn.innerText = '🙈'; btn.classList.add('on'); }
         } catch(e) { showToast('读取密码失败', true); }
