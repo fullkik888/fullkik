@@ -29,6 +29,7 @@
         .invite-friend-pill:hover { transform:translateY(-1px); border-color:var(--accent-light); box-shadow:0 12px 24px rgba(128,0,0,0.35); }
         .top-token-pill { display:flex; align-items:center; gap:7px; min-height:32px; padding:0 13px; border-radius:20px; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:var(--token); font-size:13px; font-weight:800; cursor:pointer; white-space:nowrap; }
         .top-purple-pill { color:#c084fc; border-color:rgba(168,85,247,0.42); background:rgba(168,85,247,0.12); }
+        .pgem { height: 1.05em; width: auto; vertical-align: -0.16em; display: inline-block; }
         .top-token-pill:hover { border-color:var(--accent-light); color:white; }
 
         .profile-trigger { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); padding: 6px; border-radius: 30px; cursor: pointer; transition: 0.2s; text-decoration: none;}
@@ -393,7 +394,7 @@
         <button type="button" class="invite-friend-pill" id="inviteFriendBtn" onclick="openInviteFriendModal()">邀请好友</button>
         <button class="btn-upgrade-top" id="btnVipCenterTop" onclick="switchView('vip')" style="display:none;" data-i18n="vipCenter">VIP 中心</button>
         <button class="top-token-pill" onclick="switchView('topup')">💎 <span id="headerTokenDisplay">0</span></button>
-        <button class="top-token-pill top-purple-pill" id="headerPurplePill" style="display:none;" onclick="switchView('vip')" title="创作收益 / Creator Gems">🟣 <span id="headerPurpleDisplay">0</span></button>
+        <button class="top-token-pill top-purple-pill" id="headerPurplePill" style="display:none;" onclick="switchView('vip')" title="创作收益 / Creator Gems"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="headerPurpleDisplay">0</span></button>
         
         <div style="position:relative;">
             <div class="profile-trigger" id="profileBtn" onclick="toggleDropdown(event)"></div>
@@ -427,7 +428,7 @@
                     <div id="profileWechatDisplay" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;">
                         <svg viewBox="0 0 24 24" style="width:16px;fill:currentColor;"><path d="M8.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S9.1,13.5,8.5,13.5z M12.5,13.5c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S13.1,13.5,12.5,13.5z M20,10.5c0-4.1-4-7.5-9-7.5s-9,3.4-9,7.5c0,2.3,1.3,4.4,3.4,5.7l-0.9,2.8l3.2-1.6 c1.1,0.3,2.2,0.5,3.4,0.5C16,18,20,14.6,20,10.5z"/></svg> 微信: <span id="wechatIdText"></span>
                     </div>
-                    <div style="color:var(--text-muted); margin-top:5px; font-size:14px;">💎 <span id="profileBannerTokens">0</span><span id="bannerPurpleWrap" style="display:none;"> · <span style="color:#c084fc; font-weight:700;">🟣 <span id="bannerPurpleDisplay">0</span></span></span> | <span class="profile-stat-link" onclick="toggleFollowingPanel()">关注 <span id="profileFollowingCount">0</span></span> | 粉丝 <span id="profileFollowerCount">0</span></div>
+                    <div style="color:var(--text-muted); margin-top:5px; font-size:14px;">💎 <span id="profileBannerTokens">0</span><span id="bannerPurpleWrap" style="display:none;"> · <span style="color:#c084fc; font-weight:700;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="bannerPurpleDisplay">0</span></span></span> | <span class="profile-stat-link" onclick="toggleFollowingPanel()">关注 <span id="profileFollowingCount">0</span></span> | 粉丝 <span id="profileFollowerCount">0</span></div>
                 </div>
             </div>
             <button class="btn-text-action" onclick="document.getElementById('editNameModal').style.display='flex'">⚙ 修改名称</button>
@@ -573,7 +574,7 @@
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatUp">0</span><span class="vip-stat-lbl" data-i18n="vipStatUpLbl">上传歌曲数量</span></div>
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatFav">0</span><span class="vip-stat-lbl" data-i18n="vipStatFavLbl">歌曲被收藏次数</span></div>
             <div class="vip-stat-item"><span class="vip-stat-val" id="vipStatDl">0</span><span class="vip-stat-lbl" data-i18n="vipStatDlLbl">被下架次数</span></div>
-            <div class="vip-stat-item"><span class="vip-stat-val" style="color:#c084fc;">🟣 <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计紫钻</span></div>
+            <div class="vip-stat-item"><span class="vip-stat-val" style="color:#c084fc;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="vipStatRev">0</span></span><span class="vip-stat-lbl" data-i18n="vipStatRevLbl">累计紫钻</span></div>
             <div style="text-align:right;"><button class="btn-submit" style="background:transparent; border:1px solid var(--border-color); width:auto; padding:10px 20px;" onclick="switchView('withdraw')">↓ 提现</button></div>
         </div>
 
@@ -634,9 +635,9 @@
             <div class="withdraw-summary">
                 <div class="box"><div class="val" id="withdrawSongCount">0</div><div class="lbl">上传歌曲数量</div></div>
                 <div class="box"><div class="val" id="withdrawDownloadCount">0</div><div class="lbl">歌曲下载次数</div></div>
-                <div class="box"><div class="val" style="color:#c084fc;">🟣 <span id="withdrawTotalEarned">0</span></div><div class="lbl">累计利润</div></div>
+                <div class="box"><div class="val" style="color:#c084fc;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="withdrawTotalEarned">0</span></div><div class="lbl">累计利润</div></div>
             </div>
-            <h3 style="margin:0 0 12px 0;">可提成余额 <span style="color:#c084fc;">🟣 <span id="withdrawBalance">0</span></span></h3>
+            <h3 style="margin:0 0 12px 0;">可提成余额 <span style="color:#c084fc;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="withdrawBalance">0</span></span></h3>
             <label class="input-label">提成金额</label>
             <input type="number" id="withdrawAmountInput" class="withdraw-input" min="1" placeholder="输入提成金额（紫钻）" oninput="updateFeePreview()">
             <div id="withdrawFeePreview" style="margin-top:12px; color:var(--text-muted); font-size:13px; line-height:1.8;"></div>
@@ -1993,7 +1994,7 @@
         }
         const fee = round2(amount * feePercent / 100);
         const net = round2(amount - fee);
-        box.innerHTML = `提现 <strong style="color:#c084fc;">🟣 ${amount}</strong> · 手续费 ${feePercent}% = <strong>-${fee}</strong> · 实际到账 <strong style="color:var(--success);">RM ${net}</strong>`;
+        box.innerHTML = `提现 <strong style="color:#c084fc;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> ${amount}</strong> · 手续费 ${feePercent}% = <strong>-${fee}</strong> · 实际到账 <strong style="color:var(--success);">RM ${net}</strong>`;
     }
 
     function getWithdrawalStatusLabel(status) {
@@ -2012,7 +2013,7 @@
         list.innerHTML = rows.map(w => `
             <div class="withdraw-row">
                 <div><strong>${w.id}</strong><div style="color:var(--text-muted); font-size:12px; margin-top:4px;">${w.createdAt ? new Date(w.createdAt).toLocaleString() : '-'}</div></div>
-                <div><div style="color:#c084fc; font-weight:900;">🟣 ${w.amount || 0}</div>${w.net != null ? `<div style="color:var(--success); font-size:12px; margin-top:3px;">实收 RM ${w.net}</div>` : ''}</div>
+                <div><div style="color:#c084fc; font-weight:900;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> ${w.amount || 0}</div>${w.net != null ? `<div style="color:var(--success); font-size:12px; margin-top:3px;">实收 RM ${w.net}</div>` : ''}</div>
                 <div><span class="withdraw-status ${w.status || 'PENDING'}">${getWithdrawalStatusLabel(w.status)}</span>${w.payoutRef ? `<div style="color:var(--success); font-size:11px; margin-top:4px;">✓ 已打款 Ref: ${escapeHtmlProfile(w.payoutRef)}</div>` : ''}</div>
                 <div style="color:var(--text-muted); font-size:12px;">${w.adminNote || '-'}</div>
             </div>

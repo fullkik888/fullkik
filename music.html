@@ -31,6 +31,7 @@
         .token-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: var(--token); border: 1px solid var(--border-color); text-decoration:none;}
         .token-pill:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
         .purple-pill { display: flex; align-items: center; gap: 8px; background: rgba(168,85,247,0.12); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; color: #c084fc; border: 1px solid rgba(168,85,247,0.42); text-decoration:none; }
+        .pgem { height: 1.05em; width: auto; vertical-align: -0.16em; display: inline-block; }
         .purple-pill:hover { background: rgba(168,85,247,0.2); transform: scale(1.02); }
         .mail-button { position:relative; min-width:38px; height:38px; border-radius:50%; border:1px solid var(--border-color); background:rgba(255,255,255,0.05); color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; }
         .mail-button:hover { border-color:var(--accent-light); background:rgba(128,0,0,0.22); }
@@ -428,7 +429,7 @@
                 💎 <span id="tokenDisplay">0</span>
             </a>
             <a href="/fullkik/profile.page?view=vip&skipLoader=1" class="purple-pill" id="purpleGemUI" style="display:none;" title="创作收益 / Creator Gems">
-                🟣 <span id="purpleGemDisplay">0</span>
+                <img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> <span id="purpleGemDisplay">0</span>
             </a>
             <button class="profile-trigger" id="profileBtn" onclick="toggleProfileDropdown(event)"></button>
             <div class="profile-dropdown" id="profileDropdown">
