@@ -3076,6 +3076,127 @@ app.get('/api/admin/withdrawals', async (req, res) => {
     } catch(e) { res.status(500).json([]); }
 });
 
+// ==========================================
+// CLOUDINARY MEDIA CLEANUP (IMAGES ONLY — audio in "dj_music" is NEVER touched).
+// Scan finds orphaned images (not referenced anywhere in the DB); cleanup deletes
+// only the reviewed orphans, re-checking references at delete time. Admin-gated.
+// ==========================================
+const CLEANUP_IMAGE_FOLDERS = ['dj_covers', 'dj_genres', 'dj_posters', 'dj_default_covers', 'contest_posters', 'dj_profiles'];
+
+// Extract Cloudinary public_id (folder/name, no version, no extension) from a stored image URL.
+function cloudinaryPublicIdFromUrl(url) {
+    const s = String(url || '');
+    const marker = '/image/upload/';
+    const idx = s.indexOf(marker);
+    if(idx === -1) return null;
+    let rest = s.slice(idx + marker.length);
+    rest = rest.replace(/^v\d+\//, '');          // strip version
+    rest = rest.replace(/[?#].*$/, '');           // strip query/hash
+    rest = rest.replace(/\.[a-zA-Z0-9]+$/, '');   // strip extension
+    return rest || null;
+}
+
+// Collect EVERY referenced Cloudinary image (by public_id AND raw url) from the whole DB.
+// Regex-scans full documents so no image field can be missed. If any read fails it THROWS
+// (so callers abort rather than delete against an incomplete reference set).
+async function collectReferencedImageIds() {
+    const referenced = new Set();
+    const rawUrls = new Set();
+    const IMG_URL_RE = /https?:\/\/res\.cloudinary\.com\/[^\s"'\\]+\/image\/upload\/[^\s"'\\]+/g;
+    const addFromData = (data) => {
+        const json = JSON.stringify(data || {});
+        let m;
+        while((m = IMG_URL_RE.exec(json))) {
+            const url = m[0];
+            rawUrls.add(url);
+            const id = cloudinaryPublicIdFromUrl(url);
+            if(id) referenced.add(id);
+        }
+    };
+    for(const col of ['songs', 'users', 'genres', 'reports']) {
+        const snap = await db.collection(col).get();
+        snap.docs.forEach(d => addFromData(d.data()));
+    }
+    addFromData(await getGlobalSettings()); // posters, default cover, contest posters
+    return { referenced, rawUrls };
+}
+
+// List every image asset under the app's image folders (paginated). Images only.
+async function listCloudinaryImages(folders) {
+    const all = [];
+    for(const folder of folders) {
+        let next = undefined;
+        do {
+            const r = await cloudinary.api.resources({
+                type: 'upload', resource_type: 'image', prefix: folder + '/',
+                max_results: 500, next_cursor: next
+            });
+            (r.resources || []).forEach(x => all.push(x));
+            next = r.next_cursor;
+        } while(next);
+    }
+    return all;
+}
+
+// SCAN — reports orphaned images. Deletes NOTHING.
+app.get('/api/admin/cloudinary/scan', async (req, res) => {
+    try {
+        if(!process.env.CLOUDINARY_API_KEY) return res.status(503).json({ error: 'Cloudinary 未配置' });
+        const { referenced, rawUrls } = await collectReferencedImageIds();
+        const resources = await listCloudinaryImages(CLEANUP_IMAGE_FOLDERS);
+        const orphans = [];
+        let orphanBytes = 0, usedBytes = 0, usedCount = 0;
+        resources.forEach(r => {
+            const used = referenced.has(r.public_id) || rawUrls.has(r.secure_url);
+            if(used) { usedBytes += r.bytes || 0; usedCount++; }
+            else {
+                orphanBytes += r.bytes || 0;
+                orphans.push({ public_id: r.public_id, url: r.secure_url, bytes: r.bytes || 0, created_at: r.created_at || '' });
+            }
+        });
+        orphans.sort((a, b) => (b.bytes || 0) - (a.bytes || 0));
+        res.json({
+            scanned: resources.length,
+            usedCount,
+            usedBytes,
+            orphanCount: orphans.length,
+            orphanBytes,
+            referencedTotal: referenced.size,
+            folders: CLEANUP_IMAGE_FOLDERS,
+            orphans: orphans.slice(0, 2000)
+        });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// CLEANUP — delete ONLY the reviewed orphan public_ids, images only, with two hard guards.
+app.post('/api/admin/cloudinary/cleanup', async (req, res) => {
+    try {
+        if(!process.env.CLOUDINARY_API_KEY) return res.status(503).json({ error: 'Cloudinary 未配置' });
+        let ids = Array.isArray(req.body.publicIds) ? req.body.publicIds.map(String) : [];
+        if(!ids.length) return res.status(400).json({ error: '没有要删除的项目' });
+        // GUARD 1: never delete anything outside the image folders (audio lives in dj_music).
+        ids = ids.filter(id => CLEANUP_IMAGE_FOLDERS.some(f => id.startsWith(f + '/')));
+        // GUARD 2: re-check references NOW — never delete an image still referenced anywhere.
+        const { referenced, rawUrls } = await collectReferencedImageIds();
+        const requested = ids.length;
+        ids = ids.filter(id => !referenced.has(id));
+        const skippedReferenced = requested - ids.length;
+        if(!ids.length) return res.json({ deleted: 0, skippedReferenced, message: '安全检查后没有可删除的项目' });
+        let deleted = 0; const failed = [];
+        for(let i = 0; i < ids.length; i += 100) {
+            const batch = ids.slice(i, i + 100);
+            const r = await cloudinary.api.delete_resources(batch, { resource_type: 'image', type: 'upload' });
+            const del = r.deleted || {};
+            Object.keys(del).forEach(k => { if(del[k] === 'deleted') deleted++; else failed.push(k); });
+        }
+        await logAdminAction(`Cloudinary cleanup: deleted ${deleted} orphaned images`, {
+            module: '系统', action: '媒体清理', targetId: 'cloudinary',
+            details: `deleted=${deleted}, skippedReferenced=${skippedReferenced}, failed=${failed.length}`
+        });
+        res.json({ deleted, skippedReferenced, failedCount: failed.length });
+    } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
     try {
         const nextStatus = String(req.body.status || '').toUpperCase();

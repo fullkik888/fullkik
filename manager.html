@@ -1081,6 +1081,14 @@
 
     <div id="view-system-settings" class="view-section">
         <div class="dash-header"><h2>系统设置</h2><p>全站上传限制与客服入口配置</p></div>
+        <div class="settings-card" style="border-color:rgba(52,199,89,0.3);">
+            <h3>🧹 媒体清理 / Media Cleanup</h3>
+            <p>清理 Cloudinary 上<b>不再被使用的图片</b>（旧封面、被替换的海报、旧头像），释放存储空间。<br>
+            <b style="color:#34c759;">只清理图片，绝不删除音频文件</b> — 不会影响任何已购买的歌曲下载。先扫描，确认后再删除。</p>
+            <button class="btn-primary" onclick="scanCloudinary()">🔍 扫描未使用图片</button>
+            <div id="cloudCleanupResult" style="margin-top:16px; color:var(--text-muted); line-height:1.9; font-size:14px;"></div>
+            <button class="btn-primary" id="cloudDeleteBtn" style="display:none; background:var(--danger); margin-top:14px;" onclick="deleteCloudinaryOrphans()">🗑️ 删除未使用图片</button>
+        </div>
         <div class="settings-card">
             <h3>歌曲钻石上限</h3>
             <p>VIP 上传 / 编辑 / 批量上传歌曲时单首歌可设的最高钻石价。默认 200。改动后立即生效。</p>
@@ -3017,6 +3025,53 @@
     function getWithdrawalStatusLabel(status) {
         const map = { PENDING: '待审', APPROVED: '已批准', PROCESSING: '处理中', COMPLETED: '已完成', REJECTED: '已拒绝' };
         return map[status] || status || '待审';
+    }
+
+    // --- Cloudinary media cleanup (images only; audio never touched) ---
+    let cloudScanResult = null;
+    function fmtMB(bytes) { return (Number(bytes || 0) / 1048576).toFixed(1); }
+    async function scanCloudinary() {
+        const box = document.getElementById('cloudCleanupResult');
+        const btn = document.getElementById('cloudDeleteBtn');
+        cloudScanResult = null;
+        if(btn) btn.style.display = 'none';
+        box.innerHTML = '⏳ 扫描中… 请稍候（可能需要 10–30 秒）';
+        try {
+            const res = await fetch(`${API_URL}/admin/cloudinary/scan`);
+            if(!res.ok) { const d = await res.json().catch(() => ({})); box.innerHTML = '❌ 扫描失败：' + escapeHtml(d.error || ('HTTP ' + res.status)); return; }
+            const d = await res.json();
+            cloudScanResult = d;
+            box.innerHTML =
+                `共扫描 <b>${d.scanned}</b> 张图片（封面/海报/头像，<b>不含音频</b>）<br>` +
+                `✅ 使用中：<b style="color:#34c759;">${d.usedCount}</b> 张 · ${fmtMB(d.usedBytes)} MB<br>` +
+                `⚠️ 未使用（可清理）：<b style="color:#ffcc00;">${d.orphanCount}</b> 张 · 约 <b style="color:#ffcc00;">${fmtMB(d.orphanBytes)} MB</b>`;
+            if(d.orphanCount > 0 && btn) {
+                btn.style.display = 'inline-block';
+                btn.innerText = `🗑️ 删除这 ${d.orphanCount} 张未使用图片（释放 ${fmtMB(d.orphanBytes)} MB）`;
+            } else {
+                box.innerHTML += '<div style="color:#34c759; margin-top:10px;">🎉 没有未使用的图片，无需清理。</div>';
+            }
+        } catch(e) { box.innerHTML = '❌ 扫描出错：' + escapeHtml(e.message); }
+    }
+    async function deleteCloudinaryOrphans() {
+        if(!cloudScanResult || !Array.isArray(cloudScanResult.orphans) || !cloudScanResult.orphans.length) return;
+        const n = cloudScanResult.orphanCount;
+        if(!confirm(`确定删除 ${n} 张未使用的图片？此操作不可恢复。\n\n（只删除封面 / 海报 / 头像，绝不删除音频，不影响已购买歌曲。）`)) return;
+        showGlobalLoader('删除中…');
+        try {
+            const res = await fetch(`${API_URL}/admin/cloudinary/cleanup`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicIds: cloudScanResult.orphans.map(o => o.public_id) })
+            });
+            hideGlobalLoader();
+            const d = await res.json().catch(() => ({}));
+            if(res.ok) {
+                showToast(`✅ 已删除 ${d.deleted || 0} 张${d.skippedReferenced ? `（跳过 ${d.skippedReferenced} 张仍在使用）` : ''}`);
+                document.getElementById('cloudCleanupResult').innerHTML = `✅ 已删除 <b>${d.deleted || 0}</b> 张未使用图片。${d.skippedReferenced ? ` 安全跳过 ${d.skippedReferenced} 张（仍在使用）。` : ''}`;
+                document.getElementById('cloudDeleteBtn').style.display = 'none';
+                cloudScanResult = null;
+            } else { showToast(d.error || '删除失败', true); }
+        } catch(e) { hideGlobalLoader(); showToast('删除出错：' + e.message, true); }
     }
 
     function renderBankSnapshot(w) {
