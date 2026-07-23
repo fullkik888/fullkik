@@ -3310,6 +3310,18 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
     const price = parseInt(reqBody.price) || 0;
     const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
     const uploader = reqBody.uploader || 'FULLKIK';
+    const isAdminUpload = String(uploader).toUpperCase().startsWith('FULLKIK');
+    // Only VIP creators (or the FULLKIK admin) may upload songs — normal users cannot.
+    if(!isAdminUpload) {
+        const uSnap = await db.collection('users').doc(String(uploader).toLowerCase()).get();
+        const u = uSnap.exists ? uSnap.data() : null;
+        const isVipUploader = !!(u && (u.isVip === true || u.role === 'VIP' || u.role === 'PRODUCER'));
+        if(!isVipUploader) {
+            const err = new Error('仅 VIP 创作者可上传歌曲，请先升级至 VIP。 / Only VIP creators can upload songs.');
+            err.status = 403;
+            throw err;
+        }
+    }
     const isVipUpload = reqBody.status === 'PENDING' || (uploader && !String(uploader).toUpperCase().startsWith('FULLKIK'));
     const title = reqBody.title || originalName;
     const genreIds = parseGenreIds(reqBody);

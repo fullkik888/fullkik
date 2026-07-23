@@ -567,6 +567,19 @@
     </div>
 
     <div id="view-vip" class="view-section">
+        <div id="vipUpgradePrompt" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;">VIP 中心</h2>
+                <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
+            </div>
+            <div style="text-align:center; padding:44px 24px; border:1px solid var(--border-color); border-radius:18px; background:rgba(128,0,0,0.1);">
+                <div style="font-size:52px; margin-bottom:14px;">🎧</div>
+                <h3 style="margin:0 0 10px;">升级为 VIP 创作者</h3>
+                <p style="color:var(--text-muted); line-height:1.85; max-width:380px; margin:0 auto 24px;">成为 VIP 创作者后才能上传并销售你的音乐，赚取紫钻收益。<br><span style="font-size:13px;">Become a VIP creator to upload &amp; sell your music and earn Purple Gems.</span></p>
+                <button class="btn-submit" style="width:auto; padding:14px 44px;" onclick="startVipUpgrade()">升级至VIP →</button>
+            </div>
+        </div>
+        <div id="vipDashboard">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="margin:0;" data-i18n="vipDataTitle">数据总结</h2>
             <button class="btn-text-action" onclick="switchView('profile')">← 返回</button>
@@ -594,6 +607,7 @@
         </div>
 
         <div id="vipSongList"></div>
+        </div>
     </div>
 
     <div id="view-withdraw" class="view-section">
@@ -1874,8 +1888,22 @@
         return { mySongs, totalEarned, favoriteCount, downloads, unlistedCount };
     }
 
+    function startVipUpgrade() {
+        switchView('profile');
+        setTimeout(function(){ const el = document.getElementById('vipRegSection'); if(el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 200);
+    }
+
     function renderVipCenter() {
-        if(!isUserVip) return;
+        const prompt = document.getElementById('vipUpgradePrompt');
+        const dash = document.getElementById('vipDashboard');
+        // Non-VIP users see an "升级至VIP" prompt instead of the creator dashboard.
+        if(!isUserVip) {
+            if(prompt) prompt.style.display = 'block';
+            if(dash) dash.style.display = 'none';
+            return;
+        }
+        if(prompt) prompt.style.display = 'none';
+        if(dash) dash.style.display = 'block';
         const stats = getCreatorMoneyStats();
         const mySongs = stats.mySongs;
         
@@ -2225,6 +2253,8 @@
     function handleImgPreview(e, targetId, mode) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(ev) { if(mode === 'vip') pendingVipCover = ev.target.result; document.getElementById(targetId).src = ev.target.result; }; reader.readAsDataURL(file); }
 
     function openVipUpload(isBatch) {
+        // Only VIP creators can upload. Non-VIP are sent to the upgrade prompt.
+        if(!isUserVip) { showToast('请先升级至 VIP 才能上传音乐 / Upgrade to VIP to upload', true); switchView('vip'); return; }
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
         const fileInput = document.getElementById('vipFileInput');
