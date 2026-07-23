@@ -637,11 +637,20 @@
 
     function toggleLang() { currentLang = currentLang === 'en' ? 'cn' : 'en'; localStorage.setItem('djLang', currentLang); applyLang(); }
 
+    // Header VIP button: shows "升级至VIP" for non-VIP, "VIP 中心" once upgraded.
+    function updateVipCenterBtn() {
+        const btn = document.getElementById('vipCenterTopBtn');
+        if(!btn) return;
+        const cn = currentLang !== 'en';
+        btn.innerText = isUserVip ? (cn ? 'VIP 中心' : 'VIP Center') : (cn ? '升级至VIP' : 'Upgrade VIP');
+    }
+
     function applyLang() {
         document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if(dict[currentLang][key]) el.innerText = dict[currentLang][key]; });
         document.querySelectorAll('[data-placeholder]').forEach(el => { const key = el.getAttribute('data-placeholder'); if(dict[currentLang][key]) el.placeholder = dict[currentLang][key]; });
         const mainS = document.getElementById('mainSearch'); if(mainS) mainS.placeholder = dict[currentLang].search;
         if(!username && document.getElementById('profileBtnText')) document.getElementById('profileBtnText').innerText = dict[currentLang].login;
+        updateVipCenterBtn();
         applyHomeHeroText();
         if(currentSong) openSong(currentSong.id);
         
@@ -1092,6 +1101,7 @@
                 const uRes = await fetch(`${API_URL}/users/${username}`);
                 if(uRes.ok) { 
                     const data = await uRes.json(); userTokens = data.tokens || 0; userPurchases = data.purchases || []; userFavorites = data.favorites || []; userNotifications = data.notifications || []; userFollowing = data.following || []; isUserVip = data.isVip || false; userPurpleGems = data.purpleGems || 0;
+                    updateVipCenterBtn();
                     if(document.getElementById('tokenDisplay')) document.getElementById('tokenDisplay').innerText = userTokens;
                     updateNotificationBadge();
                     
