@@ -3102,7 +3102,9 @@ function cloudinaryPublicIdFromUrl(url) {
 async function collectReferencedImageIds() {
     const referenced = new Set();
     const rawUrls = new Set();
-    const IMG_URL_RE = /https?:\/\/res\.cloudinary\.com\/[^\s"'\\]+\/image\/upload\/[^\s"'\\]+/g;
+    // Host-agnostic on purpose: matches any host with /image/upload/ (incl. a future custom
+    // Cloudinary CNAME) so references never silently go empty if the delivery domain changes.
+    const IMG_URL_RE = /https?:\/\/[^\s"'\\]+\/image\/upload\/[^\s"'\\]+/g;
     const addFromData = (data) => {
         const json = JSON.stringify(data || {});
         let m;
@@ -3178,22 +3180,30 @@ app.post('/api/admin/cloudinary/cleanup', async (req, res) => {
         ids = ids.filter(id => CLEANUP_IMAGE_FOLDERS.some(f => id.startsWith(f + '/')));
         // GUARD 2: re-check references NOW — never delete an image still referenced anywhere.
         const { referenced, rawUrls } = await collectReferencedImageIds();
+        // GUARD 3 (catastrophe brake): if NOTHING came back as referenced, something is wrong
+        // (bad config / failed reads / regex miss). A live store always references images — refuse.
+        if(referenced.size === 0) return res.status(409).json({ error: '安全中止：未检测到任何被使用的图片，已取消删除以防误删。请稍后重试或联系技术支持。' });
         const requested = ids.length;
         ids = ids.filter(id => !referenced.has(id));
         const skippedReferenced = requested - ids.length;
         if(!ids.length) return res.json({ deleted: 0, skippedReferenced, message: '安全检查后没有可删除的项目' });
-        let deleted = 0; const failed = [];
+        let deleted = 0, failedCount = 0, batchErrors = 0;
         for(let i = 0; i < ids.length; i += 100) {
             const batch = ids.slice(i, i + 100);
-            const r = await cloudinary.api.delete_resources(batch, { resource_type: 'image', type: 'upload' });
-            const del = r.deleted || {};
-            Object.keys(del).forEach(k => { if(del[k] === 'deleted') deleted++; else failed.push(k); });
+            // Per-batch guard: a failed batch (rate limit / network) must NOT abort the rest
+            // or skip the audit log — count it and keep going.
+            try {
+                const r = await cloudinary.api.delete_resources(batch, { resource_type: 'image', type: 'upload' });
+                const del = r.deleted || {};
+                Object.keys(del).forEach(k => { if(del[k] === 'deleted') deleted++; else failedCount++; });
+            } catch(be) { batchErrors++; failedCount += batch.length; }
         }
+        // Always record what actually happened, even on partial failure (irreversible deletes).
         await logAdminAction(`Cloudinary cleanup: deleted ${deleted} orphaned images`, {
             module: '系统', action: '媒体清理', targetId: 'cloudinary',
-            details: `deleted=${deleted}, skippedReferenced=${skippedReferenced}, failed=${failed.length}`
+            details: `deleted=${deleted}, skippedReferenced=${skippedReferenced}, failed=${failedCount}, batchErrors=${batchErrors}`
         });
-        res.json({ deleted, skippedReferenced, failedCount: failed.length });
+        res.json({ deleted, skippedReferenced, failedCount, batchErrors });
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
