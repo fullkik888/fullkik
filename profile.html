@@ -2296,10 +2296,11 @@
             const item = uploadItems[i];
             const fd = new FormData(); fd.append('mp3file', item.file); fd.append('title', currentVipUploadIsBatch ? item.title : titleBase); fd.append('price', currentVipUploadIsBatch ? item.price : price); fd.append('genreId', currentVipUploadIsBatch ? item.genreId : genreId); fd.append('uploader', username); fd.append('status', 'PENDING'); if(!currentVipUploadIsBatch) { fd.append('previewStart', vipPreviewStart || 0); fd.append('previewLen', vipPreviewLen || 60); }
             if(pendingVipCover) fd.append('coverBase64', pendingVipCover);
-            const uploadRes = await fetch(`${API_URL}/upload`, { method: 'POST', body: fd });
+            const uploadRes = await fetch(`${API_URL}/upload`, { method: 'POST', headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('fkUserToken') || '') }, body: fd });
             if(!uploadRes.ok) {
                 clearInterval(pInt);
                 document.getElementById('vipUploadProgOverlay').style.display = 'none';
+                if(handleAuthFailure(uploadRes)) return;
                 return errRow.innerText = await uploadRes.text();
             }
         }

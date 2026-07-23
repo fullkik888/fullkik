@@ -3305,24 +3305,43 @@ app.get('/api/songs', async (req, res) => {
 
 const DEFAULT_COVER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
 
-async function saveSongData(fileBuffer, originalName, reqBody) {
+async function saveSongData(fileBuffer, originalName, reqBody, authCtx) {
+    authCtx = authCtx || {};
     const settings = await getGlobalSettings();
     const price = parseInt(reqBody.price) || 0;
     const maxSongPrice = parseInt(settings.maxSongPrice) || 200;
-    const uploader = reqBody.uploader || 'FULLKIK';
-    const isAdminUpload = String(uploader).toUpperCase().startsWith('FULLKIK');
-    // Only VIP creators (or the FULLKIK admin) may upload songs — normal users cannot.
-    if(!isAdminUpload) {
-        const uSnap = await db.collection('users').doc(String(uploader).toLowerCase()).get();
+
+    // Identity comes ONLY from the authenticated token (set by the /api/upload route),
+    // NEVER from reqBody.uploader — otherwise anyone could claim to be FULLKIK or a VIP.
+    let uploader, isAdminUpload;
+    if(authCtx.isAdmin) {
+        isAdminUpload = true;
+        uploader = reqBody.uploader || 'FULLKIK';
+    } else {
+        isAdminUpload = false;
+        const authUser = String(authCtx.authUser || '').toLowerCase();
+        if(!authUser) { const err = new Error('未登录 / Not authenticated'); err.status = 401; throw err; }
+        // A user may only upload as themselves — reject any spoofed uploader field.
+        const claimed = String(reqBody.uploader || '').trim();
+        if(claimed && claimed.toLowerCase() !== authUser) {
+            const err = new Error('无权以他人身份上传 / Cannot upload as another user'); err.status = 403; throw err;
+        }
+        uploader = claimed || authUser;
+        // The official "FULLKIK" label is reserved for admin uploads — a creator can never
+        // publish under it (blocks brand impersonation even if someone registers "fullkik").
+        if(String(uploader).toUpperCase().startsWith('FULLKIK')) {
+            const err = new Error('无权以官方身份上传 / Reserved account name'); err.status = 403; throw err;
+        }
+        // Only VIP creators may upload — checked on the AUTHENTICATED user, not a claimed name.
+        const uSnap = await db.collection('users').doc(authUser).get();
         const u = uSnap.exists ? uSnap.data() : null;
         const isVipUploader = !!(u && (u.isVip === true || u.role === 'VIP' || u.role === 'PRODUCER'));
         if(!isVipUploader) {
             const err = new Error('仅 VIP 创作者可上传歌曲，请先升级至 VIP。 / Only VIP creators can upload songs.');
-            err.status = 403;
-            throw err;
+            err.status = 403; throw err;
         }
     }
-    const isVipUpload = reqBody.status === 'PENDING' || (uploader && !String(uploader).toUpperCase().startsWith('FULLKIK'));
+    const isVipUpload = !isAdminUpload; // creator uploads get the price cap; admin uploads don't
     const title = reqBody.title || originalName;
     const genreIds = parseGenreIds(reqBody);
 
@@ -3370,7 +3389,9 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
         size: fileBuffer ? fileBuffer.length : 0, uploadTime: new Date().toISOString(), sequence: snapshot.size + 1, price,
         previewStart: Math.max(parseInt(reqBody.previewStart) || 0, 0),
         previewLen: Math.min(Math.max(parseInt(reqBody.previewLen) || 60, 10), 180),
-        downloads: 0, plays: 0, status: reqBody.status || 'APPROVED', uploader, rejectReason: ''
+        // Creator (VIP) uploads ALWAYS enter the PENDING review queue — never trust a client
+        // status that would let a VIP self-publish live. Only admin uploads may set status.
+        downloads: 0, plays: 0, status: isAdminUpload ? (reqBody.status || 'APPROVED') : 'PENDING', uploader, rejectReason: ''
     };
     const docRef = await db.collection('songs').add(newSong);
     if(newSong.status === 'PENDING' && newSong.uploader && String(newSong.uploader).toUpperCase() !== 'FULLKIK') {
@@ -3389,8 +3410,17 @@ async function saveSongData(fileBuffer, originalName, reqBody) {
 }
 
 app.post('/api/upload', upload.single('mp3file'), async (req, res) => {
-    try { if (!req.file) return res.status(400).send('No file.'); res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body)); } 
-    catch (e) { res.status(e.status || 500).send(e.message); }
+    try {
+        if (!req.file) return res.status(400).send('No file.');
+        // Authenticate: a valid admin token OR the logged-in user's token. Identity is
+        // derived here and passed to saveSongData — the request body cannot claim identity.
+        const token = (req.headers['authorization'] || '').replace(/^Bearer\s+/i, '') || req.headers['x-user-token'] || req.headers['x-admin-token'] || '';
+        const adminPayload = verifyAdminToken(token);
+        const userPayload = adminPayload ? null : verifyUserToken(token);
+        if (!adminPayload && !userPayload) return res.status(401).send('请登录后再上传 / Please log in to upload.');
+        const authCtx = adminPayload ? { isAdmin: true } : { isAdmin: false, authUser: userPayload.sub };
+        res.json(await saveSongData(req.file.buffer, req.file.originalname, req.body, authCtx));
+    } catch (e) { res.status(e.status || 500).send(e.message); }
 });
 
 app.put('/api/users/:username/songs/:id', async (req, res) => {

@@ -2150,7 +2150,7 @@
             init = init || {};
             let u = '';
             try { u = (typeof input === 'string') ? input : (input && input.url) || ''; } catch(e) {}
-            const isAdmin = u.indexOf('/api/admin/') >= 0 && u.indexOf('/api/admin/login') < 0;
+            const isAdmin = (u.indexOf('/api/admin/') >= 0 || u.indexOf('/api/upload') >= 0) && u.indexOf('/api/admin/login') < 0;
             if(isAdmin){
                 const tok = localStorage.getItem('fkAdminToken');
                 if(tok){ const h = new Headers(init.headers || {}); h.set('Authorization', 'Bearer ' + tok); init.headers = h; }
