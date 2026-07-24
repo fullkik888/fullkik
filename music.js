@@ -2747,8 +2747,13 @@ app.post('/api/admin/email/broadcast', async (req, res) => {
         if(!subject) return res.status(400).send('请填写邮件主题 / Subject required');
         if(!message) return res.status(400).send('请填写邮件内容 / Message required');
 
-        const t = getSmtpTransporter();
-        if(!t) return res.status(400).send('SMTP 未完整设置，请先在 Render 配置 SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM');
+        // Require at least one working mailer. sendUserEmail prefers the Resend HTTP
+        // API (works on Render's free tier) and falls back to SMTP if configured.
+        const resendReady = !!String(process.env.RESEND_API_KEY || '').trim();
+        const smtpReady = !!getSmtpTransporter();
+        if(!resendReady && !smtpReady) {
+            return res.status(400).send('邮件未配置：请在 Render 设置 RESEND_API_KEY（推荐，免费套餐可用）或 SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM');
+        }
 
         // Resolve recipient docs.
         let docs = [];
@@ -2776,10 +2781,16 @@ app.post('/api/admin/email/broadcast', async (req, res) => {
 
         const html = renderBroadcastEmail(subject, message);
         let sent = 0; const failed = [];
-        // Sequential send keeps us under SMTP rate limits (e.g. Gmail ~500/day).
+        // Sequential + gently paced to stay under provider rate limits (Resend free
+        // tier ~2 req/s). Each send goes via Resend HTTP first, then SMTP fallback.
         for(const r of recipients) {
-            try { await t.transporter.sendMail({ from: t.from, to: r.email, subject, html }); sent++; }
+            try {
+                const ok = await sendUserEmail(r.email, subject, html);
+                if(ok) sent++;
+                else failed.push({ username: r.username, email: r.email, error: '发送失败：邮件服务未成功投递 / mailer did not deliver' });
+            }
             catch(e) { failed.push({ username: r.username, email: r.email, error: e.message }); }
+            await new Promise(done => setTimeout(done, 550));
         }
 
         await db.collection('email_broadcasts').add({
