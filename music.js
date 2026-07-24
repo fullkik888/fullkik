@@ -1001,6 +1001,21 @@ app.get('/api/stream/:songId', async (req, res) => {
             return songDoc.exists ? { exists: true, data: songDoc.data() } : { exists: false, data: null };
         });
         if (!cachedSong.exists) return res.status(404).send('Song not found');
+
+        // Download intent (?download=1): name the saved file "<song>-<uploader>@FULLKIK.<ext>".
+        // Server-controlled so it works regardless of the browser's download-attribute quirks,
+        // and handles non-ASCII (e.g. Chinese) song names via RFC 5987 filename*.
+        if (req.query.download || req.query.dl) {
+            const song = cachedSong.data;
+            const rawName = String(song.filename || 'track').trim() || 'track';
+            const up = String(song.uploader || '').trim();
+            const base = (up && up.toUpperCase() !== 'FULLKIK') ? `${rawName}-${up}@FULLKIK` : `${rawName}@FULLKIK`;
+            const extMatch = String(song.filepath || '').match(/\.([a-z0-9]{2,4})(?:\?|$)/i);
+            const ext = (extMatch && ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'flac'].includes(extMatch[1].toLowerCase())) ? extMatch[1].toLowerCase() : 'mp3';
+            const fname = base.replace(/[\/\\:*?"<>|\x00-\x1f]/g, '_').replace(/\s+/g, ' ').trim().slice(0, 150) + '.' + ext;
+            const asciiName = fname.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
+            res.setHeader('Content-Disposition', `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(fname)}`);
+        }
         
         const fetchHeaders = {}; 
         if (req.headers.range) fetchHeaders.Range = req.headers.range;
@@ -2720,20 +2735,16 @@ function userEmailOf(data) {
     if (isEmail(data.contact)) return String(data.contact).trim().toLowerCase();
     return null;
 }
+// Professional white template (matches the transactional notification emails).
 function renderBroadcastEmail(subject, message) {
     const body = htmlEscape(message).replace(/\n/g, '<br>');
-    return `
-    <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:520px; margin:0 auto; background:#140a0e; border:1px solid #3a2028; border-radius:16px; overflow:hidden;">
-      <div style="background:linear-gradient(135deg,#7e1c38,#4a0f22); padding:22px 24px;">
-        <div style="color:#ffffff; font-weight:900; font-size:20px; letter-spacing:1px;">FULLKIK</div>
-        <div style="color:#f0c9c0; font-size:12px; margin-top:2px;">DJ Remix · Creator Space</div>
-      </div>
-      <div style="padding:26px 24px; color:#e8dcdf;">
-        <h2 style="margin:0 0 14px; color:#ffffff; font-size:19px;">${htmlEscape(subject)}</h2>
-        <div style="font-size:14px; line-height:1.75; color:#d8c4c8;">${body}</div>
-      </div>
-      <div style="padding:14px 24px; border-top:1px solid #2a171d; color:#7a5c64; font-size:11px;">你收到此邮件是因为你是 FULLKIK 注册用户。 / You received this because you're a registered FULLKIK user.</div>
-    </div>`;
+    return `<div style="background:#f4f4f5;padding:40px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
+      + `<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e7;">`
+      + `<div style="height:3px;background:#7a1717;"></div>`
+      + `<div style="padding:30px 40px 22px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
+      + `<div style="padding:30px 40px 34px;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Message from FULLKIK</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">${htmlEscape(subject)}</div><div style="color:#3f3f46;font-size:14.5px;line-height:1.85;margin:20px 0 0;">${body}</div></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>你收到此邮件是因为你是 FULLKIK 注册用户 &middot; You received this because you are a registered FULLKIK user.</div></div>`
+      + `</div></div>`;
 }
 
 app.post('/api/admin/email/broadcast', async (req, res) => {

@@ -1852,7 +1852,7 @@
 
         if(isPurchased) { 
             actionsDiv.innerHTML = `
-                <a href="/api/stream/${currentSong.id}" download="${currentSong.filename}" style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>
+                <a href="/api/stream/${currentSong.id}?download=1" download style="text-decoration:none;" class="btn-buy-big"><svg viewBox="0 0 24 24" style="width:20px;fill:white;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> 下载歌曲</a>
                 <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-muted); padding:10px 20px; border-radius:12px; font-size:14px; font-weight:bold; display:flex; align-items:center; cursor:default;">已购买</div>
                 <button class="heart-btn ${isFav?'liked':''}" id="fav-btn-view-${id}" onclick="toggleFav('${id}', event)"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
             `; 
