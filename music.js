@@ -1238,7 +1238,7 @@ app.post('/api/register', async (req, res) => {
             }
         }
 
-        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered with ${contact} (Received ${startTokens}💎)`);
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${htmlEscape(username)}</span> registered with ${htmlEscape(contact)} (Received ${startTokens}💎)`);
         invalidateUserCaches(username);
         invalidateSettingsCache();
         setCleanShareSession(req, res);
@@ -1422,9 +1422,17 @@ app.post('/api/auth/google', async (req, res) => {
             createdAt: new Date().toISOString()
         };
         await db.collection('users').doc(username).set(userData);
-        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${username}</span> registered via Google (${email})`);
+        await logEvent('register', `<span style="color:#34c759; font-weight:600;">${htmlEscape(username)}</span> registered via Google (${htmlEscape(email)})`);
         invalidateUserCaches(username);
         setCleanShareSession(req, res);
+        sendNotifyEmail(email, {
+            greet: username,
+            subject: '欢迎加入 FULLKIK',
+            eyebrow: 'Welcome to FULLKIK', title: '欢迎加入 FULLKIK',
+            bodyZh: '欢迎来到 FULLKIK — 属于 DJ 的音乐空间。你可以充值购买作品，升级为 VIP 创作者后还能上传并销售自己的音乐。',
+            bodyEn: 'Welcome to FULLKIK, the space for DJs. Top up to buy tracks, or become a VIP creator to sell your own music.',
+            btn: '开始探索 Get started'
+        }).catch(() => {});
         res.json({ success: true, username, isNew: true, hasPassword: false, userToken: signUserToken(username) });
     } catch (e) {
         res.status(400).send('Google 验证失败：' + e.message);
@@ -1565,6 +1573,13 @@ app.put('/api/users/:username/change-username', async (req, res) => {
         await oldRef.delete();
         invalidateUserCaches(oldId);
         invalidateUserCaches(newId);
+        sendNotifyEmail(data, {
+            subject: '用户名已修改',
+            eyebrow: 'Username Changed', title: '用户名已修改',
+            bodyZh: '你的用户名已成功修改。若非本人操作，请立即联系客服。',
+            bodyEn: 'Your username was changed. If this was not you, contact support immediately.',
+            rows: [{ k: '新用户名 New username', v: htmlEscape(req.body.newUsername) }]
+        }).catch(() => {});
         // Re-issue the user token for the NEW username so the owner gate keeps matching.
         res.json({ success: true, username: req.body.newUsername, userToken: signUserToken(req.body.newUsername) });
     } catch (e) { 
@@ -1764,6 +1779,13 @@ app.post('/api/users/:username/bank', requireOwner, async (req, res) => {
         const bankAccount = { bankName, accountHolder, accountNumber, updatedAt: new Date().toISOString() };
         await userRef.update({ bankAccount });
         invalidateUserCaches(req.params.username);
+        sendNotifyEmail(doc.data(), {
+            subject: '银行卡绑定成功',
+            eyebrow: 'Bank Account Updated', title: '银行卡绑定成功',
+            bodyZh: '你的提现银行账户已成功更新。往后的提现将打款至以下账户。若非本人操作，请立即联系客服。',
+            bodyEn: 'Your payout bank account has been updated. If this was not you, contact support immediately.',
+            rows: [{ k: '银行 Bank', v: htmlEscape(bankName) }, { k: '账户 Account', v: maskAccountNumber(accountNumber) }, { k: '户名 Name', v: htmlEscape(accountHolder) }]
+        }).catch(() => {});
         // Return MASKED — the client keeps a masked copy in memory (full number lives only in the DB / admin view).
         res.json({ success: true, bankAccount: maskBankAccount(bankAccount) });
     } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
@@ -1816,6 +1838,13 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
         withdrawals.unshift(record);
         await userRef.update({ withdrawals });
         await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 紫钻（手续费 ${feePercent}% = ${fee}，实收 RM ${net}），等待审核`, { amount, fee, net }));
+        sendNotifyEmail(user, {
+            subject: `提现申请已提交 · ${amount} 紫钻`,
+            eyebrow: 'Withdrawal Requested', title: '提现申请已提交',
+            bodyZh: '我们已收到你的提现申请，系统将在 1–3 个工作日内审核处理，完成后会另行通知你。',
+            bodyEn: 'Your withdrawal request has been received and is under review.',
+            rows: [{ k: '提现金额 Amount', v: `${amount} 紫钻` }, { k: `手续费 Fee (${feePercent}%)`, v: `${fee} 紫钻` }, { k: '预计到账 Net payout', v: `RM ${net}` }]
+        }).catch(() => {});
         invalidateUserCaches(req.params.username);
         res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
     } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
@@ -1886,16 +1915,14 @@ app.delete('/api/coupons/:code', async (req, res) => {
 
 // Credit tokens for a CONFIRMED, paid top-up. Writes the same records the
 // profile/history UI already expects (topups[], orders collection, notification).
-async function creditTopupTokens(username, { tokens, price, currency, method, coupon, orderId }) {
-    const userRef = db.collection('users').doc(String(username).toLowerCase());
-    const doc = await userRef.get();
-    if (!doc.exists) throw new Error('User not found: ' + username);
-    const user = doc.data();
-    const grantTokens = Math.max(parseInt(tokens) || 0, 0);
-    const newTokens = (user.tokens || 0) + grantTokens;
-    const topups = Array.isArray(user.topups) ? user.topups : [];
-    topups.push({ orderId, amount: grantTokens, price, originalPrice: price, currency, paymentMethod: method, coupon: coupon || null, status: 'COMPLETED', date: new Date().toISOString() });
-    await userRef.update({ tokens: newTokens, topups });
+// Post-commit side effects for a CONFIRMED top-up. The token credit + idempotent
+// claim already happened ATOMICALLY in the webhook transaction; this only writes
+// the history/order records, fires the notification + receipt email, and busts
+// caches. Runs exactly once per order (the transaction guarantees a single winner).
+async function finalizeTopup(username, user, { grantTokens, price, currency, method, coupon, orderId }) {
+    // The token credit AND the topups[] history record are written atomically in
+    // the webhook transaction, so this helper only performs non-critical side
+    // effects (notification, order record, receipt email, cache busting).
     await addUserNotification(username, createNotification(
         'topup',
         `成功充值 - ${grantTokens}`,
@@ -1909,7 +1936,14 @@ async function creditTopupTokens(username, { tokens, price, currency, method, co
     });
     invalidateUserCaches(username);
     invalidateFinanceCaches();
-    return newTokens;
+    sendNotifyEmail(user, {
+        subject: `充值成功 · 已获得 ${grantTokens} 钻石`,
+        eyebrow: 'Top-up Confirmation', title: '充值成功', ref: `订单 Order · ${orderId}`,
+        bodyZh: `感谢你的支持。你已成功充值 ${currency} ${price}，${grantTokens} 颗钻石已即时到账。`,
+        bodyEn: 'Your top-up is confirmed and gems have been added to your wallet.',
+        rows: [{ k: '充值金额 Amount', v: `${currency} ${price}` }, { k: '获得钻石 Gems added', v: String(grantTokens) }],
+        btn: '查看钱包 View wallet'
+    }).catch(() => {});
 }
 
 // DISABLED: legacy instant top-up (was a simulation — credited with no payment).
@@ -2010,29 +2044,59 @@ app.post('/api/payment/hitpay/webhook', async (req, res) => {
         const reference = String(payload.reference_number || '');
         if (!reference) return res.status(200).send('no reference');
         const pendingRef = db.collection('pending_orders').doc(reference);
-        const pendingDoc = await pendingRef.get();
-        if (!pendingDoc.exists) return res.status(200).send('unknown reference');
-        const pending = pendingDoc.data();
-        if (pending.status === 'COMPLETED') return res.status(200).send('already processed');   // idempotent
 
-        await creditTopupTokens(pending.username, {
-            tokens: pending.tokens, price: pending.price, currency: pending.currency,
-            method: pending.method, coupon: pending.coupon, orderId: reference
+        // Atomically CLAIM the order and CREDIT tokens in a single transaction.
+        // HitPay webhooks are at-least-once (retried), and can arrive concurrently,
+        // so this is what guarantees EXACTLY-once crediting: only the first delivery
+        // flips status -> COMPLETED and increments tokens; any duplicate/retry reads
+        // COMPLETED and is ignored. (Previously a non-atomic check-then-credit let a
+        // duplicate webhook double-credit withdrawable diamonds.)
+        const outcome = await db.runTransaction(async (tx) => {
+            const pendingDoc = await tx.get(pendingRef);
+            if (!pendingDoc.exists) return { result: 'unknown reference' };
+            const pending = pendingDoc.data();
+            if (pending.status === 'COMPLETED') return { result: 'already processed' };
+            const userRef = db.collection('users').doc(String(pending.username).toLowerCase());
+            const userDoc = await tx.get(userRef);
+            if (!userDoc.exists) return { result: 'user not found' };
+            const grantTokens = Math.max(parseInt(pending.tokens) || 0, 0);
+            // Credit tokens AND append the top-up history record in ONE atomic write,
+            // so the first-topup detector (which reads user.topups) can never diverge
+            // from the credit and re-grant a first-topup bonus after a partial failure.
+            tx.update(userRef, {
+                tokens: admin.firestore.FieldValue.increment(grantTokens),
+                topups: admin.firestore.FieldValue.arrayUnion({
+                    orderId: reference, amount: grantTokens, price: pending.price, originalPrice: pending.price,
+                    currency: pending.currency, paymentMethod: pending.method, coupon: pending.coupon || null,
+                    status: 'COMPLETED', date: new Date().toISOString()
+                })
+            });
+            tx.update(pendingRef, { status: 'COMPLETED', paidAt: new Date().toISOString(), hitpayPaymentId: payload.payment_id || '' });
+            return { result: 'ok', pending, user: userDoc.data(), grantTokens };
         });
 
-        // Consume the coupon now that the payment is real.
-        if (pending.coupon && pending.coupon.code) {
-            const settings = await getGlobalSettings();
-            const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).map(c => {
-                if (normalizeCouponCode(c.code) !== normalizeCouponCode(pending.coupon.code)) return c;
-                const usedBy = Array.isArray(c.usedBy) ? c.usedBy : [];
-                return { ...c, usedBy: [{ username: pending.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
-            });
-            await db.collection('settings').doc('global').set({ coupons }, { merge: true });
-            invalidateSettingsCache();
-        }
+        if (outcome.result !== 'ok') return res.status(200).send(outcome.result);
 
-        await pendingRef.update({ status: 'COMPLETED', paidAt: new Date().toISOString(), hitpayPaymentId: payload.payment_id || '' });
+        const { pending, user, grantTokens } = outcome;
+        // Best-effort side effects (history/order records, notification, receipt
+        // email, coupon consume). A failure here NEVER re-credits — the credit +
+        // claim already committed exactly once in the transaction above.
+        try {
+            await finalizeTopup(pending.username, user, {
+                grantTokens, price: pending.price, currency: pending.currency,
+                method: pending.method, coupon: pending.coupon, orderId: reference
+            });
+            if (pending.coupon && pending.coupon.code) {
+                const settings = await getGlobalSettings();
+                const coupons = (Array.isArray(settings.coupons) ? settings.coupons : []).map(c => {
+                    if (normalizeCouponCode(c.code) !== normalizeCouponCode(pending.coupon.code)) return c;
+                    const usedBy = Array.isArray(c.usedBy) ? c.usedBy : [];
+                    return { ...c, usedBy: [{ username: pending.username, time: new Date().toISOString() }, ...usedBy], lastUsedAt: new Date().toISOString() };
+                });
+                await db.collection('settings').doc('global').set({ coupons }, { merge: true });
+                invalidateSettingsCache();
+            }
+        } catch (e) { console.error('topup finalize error:', e.message); }
         res.status(200).send('ok');
     } catch (e) {
         res.status(500).send(e.message);
@@ -2041,47 +2105,95 @@ app.post('/api/payment/hitpay/webhook', async (req, res) => {
 
 app.post('/api/users/:username/purchase', async (req, res) => {
     try {
-        const songDoc = await db.collection('songs').doc(req.body.songId).get(); if (!songDoc.exists) return res.status(404).send('Song not found');
-        const song = songDoc.data();
-        const userRef = db.collection('users').doc(req.params.username.toLowerCase()); const userDoc = await userRef.get();
-        const user = userDoc.data(); user.purchases = user.purchases || [];
-        if (user.purchases.find(p => p.songId === req.body.songId)) return res.status(400).send('Already purchased');
+        const songId = String(req.body.songId || '');
+        if (!songId) return res.status(400).send('Missing songId');
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const songRef = db.collection('songs').doc(songId);
 
-        const price = song.price !== undefined ? song.price : 10;
-        if (user.tokens >= price) {
-            user.tokens -= price;
+        // Atomic: guard against double-purchase + double-credit under concurrent
+        // submits (e.g. a double-clicked Buy). Debits the buyer, records the
+        // purchase, bumps downloads and credits the uploader's purple gems in ONE
+        // transaction — Firestore retries on contention so a duplicate submit re-reads
+        // the now-present purchase and is rejected. (Previously non-atomic: a double
+        // click credited the uploader's withdrawable purple gems twice for one sale.)
+        const outcome = await db.runTransaction(async (tx) => {
+            const songDoc = await tx.get(songRef);
+            if (!songDoc.exists) return { error: [404, 'Song not found'] };
+            const song = songDoc.data();
+            const userDoc = await tx.get(userRef);
+            if (!userDoc.exists) return { error: [404, 'User not found'] };
+            // Read the uploader doc up-front (Firestore requires all reads before any
+            // write). If the uploader account is gone (e.g. renamed, orphaning the
+            // song), we SKIP the purple-gem credit rather than aborting the whole
+            // purchase — matching the original fail-open behavior so the song stays buyable.
+            const isSeller = song.uploader && String(song.uploader).toUpperCase() !== 'FULLKIK';
+            const uploaderRef = isSeller ? db.collection('users').doc(String(song.uploader).toLowerCase()) : null;
+            const uploaderDoc = uploaderRef ? await tx.get(uploaderRef) : null;
+            const user = userDoc.data();
+            const purchases = Array.isArray(user.purchases) ? user.purchases : [];
+            if (purchases.find(p => p.songId === songId)) return { error: [400, 'Already purchased'] };
+            const price = song.price !== undefined ? song.price : 10;
+            if ((user.tokens || 0) < price) return { error: [400, 'Insufficient tokens'] };
             const purchaseId = Math.random().toString(36).substr(2, 10).toUpperCase();
-            
-            user.purchases.push({ 
-                songId: req.body.songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl, 
-                uploader: song.uploader || 'FULLKIK', 
-                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString() 
+            const purchaseRecord = {
+                songId, songName: song.filename, filepath: song.filepath, coverUrl: song.coverUrl,
+                uploader: song.uploader || 'FULLKIK',
+                tokensSpent: price, purchaseId, purchaseTime: new Date().toISOString()
+            };
+            tx.update(userRef, {
+                tokens: admin.firestore.FieldValue.increment(-price),
+                purchases: admin.firestore.FieldValue.arrayUnion(purchaseRecord)
             });
-            
-            await userRef.update({ tokens: user.tokens, purchases: user.purchases });
-            await db.collection('songs').doc(req.body.songId).update({ downloads: admin.firestore.FieldValue.increment(1) });
-            if(song.uploader && String(song.uploader).toUpperCase() !== 'FULLKIK') {
-                await addUserNotification(song.uploader, createNotification(
-                    'sale',
-                    `歌曲售出 - ${song.filename}`,
-                    `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 紫钻`,
-                    { songId: req.body.songId, buyer: req.params.username, amount: price }
-                ));
+            tx.update(songRef, { downloads: admin.firestore.FieldValue.increment(1) });
+            if (uploaderRef && uploaderDoc.exists) {
                 // Producer earns Purple Gems 1:1 with the Blue Gems spent on their song.
-                try { await db.collection('users').doc(String(song.uploader).toLowerCase()).update({ purpleGems: admin.firestore.FieldValue.increment(price) }); } catch(e) { console.error('purpleGems credit failed:', e.message); }
+                tx.update(uploaderRef, { purpleGems: admin.firestore.FieldValue.increment(price) });
             }
+            return { ok: true, song, price, purchaseId, buyer: user, newTokens: (user.tokens || 0) - price, purchases: [...purchases, purchaseRecord] };
+        });
 
-            await db.collection('transactions').add({
-                buyer: req.params.username, email: user.email || '-',
-                songName: song.filename, uploader: song.uploader || 'FULLKIK',
-                tokens: price, time: new Date().toISOString()
-            });
+        if (outcome.error) return res.status(outcome.error[0]).send(outcome.error[1]);
 
-            invalidateUserCaches(req.params.username);
-            invalidateUserCaches(song.uploader);
-            invalidateCachePrefix('transactions:');
-            res.json({ success: true, tokens: user.tokens, purchases: user.purchases });
-        } else res.status(400).send('Insufficient tokens');
+        const { song, price, purchaseId, buyer } = outcome;
+        const isSeller = song.uploader && String(song.uploader).toUpperCase() !== 'FULLKIK';
+        // Post-commit side effects (run once — the transaction guarantees a single commit).
+        await db.collection('transactions').add({
+            buyer: req.params.username, email: buyer.email || '-',
+            songName: song.filename, uploader: song.uploader || 'FULLKIK',
+            tokens: price, time: new Date().toISOString()
+        });
+        if (isSeller) {
+            await addUserNotification(song.uploader, createNotification(
+                'sale',
+                `歌曲售出 - ${song.filename}`,
+                `${req.params.username} 购买了你的歌曲，累计收入增加 ${price} 紫钻`,
+                { songId, buyer: req.params.username, amount: price }
+            ));
+        }
+        // Buyer receipt + seller sale notification (branded emails; fire-and-forget).
+        sendNotifyEmail(buyer, {
+            subject: `购买成功 · ${song.filename}`,
+            eyebrow: 'Purchase Receipt', title: '购买成功', ref: `订单 Order · ${purchaseId}`,
+            bodyZh: `感谢你的购买。你已成功购买歌曲《${htmlEscape(song.filename)}》，现在可在「我的音乐」中收听与下载。`,
+            bodyEn: 'Thank you for your purchase. The track is now available in your library.',
+            rows: [{ k: '歌曲 Track', v: htmlEscape(song.filename) }, { k: '创作者 Creator', v: htmlEscape(song.uploader || 'FULLKIK') }, { k: '支付 Paid', v: `${price} 钻石` }],
+            btn: '前往我的音乐 Go to library'
+        }).catch(() => {});
+        if (isSeller) {
+            sendNotifyEmail(song.uploader, {
+                subject: `你有一笔新收益 · ${song.filename}`,
+                eyebrow: 'New Sale', title: '你有一笔新收益',
+                bodyZh: `好消息，有人购买了你的作品《${htmlEscape(song.filename)}》。本次收益已计入你的紫钻余额，可随时申请提现。`,
+                bodyEn: 'Someone just bought your track. Your earnings have been added to your purple gem balance.',
+                rows: [{ k: '歌曲 Track', v: htmlEscape(song.filename) }, { k: '本次收益 Earned', v: `${price} 紫钻` }],
+                btn: '查看收益 View earnings'
+            }).catch(() => {});
+        }
+
+        invalidateUserCaches(req.params.username);
+        if (song.uploader) invalidateUserCaches(song.uploader);
+        invalidateCachePrefix('transactions:');
+        res.json({ success: true, tokens: outcome.newTokens, purchases: outcome.purchases });
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -2289,6 +2401,14 @@ app.put('/api/users/:username/vip', async (req, res) => {
 
         await db.collection('users').doc(req.params.username.toLowerCase()).update({ isVip: true, role: 'VIP', djName: djName, wechat: wechat, wechatPublic: true, vipActivatedAt: new Date().toISOString() });
         invalidateUserCaches(req.params.username);
+        sendNotifyEmail(req.params.username, {
+            subject: 'VIP 创作者已开通',
+            eyebrow: 'VIP Creator Unlocked', title: '升级为 VIP 创作者',
+            bodyZh: '恭喜你成为 FULLKIK VIP 创作者。你现在可以上传并销售你的音乐作品，赚取紫钻收益。',
+            bodyEn: 'You are now a VIP creator and can upload and sell your music.',
+            rows: [{ k: '会员等级 Membership', v: 'VIP 创作者' }, { k: '开通权限 Access', v: '上传 · 销售 · 提现' }],
+            btn: '开始上传 Start uploading'
+        }).catch(() => {});
         res.send('VIP Activated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -2313,6 +2433,13 @@ app.put('/api/users/:username/update-password', async (req, res) => {
         if (!verifyPassword(oldPassword, doc.data().password)) return res.status(400).send('Incorrect current password');
         await userRef.update({ password: hashPassword(String(newPassword)) });
         invalidateUserCaches(req.params.username);
+        sendNotifyEmail(doc.data(), {
+            subject: '密码修改成功',
+            eyebrow: 'Password Changed', title: '密码修改成功',
+            bodyZh: '你的账户密码已成功修改。若非本人操作，请立即重置密码并联系客服。',
+            bodyEn: 'Your password was changed successfully. If this was not you, reset it and contact support immediately.',
+            rows: [{ k: '操作 Action', v: '密码已更新 Updated' }]
+        }).catch(() => {});
         res.send('Password updated');
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -2421,11 +2548,75 @@ function getSmtpTransporter() {
     };
 }
 
+// Send via Resend's HTTP API (port 443 — works on Render's free tier, where the
+// SMTP ports 25/465/587 are blocked). Returns true only on a 2xx response.
+// NOTE: with no verified domain, Resend only delivers to the account owner's
+// address. Verify fullkik.com at resend.com/domains + set MAIL_FROM to a
+// fullkik.com sender to deliver to real users.
+async function sendViaResend(to, subject, html) {
+    const key = String(process.env.RESEND_API_KEY || '').trim();
+    if(!key) return false;
+    const from = String(process.env.MAIL_FROM || 'FULLKIK <onboarding@resend.dev>').trim();
+    const r = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to: [to], subject, html })
+    });
+    if(!r.ok) { const t = await r.text().catch(() => ''); console.error('Resend send failed:', r.status, t.slice(0, 200)); return false; }
+    return true;
+}
+
 async function sendUserEmail(to, subject, html) {
+    // Prefer Resend's HTTP API (works on Render free tier); fall back to SMTP.
+    try { if(await sendViaResend(to, subject, html)) return true; }
+    catch(e) { console.error('Resend error:', e.message); }
     const t = getSmtpTransporter();
     if(!t) return false;
     await t.transporter.sendMail({ from: t.from, to, subject, html });
     return true;
+}
+
+// ---- Branded transactional-notification emails (professional, no emoji) ----
+// Build the FULLKIK notification HTML: brand header, status eyebrow, title,
+// optional reference line, bilingual letter body, optional detail rows, CTA.
+function fkNotifyHtml({ eyebrow, title, ref, greet, bodyZh, bodyEn, rows, btn, btnUrl }) {
+    const enLine = bodyEn ? `<br><span style="color:#8a8a92;font-size:13px;">${bodyEn}</span>` : '';
+    const dear = greet ? `Dear ${htmlEscape(greet)}，<br>` : '';
+    const base = String(process.env.PUBLIC_BASE_URL || 'https://fullkik.com').trim().replace(/\/+$/, '');
+    const rowsHtml = (rows && rows.length)
+        ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0 2px;border-collapse:collapse;background:#f7f7f8;border:1px solid #ececef;border-radius:10px;">`
+          + rows.map((r, i) => `<tr><td style="padding:12px 18px;${i ? 'border-top:1px solid #ececef;' : ''}color:#6b7280;font-size:13px;">${r.k}</td><td style="padding:12px 18px;${i ? 'border-top:1px solid #ececef;' : ''}color:#18181b;font-size:13.5px;font-weight:600;text-align:right;">${r.v}</td></tr>`).join('')
+          + `</table>`
+        : '';
+    const btnHtml = btn ? `<a href="${btnUrl || base}" style="display:inline-block;margin:26px 0 2px;background:#7a1717;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 30px;border-radius:8px;letter-spacing:.3px;">${btn}</a>` : '';
+    const refHtml = ref ? `<div style="color:#9ca3af;font-size:12px;margin-top:7px;letter-spacing:.3px;">${htmlEscape(ref)}</div>` : '';
+    return `<div style="background:#f4f4f5;padding:40px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
+      + `<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e7;">`
+      + `<div style="height:3px;background:#7a1717;"></div>`
+      + `<div style="padding:30px 40px 22px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
+      + `<div style="padding:30px 40px 34px;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">${eyebrow}</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">${title}</div>${refHtml}<p style="color:#3f3f46;font-size:14.5px;line-height:1.85;margin:20px 0 0;">${dear}${bodyZh}${enLine}</p>${rowsHtml}${btnHtml}</div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `</div></div>`;
+}
+
+// Fire-and-forget branded notification. Accepts a username, an email string, or a
+// user-data object. NEVER throws — a mail failure must not break the transaction.
+async function sendNotifyEmail(userOrEmail, tpl) {
+    try {
+        if(!db) return false;
+        let email = null, greet = tpl.greet || '';
+        if(typeof userOrEmail === 'string' && userOrEmail.includes('@')) {
+            email = userOrEmail.trim().toLowerCase();
+        } else if(typeof userOrEmail === 'string') {
+            const d = await db.collection('users').doc(userOrEmail.toLowerCase()).get();
+            if(d.exists) { const dd = d.data(); email = userEmailOf(dd); greet = greet || dd.username || userOrEmail; }
+        } else if(userOrEmail && typeof userOrEmail === 'object') {
+            email = userEmailOf(userOrEmail); greet = greet || userOrEmail.username || '';
+        }
+        if(!email) return false;
+        const html = fkNotifyHtml({ ...tpl, greet });
+        return await sendUserEmail(email, tpl.subject, html);
+    } catch(e) { console.error('sendNotifyEmail failed:', e.message); return false; }
 }
 
 // Emails a one-time verification code. Returns true ONLY if actually delivered
@@ -2462,7 +2653,7 @@ async function maybeSendVerifyReminder(userData, userRef) {
         const html = `
             <div style="font-family:Arial,'Microsoft YaHei',sans-serif;background:#120606;color:#fff;padding:24px;border-radius:14px;max-width:520px;">
                 <h2 style="margin:0 0 12px;">FULLKIK · 请绑定真实 Gmail</h2>
-                <p style="color:#d8c4c4;line-height:1.7;">你好 <strong style="color:#fff;">${uname}</strong>，你的账号还没有绑定已验证的真实 Gmail。绑定后可以用 Google 一键登录，账号也更安全。</p>
+                <p style="color:#d8c4c4;line-height:1.7;">你好 <strong style="color:#fff;">${htmlEscape(uname)}</strong>，你的账号还没有绑定已验证的真实 Gmail。绑定后可以用 Google 一键登录，账号也更安全。</p>
                 <p style="margin:20px 0;"><a href="${base}/main.page" style="display:inline-block;background:linear-gradient(135deg,#7e1c38,#4a0f22);color:#fff;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;">前往个人中心绑定 Gmail →</a></p>
                 <p style="color:#a99595;font-size:12px;">Please link a verified Gmail in your FULLKIK profile. This is a one-time reminder.</p>
             </div>`;
@@ -2916,6 +3107,13 @@ app.post('/api/orders/:id/refund', async (req, res) => {
                 `退款原因：${reason}。账户扣回 ${Number(order.amount || 0)} 钻石。`,
                 { orderId: order.orderId || req.params.id, amount: Number(order.amount || 0), reason }
             ));
+            sendNotifyEmail(user, {
+                subject: `退款已处理 · 订单 ${order.orderId || req.params.id}`,
+                eyebrow: 'Refund Processed', title: '退款已处理', ref: `订单 Order · ${order.orderId || req.params.id}`,
+                bodyZh: `你的充值订单已退款。相应款项将退回原支付渠道，账户中对应的 ${Number(order.amount || 0)} 钻石已扣回。`,
+                bodyEn: 'Your top-up order has been refunded. The amount returns to your original payment method.',
+                rows: [{ k: '退款金额 Refund', v: `${order.currency || 'RM'} ${Number(order.price || 0)}` }, { k: '扣回钻石 Gems removed', v: String(Number(order.amount || 0)) }, { k: '订单 Order', v: htmlEscape(String(order.orderId || req.params.id)) }]
+            }).catch(() => {});
         }
 
         const refundedAt = new Date().toISOString();
@@ -3245,6 +3443,23 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
             `提现 ${withdrawals[index].amount} 紫钻${withdrawals[index].net != null ? `（实收 RM ${withdrawals[index].net}）` : ''}状态更新为 ${nextStatus}${withdrawals[index].payoutRef ? `（转账凭证 / Ref: ${withdrawals[index].payoutRef}）` : ''}${withdrawals[index].adminNote ? `：${withdrawals[index].adminNote}` : ''}`,
             { withdrawalId: req.params.withdrawalId, status: nextStatus, amount: withdrawals[index].amount, net: withdrawals[index].net, payoutRef: withdrawals[index].payoutRef }
         ));
+        // Email the DJ only for the two terminal outcomes: paid or declined.
+        if(nextStatus === 'COMPLETED' || nextStatus === 'REJECTED') {
+            const w = withdrawals[index];
+            sendNotifyEmail(user, nextStatus === 'COMPLETED' ? {
+                subject: `提现已完成 · RM ${w.net} 已到账`,
+                eyebrow: 'Withdrawal Completed', title: '提现已完成',
+                bodyZh: `你的提现已完成打款，RM ${w.net} 已转入你绑定的银行账户，请注意查收。`,
+                bodyEn: 'Your payout has been sent to your bank account.',
+                rows: [{ k: '实收金额 Net paid', v: `RM ${w.net}` }].concat(w.payoutRef ? [{ k: '转账凭证 Reference', v: htmlEscape(String(w.payoutRef)) }] : []).concat([{ k: '状态 Status', v: '已完成 Paid' }])
+            } : {
+                subject: '提现申请未通过',
+                eyebrow: 'Withdrawal Declined', title: '提现申请未通过',
+                bodyZh: '很抱歉，你的提现申请未能通过审核，相应的紫钻已退回你的账户。如有疑问请联系客服。',
+                bodyEn: 'Your withdrawal request was declined. The purple gems have been returned to your account.',
+                rows: [{ k: '提现金额 Amount', v: `${w.amount} 紫钻` }, { k: '状态 Status', v: '未通过 Rejected' }].concat(w.adminNote ? [{ k: '说明 Note', v: htmlEscape(String(w.adminNote)) }] : [])
+            }).catch(() => {});
+        }
         await logAdminAction(`Withdrawal ${nextStatus}: ${user.username || req.params.username}`, {
             module: '财务',
             action: '提现审批',
@@ -3401,6 +3616,13 @@ async function saveSongData(fileBuffer, originalName, reqBody, authCtx) {
             '歌曲已进入待审队列，请等待管理员审核',
             { songId: docRef.id, status: newSong.status }
         ));
+        sendNotifyEmail(newSong.uploader, {
+            subject: '歌曲上传成功 · 等待审核',
+            eyebrow: 'Upload Received — Pending Review', title: '上传成功，等待审核',
+            bodyZh: `你的歌曲《${htmlEscape(newSong.filename)}》已上传成功，已进入审核队列。审核通常需要 1–3 天，通过后会立即通知你。`,
+            bodyEn: 'Your song has been uploaded and is pending review.',
+            rows: [{ k: '歌曲 Track', v: htmlEscape(newSong.filename) }, { k: '状态 Status', v: '审核中 Pending' }]
+        }).catch(() => {});
     }
     if(newSong.status === 'APPROVED') {
         await notifyFollowersOfSong(docRef.id, newSong);
@@ -3505,6 +3727,14 @@ app.put('/api/songs/:id/settings', async (req, res) => {
                         '歌曲审核通过，已发布到 FULLKIK',
                         { songId: req.params.id, status: 'APPROVED' }
                     ));
+                    sendNotifyEmail(oldSong.uploader, {
+                        subject: `歌曲已通过审核 · ${oldSong.filename || req.params.id}`,
+                        eyebrow: 'Song Approved', title: '歌曲已通过审核',
+                        bodyZh: `你的歌曲《${htmlEscape(oldSong.filename || String(req.params.id))}》已通过审核，现已正式上架发布。`,
+                        bodyEn: 'Your song is now live on FULLKIK.',
+                        rows: [{ k: '歌曲 Track', v: htmlEscape(oldSong.filename || String(req.params.id)) }, { k: '状态 Status', v: '已上架 Live' }],
+                        btn: '查看歌曲 View song'
+                    }).catch(() => {});
                 }
                 if(req.body.status === 'REJECTED') {
                     await addUserNotification(oldSong.uploader, createNotification(
@@ -3513,6 +3743,14 @@ app.put('/api/songs/:id/settings', async (req, res) => {
                         req.body.rejectReason || '未符合规范',
                         { songId: req.params.id, status: 'REJECTED', reason: req.body.rejectReason || '未符合规范' }
                     ));
+                    sendNotifyEmail(oldSong.uploader, {
+                        subject: `歌曲未通过审核 · ${oldSong.filename || req.params.id}`,
+                        eyebrow: 'Song Not Approved', title: '歌曲未通过审核',
+                        bodyZh: '很抱歉，你的歌曲本次未通过审核。请根据以下原因调整后重新上传。',
+                        bodyEn: 'Unfortunately your song was not approved this time. Please review the reason and re-upload.',
+                        rows: [{ k: '歌曲 Track', v: htmlEscape(oldSong.filename || String(req.params.id)) }, { k: '原因 Reason', v: htmlEscape(req.body.rejectReason || '未符合规范') }, { k: '状态 Status', v: '未通过 Rejected' }],
+                        btn: '重新上传 Re-upload'
+                    }).catch(() => {});
                 }
             }
             if(req.body.status === 'APPROVED') {
