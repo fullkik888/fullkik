@@ -2014,13 +2014,34 @@
 
     function updateFeePreview() {
         const box = document.getElementById('withdrawFeePreview');
-        if(!box) return;
+        const input = document.getElementById('withdrawAmountInput');
+        const submitBtn = document.getElementById('withdrawSubmitBtn');
+        if(!box || !input) return;
         const feePercent = getWithdrawFeePercent();
-        const amount = parseInt(document.getElementById('withdrawAmountInput').value);
+        const balance = parseInt(withdrawalSummary.balance) || 0;
+        const amount = parseInt(input.value);
+        // Toggle the "over available balance" error state (red input + disabled submit).
+        const setOverLimit = (on) => {
+            input.style.borderColor = on ? '#ff453a' : '';
+            input.style.color = on ? '#ff453a' : '';
+            input.style.boxShadow = on ? '0 0 0 2px rgba(255,69,58,0.25)' : '';
+            if(submitBtn) {
+                submitBtn.disabled = on;
+                submitBtn.style.opacity = on ? '0.45' : '';
+                submitBtn.style.cursor = on ? 'not-allowed' : '';
+            }
+        };
         if(Number.isNaN(amount) || amount < 1) {
+            setOverLimit(false);
             box.innerHTML = `1 紫钻 = RM 1 · 提现手续费 <strong style="color:#c084fc;">${feePercent}%</strong>，从提现金额中扣除。`;
             return;
         }
+        if(amount > balance) {
+            setOverLimit(true);
+            box.innerHTML = `<strong style="color:#ff453a;">⚠️ 超过可提成余额（最多 ${balance} 紫钻）· Exceeds available balance</strong>`;
+            return;
+        }
+        setOverLimit(false);
         const fee = round2(amount * feePercent / 100);
         const net = round2(amount - fee);
         box.innerHTML = `提现 <strong style="color:#c084fc;"><img src="/purple-gem.png" class="pgem" alt="🟣" onerror="this.replaceWith('🟣')"> ${amount}</strong> · 手续费 ${feePercent}% = <strong>-${fee}</strong> · 实际到账 <strong style="color:var(--success);">RM ${net}</strong>`;
