@@ -134,10 +134,31 @@
         <div class="input-group"><input type="text" id="loginContact" placeholder="Username, Email or Phone" data-placeholder="contactPH"></div>
         <div class="input-group password-wrap"><input type="password" id="loginPass" placeholder="Password" data-placeholder="passPH"><button class="password-toggle" onclick="togglePassword('loginPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
         <button class="btn-primary" onclick="login()" data-i18n="continueBtn">Continue</button>
+        <div style="margin-top:10px;"><span class="toggle-link" onclick="openOtpLogin()">用邮箱验证码登录 · Email code login</span></div>
         <div><span class="toggle-link" onclick="switchView('forgotView')" data-i18n="forgotLnk">Forgot password?</span><br><span style="color: var(--text-muted); font-size: 14px;" data-i18n="noAcc">Don't have an account? </span><span class="toggle-link" onclick="switchView('registerView')" data-i18n="signupLnk">Sign up</span></div>
         <div style="margin-top: 20px;"><a href="/main.page" style="color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500;" data-i18n="guestLnk">Continue as Guest ➔</a></div>
         <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px; color:var(--text-muted); font-size:12px;"><span style="flex:1; height:1px; background:var(--border-color);"></span><span data-i18n="orSep">或 · OR</span><span style="flex:1; height:1px; background:var(--border-color);"></span></div>
         <div class="gbtn-center"><div id="googleBtnLogin"></div></div>
+    </div>
+
+    <div id="otpLoginView" class="view-section">
+        <h2>邮箱验证码登录</h2>
+        <p>输入用户名或邮箱，验证码将发送到你绑定的邮箱。<br><span style="color:var(--text-muted);">Log in with a code sent to your email</span></p>
+        <div id="otpLoginStep1">
+            <div class="input-group"><input type="text" id="otpLoginContact" placeholder="用户名或邮箱 / Username or Email"></div>
+            <button class="btn-primary" id="otpLoginSendBtn" onclick="sendLoginOtp()">发送验证码 / Send code</button>
+        </div>
+        <div id="otpLoginStep2" style="display:none;">
+            <div class="otp-panel">
+                <div style="color:var(--text-muted); font-size:13px;">验证码已发送至 / Code sent to</div>
+                <div class="otp-phone" id="otpLoginEmail">—</div>
+                <input type="text" inputmode="numeric" maxlength="6" id="otpLoginCode" class="otp-code-input" placeholder="______" style="width:100%; box-sizing:border-box; margin-top:12px;">
+                <div class="otp-hint">请输入 6 位验证码，5 分钟内有效 / 6-digit code, valid 5 min.</div>
+                <div class="otp-tools"><span class="toggle-link" id="otpLoginResend" onclick="sendLoginOtp(true)">重新发送 / Resend</span></div>
+            </div>
+            <button class="btn-primary" id="otpLoginVerifyBtn" onclick="verifyLoginOtp()">登录 / Log in</button>
+        </div>
+        <div style="margin-top:20px;"><span class="toggle-link" onclick="switchView('loginView')">返回登录 / Back to Sign in</span></div>
     </div>
 
     <div id="registerView" class="view-section">
@@ -297,7 +318,62 @@
         if(res.ok) { saveUserSession(await res.json()); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/main.page'; }
         else { const err = await res.text(); showToast(err.includes('Not found') ? "Sorry Something Went Wrong." : err, true); }
     }
-    
+
+    // ---- Email-OTP login (passwordless — code goes to the account's own email) ----
+    let _otpLoginContact = '', _otpLoginCooldown = 0, _otpLoginTimer = null;
+    function openOtpLogin() {
+        const c = (document.getElementById('loginContact').value || '').trim();
+        document.getElementById('otpLoginStep1').style.display = '';
+        document.getElementById('otpLoginStep2').style.display = 'none';
+        document.getElementById('otpLoginContact').value = c;
+        document.getElementById('otpLoginCode').value = '';
+        switchView('otpLoginView');
+        document.getElementById('otpLoginContact').focus();
+    }
+    async function sendLoginOtp(isResend) {
+        if (isResend && _otpLoginCooldown > 0) return;
+        const contact = (document.getElementById('otpLoginContact').value || '').trim();
+        if (!contact) return showToast('请输入用户名或邮箱 / Enter username or email', true);
+        const btn = document.getElementById('otpLoginSendBtn');
+        if (btn && !isResend) { btn.disabled = true; btn.innerText = '发送中… / Sending…'; }
+        try {
+            const res = await fetch(`${API_URL}/login/otp/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact }) });
+            if (res.ok) {
+                const d = await res.json();
+                _otpLoginContact = contact;
+                document.getElementById('otpLoginEmail').innerText = d.email || '';
+                document.getElementById('otpLoginStep1').style.display = 'none';
+                document.getElementById('otpLoginStep2').style.display = '';
+                document.getElementById('otpLoginCode').focus();
+                startOtpLoginCooldown(60);
+                showToast('验证码已发送 / Code sent');
+            } else {
+                showToast(await res.text() || '发送失败 / Failed', true);
+            }
+        } catch (e) { showToast('网络错误 / Network error', true); }
+        finally { if (btn && !isResend) { btn.disabled = false; btn.innerText = '发送验证码 / Send code'; } }
+    }
+    function startOtpLoginCooldown(sec) {
+        _otpLoginCooldown = sec;
+        const el = document.getElementById('otpLoginResend');
+        if (_otpLoginTimer) clearInterval(_otpLoginTimer);
+        const upd = () => { if (el) el.innerText = _otpLoginCooldown > 0 ? `重新发送 (${_otpLoginCooldown}s)` : '重新发送 / Resend'; };
+        upd();
+        _otpLoginTimer = setInterval(() => { _otpLoginCooldown--; if (_otpLoginCooldown <= 0) clearInterval(_otpLoginTimer); upd(); }, 1000);
+    }
+    async function verifyLoginOtp() {
+        const code = (document.getElementById('otpLoginCode').value || '').trim();
+        if (!/^\d{6}$/.test(code)) return showToast('请输入 6 位验证码 / Enter 6-digit code', true);
+        const btn = document.getElementById('otpLoginVerifyBtn');
+        if (btn) { btn.disabled = true; btn.innerText = '登录中… / Signing in…'; }
+        try {
+            const res = await fetch(`${API_URL}/login/otp/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact: _otpLoginContact, code }) });
+            if (res.ok) { saveUserSession(await res.json()); sessionStorage.setItem('fullkikShowWelcome', '1'); window.location.href = '/main.page'; }
+            else showToast(await res.text() || '验证失败 / Failed', true);
+        } catch (e) { showToast('网络错误 / Network error', true); }
+        finally { if (btn) { btn.disabled = false; btn.innerText = '登录 / Log in'; } }
+    }
+
     function goHomeNow() { window.location.href = '/main.page'; }
     let _successTimer = null;
     function showRegisterSuccess(username) {

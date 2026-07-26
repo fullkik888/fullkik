@@ -1364,6 +1364,117 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// ---- Passwordless login via email OTP (handy for Google sign-ups with no password) ----
+// The one-time code is ALWAYS sent to the account's OWN stored email (never a
+// caller-supplied address), so knowing a username can't be used to hijack the
+// account. Rate-limited (60s), attempt-capped (5), 5-minute expiry, and the code
+// is never returned in the response (only a masked email).
+function maskLoginEmail(e) {
+    const s = String(e || '');
+    const at = s.indexOf('@');
+    if (at < 1) return s;
+    return s.slice(0, Math.min(2, at)) + '***' + s.slice(at);
+}
+
+async function resolveLoginUser(contact) {
+    const key = String(contact || '').trim();
+    if (!key) return null;
+    const lower = key.toLowerCase();
+    let uDoc = await db.collection('users').doc(lower).get();
+    if (!uDoc.exists) {
+        const lookups = [['username', lower], ['email', lower], ['contact', key], ['contact', lower], ['phone', key]];
+        for (const [field, val] of lookups) {
+            const q = await db.collection('users').where(field, '==', val).limit(1).get();
+            if (!q.empty) { uDoc = q.docs[0]; break; }
+        }
+    }
+    return (uDoc && uDoc.exists) ? uDoc : null;
+}
+
+async function sendLoginOtpEmail(to, code, username) {
+    const subject = 'FULLKIK 登录验证码 / Login code: ' + code;
+    const html = `<div style="background:#f4f4f5;padding:40px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
+      + `<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e7;">`
+      + `<div style="height:3px;background:#7a1717;"></div>`
+      + `<div style="padding:30px 40px 20px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
+      + `<div style="padding:30px 40px 32px;text-align:center;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Login Verification</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">登录验证码</div>`
+      + `<p style="color:#3f3f46;font-size:14.5px;line-height:1.8;margin:16px 0 0;">Dear ${htmlEscape(username || '')}，请使用以下验证码登录 FULLKIK：<br><span style="color:#8a8a92;font-size:13px;">Use this code to sign in to FULLKIK.</span></p>`
+      + `<div style="margin:20px auto 4px;background:#f7f7f8;border:1px solid #ececef;border-radius:12px;padding:16px;font-size:34px;font-weight:800;letter-spacing:10px;color:#18181b;">${code}</div>`
+      + `<p style="color:#8a8a92;font-size:12.5px;line-height:1.7;margin:14px 0 0;">验证码 5 分钟内有效，请勿告诉他人。若非本人操作请忽略。<br>Valid for 5 minutes. Never share this code.</p></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `</div></div>`;
+    try { return await sendUserEmail(to, subject, html); }
+    catch (e) { console.error('login OTP email failed:', e.message); return false; }
+}
+
+app.post('/api/login/otp/send', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        const uDoc = await resolveLoginUser(req.body.contact);
+        if (!uDoc) return res.status(400).send('账号不存在 / Account not found');
+        const userData = uDoc.data();
+        if (userData.status === 'BANNED') return res.status(403).send(`Account Banned: ${userData.banReason || 'Violation of terms'}`);
+        const email = userEmailOf(userData);
+        if (!email) return res.status(400).send('此账号未绑定邮箱，请用密码登录 / No email on file — use password');
+
+        // Rate limit: one code per 60s per account (two equality filters, no orderBy → no composite index needed).
+        const recent = await db.collection('otp_logs').where('userId', '==', uDoc.id).where('type', '==', 'login').get();
+        const lastTs = recent.docs.reduce((mx, d) => Math.max(mx, new Date(d.data().timestamp || 0).getTime()), 0);
+        if (lastTs && (Date.now() - lastTs) < 60 * 1000) return res.status(429).send('请求过于频繁，请 1 分钟后再试 / Please wait a minute');
+
+        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const now = new Date();
+        const docRef = await db.collection('otp_logs').add({
+            phone: email, code, type: 'login', channel: 'email',
+            ip: getClientIp(req), userId: uDoc.id, errors: 0, status: 'ACTIVE',
+            timestamp: now.toISOString(), expiresAt: new Date(now.getTime() + 5 * 60 * 1000).toISOString(),
+            consumed: false
+        });
+        const delivered = await sendLoginOtpEmail(email, code, userData.username || uDoc.id);
+        if (!delivered) { await docRef.delete().catch(() => {}); return res.status(502).send('验证码发送失败，请稍后再试 / Failed to send code'); }
+        res.json({ success: true, email: maskLoginEmail(email) });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/login/otp/verify', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        const code = String(req.body.code || '').trim();
+        if (!/^\d{6}$/.test(code)) return res.status(400).send('验证码格式不正确 / Invalid code');
+        const uDoc = await resolveLoginUser(req.body.contact);
+        if (!uDoc) return res.status(400).send('账号不存在 / Account not found');
+        const userData = uDoc.data();
+        if (userData.status === 'BANNED') return res.status(403).send(`Account Banned: ${userData.banReason || 'Violation of terms'}`);
+
+        const snap = await db.collection('otp_logs').where('userId', '==', uDoc.id).where('type', '==', 'login').get();
+        const rows = snap.docs.map(d => ({ ref: d.ref, ...d.data() })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const active = rows.find(r => !r.consumed && r.status === 'ACTIVE');
+        if (!active) return res.status(400).send('验证码不存在或已过期，请重新获取 / No active code');
+        if (active.expiresAt && new Date(active.expiresAt).getTime() < Date.now()) {
+            await active.ref.update({ status: 'EXPIRED' });
+            return res.status(400).send('验证码已过期 / Code expired');
+        }
+        if ((parseInt(active.errors) || 0) >= 5) {
+            await active.ref.update({ status: 'LOCKED', consumed: true });
+            return res.status(400).send('错误次数过多，请重新获取验证码 / Too many attempts');
+        }
+        if (String(active.code) !== code) {
+            await active.ref.update({ errors: (parseInt(active.errors) || 0) + 1 });
+            return res.status(400).send('验证码错误 / Incorrect code');
+        }
+        // Success — consume the code and log the user in (same session shape as /api/login).
+        await active.ref.update({ status: 'USED', consumed: true, consumedAt: new Date().toISOString() });
+        const loginHistory = [
+            { time: new Date().toISOString(), ip: getClientIp(req), device: req.get('user-agent') || '-', via: 'email-otp' },
+            ...((userData.loginHistory || []).filter(Boolean))
+        ].slice(0, 20);
+        await uDoc.ref.update({ loginHistory });
+        invalidateUserCaches(userData.username || uDoc.id);
+        setCleanShareSession(req, res);
+        res.json({ success: true, username: userData.username || uDoc.id, userToken: signUserToken(userData.username || uDoc.id) });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
 // Public, non-secret config the frontend needs (e.g. the Google client id).
 app.get('/api/public-config', (req, res) => {
     res.json({ googleClientId: GOOGLE_CLIENT_ID });
