@@ -2827,7 +2827,7 @@
             }
             buildDashboardStats(); renderGenres(); renderFeaturedGenreSettings(); renderTopNavGenreSettings(); renderCategoryDisplayGenreSettings(); populateGenreDropdowns(); updatePendingBadge(); renderBanners(); renderContestSidebar();
             updateReportBadge();
-            if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 30000);
+            if(!badgeRefreshTimer) badgeRefreshTimer = setInterval(refreshPendingIndicators, 15000);
             const savedView = localStorage.getItem('fkAdminLastView');
             const savedTitle = localStorage.getItem('fkAdminLastTitle');
             if(savedView && savedView !== 'dashboard' && document.getElementById(`view-${savedView}`)) switchView(savedView, savedTitle || '');
@@ -4799,6 +4799,14 @@
             if(songsRes.ok) {
                 allSongs = await songsRes.json();
                 updatePendingBadge();
+                // If the reviewer is sitting on the 待审队列 view, refresh the visible list too so a
+                // freshly-uploaded VIP song appears on its own — but never wipe an in-progress selection.
+                const pendingActive = document.getElementById('view-pending')?.classList.contains('active');
+                const hasSelection = document.querySelectorAll('.pend-check:checked').length > 0;
+                if(pendingActive && !hasSelection) {
+                    pendFiltered = allSongs.filter(s => s.status === 'PENDING');
+                    renderPendingUI();
+                }
             }
             if(reportsRes.ok) {
                 allReports = await reportsRes.json();
@@ -5740,7 +5748,17 @@
     function updatePendingBadge() {
         updateApprovalBadges();
     }
-    function loadPending() { showContentLoader(); pendFiltered = allSongs.filter(s => s.status === 'PENDING'); pendPage = 1; renderPendingUI(); hideContentLoader(); }
+    async function loadPending() {
+        showContentLoader();
+        // Always pull the freshest catalog when the reviewer opens the queue (cache-bypassing),
+        // so a song a VIP just uploaded shows up immediately instead of after the next poll.
+        try { allSongs = await (await fetch(`${API_URL}/songs?fresh=1`)).json(); } catch(e) {}
+        pendFiltered = allSongs.filter(s => s.status === 'PENDING');
+        pendPage = 1;
+        renderPendingUI();
+        updatePendingBadge();
+        hideContentLoader();
+    }
     
     function toggleAllPending() { const st = document.getElementById('selectAllPending').checked; document.querySelectorAll('.pend-check').forEach(cb => cb.checked = st); updatePendSelCount(); }
     function updatePendSelCount() { document.getElementById('sel-pend-count').innerText = document.querySelectorAll('.pend-check:checked').length; }
@@ -5779,9 +5797,9 @@
         renderPaginationControls(pendFiltered.length, pendLimit, pendPage, 'pending-pagination', (np) => { pendPage = np; renderPendingUI(); }, (nl) => { pendLimit = nl; pendPage = 1; renderPendingUI(); });
     }
 
-    async function bulkApprove() { const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); } allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); hideGlobalLoader(); showToast("Bulk Approved"); }
-    async function bulkReject() { const reason = document.getElementById('bulkRejectReason').value || '未符合规范'; const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); } allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); loadPending(); hideGlobalLoader(); showToast("Bulk Rejected"); }
-    async function resolvePending(id, newStatus) { let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) }); allSongs = await (await fetch(`${API_URL}/songs`)).json(); updatePendingBadge(); buildDashboardStats(); loadPending(); hideGlobalLoader(); showToast("Song Resolved"); }
+    async function bulkApprove() { const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); } await loadPending(); hideGlobalLoader(); showToast("Bulk Approved"); }
+    async function bulkReject() { const reason = document.getElementById('bulkRejectReason').value || '未符合规范'; const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); } await loadPending(); hideGlobalLoader(); showToast("Bulk Rejected"); }
+    async function resolvePending(id, newStatus) { let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) }); await loadPending(); buildDashboardStats(); hideGlobalLoader(); showToast("Song Resolved"); }
 
     // --- GENRES ---
     function renderGenres() {
