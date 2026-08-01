@@ -70,14 +70,14 @@
         .hero h1 { font-size: 36px; margin: 0 0 10px 0; font-weight: 700; letter-spacing: 2px;}
         .hero p { color: var(--text-muted); font-size: 14px; margin: 0 0 30px 0;}
         
-        .banners-container { display:flex; gap:10px; margin: 0 auto 20px auto; width:100%; max-width:800px; justify-content:center; overflow-x:auto; scrollbar-width:none;}
+        .banners-container { display:flex; gap:0; margin: 0 auto 20px auto; width:100%; max-width:800px; justify-content:center; overflow-x:auto; scrollbar-width:none;}
         .banners-container::-webkit-scrollbar { display:none; }
         .banners-container img { width:30%; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); flex-shrink:0;}
         .banners-container.contest-mode { max-width:900px; overflow:hidden; }
         .banners-container.marquee-on { overflow:hidden; max-width:min(100%, 1180px); justify-content:flex-start; }
         .banners-container.marquee-on .banners-track { display:flex; width:max-content; animation: bannersMarquee 26s linear infinite; }
         .banners-container.marquee-on:hover .banners-track { animation-play-state:paused; }
-        .banners-container.marquee-on .banners-track img { width:250px; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); margin-right:10px; flex-shrink:0; }
+        .banners-container.marquee-on .banners-track img { width:250px; height:120px; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); margin-right:0; flex-shrink:0; }
         @keyframes bannersMarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
         @media (prefers-reduced-motion: reduce) { .banners-container.marquee-on .banners-track { animation:none; } }
         .contest-banner-link { width:100%; border:none; padding:0; background:transparent; cursor:pointer; flex-shrink:0; display:block; }
