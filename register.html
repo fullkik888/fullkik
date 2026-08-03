@@ -150,8 +150,8 @@
         </div>
         <div id="otpLoginStep2" style="display:none;">
             <div class="otp-panel">
-                <div style="color:var(--text-muted); font-size:13px;">验证码已发送至 / Code sent to</div>
-                <div class="otp-phone" id="otpLoginEmail">—</div>
+                <div class="otp-phone" style="font-weight:600; font-size:14px;">如果该账号已注册，验证码已发送到绑定邮箱</div>
+                <div style="color:var(--text-muted); font-size:12px; margin-top:4px;">If the account exists, a code was sent to its email.</div>
                 <input type="text" inputmode="numeric" maxlength="6" id="otpLoginCode" class="otp-code-input" placeholder="______" style="width:100%; box-sizing:border-box; margin-top:12px;">
                 <div class="otp-hint">请输入 6 位验证码，5 分钟内有效 / 6-digit code, valid 5 min.</div>
                 <div class="otp-tools"><span class="toggle-link" id="otpLoginResend" onclick="sendLoginOtp(true)">重新发送 / Resend</span></div>
@@ -186,17 +186,26 @@
     </div>
 
     <div id="forgotView" class="view-section">
-        <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2><p data-i18n="resetSub">We'll send a secure link to your contact.</p>
-        <div class="input-group"><input type="text" id="forgotContact" placeholder="Email or Phone Number" data-placeholder="contactPH"></div>
-        <button class="btn-primary" onclick="requestReset()" data-i18n="sendLnk">Send Link</button><br>
+        <h2>重置密码 / Reset Password</h2>
+        <p>输入用户名或邮箱，重置验证码将发送到绑定邮箱。<br><span style="color:var(--text-muted);">We'll email a 6-digit reset code to your registered address.</span></p>
+        <div class="input-group"><input type="text" id="forgotContact" placeholder="用户名或邮箱 / Username or Email"></div>
+        <button class="btn-primary" id="resetSendBtn" onclick="sendResetOtp()">发送验证码 / Send code</button><br>
         <span class="toggle-link" onclick="switchView('loginView')" data-i18n="backLnk">Back to Sign in</span>
     </div>
 
     <div id="resetView" class="view-section">
-        <h2 data-i18n="loginTitle">欢迎来到FULLKIK</h2><p data-i18n="newPassSub">Enter your new credentials</p>
-        <div class="input-group password-wrap"><input type="password" id="newPass" placeholder="New Password" data-placeholder="newPassPH"><button class="password-toggle" onclick="togglePassword('newPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
-        <div class="input-group password-wrap"><input type="password" id="confirmNewPass" placeholder="Confirm New Password" data-placeholder="confirmNewPH"><button class="password-toggle" onclick="togglePassword('confirmNewPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
-        <button class="btn-primary" onclick="executeReset()" data-i18n="resetBtn">Reset & Login</button>
+        <h2>重置密码 / Reset Password</h2>
+        <div class="otp-panel">
+            <div class="otp-phone" style="font-weight:600; font-size:14px;">如果该账号已注册，验证码已发送到绑定邮箱</div>
+            <div style="color:var(--text-muted); font-size:12px; margin-top:4px;">If the account exists, a reset code was sent to its email.</div>
+            <input type="text" inputmode="numeric" maxlength="6" id="resetCode" class="otp-code-input" placeholder="______" style="width:100%; box-sizing:border-box; margin-top:12px;">
+            <div class="otp-hint">请输入 6 位验证码，10 分钟内有效 / 6-digit code, valid 10 min.</div>
+            <div class="otp-tools"><span class="toggle-link" id="resetResend" onclick="sendResetOtp(true)">重新发送 / Resend</span></div>
+        </div>
+        <div class="input-group password-wrap" style="margin-top:14px;"><input type="password" id="newPass" placeholder="新密码 / New Password (min 6)"><button class="password-toggle" onclick="togglePassword('newPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <div class="input-group password-wrap"><input type="password" id="confirmNewPass" placeholder="确认新密码 / Confirm New Password"><button class="password-toggle" onclick="togglePassword('confirmNewPass')" type="button" aria-label="显示密码"><svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg></button></div>
+        <button class="btn-primary" id="resetVerifyBtn" onclick="executeReset()">重置密码 / Reset Password</button><br>
+        <span class="toggle-link" onclick="switchView('loginView')">返回登录 / Back to Sign in</span>
     </div>
 </div>
 
@@ -339,14 +348,12 @@
         try {
             const res = await fetch(`${API_URL}/login/otp/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact }) });
             if (res.ok) {
-                const d = await res.json();
                 _otpLoginContact = contact;
-                document.getElementById('otpLoginEmail').innerText = d.email || '';
                 document.getElementById('otpLoginStep1').style.display = 'none';
                 document.getElementById('otpLoginStep2').style.display = '';
                 document.getElementById('otpLoginCode').focus();
                 startOtpLoginCooldown(60);
-                showToast('验证码已发送 / Code sent');
+                showToast('如已注册，验证码已发送 / Code sent if the account exists');
             } else {
                 showToast(await res.text() || '发送失败 / Failed', true);
             }
@@ -394,16 +401,47 @@
     // Registration is Google-only (real Google verification). The old simulated-OTP
     // email registration flow was removed. Existing users still log in via username/password.
 
-    async function requestReset() {
-        const contact = document.getElementById('forgotContact').value; if(!contact) return showToast(dict[currentLang].errFill, true);
-        const res = await fetch(`${API_URL}/forgot-password`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contact }) });
-        if(res.ok) { currentResetToken = (await res.json()).resetToken; showToast("Link sent!"); setTimeout(() => switchView('resetView'), 1500); } else showToast(await res.text(), true);
+    // --- Forgot password via email OTP (send a code, then reset with code + new password) ---
+    let _resetContact = '', _resetCooldown = 0, _resetTimer = null;
+    async function sendResetOtp(isResend) {
+        if (isResend && _resetCooldown > 0) return;
+        const contact = (document.getElementById('forgotContact').value || '').trim();
+        if (!contact) return showToast('请输入用户名或邮箱 / Enter username or email', true);
+        const btn = document.getElementById('resetSendBtn');
+        if (btn && !isResend) { btn.disabled = true; btn.innerText = '发送中… / Sending…'; }
+        try {
+            const res = await fetch(`${API_URL}/password/reset/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact }) });
+            if (res.ok) {
+                _resetContact = contact;
+                if (!isResend) { document.getElementById('resetCode').value = ''; switchView('resetView'); document.getElementById('resetCode').focus(); }
+                startResetCooldown(60);
+                showToast('如已注册，验证码已发送 / Code sent if the account exists');
+            } else showToast(await res.text() || '发送失败 / Failed', true);
+        } catch (e) { showToast('网络错误 / Network error', true); }
+        finally { if (btn && !isResend) { btn.disabled = false; btn.innerText = '发送验证码 / Send code'; } }
+    }
+    function startResetCooldown(sec) {
+        _resetCooldown = sec;
+        const el = document.getElementById('resetResend');
+        if (_resetTimer) clearInterval(_resetTimer);
+        const upd = () => { if (el) el.innerText = _resetCooldown > 0 ? `重新发送 (${_resetCooldown}s)` : '重新发送 / Resend'; };
+        upd();
+        _resetTimer = setInterval(() => { _resetCooldown--; if (_resetCooldown <= 0) clearInterval(_resetTimer); upd(); }, 1000);
     }
     async function executeReset() {
+        const code = (document.getElementById('resetCode').value || '').trim();
         const newPass = document.getElementById('newPass').value, confirm = document.getElementById('confirmNewPass').value;
-        if(newPass !== confirm) return showToast(dict[currentLang].errMatch, true); if(!newPass) return showToast(dict[currentLang].errFill, true);
-        const res = await fetch(`${API_URL}/reset-password`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ token: currentResetToken, newPassword: newPass }) });
-        if(res.ok) { showToast("Password updated!"); setTimeout(() => switchView('loginView'), 1500); } else showToast(await res.text(), true);
+        if (!/^\d{6}$/.test(code)) return showToast('请输入 6 位验证码 / Enter 6-digit code', true);
+        if (!newPass || newPass.length < 6) return showToast('新密码至少 6 位 / Password min 6 chars', true);
+        if (newPass !== confirm) return showToast(dict[currentLang].errMatch, true);
+        const btn = document.getElementById('resetVerifyBtn');
+        if (btn) { btn.disabled = true; btn.innerText = '重置中… / Resetting…'; }
+        try {
+            const res = await fetch(`${API_URL}/password/reset/verify`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contact: _resetContact, code, newPassword: newPass }) });
+            if (res.ok) { showToast('密码已重置，请用新密码登录 / Password reset — please sign in'); setTimeout(() => switchView('loginView'), 1500); }
+            else showToast(await res.text() || '重置失败 / Failed', true);
+        } catch (e) { showToast('网络错误 / Network error', true); }
+        finally { if (btn) { btn.disabled = false; btn.innerText = '重置密码 / Reset Password'; } }
     }
 
     document.addEventListener("DOMContentLoaded", () => { applyLang(); });

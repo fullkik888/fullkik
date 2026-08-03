@@ -1083,7 +1083,7 @@ app.post('/api/otp/send', async (req, res) => {
         });
         // Only leak the code back to the browser when we could NOT actually deliver it.
         const out = { success: true, otpId: ref.id, expiresAt, msgid, channel, simulated: !delivered };
-        if (!delivered) out.otp = code;
+        // (Security) the OTP code is NEVER returned to the caller, even on delivery failure.
         res.json(out);
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1114,7 +1114,8 @@ app.post('/api/otp/verify', async (req, res) => {
 app.get('/api/otp-history', async (req, res) => {
     try {
         const snap = await db.collection('otp_logs').orderBy('timestamp', 'desc').limit(500).get();
-        res.json(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        // Never expose the raw OTP code in this (non-admin-gated) history feed.
+        res.json(snap.docs.map(d => { const { code, ...rest } = d.data(); return { id: d.id, ...rest }; }));
     } catch(e) { res.json([]); }
 });
 
@@ -1155,7 +1156,7 @@ app.post('/api/otp/resend/:id', async (req, res) => {
             resentFrom: req.params.id
         });
         const out = { success: true, otpId: ref.id, expiresAt, msgid, channel, simulated: !delivered };
-        if (!delivered) out.otp = code;
+        // (Security) the OTP code is NEVER returned to the caller, even on delivery failure.
         res.json(out);
     } catch(e) { res.status(500).send(e.message); }
 });
@@ -1365,16 +1366,17 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ---- Passwordless login via email OTP (handy for Google sign-ups with no password) ----
-// The one-time code is ALWAYS sent to the account's OWN stored email (never a
-// caller-supplied address), so knowing a username can't be used to hijack the
-// account. Rate-limited (60s), attempt-capped (5), 5-minute expiry, and the code
-// is never returned in the response (only a masked email).
-function maskLoginEmail(e) {
-    const s = String(e || '');
-    const at = s.indexOf('@');
-    if (at < 1) return s;
-    return s.slice(0, Math.min(2, at)) + '***' + s.slice(at);
-}
+// Hardened over two adversarial-review rounds:
+//  * codes live in a DEDICATED `login_otps` collection — the shared, caller-writable
+//    /api/otp/send and the public /api/otp-history can neither PLANT nor READ a login code
+//  * verify enforces the 5-attempt cap ATOMICALLY in a transaction (no concurrency bypass)
+//  * each /send supersedes the account's prior codes, so only ONE is ever live
+//  * abuse limits key on the ACCOUNT (userId), NOT the client IP: a 60s per-account
+//    send-spacing + the 5-attempt-per-code cap bound both inbox-bombing and guessing.
+//    (A per-IP throttle was intentionally NOT used — X-Forwarded-For is client-spoofable,
+//    so it was bypassable AND a memory-DoS vector, and added no real protection.)
+//  * responses are GENERIC and the email is sent fire-and-forget, so neither the body
+//    NOR the latency reveals whether an account exists; the code is never returned.
 
 async function resolveLoginUser(contact) {
     const key = String(contact || '').trim();
@@ -1410,29 +1412,45 @@ async function sendLoginOtpEmail(to, code, username) {
 app.post('/api/login/otp/send', async (req, res) => {
     try {
         if (!db) return res.status(500).send('DB disconnected');
+        // Resolve + decide SILENTLY. The response is ALWAYS the same generic 200, and the
+        // email is sent fire-and-forget, so neither the body nor the latency reveals whether
+        // the account exists / is banned / has an email on file.
         const uDoc = await resolveLoginUser(req.body.contact);
-        if (!uDoc) return res.status(400).send('账号不存在 / Account not found');
-        const userData = uDoc.data();
-        if (userData.status === 'BANNED') return res.status(403).send(`Account Banned: ${userData.banReason || 'Violation of terms'}`);
-        const email = userEmailOf(userData);
-        if (!email) return res.status(400).send('此账号未绑定邮箱，请用密码登录 / No email on file — use password');
-
-        // Rate limit: one code per 60s per account (two equality filters, no orderBy → no composite index needed).
-        const recent = await db.collection('otp_logs').where('userId', '==', uDoc.id).where('type', '==', 'login').get();
-        const lastTs = recent.docs.reduce((mx, d) => Math.max(mx, new Date(d.data().timestamp || 0).getTime()), 0);
-        if (lastTs && (Date.now() - lastTs) < 60 * 1000) return res.status(429).send('请求过于频繁，请 1 分钟后再试 / Please wait a minute');
-
-        const code = String(Math.floor(100000 + Math.random() * 900000));
-        const now = new Date();
-        const docRef = await db.collection('otp_logs').add({
-            phone: email, code, type: 'login', channel: 'email',
-            ip: getClientIp(req), userId: uDoc.id, errors: 0, status: 'ACTIVE',
-            timestamp: now.toISOString(), expiresAt: new Date(now.getTime() + 5 * 60 * 1000).toISOString(),
-            consumed: false
-        });
-        const delivered = await sendLoginOtpEmail(email, code, userData.username || uDoc.id);
-        if (!delivered) { await docRef.delete().catch(() => {}); return res.status(502).send('验证码发送失败，请稍后再试 / Failed to send code'); }
-        res.json({ success: true, email: maskLoginEmail(email) });
+        if (uDoc) {
+            const userData = uDoc.data();
+            const email = userEmailOf(userData);
+            if (userData.status !== 'BANNED' && email) {
+                // ONE deterministic doc per account (login_otps/{userId}). A transaction makes
+                // the 60s send-spacing AND single-live-code ATOMIC, so a concurrent /send burst
+                // can't each slip past the gate and email-bomb the account (no read-then-write
+                // TOCTOU). tx.set overwrites, so exactly one code is ever live and nothing accretes.
+                const otpRef = db.collection('login_otps').doc(uDoc.id);
+                const issued = await db.runTransaction(async (tx) => {
+                    const d = await tx.get(otpRef);
+                    if (d.exists && d.data().createdAt && (Date.now() - new Date(d.data().createdAt).getTime()) < 60 * 1000) {
+                        // A code was issued < 60s ago — enforce spacing REGARDLESS of its status.
+                        // (Gating only on 'ACTIVE' let an attacker force LOCKED via 5 bad verifies
+                        // and then re-send instantly, bypassing the 1-email/60s bound.)
+                        return null;
+                    }
+                    const code = String(Math.floor(100000 + Math.random() * 900000));
+                    const now = new Date();
+                    tx.set(otpRef, {
+                        userId: uDoc.id, email, code, errors: 0, status: 'ACTIVE',
+                        ip: getClientIp(req), createdAt: now.toISOString(),
+                        expiresAt: new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+                    });
+                    return code;
+                });
+                if (issued) {
+                    // Fire-and-forget so the mail round-trip's latency can't leak account existence.
+                    // (On a delivery failure the code just goes unused and is overwritten by the
+                    // next send after the 60s window — no need to race-delete the doc.)
+                    sendLoginOtpEmail(email, issued, userData.username || uDoc.id).catch(() => {});
+                }
+            }
+        }
+        res.json({ success: true });   // generic — reveals nothing about the account
     } catch (e) { res.status(500).send(e.message); }
 });
 
@@ -1440,30 +1458,35 @@ app.post('/api/login/otp/verify', async (req, res) => {
     try {
         if (!db) return res.status(500).send('DB disconnected');
         const code = String(req.body.code || '').trim();
-        if (!/^\d{6}$/.test(code)) return res.status(400).send('验证码格式不正确 / Invalid code');
+        const FAIL = '验证码错误或已过期 / Invalid or expired code';   // ONE generic error for every failure (no enumeration)
+        if (!/^\d{6}$/.test(code)) return res.status(400).send(FAIL);
         const uDoc = await resolveLoginUser(req.body.contact);
-        if (!uDoc) return res.status(400).send('账号不存在 / Account not found');
+        if (!uDoc) return res.status(400).send(FAIL);
         const userData = uDoc.data();
-        if (userData.status === 'BANNED') return res.status(403).send(`Account Banned: ${userData.banReason || 'Violation of terms'}`);
+        if (userData.status === 'BANNED') return res.status(400).send(FAIL);
 
-        const snap = await db.collection('otp_logs').where('userId', '==', uDoc.id).where('type', '==', 'login').get();
-        const rows = snap.docs.map(d => ({ ref: d.ref, ...d.data() })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        const active = rows.find(r => !r.consumed && r.status === 'ACTIVE');
-        if (!active) return res.status(400).send('验证码不存在或已过期，请重新获取 / No active code');
-        if (active.expiresAt && new Date(active.expiresAt).getTime() < Date.now()) {
-            await active.ref.update({ status: 'EXPIRED' });
-            return res.status(400).send('验证码已过期 / Code expired');
-        }
-        if ((parseInt(active.errors) || 0) >= 5) {
-            await active.ref.update({ status: 'LOCKED', consumed: true });
-            return res.status(400).send('错误次数过多，请重新获取验证码 / Too many attempts');
-        }
-        if (String(active.code) !== code) {
-            await active.ref.update({ errors: (parseInt(active.errors) || 0) + 1 });
-            return res.status(400).send('验证码错误 / Incorrect code');
-        }
-        // Success — consume the code and log the user in (same session shape as /api/login).
-        await active.ref.update({ status: 'USED', consumed: true, consumedAt: new Date().toISOString() });
+        // The account's single login code lives at login_otps/{userId}; the transaction reads
+        // it directly (no query/index) and enforces the 5-attempt cap ATOMICALLY — concurrent
+        // guesses serialize on the doc, so the counter can't be raced past the cap.
+        const otpRef = db.collection('login_otps').doc(uDoc.id);
+        const outcome = await db.runTransaction(async (tx) => {
+            const d = await tx.get(otpRef);
+            if (!d.exists) return 'fail';
+            const o = d.data();
+            if (o.status !== 'ACTIVE') return 'fail';
+            if (o.expiresAt && new Date(o.expiresAt).getTime() < Date.now()) { tx.update(otpRef, { status: 'EXPIRED' }); return 'fail'; }
+            if ((parseInt(o.errors) || 0) >= 5) { tx.update(otpRef, { status: 'LOCKED' }); return 'fail'; }
+            if (String(o.code) !== code) {
+                const n = (parseInt(o.errors) || 0) + 1;
+                tx.update(otpRef, { errors: n, status: n >= 5 ? 'LOCKED' : 'ACTIVE' });
+                return 'fail';
+            }
+            tx.update(otpRef, { status: 'USED', consumedAt: new Date().toISOString() });
+            return 'ok';
+        });
+        if (outcome !== 'ok') return res.status(400).send(FAIL);
+
+        // Success — log the user in (same session shape as /api/login).
         const loginHistory = [
             { time: new Date().toISOString(), ip: getClientIp(req), device: req.get('user-agent') || '-', via: 'email-otp' },
             ...((userData.loginHistory || []).filter(Boolean))
@@ -1472,6 +1495,112 @@ app.post('/api/login/otp/verify', async (req, res) => {
         invalidateUserCaches(userData.username || uDoc.id);
         setCleanShareSession(req, res);
         res.json({ success: true, username: userData.username || uDoc.id, userToken: signUserToken(userData.username || uDoc.id) });
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+// ---- Forgot / reset password via email OTP ----
+// Same hardened model as the login OTP above, but the code lives in a SEPARATE
+// `password_reset_otps` collection (token separation — a login code can never reset a
+// password and vice versa). One deterministic doc per account, transactional 60s send
+// spacing + atomic 5-attempt cap, generic responses + fire-and-forget email (no account
+// enumeration by body or latency), single-use code, and the password write happens
+// ATOMICALLY with consuming the code (both land or neither).
+async function sendPasswordResetOtpEmail(to, code, username) {
+    const subject = 'FULLKIK 重置密码验证码 / Password reset code: ' + code;
+    const html = `<div style="background:#f4f4f5;padding:40px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
+      + `<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e7;">`
+      + `<div style="height:3px;background:#7a1717;"></div>`
+      + `<div style="padding:30px 40px 20px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
+      + `<div style="padding:30px 40px 32px;text-align:center;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Password Reset</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">重置密码验证码</div>`
+      + `<p style="color:#3f3f46;font-size:14.5px;line-height:1.8;margin:16px 0 0;">Dear ${htmlEscape(username || '')}，请在重置密码页面输入以下验证码：<br><span style="color:#8a8a92;font-size:13px;">Enter this code on the reset-password page to set a new password.</span></p>`
+      + `<div style="margin:20px auto 4px;background:#f7f7f8;border:1px solid #ececef;border-radius:12px;padding:16px;font-size:34px;font-weight:800;letter-spacing:10px;color:#18181b;">${code}</div>`
+      + `<p style="color:#8a8a92;font-size:12.5px;line-height:1.7;margin:14px 0 0;">验证码 10 分钟内有效，请勿告诉他人。若非本人操作，请忽略本邮件，你的密码不会改变。<br>Valid for 10 minutes. Never share this code. If you didn't request this, ignore this email — your password stays unchanged.</p></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `</div></div>`;
+    try { return await sendUserEmail(to, subject, html); }
+    catch (e) { console.error('reset OTP email failed:', e.message); return false; }
+}
+
+app.post('/api/password/reset/send', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        // Resolve + decide SILENTLY — always the same generic 200, email fire-and-forget,
+        // so neither the body nor the latency reveals whether the account exists.
+        const uDoc = await resolveLoginUser(req.body.contact);
+        if (uDoc) {
+            const userData = uDoc.data();
+            const email = userEmailOf(userData);
+            if (userData.status !== 'BANNED' && email) {
+                const otpRef = db.collection('password_reset_otps').doc(uDoc.id);
+                const issued = await db.runTransaction(async (tx) => {
+                    const d = await tx.get(otpRef);
+                    if (d.exists && d.data().createdAt && (Date.now() - new Date(d.data().createdAt).getTime()) < 60 * 1000) {
+                        // Enforce 1-email-per-60s-per-account REGARDLESS of status (a LOCKED code
+                        // from 5 bad guesses must not let an attacker re-send instantly).
+                        return null;
+                    }
+                    const code = String(Math.floor(100000 + Math.random() * 900000));
+                    const now = new Date();
+                    tx.set(otpRef, {
+                        userId: uDoc.id, email, code, errors: 0, status: 'ACTIVE',
+                        ip: getClientIp(req), createdAt: now.toISOString(),
+                        expiresAt: new Date(now.getTime() + 10 * 60 * 1000).toISOString()
+                    });
+                    return code;
+                });
+                if (issued) sendPasswordResetOtpEmail(email, issued, userData.username || uDoc.id).catch(() => {});
+            }
+        }
+        res.json({ success: true });   // generic — reveals nothing about the account
+    } catch (e) { res.status(500).send(e.message); }
+});
+
+app.post('/api/password/reset/verify', async (req, res) => {
+    try {
+        if (!db) return res.status(500).send('DB disconnected');
+        const code = String(req.body.code || '').trim();
+        const newPassword = String(req.body.newPassword || '');
+        const FAIL = '验证码错误或已过期 / Invalid or expired code';   // ONE generic error for every OTP failure
+        // These two checks are account-independent, so they leak nothing about who exists.
+        if (!/^\d{6}$/.test(code)) return res.status(400).send(FAIL);
+        if (newPassword.length < 6) return res.status(400).send('新密码至少 6 位 / Password must be at least 6 characters');
+
+        const uDoc = await resolveLoginUser(req.body.contact);
+        if (!uDoc) return res.status(400).send(FAIL);
+        const userData = uDoc.data();
+        if (userData.status === 'BANNED') return res.status(400).send(FAIL);
+
+        const otpRef = db.collection('password_reset_otps').doc(uDoc.id);
+        const hashed = hashPassword(newPassword);   // computed once; reused if the tx retries
+        const outcome = await db.runTransaction(async (tx) => {
+            const d = await tx.get(otpRef);
+            if (!d.exists) return 'fail';
+            const o = d.data();
+            if (o.status !== 'ACTIVE') return 'fail';
+            if (o.expiresAt && new Date(o.expiresAt).getTime() < Date.now()) { tx.update(otpRef, { status: 'EXPIRED' }); return 'fail'; }
+            if ((parseInt(o.errors) || 0) >= 5) { tx.update(otpRef, { status: 'LOCKED' }); return 'fail'; }
+            if (String(o.code) !== code) {
+                const n = (parseInt(o.errors) || 0) + 1;
+                tx.update(otpRef, { errors: n, status: n >= 5 ? 'LOCKED' : 'ACTIVE' });
+                return 'fail';
+            }
+            // Correct code — consume it AND set the new password in the SAME transaction,
+            // so the code can never be spent without the password actually changing.
+            tx.update(otpRef, { status: 'USED', consumedAt: new Date().toISOString() });
+            tx.update(uDoc.ref, { password: hashed });
+            return 'ok';
+        });
+        if (outcome !== 'ok') return res.status(400).send(FAIL);
+
+        invalidateUserCaches(userData.username || uDoc.id);
+        sendNotifyEmail(userData, {
+            subject: '密码重置成功',
+            eyebrow: 'Password Reset', title: '密码已重置',
+            bodyZh: '你的账户密码已通过邮箱验证码成功重置。若非本人操作，请立即重置密码并联系客服。',
+            bodyEn: 'Your password was reset via email code. If this was not you, reset it again and contact support immediately.',
+            rows: [{ k: '操作 Action', v: '密码已重置 Reset' }]
+        }).catch(() => {});
+        res.json({ success: true });
     } catch (e) { res.status(500).send(e.message); }
 });
 
