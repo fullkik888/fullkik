@@ -2133,6 +2133,7 @@
     let pendingUploadBase64 = null, pendingGenreBase64 = null, pendingEditSongBase64 = null, pendingHomePosterBase64 = null, pendingDefaultCoverBase64 = null; 
     let chartInstances = {}; let globalSettings = {}; let currentBanners = ['', '', ''];
     let badgeRefreshTimer = null;
+    let _songsEpoch = 0;   // bumped after every local song mutation; lets the poll discard stale in-flight /songs responses
     let selectedManagerBulkFiles = [];
     let hotProducerDraftIds = null;
     let reconcileRange = '7', reconcileCustomStart = '', reconcileCustomEnd = '';
@@ -4787,6 +4788,12 @@
                 pendingQueueBadge.style.display = 'none';
             }
         }
+        // Keep the dashboard pending counters in lock-step with the badges (they used to update only
+        // inside buildDashboardStats, so a songs-only poll left them stale vs the sidebar count).
+        const pendSub = document.getElementById('stat-pend-sub');
+        if(pendSub) pendSub.innerText = `${pendingSongs} 首待审`;
+        const quickPend = document.getElementById('quick-pending-count');
+        if(quickPend) quickPend.innerText = pendingSongs;
     }
 
     function updateReportBadge() {
@@ -4794,18 +4801,35 @@
     }
 
     async function refreshPendingIndicators() {
+        if(document.hidden) return;   // don't poll full collections while the tab is backgrounded
+        const ep = _songsEpoch;
         try {
             const [songsRes, reportsRes, withdrawRes] = await Promise.all([fetch(`${API_URL}/songs`), fetch(`${API_URL}/reports`), fetch(`${API_URL}/withdrawals`)]);
+            // A resolve/upload landed while this poll was in flight — its fresh loadPending already applied
+            // the truth, so discard this (possibly stale, cache-served) response instead of resurrecting a song.
+            if(_songsEpoch !== ep) return;
             if(songsRes.ok) {
-                allSongs = await songsRes.json();
+                const data = await songsRes.json();
+                if(Array.isArray(data)) allSongs = data;
                 updatePendingBadge();
-                // If the reviewer is sitting on the 待审队列 view, refresh the visible list too so a
-                // freshly-uploaded VIP song appears on its own — but never wipe an in-progress selection.
+                // If the reviewer is on the 待审队列 view, refresh the visible list too — but ONLY when the
+                // PENDING set actually changed, and preserve any in-progress work (ticked boxes, typed reject
+                // reasons, focus). Skipping when unchanged means typing a reject reason is never disturbed.
                 const pendingActive = document.getElementById('view-pending')?.classList.contains('active');
-                const hasSelection = document.querySelectorAll('.pend-check:checked').length > 0;
-                if(pendingActive && !hasSelection) {
-                    pendFiltered = allSongs.filter(s => s.status === 'PENDING');
-                    renderPendingUI();
+                if(pendingActive) {
+                    const fresh = (allSongs || []).filter(s => s.status === 'PENDING');
+                    const changed = fresh.length !== pendFiltered.length || fresh.some((s, i) => !pendFiltered[i] || pendFiltered[i].id !== s.id);
+                    if(changed) {
+                        const sel = new Set([...document.querySelectorAll('.pend-check:checked')].map(cb => cb.value));
+                        const reasons = {}; document.querySelectorAll('[id^="rej-reason-"]').forEach(inp => { if(inp.value) reasons[inp.id] = inp.value; });
+                        const activeId = document.activeElement && document.activeElement.id;
+                        pendFiltered = fresh;
+                        renderPendingUI();
+                        document.querySelectorAll('.pend-check').forEach(cb => { if(sel.has(cb.value)) cb.checked = true; });
+                        Object.keys(reasons).forEach(id => { const el = document.getElementById(id); if(el) el.value = reasons[id]; });
+                        if(activeId) { const el = document.getElementById(activeId); if(el && el.focus) el.focus(); }
+                        updatePendSelCount();
+                    }
                 }
             }
             if(reportsRes.ok) {
@@ -5752,8 +5776,10 @@
         showContentLoader();
         // Always pull the freshest catalog when the reviewer opens the queue (cache-bypassing),
         // so a song a VIP just uploaded shows up immediately instead of after the next poll.
-        try { allSongs = await (await fetch(`${API_URL}/songs?fresh=1`)).json(); } catch(e) {}
-        pendFiltered = allSongs.filter(s => s.status === 'PENDING');
+        // Guard against a non-array (error) body so a bad response can't corrupt allSongs or
+        // throw past hideContentLoader() and leave the queue stuck behind the loading overlay.
+        try { const data = await (await fetch(`${API_URL}/songs?fresh=1`)).json(); if(Array.isArray(data)) allSongs = data; } catch(e) {}
+        pendFiltered = (Array.isArray(allSongs) ? allSongs : []).filter(s => s.status === 'PENDING');
         pendPage = 1;
         renderPendingUI();
         updatePendingBadge();
@@ -5797,9 +5823,9 @@
         renderPaginationControls(pendFiltered.length, pendLimit, pendPage, 'pending-pagination', (np) => { pendPage = np; renderPendingUI(); }, (nl) => { pendLimit = nl; pendPage = 1; renderPendingUI(); });
     }
 
-    async function bulkApprove() { const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); } await loadPending(); hideGlobalLoader(); showToast("Bulk Approved"); }
-    async function bulkReject() { const reason = document.getElementById('bulkRejectReason').value || '未符合规范'; const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); } await loadPending(); hideGlobalLoader(); showToast("Bulk Rejected"); }
-    async function resolvePending(id, newStatus) { let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) }); await loadPending(); buildDashboardStats(); hideGlobalLoader(); showToast("Song Resolved"); }
+    async function bulkApprove() { const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'APPROVED' }) }); } await loadPending(); _songsEpoch++;hideGlobalLoader(); showToast("Bulk Approved"); }
+    async function bulkReject() { const reason = document.getElementById('bulkRejectReason').value || '未符合规范'; const checked = Array.from(document.querySelectorAll('.pend-check:checked')).map(cb => cb.value); if(!checked.length) return showToast("未选择歌曲", true); showGlobalLoader(); for(let id of checked) { await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: 'REJECTED', rejectReason: reason }) }); } await loadPending(); _songsEpoch++;hideGlobalLoader(); showToast("Bulk Rejected"); }
+    async function resolvePending(id, newStatus) { let reason = ''; if(newStatus === 'REJECTED') reason = document.getElementById(`rej-reason-${id}`).value || '未符合规范'; showGlobalLoader(); await fetch(`${API_URL}/songs/${id}/settings`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ status: newStatus, rejectReason: reason }) }); await loadPending(); _songsEpoch++;buildDashboardStats(); hideGlobalLoader(); showToast("Song Resolved"); }
 
     // --- GENRES ---
     function renderGenres() {

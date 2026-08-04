@@ -868,6 +868,18 @@
 <div class="modal-overlay" id="profilePurchaseModal"><div class="modal-box"><div class="modal-content" id="profilePurchaseContent"></div><div class="modal-actions" id="profilePurchaseActions"></div></div></div>
 <div class="modal-overlay" id="profilePurchaseSuccess"><div class="modal-box" style="padding: 40px 20px; text-align:center;"><svg viewBox="0 0 24 24" style="width:70px; height:70px; fill:var(--accent-light); margin-bottom: 15px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg><h2 style="margin:0; font-size:20px;">购买成功!</h2></div></div>
 
+<!-- Verify-Google-before-upload gate (shown when an unverified VIP tries to upload) -->
+<div class="modal-overlay" id="googleVerifyModal">
+    <div class="modal-box" style="max-width:380px; width:calc(100% - 40px); padding:34px 28px 30px; text-align:center;">
+        <div style="font-size:38px; margin-bottom:8px;">🔒</div>
+        <h2 style="margin:0 0 8px; font-size:20px;">验证 Google 后再上传</h2>
+        <p style="color:var(--text-muted); font-size:13.5px; line-height:1.65; margin:0 0 20px;">上传作品前，请先用真实 Google 账号验证你的 Gmail。<br><span style="opacity:.85;">Verify your Gmail with a real Google account before uploading.</span></p>
+        <div id="uploadGoogleBtnWrap" style="display:flex; justify-content:center;"></div>
+        <div id="uploadGoogleFallback" style="color:var(--text-muted); font-size:12px; margin-top:12px; display:none;">Google 加载中，请稍候… / Loading Google…</div>
+        <button onclick="cancelGoogleVerify()" style="margin-top:18px; background:none; border:1px solid var(--border-color); color:var(--text-muted); padding:9px 20px; border-radius:10px; cursor:pointer; font-size:13px;">稍后 / Later</button>
+    </div>
+</div>
+
 
 <script src="https://accounts.google.com/gsi/client" async defer onload="if(window.initLinkGoogle)initLinkGoogle()"></script>
 <script>
@@ -898,15 +910,39 @@
     }
 
     // --- Link Google (attach a real, verified Gmail to this account) ---
+    let _pendingUploadIsBatch = null;   // set when the user hit "upload" while unverified
     async function onLinkGoogleCredential(response){
         try {
             showGlobalLoader('绑定 Google...');
-            const res = await fetch(`${API_URL}/users/${username}/link-google`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ credential: response.credential }) });
+            // Owner-authenticated now (endpoint is requireOwner) — send the user token.
+            const res = await fetch(`${API_URL}/users/${username}/link-google`, { method:'POST', headers: authJsonHeaders(), body: JSON.stringify({ credential: response.credential }) });
             hideGlobalLoader();
-            if(res.ok){ const d = await res.json(); showToast('Google 绑定成功 / Linked: ' + d.email); if(currentProfileUserData){ currentProfileUserData.googleVerified = true; currentProfileUserData.email = d.email; } setLinkGoogleStatus(d.email); updateGmailVerifyBadge(); }
-            else { showToast(await res.text(), true); }
+            if(res.ok){
+                const d = await res.json();
+                showToast('Google 绑定成功 / Linked: ' + d.email);
+                if(currentProfileUserData){ currentProfileUserData.googleVerified = true; currentProfileUserData.email = d.email; }
+                setLinkGoogleStatus(d.email); updateGmailVerifyBadge();
+                // If they were mid-upload, close the gate and resume the upload they wanted.
+                const pend = _pendingUploadIsBatch; _pendingUploadIsBatch = null;
+                closeGoogleVerifyModal();
+                if(pend !== null) openVipUpload(pend);
+            }
+            else { if(handleAuthFailure(res)) return; showToast(await res.text(), true); }
         } catch(e){ hideGlobalLoader(); showToast('绑定失败', true); }
     }
+    function openGoogleVerifyModal(){
+        const m = document.getElementById('googleVerifyModal');
+        if(!m) return;
+        m.style.display = 'flex';
+        const wrap2 = document.getElementById('uploadGoogleBtnWrap');
+        if(wrap2 && !wrap2.childNodes.length && window.google && window.google.accounts){
+            try { google.accounts.id.renderButton(wrap2, { theme:'filled_black', size:'large', shape:'rectangular', text:'continue_with', logo_alignment:'center', width: 240 }); } catch(e){}
+        }
+        const fb = document.getElementById('uploadGoogleFallback');
+        if(fb) fb.style.display = (wrap2 && wrap2.childNodes.length) ? 'none' : 'block';
+    }
+    function closeGoogleVerifyModal(){ const m = document.getElementById('googleVerifyModal'); if(m) m.style.display = 'none'; }
+    function cancelGoogleVerify(){ _pendingUploadIsBatch = null; closeGoogleVerifyModal(); }
     function setLinkGoogleStatus(email){
         const s = document.getElementById('linkGoogleStatus');
         const w = document.getElementById('linkGoogleBtnWrap');
@@ -962,6 +998,9 @@
             google.accounts.id.initialize({ client_id: cfg.googleClientId, callback: onLinkGoogleCredential });
             const wrap = document.getElementById('linkGoogleBtnWrap');
             if(wrap) google.accounts.id.renderButton(wrap, { theme:'filled_black', size:'large', shape:'rectangular', text:'continue_with', logo_alignment:'center', width: 240 });
+            // Also render the button inside the "verify before upload" gate modal (shares the same callback).
+            const wrapUp = document.getElementById('uploadGoogleBtnWrap');
+            if(wrapUp) google.accounts.id.renderButton(wrapUp, { theme:'filled_black', size:'large', shape:'rectangular', text:'continue_with', logo_alignment:'center', width: 240 });
             try { const me = await (await fetch(`${API_URL}/users/${encodeURIComponent(username)}`)).json(); if(me && me.googleVerified && me.email) setLinkGoogleStatus(me.email); } catch(e){}
         } catch(e){}
     }
@@ -2276,6 +2315,8 @@
     function openVipUpload(isBatch) {
         // Only VIP creators can upload. Non-VIP are sent to the upgrade prompt.
         if(!isUserVip) { showToast('请先升级至 VIP 才能上传音乐 / Upgrade to VIP to upload', true); switchView('vip'); return; }
+        // Must have a verified Google (Gmail) first — some testing-phase VIPs never verified.
+        if(!(currentProfileUserData && currentProfileUserData.googleVerified)) { _pendingUploadIsBatch = isBatch; openGoogleVerifyModal(); return; }
         pendingVipCover = null; document.getElementById('vipCoverPreview').src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
         document.getElementById('vipTitleInput').value = ''; document.getElementById('vipPriceInput').value = '10'; document.getElementById('vipErrRow').innerText = '';
         const fileInput = document.getElementById('vipFileInput');
@@ -2322,7 +2363,10 @@
                 clearInterval(pInt);
                 document.getElementById('vipUploadProgOverlay').style.display = 'none';
                 if(handleAuthFailure(uploadRes)) return;
-                return errRow.innerText = await uploadRes.text();
+                const txt = await uploadRes.text();
+                // Backstop: if the server rejects because Google isn't verified, pop the verify gate.
+                if(uploadRes.status === 403 && /Gmail|Google/i.test(txt)) { _pendingUploadIsBatch = currentVipUploadIsBatch; openGoogleVerifyModal(); return; }
+                return errRow.innerText = txt;
             }
         }
 

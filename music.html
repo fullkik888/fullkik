@@ -102,6 +102,13 @@
         .dj-scroll-container::-webkit-scrollbar { display: none; }
         .dj-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 80px; flex-shrink: 0; position:relative; cursor:pointer;}
         .dj-card img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color); background:#1a0f0f;}
+        /* Auto-scrolling hot-producers row (moves left, reappears from the right — like the 公告 marquee) */
+        .dj-scroll-container.dj-marquee { overflow: hidden; }
+        .dj-marquee .dj-track { display: flex; width: max-content; animation: djMarquee 40s linear infinite; }
+        .dj-marquee:hover .dj-track { animation-play-state: paused; }
+        .dj-marquee .dj-card { margin-right: 15px; }
+        @keyframes djMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .dj-marquee .dj-track { animation: none; } }
         .dj-rank { position: absolute; top: 0; left: 5px; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: white;}
         .rank-1 { background: linear-gradient(45deg, #FFD700, #FDB931); border:1px solid #B8860B; }
         .rank-2 { background: linear-gradient(45deg, #C0C0C0, #E0E0E0); border:1px solid #A9A9A9; color:#333;}
@@ -1355,20 +1362,25 @@
             const vips = getHomepageHotProducers(users);
 
             if(vips.length > 0) {
-                let djHtml = `<div class="section-header"><h3>热门制作人</h3><span onclick="switchView('dj-list')">更多 ></span></div><div class="dj-scroll-container">`;
-                vips.slice(0, 10).forEach((v, i) => {
-            const count = allSongs.filter(s => s.uploader === v.username).length;
+                const cardHtml = vips.slice(0, 10).map((v, i) => {
+                    const count = allSongs.filter(s => s.uploader === v.username).length;
                     const rClass = i===0 ? 'rank-1' : i===1 ? 'rank-2' : i===2 ? 'rank-3' : '';
                     const pfp = v.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231a0f0f'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🎧%3C/text%3E%3C/svg%3E";
-                    djHtml += `
+                    return `
                         <div class="dj-card" onclick="window.location.href='/fullkik/vip?user=${v.username}'">
                             ${rClass ? `<div class="dj-rank ${rClass}">${i+1}</div>` : ''}
                             <img src="${pfp}">
                             <div class="dj-name truncate">${v.djName || v.username}</div>
                             <div class="dj-count">${count} 首作品</div>
                         </div>`;
-                });
-                djHtml += `</div>`;
+                }).join('');
+                // Auto-scroll marquee (like 公告/banners): repeat the set to fill the width, then
+                // double it so translateX(-50%) loops seamlessly — moves left, reappears from right.
+                const unit = Math.min(vips.length, 10) || 1;
+                const k = Math.max(2, Math.ceil(1400 / (unit * 95)));
+                const oneRun = cardHtml.repeat(k);
+                const djHtml = `<div class="section-header"><h3>热门制作人</h3><span onclick="switchView('dj-list')">更多 ></span></div>`
+                    + `<div class="dj-scroll-container dj-marquee"><div class="dj-track">${oneRun}${oneRun}</div></div>`;
                 container.innerHTML += djHtml;
             }
             container.innerHTML += generateFollowUpdateHtml();

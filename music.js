@@ -1054,7 +1054,7 @@ app.post('/api/otp/send', async (req, res) => {
         if(type === 'register' && await isIpBlocked(clientIp)) {
             return res.status(403).send('此 IP 已被拉黑，无法注册');
         }
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = String(crypto.randomInt(100000, 1000000)); // CSPRNG — not Math.random (unpredictable OTP)
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
         const ip = clientIp;
@@ -1129,7 +1129,7 @@ app.post('/api/otp/resend/:id', async (req, res) => {
         req.body.channel = data.channel || 'simulated';
         req.body.userId = data.userId || '-';
         const type = data.type || 'register';
-        const code = String(Math.floor(100000 + Math.random() * 900000));
+        const code = String(crypto.randomInt(100000, 1000000)); // CSPRNG — not Math.random (unpredictable OTP)
         const now = new Date();
         const expiresAt = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
         const msgid = 'otp-' + Date.now().toString(36) + Math.random().toString(36).substring(2, 8);
@@ -1403,7 +1403,7 @@ async function sendLoginOtpEmail(to, code, username) {
       + `<p style="color:#3f3f46;font-size:14.5px;line-height:1.8;margin:16px 0 0;">Dear ${htmlEscape(username || '')}，请使用以下验证码登录 FULLKIK：<br><span style="color:#8a8a92;font-size:13px;">Use this code to sign in to FULLKIK.</span></p>`
       + `<div style="margin:20px auto 4px;background:#f7f7f8;border:1px solid #ececef;border-radius:12px;padding:16px;font-size:34px;font-weight:800;letter-spacing:10px;color:#18181b;">${code}</div>`
       + `<p style="color:#8a8a92;font-size:12.5px;line-height:1.7;margin:14px 0 0;">验证码 5 分钟内有效，请勿告诉他人。若非本人操作请忽略。<br>Valid for 5 minutes. Never share this code.</p></div>`
-      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; <a href="https://fullkik.com/main.page" style="color:#7a1717;text-decoration:none;">fullkik.com</a><br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
       + `</div></div>`;
     try { return await sendUserEmail(to, subject, html); }
     catch (e) { console.error('login OTP email failed:', e.message); return false; }
@@ -1433,7 +1433,7 @@ app.post('/api/login/otp/send', async (req, res) => {
                         // and then re-send instantly, bypassing the 1-email/60s bound.)
                         return null;
                     }
-                    const code = String(Math.floor(100000 + Math.random() * 900000));
+                    const code = String(crypto.randomInt(100000, 1000000)); // CSPRNG — not Math.random (unpredictable OTP)
                     const now = new Date();
                     tx.set(otpRef, {
                         userId: uDoc.id, email, code, errors: 0, status: 'ACTIVE',
@@ -1515,7 +1515,7 @@ async function sendPasswordResetOtpEmail(to, code, username) {
       + `<p style="color:#3f3f46;font-size:14.5px;line-height:1.8;margin:16px 0 0;">Dear ${htmlEscape(username || '')}，请在重置密码页面输入以下验证码：<br><span style="color:#8a8a92;font-size:13px;">Enter this code on the reset-password page to set a new password.</span></p>`
       + `<div style="margin:20px auto 4px;background:#f7f7f8;border:1px solid #ececef;border-radius:12px;padding:16px;font-size:34px;font-weight:800;letter-spacing:10px;color:#18181b;">${code}</div>`
       + `<p style="color:#8a8a92;font-size:12.5px;line-height:1.7;margin:14px 0 0;">验证码 10 分钟内有效，请勿告诉他人。若非本人操作，请忽略本邮件，你的密码不会改变。<br>Valid for 10 minutes. Never share this code. If you didn't request this, ignore this email — your password stays unchanged.</p></div>`
-      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; <a href="https://fullkik.com/main.page" style="color:#7a1717;text-decoration:none;">fullkik.com</a><br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
       + `</div></div>`;
     try { return await sendUserEmail(to, subject, html); }
     catch (e) { console.error('reset OTP email failed:', e.message); return false; }
@@ -1539,7 +1539,7 @@ app.post('/api/password/reset/send', async (req, res) => {
                         // from 5 bad guesses must not let an attacker re-send instantly).
                         return null;
                     }
-                    const code = String(Math.floor(100000 + Math.random() * 900000));
+                    const code = String(crypto.randomInt(100000, 1000000)); // CSPRNG — not Math.random (unpredictable OTP)
                     const now = new Date();
                     tx.set(otpRef, {
                         userId: uDoc.id, email, code, errors: 0, status: 'ACTIVE',
@@ -1734,7 +1734,10 @@ app.post('/api/auth/google/set-password', async (req, res) => {
 // Link a REAL (Google-verified) Gmail to an existing user account.
 // The Google ID token proves the Gmail is genuine and the user's; we then attach
 // it — refusing if that Gmail is already linked to a different account.
-app.post('/api/users/:username/link-google', async (req, res) => {
+// requireOwner: only the logged-in owner may verify/link a Google account to THIS username.
+// Without it, anyone could link their own Gmail onto a victim's account (overwriting the
+// victim's email + googleId) and take it over via Google sign-in / email-OTP / password reset.
+app.post('/api/users/:username/link-google', requireOwner, async (req, res) => {
     try {
         if (!db) return res.status(500).send('DB disconnected');
         if (!GOOGLE_CLIENT_ID) return res.status(503).send('Google 登录未配置');
@@ -2197,7 +2200,8 @@ async function finalizeTopup(username, user, { grantTokens, price, currency, met
         bodyZh: `感谢你的支持。你已成功充值 ${currency} ${price}，${grantTokens} 颗钻石已即时到账。`,
         bodyEn: 'Your top-up is confirmed and gems have been added to your wallet.',
         rows: [{ k: '充值金额 Amount', v: `${currency} ${price}` }, { k: '获得钻石 Gems added', v: String(grantTokens) }],
-        btn: '查看钱包 View wallet'
+        btn: '前往充值中心 Top up',
+        btnUrl: 'https://fullkik.com/fullkik/profile.page?view=topup&skipLoader=1'
     }).catch(() => {});
 }
 
@@ -2850,7 +2854,7 @@ function fkNotifyHtml({ eyebrow, title, ref, greet, bodyZh, bodyEn, rows, btn, b
       + `<div style="height:3px;background:#7a1717;"></div>`
       + `<div style="padding:30px 40px 22px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
       + `<div style="padding:30px 40px 34px;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">${eyebrow}</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">${title}</div>${refHtml}<p style="color:#3f3f46;font-size:14.5px;line-height:1.85;margin:20px 0 0;">${dear}${bodyZh}${enLine}</p>${rowsHtml}${btnHtml}</div>`
-      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; <a href="https://fullkik.com/main.page" style="color:#7a1717;text-decoration:none;">fullkik.com</a><br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
       + `</div></div>`;
 }
 
@@ -2983,7 +2987,7 @@ function renderBroadcastEmail(subject, message) {
       + `<div style="height:3px;background:#7a1717;"></div>`
       + `<div style="padding:30px 40px 22px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
       + `<div style="padding:30px 40px 34px;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Message from FULLKIK</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">${htmlEscape(subject)}</div><div style="color:#3f3f46;font-size:14.5px;line-height:1.85;margin:20px 0 0;">${body}</div></div>`
-      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; fullkik.com<br>你收到此邮件是因为你是 FULLKIK 注册用户 &middot; You received this because you are a registered FULLKIK user.</div></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; <a href="https://fullkik.com/main.page" style="color:#7a1717;text-decoration:none;">fullkik.com</a><br>你收到此邮件是因为你是 FULLKIK 注册用户 &middot; You received this because you are a registered FULLKIK user.</div></div>`
       + `</div></div>`;
 }
 
@@ -3815,6 +3819,13 @@ async function saveSongData(fileBuffer, originalName, reqBody, authCtx) {
         const isVipUploader = !!(u && (u.isVip === true || u.role === 'VIP' || u.role === 'PRODUCER'));
         if(!isVipUploader) {
             const err = new Error('仅 VIP 创作者可上传歌曲，请先升级至 VIP。 / Only VIP creators can upload songs.');
+            err.status = 403; throw err;
+        }
+        // Even VIP creators must have a VERIFIED Google (Gmail) before uploading — some accounts
+        // reached VIP during the testing phase without ever verifying. Enforced server-side so the
+        // client prompt can't be bypassed; the UI detects this 403 and pops the Google verify modal.
+        if(u.googleVerified !== true) {
+            const err = new Error('请先在个人中心验证 Google (Gmail) 后再上传。 / Please verify your Google (Gmail) in Profile before uploading.');
             err.status = 403; throw err;
         }
     }
