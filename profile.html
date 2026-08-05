@@ -130,6 +130,12 @@
         .withdraw-summary .val { font-size:28px; font-weight:900; color:white; }
         .withdraw-summary .lbl { color:var(--text-muted); font-size:12px; margin-top:6px; }
         .withdraw-input { width:100%; box-sizing:border-box; border-radius:12px; border:1px solid var(--border-color); background:#fff; color:#111; padding:16px 18px; font-size:16px; outline:none; }
+        .pin-slots { display:flex; gap:10px; }
+        .pin-slot { flex:1 1 0; min-width:0; height:56px; text-align:center; font-size:22px; font-weight:800; border-radius:12px; border:1px solid var(--border-color); background:#fff; color:#111; outline:none; padding:0; box-sizing:border-box; }
+        .pin-slot:focus { border-color:var(--accent-light); box-shadow:0 0 0 3px rgba(128,0,0,0.28); }
+        .pin-slot.filled { border-color:var(--accent-light); }
+        .pin-slot::-webkit-outer-spin-button, .pin-slot::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+        @media (max-width:400px){ .pin-slots{ gap:6px; } .pin-slot{ height:48px; font-size:19px; } }
         .withdraw-list { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
         .withdraw-row { display:grid; grid-template-columns:1fr 120px 120px 160px; gap:12px; align-items:center; border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; background:rgba(255,255,255,0.03); }
         .withdraw-status { display:inline-block; border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; font-weight:900; font-size:12px; color:white; text-align:center; }
@@ -666,12 +672,12 @@
             <div id="withdrawPinStatus" style="font-size:12.5px; color:var(--text-muted); margin-bottom:16px;">加载中…</div>
             <div id="withdrawPinCurrentWrap" style="display:none;">
                 <label class="input-label">当前提现密码</label>
-                <input type="password" id="withdrawPinCurrent" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位数字">
+                <div class="pin-mount" data-pin="withdrawPinCurrent" data-mask="1"></div>
             </div>
-            <label class="input-label">新提现密码（6 位数字）</label>
-            <input type="password" id="withdrawPinNew" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位数字">
+            <label class="input-label" style="display:block;">新提现密码（6 位数字）</label>
+            <div class="pin-mount" data-pin="withdrawPinNew"></div>
             <label class="input-label" style="display:block; margin-top:14px;">再次输入新提现密码</label>
-            <input type="password" id="withdrawPinConfirm" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位数字">
+            <div class="pin-mount" data-pin="withdrawPinConfirm"></div>
             <button class="btn-submit" id="withdrawPinSaveBtn" style="margin-top:20px;" onclick="saveWithdrawPin()">设置提现密码</button>
             <div id="withdrawPinMsg" style="font-weight:800; margin-top:10px; font-size:13px;"></div>
             <div style="margin-top:16px;">
@@ -681,12 +687,12 @@
                 <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:12px;">我们会向你账户邮箱发送验证码，用于重置提现密码。<br><span style="opacity:.85;">We'll email a code to reset your PIN.</span></div>
                 <button class="btn-submit" id="forgotPinSendBtn" style="background:transparent; border:1px solid var(--border-color);" onclick="sendWithdrawPinOtp()">发送验证码 / Send code</button>
                 <div id="forgotPinStep2" style="display:none; margin-top:16px;">
-                    <label class="input-label">邮箱验证码（6 位）</label>
-                    <input type="text" id="forgotPinCode" class="withdraw-input" inputmode="numeric" maxlength="6" placeholder="6 位验证码">
+                    <label class="input-label" style="display:block;">邮箱验证码（6 位）</label>
+                    <div class="pin-mount" data-pin="forgotPinCode"></div>
                     <label class="input-label" style="display:block; margin-top:14px;">新提现密码（6 位数字）</label>
-                    <input type="password" id="forgotPinNew" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位数字">
+                    <div class="pin-mount" data-pin="forgotPinNew"></div>
                     <label class="input-label" style="display:block; margin-top:14px;">再次输入新提现密码</label>
-                    <input type="password" id="forgotPinNewConfirm" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位数字">
+                    <div class="pin-mount" data-pin="forgotPinNewConfirm"></div>
                     <button class="btn-submit" id="forgotPinResetBtn" style="margin-top:18px;" onclick="resetWithdrawPinWithOtp()">重置提现密码 / Reset PIN</button>
                 </div>
                 <div id="forgotPinMsg" style="font-weight:800; margin-top:10px; font-size:13px;"></div>
@@ -905,7 +911,7 @@
     <div class="modal-box" style="max-width:380px; width:calc(100% - 40px); padding:30px 26px; text-align:center;">
         <h2 style="margin:0 0 8px; font-size:20px;">输入提现密码</h2>
         <div id="withdrawPinModalSummary" style="color:var(--text-muted); font-size:13px; line-height:1.6; margin-bottom:18px;"></div>
-        <input type="password" id="withdrawPinEntry" class="withdraw-input" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 位提现密码" style="text-align:center; letter-spacing:8px; font-size:20px;">
+        <div class="pin-mount" data-pin="withdrawPinEntry" data-mask="1" style="margin-top:4px;"></div>
         <div id="withdrawPinEntryMsg" style="color:var(--danger); font-weight:800; margin-top:10px; font-size:13px; min-height:16px;"></div>
         <button class="btn-submit" id="withdrawPinConfirmBtn" style="margin-top:12px;" onclick="confirmWithdrawalWithPin()">确认提现 / Confirm</button>
         <button onclick="closeWithdrawPinModal()" style="margin-top:12px; width:100%; background:none; border:1px solid var(--border-color); color:var(--text-muted); padding:10px 20px; border-radius:12px; cursor:pointer; font-size:13px;">取消 / Cancel</button>
@@ -2179,10 +2185,10 @@
         const net = round2(amount - fee);
         const b = withdrawalSummary.bankAccount || {};
         document.getElementById('withdrawPinModalSummary').innerHTML = `提现 🟣 <strong style="color:#c084fc;">${amount}</strong> · 手续费 ${feePercent}% ≈ ${fee} · 实收 <strong style="color:var(--success);">RM ${net}</strong><br><span style="font-size:12px;">打款至 ${escapeHtmlProfile(b.bankName || '-')} · ${escapeHtmlProfile(b.accountNumber || '-')}</span>`;
-        document.getElementById('withdrawPinEntry').value = '';
+        clearPinGroup('withdrawPinEntry');
         document.getElementById('withdrawPinEntryMsg').innerText = '';
         document.getElementById('withdrawPinModal').style.display = 'flex';
-        setTimeout(() => { const el = document.getElementById('withdrawPinEntry'); if(el) el.focus(); }, 50);
+        setTimeout(() => focusPinGroup('withdrawPinEntry'), 50);
     }
     function closeWithdrawPinModal() { document.getElementById('withdrawPinModal').style.display = 'none'; }
     async function confirmWithdrawalWithPin() {
@@ -2215,6 +2221,58 @@
         } catch(e) { msg.innerText = '网络错误，请重试'; }
         finally { if(btn) { btn.disabled = false; btn.style.opacity = ''; } }
     }
+
+    // ---- Reusable 6-slot digit input (writes the joined value into a hidden <input> that keeps the
+    // original id, so all the PIN read/clear logic is unchanged). Auto-advances, backspace, paste. ----
+    function mountPinGroups() {
+        document.querySelectorAll('.pin-mount').forEach(mount => {
+            if(mount.dataset.mounted) return;
+            const id = mount.dataset.pin;
+            const type = mount.dataset.mask === '1' ? 'password' : 'text';
+            let html = '<div class="pin-slots">';
+            for(let i=0;i<6;i++) html += `<input type="${type}" inputmode="numeric" maxlength="1" class="pin-slot" autocomplete="off" aria-label="digit ${i+1}">`;
+            html += `</div><input type="hidden" id="${id}">`;
+            mount.innerHTML = html;
+            mount.dataset.mounted = '1';
+            const hidden = mount.querySelector('input[type=hidden]');
+            const slots = Array.prototype.slice.call(mount.querySelectorAll('.pin-slot'));
+            const sync = () => { hidden.value = slots.map(s => s.value).join(''); slots.forEach(s => s.classList.toggle('filled', !!s.value)); };
+            slots.forEach((slot, i) => {
+                slot.addEventListener('input', () => {
+                    slot.value = (slot.value || '').replace(/\D/g, '').slice(0, 1);
+                    sync();
+                    if(slot.value && i < slots.length - 1) slots[i + 1].focus();
+                });
+                slot.addEventListener('keydown', (e) => {
+                    if(e.key === 'Backspace' && !slot.value && i > 0) { slots[i - 1].focus(); slots[i - 1].value = ''; sync(); e.preventDefault(); }
+                    else if(e.key === 'ArrowLeft' && i > 0) { slots[i - 1].focus(); e.preventDefault(); }
+                    else if(e.key === 'ArrowRight' && i < slots.length - 1) { slots[i + 1].focus(); e.preventDefault(); }
+                });
+                slot.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const digits = ((e.clipboardData || window.clipboardData).getData('text') || '').replace(/\D/g, '').slice(0, 6).split('');
+                    for(let k = 0; k < slots.length; k++) slots[k].value = digits[k] || '';
+                    sync();
+                    slots[Math.min(digits.length, slots.length - 1)].focus();
+                });
+            });
+        });
+    }
+    function clearPinGroup(id) {
+        const hidden = document.getElementById(id);
+        if(!hidden) return;
+        hidden.value = '';
+        const slotsBox = hidden.previousElementSibling;
+        if(slotsBox) slotsBox.querySelectorAll('.pin-slot').forEach(s => { s.value = ''; s.classList.remove('filled'); });
+    }
+    function focusPinGroup(id) {
+        const hidden = document.getElementById(id);
+        if(!hidden) return;
+        const slotsBox = hidden.previousElementSibling;
+        const first = slotsBox && slotsBox.querySelector('.pin-slot');
+        if(first) first.focus();
+    }
+    document.addEventListener('DOMContentLoaded', mountPinGroups);
 
     // ---- Withdrawal PIN management (提现密码) ----
     function renderWithdrawPinCard() {
@@ -2250,7 +2308,7 @@
             if(res.ok) {
                 withdrawalSummary.hasWithdrawPin = true;
                 withdrawalSummary.withdrawPinSetAt = data.withdrawPinSetAt || new Date().toISOString();
-                if(curEl) curEl.value = ''; document.getElementById('withdrawPinNew').value = ''; document.getElementById('withdrawPinConfirm').value = '';
+                clearPinGroup('withdrawPinCurrent'); clearPinGroup('withdrawPinNew'); clearPinGroup('withdrawPinConfirm');
                 msg.style.color = 'var(--success)'; msg.innerText = '提现密码已保存 ✓';
                 renderWithdrawPinCard();
             } else { msg.style.color = 'var(--danger)'; msg.innerText = data.message || '保存失败'; }
@@ -2306,7 +2364,7 @@
                 withdrawalSummary.hasWithdrawPin = true;
                 withdrawalSummary.withdrawPinSetAt = data.withdrawPinSetAt || new Date().toISOString();
                 msg.style.color = 'var(--success)'; msg.innerText = '提现密码已重置 ✓，请用新密码提现';
-                document.getElementById('forgotPinCode').value = ''; document.getElementById('forgotPinNew').value = ''; document.getElementById('forgotPinNewConfirm').value = '';
+                clearPinGroup('forgotPinCode'); clearPinGroup('forgotPinNew'); clearPinGroup('forgotPinNewConfirm');
                 document.getElementById('forgotPinStep2').style.display = 'none';
                 document.getElementById('forgotPinBox').style.display = 'none';
                 const t = document.getElementById('forgotPinToggle'); if(t) t.innerText = '▶ 忘记提现密码?';
