@@ -2006,6 +2006,8 @@ app.get('/api/users/:username/withdrawals', async (req, res) => {
                 balance: earnings.balance,
                 feePercent,
                 bankAccount: maskBankAccount(doc.data().bankAccount),
+                hasWithdrawPin: !!doc.data().withdrawPinHash,
+                withdrawPinSetAt: doc.data().withdrawPinSetAt || '',
                 withdrawals: earnings.withdrawals.map(maskWithdrawalRecord).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
             };
         });
@@ -2072,6 +2074,31 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
         const earnings = await calculateUserEarnings(req.params.username);
         if(amount > earnings.balance) return res.status(400).json({ error: 'INSUFFICIENT_BALANCE', message: '超过可提现余额' });
 
+        // Withdrawal PIN is a second factor: a stolen SESSION token alone must not be able to drain
+        // earnings. Verify the 6-digit PIN with an ATOMIC lockout (5 wrong tries -> 30-min lock) so a
+        // compromised session can't brute-force the 1-in-a-million PIN.
+        if(!user.withdrawPinHash) {
+            return res.status(400).json({ error: 'PIN_NOT_SET', message: '请先设置提现密码后再提现 / Set a withdrawal PIN first' });
+        }
+        const pin = String(req.body.pin || '').trim();
+        if(!/^\d{6}$/.test(pin)) return res.status(400).json({ error: 'PIN_REQUIRED', message: '请输入 6 位提现密码 / Enter your 6-digit withdrawal PIN' });
+        const pinCheck = await db.runTransaction(async (tx) => {
+            const d = await tx.get(userRef);
+            const uu = d.data();
+            const now = Date.now();
+            if(uu.withdrawPinLockedUntil && new Date(uu.withdrawPinLockedUntil).getTime() > now) return 'locked';
+            if(!verifyPassword(pin, uu.withdrawPinHash)) {
+                const fails = (parseInt(uu.withdrawPinFails) || 0) + 1;
+                if(fails >= 5) tx.update(userRef, { withdrawPinFails: 0, withdrawPinLockedUntil: new Date(now + 30 * 60 * 1000).toISOString() });
+                else tx.update(userRef, { withdrawPinFails: fails });
+                return 'wrong';
+            }
+            if(parseInt(uu.withdrawPinFails) || 0) tx.update(userRef, { withdrawPinFails: 0 });
+            return 'ok';
+        });
+        if(pinCheck === 'locked') return res.status(403).json({ error: 'PIN_LOCKED', message: '提现密码错误次数过多，请 30 分钟后再试或点击「忘记提现密码」重置 / Too many wrong attempts; try again in 30 min or reset your PIN' });
+        if(pinCheck !== 'ok') return res.status(400).json({ error: 'PIN_WRONG', message: '提现密码不正确 / Incorrect withdrawal PIN' });
+
         const settings = await getGlobalSettings();
         let feePercent = Number(settings.withdrawFeePercent);
         if(!Number.isFinite(feePercent) || feePercent < 0 || feePercent > 100) feePercent = 10;
@@ -2105,6 +2132,121 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
         }).catch(() => {});
         invalidateUserCaches(req.params.username);
         res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
+});
+
+// ==========================================
+// WITHDRAWAL PIN (提现密码) — a 6-digit second factor for real-money withdrawals.
+// Stored as a scrypt hash (same s1$ format as passwords). All endpoints are requireOwner
+// (you can only manage your OWN PIN), so there is no account-enumeration surface.
+// ==========================================
+async function sendWithdrawPinOtpEmail(to, code, username) {
+    const subject = 'FULLKIK 提现密码重置验证码 / Withdrawal PIN reset code: ' + code;
+    const html = `<div style="background:#f4f4f5;padding:40px 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">`
+      + `<div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e5e7;">`
+      + `<div style="height:3px;background:#7a1717;"></div>`
+      + `<div style="padding:30px 40px 20px;text-align:center;border-bottom:1px solid #f0f0f2;"><div style="color:#7a1717;font-size:18px;font-weight:700;letter-spacing:5px;">FULLKIK</div><div style="color:#b0b0b8;font-size:10px;font-weight:600;letter-spacing:3px;margin-top:7px;">DJ MUSIC SPACE</div></div>`
+      + `<div style="padding:30px 40px 32px;text-align:center;"><div style="color:#7a1717;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">Withdrawal PIN Reset</div><div style="color:#18181b;font-size:21px;font-weight:600;margin-top:6px;">提现密码重置验证码</div>`
+      + `<p style="color:#3f3f46;font-size:14.5px;line-height:1.8;margin:16px 0 0;">Dear ${htmlEscape(username || '')}，请在提现页面输入以下验证码以重置你的提现密码：<br><span style="color:#8a8a92;font-size:13px;">Enter this code on the withdrawal page to reset your withdrawal PIN.</span></p>`
+      + `<div style="margin:20px auto 4px;background:#f7f7f8;border:1px solid #ececef;border-radius:12px;padding:16px;font-size:34px;font-weight:800;letter-spacing:10px;color:#18181b;">${code}</div>`
+      + `<p style="color:#8a8a92;font-size:12.5px;line-height:1.7;margin:14px 0 0;">验证码 10 分钟内有效，请勿告诉他人。若非本人操作，请忽略本邮件，你的提现密码不会改变。<br>Valid for 10 minutes. Never share this code. If this wasn't you, ignore this email — your PIN stays unchanged.</p></div>`
+      + `<div style="padding:18px 40px 26px;border-top:1px solid #f0f0f2;text-align:center;"><div style="color:#b0b0b8;font-size:11px;line-height:1.7;">FULLKIK &middot; <a href="https://fullkik.com/main.page" style="color:#7a1717;text-decoration:none;">fullkik.com</a><br>此为系统自动发送的通知邮件，无需回复 &middot; This is an automated message.</div></div>`
+      + `</div></div>`;
+    try { return await sendUserEmail(to, subject, html); }
+    catch (e) { console.error('withdraw PIN OTP email failed:', e.message); return false; }
+}
+
+// Set or change the withdrawal PIN. If one already exists, the current PIN is required.
+app.post('/api/users/:username/withdraw-pin', requireOwner, async (req, res) => {
+    try {
+        if(!db) return res.status(500).json({ error: 'DB', message: 'DB disconnected' });
+        const newPin = String(req.body.newPin || '').trim();
+        if(!/^\d{6}$/.test(newPin)) return res.status(400).json({ error: 'PIN_FORMAT', message: '提现密码必须是 6 位数字 / PIN must be 6 digits' });
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+        const u = doc.data();
+        if(u.withdrawPinHash) {
+            const cur = String(req.body.currentPin || '').trim();
+            if(!verifyPassword(cur, u.withdrawPinHash)) return res.status(400).json({ error: 'CURRENT_PIN_WRONG', message: '当前提现密码不正确 / Current PIN is incorrect' });
+        }
+        const setAt = new Date().toISOString();
+        await userRef.update({ withdrawPinHash: hashPassword(newPin), withdrawPinSetAt: setAt, withdrawPinFails: 0, withdrawPinLockedUntil: '' });
+        invalidateUserCaches(req.params.username);
+        sendNotifyEmail(u, {
+            subject: '提现密码已更新', eyebrow: 'Withdrawal PIN Updated', title: '提现密码已更新',
+            bodyZh: '你的提现密码已成功设置 / 修改。若非本人操作，请立即修改并联系客服。',
+            bodyEn: 'Your withdrawal PIN was set/changed. If this was not you, change it and contact support immediately.',
+            rows: [{ k: '操作 Action', v: '提现密码已更新 Updated' }]
+        }).catch(() => {});
+        res.json({ success: true, withdrawPinSetAt: setAt });
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
+});
+
+// Forgot withdrawal PIN -> email a one-time code to the account's own email.
+app.post('/api/users/:username/withdraw-pin/forgot', requireOwner, async (req, res) => {
+    try {
+        if(!db) return res.status(500).json({ error: 'DB', message: 'DB disconnected' });
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+        const u = doc.data();
+        const email = userEmailOf(u);
+        if(!email) return res.status(400).json({ error: 'NO_EMAIL', message: '账户未绑定邮箱，无法通过邮件重置 / No email on file to reset by code' });
+        const otpRef = db.collection('withdraw_pin_otps').doc(userRef.id);
+        const issued = await db.runTransaction(async (tx) => {
+            const d = await tx.get(otpRef);
+            if(d.exists && d.data().createdAt && (Date.now() - new Date(d.data().createdAt).getTime()) < 60 * 1000) return null;
+            const code = String(crypto.randomInt(100000, 1000000));
+            const now = new Date();
+            tx.set(otpRef, { userId: userRef.id, email, code, errors: 0, status: 'ACTIVE', createdAt: now.toISOString(), expiresAt: new Date(now.getTime() + 10 * 60 * 1000).toISOString() });
+            return code;
+        });
+        if(issued) sendWithdrawPinOtpEmail(email, issued, u.username || userRef.id).catch(() => {});
+        res.json({ success: true });   // owner-scoped; email is fire-and-forget
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
+});
+
+// Reset the withdrawal PIN with the emailed code. Atomic 5-attempt cap; sets the new PIN and clears any lock.
+app.post('/api/users/:username/withdraw-pin/reset', requireOwner, async (req, res) => {
+    try {
+        if(!db) return res.status(500).json({ error: 'DB', message: 'DB disconnected' });
+        const code = String(req.body.code || '').trim();
+        const newPin = String(req.body.newPin || '').trim();
+        const FAIL = '验证码错误或已过期 / Invalid or expired code';
+        if(!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'CODE', message: FAIL });
+        if(!/^\d{6}$/.test(newPin)) return res.status(400).json({ error: 'PIN_FORMAT', message: '提现密码必须是 6 位数字 / PIN must be 6 digits' });
+        const userRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const doc = await userRef.get();
+        if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
+        const otpRef = db.collection('withdraw_pin_otps').doc(userRef.id);
+        const hashed = hashPassword(newPin);
+        const setAt = new Date().toISOString();
+        const outcome = await db.runTransaction(async (tx) => {
+            const d = await tx.get(otpRef);
+            if(!d.exists) return 'fail';
+            const o = d.data();
+            if(o.status !== 'ACTIVE') return 'fail';
+            if(o.expiresAt && new Date(o.expiresAt).getTime() < Date.now()) { tx.update(otpRef, { status: 'EXPIRED' }); return 'fail'; }
+            if((parseInt(o.errors) || 0) >= 5) { tx.update(otpRef, { status: 'LOCKED' }); return 'fail'; }
+            if(String(o.code) !== code) {
+                const n = (parseInt(o.errors) || 0) + 1;
+                tx.update(otpRef, { errors: n, status: n >= 5 ? 'LOCKED' : 'ACTIVE' });
+                return 'fail';
+            }
+            tx.update(otpRef, { status: 'USED', consumedAt: setAt });
+            tx.update(userRef, { withdrawPinHash: hashed, withdrawPinSetAt: setAt, withdrawPinFails: 0, withdrawPinLockedUntil: '' });
+            return 'ok';
+        });
+        if(outcome !== 'ok') return res.status(400).json({ error: 'CODE', message: FAIL });
+        invalidateUserCaches(req.params.username);
+        sendNotifyEmail(doc.data(), {
+            subject: '提现密码已重置', eyebrow: 'Withdrawal PIN Reset', title: '提现密码已重置',
+            bodyZh: '你的提现密码已通过邮箱验证码重置。若非本人操作，请立即联系客服。',
+            bodyEn: 'Your withdrawal PIN was reset via email code. If this was not you, contact support immediately.',
+            rows: [{ k: '操作 Action', v: '提现密码已重置 Reset' }]
+        }).catch(() => {});
+        res.json({ success: true, withdrawPinSetAt: setAt });
     } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
 });
 

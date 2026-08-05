@@ -214,8 +214,8 @@
         .uploader-inline { color:var(--text-muted); cursor:pointer; border-bottom:1px solid rgba(165,42,42,0.35); }
         .uploader-inline:hover { color:white; border-bottom-color:var(--accent-light); }
         
-        .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 12px;}
-        .wave-bar { flex: 1; background: var(--border-color); border-radius: 2px; transition: 0.2s;}
+        .waveform-ui { width: 100%; height: 60px; display: flex; align-items: center; gap: 3px; margin-bottom: 12px; cursor: pointer;}
+        .wave-bar { flex: 1; min-width: 2px; background: rgba(255,255,255,0.16); border-radius: 2px; transition: background 0.2s;}
         
         .audio-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 16px;}
         .play-circle { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;}
@@ -1846,6 +1846,44 @@
     }
 
     // --- INDIVIDUAL SONG PLAYER ---
+    // Deterministic per-song waveform (stable shape per song id), highlighted purple up to the
+    // current playback position and grey beyond — click anywhere on it to seek (within the preview
+    // window if unpurchased). No real audio decoding needed; the shape is seeded from the song id.
+    let _waveBars = [];
+    function buildWaveform(song) {
+        const wf = document.getElementById('waveform'); if(!wf) return;
+        let s = 2166136261 >>> 0; const key = String((song && song.id) || 'fullkik');
+        for(let i=0;i<key.length;i++){ s ^= key.charCodeAt(i); s = Math.imul(s, 16777619) >>> 0; }
+        const rand = () => { s = (Math.imul(s ^ (s >>> 15), s | 1) + 0x6D2B79F5) >>> 0; return ((s ^ (s >>> 13)) >>> 0) / 4294967296; };
+        const N = 72; let html = '';
+        for(let i=0;i<N;i++){
+            const env = 0.55 + 0.4*Math.sin(i*0.30) + 0.16*Math.sin(i*0.11 + 1.6);
+            const h = Math.max(0.14, Math.min(1, env*0.55 + rand()*0.6));
+            html += `<div class="wave-bar" style="height:${(h*100).toFixed(1)}%"></div>`;
+        }
+        wf.innerHTML = html;
+        _waveBars = Array.prototype.slice.call(wf.querySelectorAll('.wave-bar'));
+        updateWaveformProgress(0);
+        wf.onclick = function(e){
+            if(!_waveBars.length || !audioEl) return;
+            const rect = wf.getBoundingClientRect();
+            const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const isP = audioEl.dataset.purchased === 'true';
+            const ps = parseFloat(audioEl.dataset.previewStart) || 0;
+            const pl = parseFloat(audioEl.dataset.previewLen) || 60;
+            const winLen = isP ? (audioEl.duration || 0) : Math.min(pl, Math.max(0.01, (audioEl.duration || 0) - ps));
+            seekPlayerAudio(frac * winLen);
+            updateWaveformProgress(frac);
+        };
+    }
+    function updateWaveformProgress(frac) {
+        frac = Math.max(0, Math.min(1, frac || 0));
+        const played = Math.round(frac * _waveBars.length);
+        for(let i=0;i<_waveBars.length;i++){
+            _waveBars[i].style.background = i < played ? '#a855f7' : 'rgba(255,255,255,0.16)';
+        }
+    }
+
     function openSong(id) {
         currentSong = allSongs.find(s => s.id === id); if(!currentSong) return;
         const isPurchased = username ? userPurchases.some(p => p.songId === id) : false;
@@ -1880,6 +1918,7 @@
         }
 
         audioEl.src = `/api/stream/${currentSong.id}`; audioEl.dataset.purchased = isPurchased; audioEl.dataset.previewStart = String((currentSong && currentSong.previewStart) ? Math.max(0, parseInt(currentSong.previewStart)) : 0); audioEl.dataset.previewLen = String((currentSong && currentSong.previewLen) ? Math.max(5, parseInt(currentSong.previewLen)) : 60); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = '0%';
+        buildWaveform(currentSong);
         setSongVisualizerPlaying(false);
         renderSongRecommendations(false);
         switchView('song');
@@ -1889,7 +1928,7 @@
     // AUDIO LOGIC
     if(audioEl) {
         audioEl.addEventListener('loadedmetadata', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; const winLen = isP ? audioEl.duration : Math.min(pl, Math.max(0, (audioEl.duration || 0) - ps)); if(!isP && ps > 0) { try { audioEl.currentTime = ps; } catch(e){} } document.getElementById('playerDur').innerText = formatTime(winLen); document.getElementById('playerSeek').max = winLen; });
-        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; if(!isP) { if(audioEl.currentTime < ps - 0.5) audioEl.currentTime = ps; if(audioEl.currentTime >= ps + pl) { audioEl.pause(); audioEl.currentTime = ps; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } } const rel = isP ? audioEl.currentTime : Math.max(0, audioEl.currentTime - ps); const winLen = isP ? audioEl.duration : Math.min(pl, Math.max(0.01, (audioEl.duration || 0) - ps)); document.getElementById('playerCurr').innerText = formatTime(rel); document.getElementById('playerSeek').value = rel; document.getElementById('playerProg').style.width = `${Math.max(0, Math.min(100, (rel / winLen) * 100))}%`; });
+        audioEl.addEventListener('timeupdate', () => { const isP = audioEl.dataset.purchased === 'true'; const ps = parseFloat(audioEl.dataset.previewStart) || 0; const pl = parseFloat(audioEl.dataset.previewLen) || 60; if(!isP) { if(audioEl.currentTime < ps - 0.5) audioEl.currentTime = ps; if(audioEl.currentTime >= ps + pl) { audioEl.pause(); audioEl.currentTime = ps; document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; } } const rel = isP ? audioEl.currentTime : Math.max(0, audioEl.currentTime - ps); const winLen = isP ? audioEl.duration : Math.min(pl, Math.max(0.01, (audioEl.duration || 0) - ps)); document.getElementById('playerCurr').innerText = formatTime(rel); document.getElementById('playerSeek').value = rel; document.getElementById('playerProg').style.width = `${Math.max(0, Math.min(100, (rel / winLen) * 100))}%`; updateWaveformProgress(winLen > 0 ? rel / winLen : 0); });
         audioEl.addEventListener('play', () => setSongVisualizerPlaying(true));
         audioEl.addEventListener('pause', () => setSongVisualizerPlaying(false));
         audioEl.addEventListener('ended', () => { setSongVisualizerPlaying(false); document.getElementById('playerPlayBtn').innerHTML = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`; document.getElementById('playerSeek').value = 0; document.getElementById('playerProg').style.width = "0%"; });
