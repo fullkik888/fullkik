@@ -3857,26 +3857,33 @@ app.put('/api/withdrawals/:username/:withdrawalId/status', requireAdmin, async (
         if(!allowed.includes(nextStatus)) return res.status(400).send('Invalid status');
 
         const userRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const doc = await userRef.get();
-        if(!doc.exists) return res.status(404).send('User not found');
-
-        const user = doc.data();
-        const withdrawals = user.withdrawals || [];
-        const index = withdrawals.findIndex(w => w.id === req.params.withdrawalId);
-        if(index === -1) return res.status(404).send('Withdrawal not found');
-
         // Transfer reference / bank receipt no. — captured when marking COMPLETED so every payout is provable.
         const payoutRef = String(req.body.payoutRef || '').trim().slice(0, 120);
-        withdrawals[index] = {
-            ...withdrawals[index],
-            status: nextStatus,
-            adminNote: req.body.adminNote || withdrawals[index].adminNote || '',
-            payoutRef: nextStatus === 'COMPLETED' ? (payoutRef || withdrawals[index].payoutRef || '') : (withdrawals[index].payoutRef || ''),
-            updatedAt: new Date().toISOString(),
-            completedAt: ['COMPLETED', 'REJECTED'].includes(nextStatus) ? new Date().toISOString() : withdrawals[index].completedAt || ''
-        };
-
-        await userRef.update({ withdrawals });
+        const adminNoteIn = req.body.adminNote || '';
+        // Transactional read-modify-write so a concurrent DJ withdrawal-append (also transactional) can't
+        // be clobbered by a blind whole-array overwrite (lost-write race). `user`/`withdrawals`/`index`
+        // are populated inside the tx and reused by the notification/email/log code below.
+        let user = null, withdrawals = null, index = -1, notFound = '';
+        await db.runTransaction(async (tx) => {
+            const d = await tx.get(userRef);
+            if(!d.exists) { notFound = 'user'; return; }
+            user = d.data();
+            withdrawals = Array.isArray(user.withdrawals) ? user.withdrawals : [];
+            index = withdrawals.findIndex(w => w.id === req.params.withdrawalId);
+            if(index === -1) { notFound = 'wd'; return; }
+            const nowIso = new Date().toISOString();
+            withdrawals[index] = {
+                ...withdrawals[index],
+                status: nextStatus,
+                adminNote: adminNoteIn || withdrawals[index].adminNote || '',
+                payoutRef: nextStatus === 'COMPLETED' ? (payoutRef || withdrawals[index].payoutRef || '') : (withdrawals[index].payoutRef || ''),
+                updatedAt: nowIso,
+                completedAt: ['COMPLETED', 'REJECTED'].includes(nextStatus) ? nowIso : (withdrawals[index].completedAt || '')
+            };
+            tx.update(userRef, { withdrawals });
+        });
+        if(notFound === 'user') return res.status(404).send('User not found');
+        if(notFound === 'wd') return res.status(404).send('Withdrawal not found');
         const notificationTitle = nextStatus === 'REJECTED'
             ? '退款消息 - 提现被拒绝'
             : nextStatus === 'COMPLETED'
