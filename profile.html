@@ -1964,11 +1964,13 @@
     function getCreatorMoneyStats() {
         const mySongs = allSongs.filter(s => s.uploader === username);
         const mySongIds = mySongs.map(s => s.id);
-        const totalEarned = allUsers.reduce((sum, user) => {
+        const purchaseEarned = allUsers.reduce((sum, user) => {
             return sum + (user.purchases || []).reduce((inner, p) => {
                 return inner + (String(p.uploader || '').toLowerCase() === username.toLowerCase() ? (parseInt(p.tokensSpent) || 0) : 0);
             }, 0);
         }, 0);
+        // 打赏 tips are earnings too — mirror the server's calculateUserEarnings (purchases + tipsEarned).
+        const totalEarned = purchaseEarned + (currentProfileUserData ? (parseInt(currentProfileUserData.tipsEarned) || 0) : 0);
         const favoriteCount = allUsers.reduce((sum, user) => {
             return sum + (user.favorites || []).filter(songId => mySongIds.includes(songId)).length;
         }, 0);

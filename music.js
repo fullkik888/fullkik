@@ -727,7 +727,11 @@ async function calculateUserEarnings(username) {
     });
 
     const userDoc = await db.collection('users').doc(target).get();
-    const withdrawals = userDoc.exists ? (userDoc.data().withdrawals || []) : [];
+    const targetData = userDoc.exists ? userDoc.data() : {};
+    // 打赏 tips are earnings too (1 gem tipped = 1 withdrawable purple gem). Stored as a running
+    // counter on the DJ so they fold into the withdrawable total alongside song-purchase earnings.
+    total += parseInt(targetData.tipsEarned) || 0;
+    const withdrawals = targetData.withdrawals || [];
     const locked = withdrawals
         .filter(w => w.status !== 'REJECTED')
         .reduce((sum, w) => sum + (parseInt(w.amount) || 0), 0);
@@ -2630,6 +2634,70 @@ app.post('/api/users/:username/purchase', async (req, res) => {
         invalidateCachePrefix('transactions:');
         res.json({ success: true, tokens: outcome.newTokens, purchases: outcome.purchases });
     } catch (e) { res.status(500).send(e.message); }
+});
+
+// ---- 打赏 / Tip: a fan sends blue gems to a DJ, who receives them 1:1 as withdrawable purple gems ----
+// requireOwner so the token debit can only come from the logged-in tipper's own account.
+app.post('/api/users/:username/tip', requireOwner, async (req, res) => {
+    try {
+        if(!db) return res.status(500).json({ error: 'DB', message: 'DB disconnected' });
+        const amount = parseInt(req.body.amount);
+        if(Number.isNaN(amount) || amount < 1) return res.status(400).json({ error: 'AMOUNT_MIN', message: '打赏至少 1 钻石 / Minimum tip is 1 gem' });
+        if(amount > 1000000) return res.status(400).json({ error: 'AMOUNT_MAX', message: '打赏金额过大 / Amount too large' });
+        const songId = String(req.body.songId || '');
+        if(!songId) return res.status(400).json({ error: 'MISSING_SONG', message: 'Missing songId' });
+
+        const tipperRef = db.collection('users').doc(req.params.username.toLowerCase());
+        const songRef = db.collection('songs').doc(songId);
+
+        // Atomic: debit the tipper and credit the DJ in ONE transaction (both or neither).
+        const outcome = await db.runTransaction(async (tx) => {
+            const songDoc = await tx.get(songRef);
+            if(!songDoc.exists) return { error: [404, 'SONG_NOT_FOUND', '歌曲不存在'] };
+            const song = songDoc.data();
+            const uploader = String(song.uploader || '');
+            if(!uploader || uploader.toUpperCase() === 'FULLKIK') return { error: [400, 'NO_DJ', '该歌曲无法打赏 / This track cannot be tipped'] };
+            if(uploader.toLowerCase() === req.params.username.toLowerCase()) return { error: [400, 'SELF_TIP', '不能打赏自己 / You cannot tip yourself'] };
+            const tipperDoc = await tx.get(tipperRef);
+            if(!tipperDoc.exists) return { error: [404, 'USER_NOT_FOUND', 'User not found'] };
+            const djRef = db.collection('users').doc(uploader.toLowerCase());
+            const djDoc = await tx.get(djRef);
+            if(!djDoc.exists) return { error: [404, 'DJ_NOT_FOUND', 'DJ 账户不存在 / DJ account not found'] };
+            const tipper = tipperDoc.data();
+            if((tipper.tokens || 0) < amount) return { error: [400, 'INSUFFICIENT', '钻石余额不足 / Not enough gems'] };
+            tx.update(tipperRef, { tokens: admin.firestore.FieldValue.increment(-amount) });
+            tx.update(djRef, {
+                purpleGems: admin.firestore.FieldValue.increment(amount),   // display counter
+                tipsEarned: admin.firestore.FieldValue.increment(amount)    // folded into withdrawable earnings
+            });
+            return { ok: true, uploader, song, newTokens: (tipper.tokens || 0) - amount, tipper };
+        });
+        if(outcome.error) return res.status(outcome.error[0]).json({ error: outcome.error[1], message: outcome.error[2] });
+
+        const { uploader, song, newTokens, tipper } = outcome;
+        // Post-commit side effects (single commit guaranteed).
+        await db.collection('transactions').add({
+            type: 'tip', buyer: req.params.username, email: (tipper && tipper.email) || '-',
+            songName: song.filename, uploader, tokens: amount, time: new Date().toISOString()
+        }).catch(() => {});
+        await addUserNotification(uploader, createNotification(
+            'tip', `收到打赏 - ${song.filename}`,
+            `${req.params.username} 打赏了你 ${amount} 紫钻，已计入你的收益`,
+            { songId, from: req.params.username, amount }
+        )).catch(() => {});
+        sendNotifyEmail(uploader, {
+            subject: `你收到一笔打赏 · ${amount} 紫钻`,
+            eyebrow: 'New Tip', title: '你收到一笔打赏',
+            bodyZh: `有人打赏了你的作品《${htmlEscape(song.filename)}》。${amount} 紫钻已计入你的收益，可随时申请提现。`,
+            bodyEn: 'Someone tipped your track. The gems were added to your withdrawable purple gem balance.',
+            rows: [{ k: '歌曲 Track', v: htmlEscape(song.filename) }, { k: '打赏 Tip', v: `${amount} 紫钻` }],
+            btn: '查看收益 View earnings'
+        }).catch(() => {});
+        invalidateUserCaches(req.params.username);
+        invalidateUserCaches(uploader);
+        invalidateCachePrefix('transactions:');
+        res.json({ success: true, tokens: newTokens, amount, uploader });
+    } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
 });
 
 app.put('/api/users/:username/update-purchases-order', async (req, res) => {
