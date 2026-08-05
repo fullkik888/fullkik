@@ -130,12 +130,12 @@
         .withdraw-summary .val { font-size:28px; font-weight:900; color:white; }
         .withdraw-summary .lbl { color:var(--text-muted); font-size:12px; margin-top:6px; }
         .withdraw-input { width:100%; box-sizing:border-box; border-radius:12px; border:1px solid var(--border-color); background:#fff; color:#111; padding:16px 18px; font-size:16px; outline:none; }
-        .pin-slots { display:flex; gap:10px; }
-        .pin-slot { flex:1 1 0; min-width:0; height:56px; text-align:center; font-size:22px; font-weight:800; border-radius:12px; border:1px solid var(--border-color); background:#fff; color:#111; outline:none; padding:0; box-sizing:border-box; }
+        .pin-slots { display:flex; gap:10px; justify-content:flex-start; }
+        .pin-slot { flex:0 1 54px; min-width:40px; height:54px; text-align:center; font-size:22px; font-weight:800; border-radius:12px; border:1px solid var(--border-color); background:#fff; color:#111; outline:none; padding:0; box-sizing:border-box; }
         .pin-slot:focus { border-color:var(--accent-light); box-shadow:0 0 0 3px rgba(128,0,0,0.28); }
         .pin-slot.filled { border-color:var(--accent-light); }
         .pin-slot::-webkit-outer-spin-button, .pin-slot::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-        @media (max-width:400px){ .pin-slots{ gap:6px; } .pin-slot{ height:48px; font-size:19px; } }
+        @media (max-width:400px){ .pin-slots{ gap:6px; } .pin-slot{ flex-basis:46px; min-width:0; height:48px; font-size:19px; } }
         .withdraw-list { display:flex; flex-direction:column; gap:10px; margin-top:18px; }
         .withdraw-row { display:grid; grid-template-columns:1fr 120px 120px 160px; gap:12px; align-items:center; border:1px solid var(--border-color); border-radius:12px; padding:14px 16px; background:rgba(255,255,255,0.03); }
         .withdraw-status { display:inline-block; border:1px solid var(--border-color); border-radius:8px; padding:6px 10px; font-weight:900; font-size:12px; color:white; text-align:center; }
