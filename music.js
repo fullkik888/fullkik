@@ -2071,33 +2071,18 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
             return res.status(400).json({ error: 'BANK_REQUIRED', message: '请先绑定银行账户后再提现' });
         }
 
+        // `total` is the authoritative earned amount (cross-user purchases) — used as the hard cap.
+        // `locked` is recomputed INSIDE the transaction below so the balance check can't be raced.
         const earnings = await calculateUserEarnings(req.params.username);
+        const totalEarned = earnings.total;
         if(amount > earnings.balance) return res.status(400).json({ error: 'INSUFFICIENT_BALANCE', message: '超过可提现余额' });
 
-        // Withdrawal PIN is a second factor: a stolen SESSION token alone must not be able to drain
-        // earnings. Verify the 6-digit PIN with an ATOMIC lockout (5 wrong tries -> 30-min lock) so a
-        // compromised session can't brute-force the 1-in-a-million PIN.
+        // Withdrawal PIN is a second factor: a stolen SESSION token alone must not be able to drain earnings.
         if(!user.withdrawPinHash) {
             return res.status(400).json({ error: 'PIN_NOT_SET', message: '请先设置提现密码后再提现 / Set a withdrawal PIN first' });
         }
         const pin = String(req.body.pin || '').trim();
         if(!/^\d{6}$/.test(pin)) return res.status(400).json({ error: 'PIN_REQUIRED', message: '请输入 6 位提现密码 / Enter your 6-digit withdrawal PIN' });
-        const pinCheck = await db.runTransaction(async (tx) => {
-            const d = await tx.get(userRef);
-            const uu = d.data();
-            const now = Date.now();
-            if(uu.withdrawPinLockedUntil && new Date(uu.withdrawPinLockedUntil).getTime() > now) return 'locked';
-            if(!verifyPassword(pin, uu.withdrawPinHash)) {
-                const fails = (parseInt(uu.withdrawPinFails) || 0) + 1;
-                if(fails >= 5) tx.update(userRef, { withdrawPinFails: 0, withdrawPinLockedUntil: new Date(now + 30 * 60 * 1000).toISOString() });
-                else tx.update(userRef, { withdrawPinFails: fails });
-                return 'wrong';
-            }
-            if(parseInt(uu.withdrawPinFails) || 0) tx.update(userRef, { withdrawPinFails: 0 });
-            return 'ok';
-        });
-        if(pinCheck === 'locked') return res.status(403).json({ error: 'PIN_LOCKED', message: '提现密码错误次数过多，请 30 分钟后再试或点击「忘记提现密码」重置 / Too many wrong attempts; try again in 30 min or reset your PIN' });
-        if(pinCheck !== 'ok') return res.status(400).json({ error: 'PIN_WRONG', message: '提现密码不正确 / Incorrect withdrawal PIN' });
 
         const settings = await getGlobalSettings();
         let feePercent = Number(settings.withdrawFeePercent);
@@ -2105,8 +2090,6 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
         // 1 紫钻 = RM 1. Fee is deducted from the payout; DJ receives `net` RM.
         const fee = round2(amount * feePercent / 100);
         const net = round2(amount - fee);
-
-        const withdrawals = user.withdrawals || [];
         const record = {
             id: 'WD' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase(),
             amount,                 // gross 紫钻 deducted from balance
@@ -2120,8 +2103,37 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
             createdAt: new Date().toISOString(),
             note: req.body.note || ''
         };
-        withdrawals.unshift(record);
-        await userRef.update({ withdrawals });
+
+        // ONE atomic transaction does BOTH the PIN check (with the 5-try/30-min lockout) AND the
+        // balance re-check + append — all against the tx-read withdrawals array. This closes the PIN
+        // brute-force race AND the TOCTOU where a concurrent status flip / withdrawal could let locked
+        // pending payouts exceed earnings (the append is guarded by the same read that validated it).
+        let outWithdrawals = null;
+        const txResult = await db.runTransaction(async (tx) => {
+            const d = await tx.get(userRef);
+            const uu = d.data();
+            const now = Date.now();
+            if(uu.withdrawPinLockedUntil && new Date(uu.withdrawPinLockedUntil).getTime() > now) return 'locked';
+            if(!verifyPassword(pin, uu.withdrawPinHash)) {
+                const fails = (parseInt(uu.withdrawPinFails) || 0) + 1;
+                if(fails >= 5) tx.update(userRef, { withdrawPinFails: 0, withdrawPinLockedUntil: new Date(now + 30 * 60 * 1000).toISOString() });
+                else tx.update(userRef, { withdrawPinFails: fails });
+                return 'wrong';
+            }
+            const txWithdrawals = Array.isArray(uu.withdrawals) ? uu.withdrawals : [];
+            const lockedNow = txWithdrawals.filter(w => String(w.status || '').toUpperCase() !== 'REJECTED').reduce((s, w) => s + (parseInt(w.amount) || 0), 0);
+            if(lockedNow + amount > totalEarned) return 'overdraw';
+            const next = [record, ...txWithdrawals];
+            const upd = { withdrawals: next };
+            if(parseInt(uu.withdrawPinFails) || 0) upd.withdrawPinFails = 0;
+            tx.update(userRef, upd);
+            outWithdrawals = next;
+            return 'ok';
+        });
+        if(txResult === 'locked') return res.status(403).json({ error: 'PIN_LOCKED', message: '提现密码错误次数过多，请 30 分钟后再试或点击「忘记提现密码」重置 / Too many wrong attempts; try again in 30 min or reset your PIN' });
+        if(txResult === 'wrong') return res.status(400).json({ error: 'PIN_WRONG', message: '提现密码不正确 / Incorrect withdrawal PIN' });
+        if(txResult === 'overdraw') return res.status(400).json({ error: 'INSUFFICIENT_BALANCE', message: '超过可提现余额' });
+
         await addUserNotification(req.params.username, createNotification('withdrawal', '提现申请已提交', `已提交 ${amount} 紫钻（手续费 ${feePercent}% = ${fee}，实收 RM ${net}），等待审核`, { amount, fee, net }));
         sendNotifyEmail(user, {
             subject: `提现申请已提交 · ${amount} 紫钻`,
@@ -2131,7 +2143,9 @@ app.post('/api/users/:username/withdrawals', requireOwner, async (req, res) => {
             rows: [{ k: '提现金额 Amount', v: `${amount} 紫钻` }, { k: `手续费 Fee (${feePercent}%)`, v: `${fee} 紫钻` }, { k: '预计到账 Net payout', v: `RM ${net}` }]
         }).catch(() => {});
         invalidateUserCaches(req.params.username);
-        res.json({ success: true, withdrawal: record, balance: earnings.balance - amount, withdrawals });
+        const finalList = outWithdrawals || [];
+        const newLocked = finalList.filter(w => String(w.status || '').toUpperCase() !== 'REJECTED').reduce((s, w) => s + (parseInt(w.amount) || 0), 0);
+        res.json({ success: true, withdrawal: record, balance: Math.max(totalEarned - newLocked, 0), withdrawals: finalList });
     } catch(e) { res.status(500).json({ error: 'SERVER_ERROR', message: e.message }); }
 });
 
@@ -2166,12 +2180,32 @@ app.post('/api/users/:username/withdraw-pin', requireOwner, async (req, res) => 
         const doc = await userRef.get();
         if(!doc.exists) return res.status(404).json({ error: 'USER_NOT_FOUND', message: 'User not found' });
         const u = doc.data();
-        if(u.withdrawPinHash) {
-            const cur = String(req.body.currentPin || '').trim();
-            if(!verifyPassword(cur, u.withdrawPinHash)) return res.status(400).json({ error: 'CURRENT_PIN_WRONG', message: '当前提现密码不正确 / Current PIN is incorrect' });
-        }
         const setAt = new Date().toISOString();
-        await userRef.update({ withdrawPinHash: hashPassword(newPin), withdrawPinSetAt: setAt, withdrawPinFails: 0, withdrawPinLockedUntil: '' });
+        const newHash = hashPassword(newPin);
+        if(u.withdrawPinHash) {
+            // Verify the current PIN under the SAME atomic 5-try/30-min lockout as withdrawals — otherwise
+            // this endpoint is an UNTHROTTLED brute-force oracle a stolen session could use to learn the PIN
+            // (and reset it) without ever tripping the withdrawal lock. Share the same counters.
+            const cur = String(req.body.currentPin || '').trim();
+            const chk = await db.runTransaction(async (tx) => {
+                const d2 = await tx.get(userRef);
+                const uu = d2.data();
+                const now = Date.now();
+                if(uu.withdrawPinLockedUntil && new Date(uu.withdrawPinLockedUntil).getTime() > now) return 'locked';
+                if(uu.withdrawPinHash && !verifyPassword(cur, uu.withdrawPinHash)) {
+                    const fails = (parseInt(uu.withdrawPinFails) || 0) + 1;
+                    if(fails >= 5) tx.update(userRef, { withdrawPinFails: 0, withdrawPinLockedUntil: new Date(now + 30 * 60 * 1000).toISOString() });
+                    else tx.update(userRef, { withdrawPinFails: fails });
+                    return 'wrong';
+                }
+                tx.update(userRef, { withdrawPinHash: newHash, withdrawPinSetAt: setAt, withdrawPinFails: 0, withdrawPinLockedUntil: '' });
+                return 'ok';
+            });
+            if(chk === 'locked') return res.status(403).json({ error: 'PIN_LOCKED', message: '提现密码错误次数过多，请 30 分钟后再试或点击「忘记提现密码」重置 / Too many wrong attempts; try again in 30 min or reset your PIN' });
+            if(chk !== 'ok') return res.status(400).json({ error: 'CURRENT_PIN_WRONG', message: '当前提现密码不正确 / Current PIN is incorrect' });
+        } else {
+            await userRef.update({ withdrawPinHash: newHash, withdrawPinSetAt: setAt, withdrawPinFails: 0, withdrawPinLockedUntil: '' });
+        }
         invalidateUserCaches(req.params.username);
         sendNotifyEmail(u, {
             subject: '提现密码已更新', eyebrow: 'Withdrawal PIN Updated', title: '提现密码已更新',
@@ -3813,7 +3847,10 @@ app.post('/api/admin/cloudinary/cleanup', async (req, res) => {
     } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-app.put('/api/withdrawals/:username/:withdrawalId/status', async (req, res) => {
+// requireAdmin: only staff may approve/reject/complete a withdrawal. Was unauthenticated — anyone
+// could flip any withdrawal's status (e.g. self-REJECT to free balance and enable an overdraw, or
+// mark others' payouts COMPLETED). Now admin-only.
+app.put('/api/withdrawals/:username/:withdrawalId/status', requireAdmin, async (req, res) => {
     try {
         const nextStatus = String(req.body.status || '').toUpperCase();
         const allowed = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'REJECTED'];
