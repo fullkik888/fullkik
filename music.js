@@ -2644,19 +2644,26 @@ app.post('/api/users/:username/tip', requireOwner, async (req, res) => {
         const amount = parseInt(req.body.amount);
         if(Number.isNaN(amount) || amount < 1) return res.status(400).json({ error: 'AMOUNT_MIN', message: '打赏至少 1 钻石 / Minimum tip is 1 gem' });
         if(amount > 1000000) return res.status(400).json({ error: 'AMOUNT_MAX', message: '打赏金额过大 / Amount too large' });
+        // Tip target: either a specific song (recipient = its uploader) or a DJ directly (DJ page).
         const songId = String(req.body.songId || '');
-        if(!songId) return res.status(400).json({ error: 'MISSING_SONG', message: 'Missing songId' });
+        const toDirect = String(req.body.to || '').trim().toLowerCase();
+        if(!songId && !toDirect) return res.status(400).json({ error: 'MISSING_TARGET', message: 'Missing tip target' });
 
         const tipperRef = db.collection('users').doc(req.params.username.toLowerCase());
-        const songRef = db.collection('songs').doc(songId);
+        const songRef = songId ? db.collection('songs').doc(songId) : null;
 
         // Atomic: debit the tipper and credit the DJ in ONE transaction (both or neither).
         const outcome = await db.runTransaction(async (tx) => {
-            const songDoc = await tx.get(songRef);
-            if(!songDoc.exists) return { error: [404, 'SONG_NOT_FOUND', '歌曲不存在'] };
-            const song = songDoc.data();
-            const uploader = String(song.uploader || '');
-            if(!uploader || uploader.toUpperCase() === 'FULLKIK') return { error: [400, 'NO_DJ', '该歌曲无法打赏 / This track cannot be tipped'] };
+            let song = null, uploader = '';
+            if(songRef) {
+                const songDoc = await tx.get(songRef);
+                if(!songDoc.exists) return { error: [404, 'SONG_NOT_FOUND', '歌曲不存在'] };
+                song = songDoc.data();
+                uploader = String(song.uploader || '');
+            } else {
+                uploader = toDirect;
+            }
+            if(!uploader || uploader.toUpperCase() === 'FULLKIK') return { error: [400, 'NO_DJ', '该对象无法打赏 / Cannot be tipped'] };
             if(uploader.toLowerCase() === req.params.username.toLowerCase()) return { error: [400, 'SELF_TIP', '不能打赏自己 / You cannot tip yourself'] };
             const tipperDoc = await tx.get(tipperRef);
             if(!tipperDoc.exists) return { error: [404, 'USER_NOT_FOUND', 'User not found'] };
@@ -2670,27 +2677,28 @@ app.post('/api/users/:username/tip', requireOwner, async (req, res) => {
                 purpleGems: admin.firestore.FieldValue.increment(amount),   // display counter
                 tipsEarned: admin.firestore.FieldValue.increment(amount)    // folded into withdrawable earnings
             });
-            return { ok: true, uploader, song, newTokens: (tipper.tokens || 0) - amount, tipper };
+            return { ok: true, uploader: (djDoc.data() && djDoc.data().username) || uploader, song, newTokens: (tipper.tokens || 0) - amount, tipper };
         });
         if(outcome.error) return res.status(outcome.error[0]).json({ error: outcome.error[1], message: outcome.error[2] });
 
         const { uploader, song, newTokens, tipper } = outcome;
+        const songName = song ? song.filename : '';
         // Post-commit side effects (single commit guaranteed).
         await db.collection('transactions').add({
             type: 'tip', buyer: req.params.username, email: (tipper && tipper.email) || '-',
-            songName: song.filename, uploader, tokens: amount, time: new Date().toISOString()
+            songName: songName || '(DJ 打赏)', uploader, tokens: amount, time: new Date().toISOString()
         }).catch(() => {});
         await addUserNotification(uploader, createNotification(
-            'tip', `收到打赏 - ${song.filename}`,
+            'tip', songName ? `收到打赏 - ${songName}` : '收到打赏',
             `${req.params.username} 打赏了你 ${amount} 紫钻，已计入你的收益`,
-            { songId, from: req.params.username, amount }
+            { songId: songId || '', from: req.params.username, amount }
         )).catch(() => {});
         sendNotifyEmail(uploader, {
             subject: `你收到一笔打赏 · ${amount} 紫钻`,
             eyebrow: 'New Tip', title: '你收到一笔打赏',
-            bodyZh: `有人打赏了你的作品《${htmlEscape(song.filename)}》。${amount} 紫钻已计入你的收益，可随时申请提现。`,
-            bodyEn: 'Someone tipped your track. The gems were added to your withdrawable purple gem balance.',
-            rows: [{ k: '歌曲 Track', v: htmlEscape(song.filename) }, { k: '打赏 Tip', v: `${amount} 紫钻` }],
+            bodyZh: songName ? `有人打赏了你的作品《${htmlEscape(songName)}》。${amount} 紫钻已计入你的收益，可随时申请提现。` : `你收到了一笔打赏，${amount} 紫钻已计入你的收益，可随时申请提现。`,
+            bodyEn: 'Someone tipped you. The gems were added to your withdrawable purple gem balance.',
+            rows: (songName ? [{ k: '歌曲 Track', v: htmlEscape(songName) }] : []).concat([{ k: '打赏 Tip', v: `${amount} 紫钻` }]),
             btn: '查看收益 View earnings'
         }).catch(() => {});
         invalidateUserCaches(req.params.username);

@@ -50,6 +50,20 @@
         .follow-btn { background: var(--accent); color: white; border: none; padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; display:flex; align-items:center; justify-content:center;}
         .follow-btn:hover { background: var(--accent-light); }
         .follow-btn.following { background: rgba(255,255,255,0.1); border: 1px solid var(--border-color); color: var(--text-muted); }
+        .tip-reward-btn { background: rgba(192,132,252,0.14); color: #e9d5ff; border: 1px solid rgba(192,132,252,0.5); padding: 8px 24px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .tip-reward-btn:hover { background: rgba(192,132,252,0.24); border-color: #c084fc; }
+        .tip-reward-btn img { height: 16px; vertical-align: middle; }
+        .tip-ov { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .tip-ov.show { display: flex; }
+        .tip-box { background: #160c0c; border: 1px solid var(--border-color); border-radius: 20px; padding: 28px 26px; width: min(92vw, 400px); box-shadow: 0 24px 70px rgba(0,0,0,0.7); }
+        .tip-box h2 { margin: 0 0 18px; font-size: 22px; }
+        .tip-chip2 { flex: 1; padding: 12px 0; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.04); color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .tip-chip2:hover { border-color: #c084fc; }
+        .tip-chip2.active { border-color: #c084fc; background: rgba(192,132,252,0.18); color: #e9d5ff; }
+        .tip-in { width: 100%; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.4); color: #fff; padding: 14px 16px; font-size: 16px; outline: none; }
+        .tip-in:focus { border-color: #c084fc; }
+        .tip-cta { width: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-light)); color: #fff; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; }
+        .tip-cta img { height: 18px; vertical-align: middle; }
 
         .list-song-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg); border-radius: 8px; margin-bottom: 10px; cursor:pointer; transition:0.2s;}
         .list-song-row:hover { border-color: var(--accent); }
@@ -149,11 +163,12 @@
                     <span id="roleTag" style="display:none; color:#ffcc00; font-size:12px; font-weight:bold; border:1px solid #ffcc00; padding:2px 6px; border-radius:10px;">VIP</span>
                 </div>
                 <div id="vipWechat" style="color:#34c759; font-size:13px; margin-top:8px; display:none; align-items:center; gap:5px;"></div>
-                <div style="color:var(--text-muted); margin-top:5px; font-size:14px;"><span id="vipSongCount">0</span> 首上传歌曲 | <span id="vipFollowCount">0</span> 人关注</div>
+                <div style="color:var(--text-muted); margin-top:5px; font-size:14px;"><span id="vipSongCount">0</span> 首上传歌曲 | <span id="vipFollowCount">0</span> 人关注 | 总共下载 <span id="vipDownloadCount">0</span></div>
             </div>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;">
             <button class="follow-btn" id="followBtn" onclick="toggleFollow()">+ 关注</button>
+            <button class="tip-reward-btn" id="tipRewardBtn" onclick="openTipModal()" style="display:none;"><img src="/purple-gem.png" onerror="this.replaceWith('🟣')"> 打赏 DJ</button>
             <button class="follow-btn following" onclick="shareProfileLink()">🔗 分享链接</button>
         </div>
     </div>
@@ -164,9 +179,41 @@
 
 <div class="site-footer">© 2026 FULLKIK</div>
 
+<!-- 打赏 / Tip a DJ -->
+<div class="tip-ov" id="tipModal">
+    <div class="tip-box">
+        <h2>打赏 <span id="tipDjName" style="color:#c084fc;">DJ</span></h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.04); border:1px solid var(--border-color); border-radius:12px; padding:12px 16px; margin-bottom:16px;">
+            <span style="color:var(--text-muted); font-size:13px;">我的余额 Balance</span>
+            <span style="font-weight:800;">💎 <span id="tipBalance">0</span></span>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <button type="button" class="tip-chip2" onclick="setTipAmount(10)">10</button>
+            <button type="button" class="tip-chip2" onclick="setTipAmount(50)">50</button>
+            <button type="button" class="tip-chip2" onclick="setTipAmount(100)">100</button>
+            <button type="button" class="tip-chip2" onclick="setTipAmount(200)">200</button>
+        </div>
+        <input type="number" id="tipAmountInput" class="tip-in" min="1" placeholder="输入打赏钻石数量" oninput="onTipAmountInput()">
+        <div id="tipMsg" style="color:var(--danger); font-weight:800; font-size:13px; margin-top:8px; min-height:16px;"></div>
+        <button class="tip-cta" id="tipConfirmBtn" style="margin-top:6px;" onclick="confirmTip()">确认打赏 <img src="/purple-gem.png" onerror="this.replaceWith('🟣')"> <span id="tipConfirmAmt">0</span></button>
+        <button type="button" onclick="closeTipModal()" style="width:100%; margin-top:10px; background:none; border:1px solid var(--border-color); color:var(--text-muted); padding:10px; border-radius:12px; cursor:pointer; font-size:13px;">取消 / Cancel</button>
+    </div>
+</div>
+
+<!-- 成功打赏 -->
+<div class="tip-ov" id="tipSuccessModal">
+    <div class="tip-box" style="text-align:center;">
+        <div style="font-size:46px; margin-bottom:8px;">🎉</div>
+        <h2 style="justify-content:center;">成功打赏</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin:0 0 22px;" id="tipSuccessMsg">已送出打赏</p>
+        <button class="tip-cta" onclick="closeTipSuccess()">好的 / OK</button>
+    </div>
+</div>
+
 <script>
     const API_URL = '/api';
     const username = localStorage.getItem('djUsername');
+    let myTokens = 0;
     let targetUser = '';
     let targetUserData = null;
     let isFollowing = false;
@@ -177,6 +224,60 @@
     if(incomingReferralCode) localStorage.setItem('fullkikReferral', incomingReferralCode);
 
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); }
+
+    // ---- 打赏 / Tip this DJ (blue gems -> DJ withdrawable purple gems, 1:1) ----
+    let _tipAmount = 0;
+    function openTipModal() {
+        if(!username) return window.location.href = '/register.html';
+        if(!targetUserData || !targetUserData.username) return;
+        if(String(username).toLowerCase() === String(targetUserData.username).toLowerCase()) return showToast('不能打赏自己');
+        document.getElementById('tipDjName').innerText = targetUserData.djName || targetUserData.username;
+        document.getElementById('tipBalance').innerText = myTokens || 0;
+        document.getElementById('tipAmountInput').value = '';
+        document.getElementById('tipMsg').innerText = '';
+        setTipAmount(0);
+        document.getElementById('tipModal').classList.add('show');
+    }
+    function closeTipModal() { document.getElementById('tipModal').classList.remove('show'); }
+    function setTipAmount(n) {
+        _tipAmount = parseInt(n) || 0;
+        const inp = document.getElementById('tipAmountInput'); if(_tipAmount > 0) inp.value = _tipAmount;
+        document.getElementById('tipConfirmAmt').innerText = _tipAmount;
+        document.querySelectorAll('#tipModal .tip-chip2').forEach(c => c.classList.toggle('active', parseInt(c.innerText) === _tipAmount));
+    }
+    function onTipAmountInput() {
+        const v = parseInt(document.getElementById('tipAmountInput').value) || 0;
+        _tipAmount = v > 0 ? v : 0;
+        document.getElementById('tipConfirmAmt').innerText = _tipAmount;
+        document.querySelectorAll('#tipModal .tip-chip2').forEach(c => c.classList.toggle('active', parseInt(c.innerText) === _tipAmount));
+    }
+    async function confirmTip() {
+        const amount = _tipAmount; const msg = document.getElementById('tipMsg');
+        if(!(amount >= 1)) { msg.innerText = '请输入打赏数量 / Enter an amount'; return; }
+        if(amount > (myTokens || 0)) { msg.innerText = '钻石余额不足 / Not enough gems'; return; }
+        const btn = document.getElementById('tipConfirmBtn'); if(btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+        try {
+            const res = await fetch(`${API_URL}/users/${username}/tip`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('fkUserToken') || '') },
+                body: JSON.stringify({ to: targetUserData.username, amount })
+            });
+            const data = await res.json().catch(() => ({}));
+            if(res.ok) {
+                myTokens = (data.tokens != null) ? data.tokens : ((myTokens || 0) - amount);
+                const td = document.getElementById('tokenDisplay'); if(td) td.innerText = myTokens;
+                closeTipModal();
+                document.getElementById('tipSuccessMsg').innerText = `已送出 ${amount} 钻石给 ${data.uploader || targetUserData.username}`;
+                document.getElementById('tipSuccessModal').classList.add('show');
+            } else if(res.status === 401) {
+                msg.innerText = '请重新登录 / Please log in again'; setTimeout(() => window.location.href = '/register.html', 1200);
+            } else {
+                msg.innerText = data.message || '打赏失败 / Failed';
+            }
+        } catch(e) { msg.innerText = '网络错误，请重试 / Network error'; }
+        finally { if(btn) { btn.disabled = false; btn.style.opacity = ''; } }
+    }
+    function closeTipSuccess() { document.getElementById('tipSuccessModal').classList.remove('show'); }
     function closeDropdowns(e) {
         const dropdown = document.getElementById('profileDropdown');
         if(dropdown && dropdown.classList.contains('show') && !e.target.closest('.profile-trigger') && !e.target.closest('#profileDropdown')) dropdown.classList.remove('show');
@@ -235,6 +336,7 @@
             const meRes = await fetch(`${API_URL}/users/${username}`);
             if(meRes.ok) {
                 const me = await meRes.json();
+                myTokens = me.tokens || 0;
                 document.getElementById('tokenDisplay').innerText = me.tokens || 0;
                 userNotifications = me.notifications || [];
                 updateNotificationBadge();
@@ -295,10 +397,16 @@
             isFollowing = myFollowingList.includes(vData.username);
             updateFollowBtn();
 
+            // Show 打赏 (tip) button unless you're viewing your own page (can't tip yourself).
+            const tipBtn = document.getElementById('tipRewardBtn');
+            if(tipBtn) tipBtn.style.display = (username && String(username).toLowerCase() === String(vData.username).toLowerCase()) ? 'none' : 'flex';
+
             // Load Songs
             const songs = await (await fetch(`${API_URL}/songs`)).json();
             const vipSongs = songs.filter(s => s.uploader === vData.username && s.status === 'APPROVED');
             document.getElementById('vipSongCount').innerText = vipSongs.length;
+            const totalDownloads = vipSongs.reduce((sum, s) => sum + (parseInt(s.downloads) || 0), 0);
+            document.getElementById('vipDownloadCount').innerText = totalDownloads;
             
             const listDiv = document.getElementById('vipSongsList');
             vipSongs.forEach(s => {
